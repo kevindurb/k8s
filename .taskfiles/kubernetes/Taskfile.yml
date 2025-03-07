@@ -4,7 +4,7 @@ version: "3"
 
 vars:
   apps:
-    sh: ls ./k8s
+    sh: ls ./apps
 
 tasks:
   force-update-external-secret:
@@ -18,9 +18,9 @@ tasks:
       - mkdir ./dist
       - for:
           var: apps
-        cmd: kustomize build {{ joinPath "./k8s" .ITEM }} > ./dist/{{ .ITEM }}.yml
+        cmd: kustomize build {{ joinPath "./apps" .ITEM }} > ./dist/{{ .ITEM }}.yml
     sources:
-      - k8s/**/*.{yml,yaml}
+      - apps/**/*.{yml,yaml}
     generates:
       - dist/*.yml
 
