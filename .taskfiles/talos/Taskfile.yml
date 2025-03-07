@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: '3'
+
+tasks:
+  genconfig: >
+    talhelper genconfig
+    -s ./talos/talsecret.sops.yml
+    -c ./talos/talconfig.yml
+    -o ./talos/clusterconfig

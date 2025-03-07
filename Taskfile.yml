@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: "3"
+
+dotenv: [.env]
+
+includes:
+  templates:
+    taskfile: .taskfiles/templates
+    aliases: [t, tmp, gen]
+  argo:
+    taskfile: .taskfiles/argo
+  cloudflare:
+    taskfile: .taskfiles/cloudflare
+  kubernetes:
+    taskfile: .taskfiles/kubernetes
+    aliases: [k, k8s]
+  restic:
+    taskfile: .taskfiles/restic
+  talos:
+    taskfile: .taskfiles/talos
+    aliases: [tal]
+
+tasks:
+  default: task --list-all
+
+  lint: npx prettier -w .

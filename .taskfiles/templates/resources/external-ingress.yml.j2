@@ -1,0 +1,36 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: external-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+    nginx.ingress.kubernetes.io/backend-protocol: {{ ENV.PROTO | upper }}
+    gethomepage.dev/href: https://{{ ENV.SUBDOMAIN }}.durbin.casa
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/app: {{ ENV.APP }}
+    gethomepage.dev/group: Other
+    gethomepage.dev/icon: {{ ENV.APP }}
+    gethomepage.dev/name: {{ ENV.APP | title }}
+    nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy-web-service.auth.svc.cluster.local/oauth2/auth
+    nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.durbin.casa/oauth2/start
+    nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email,X-Auth-Request-Preferred-Username
+    external-dns.alpha.kubernetes.io/target: external.durbin.casa
+spec:
+  ingressClassName: external
+  rules:
+    - host: &host {{ ENV.SUBDOMAIN }}.durbin.casa
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: {{ ENV.COMP }}-service
+                port:
+                  name: {{ ENV.PROTO }}
+  tls:
+    - secretName: durbin-casa-wildcard-cert
+      hosts:
+        - *host
+

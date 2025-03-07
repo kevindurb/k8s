@@ -1,0 +1,37 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: unlock-democratic-csi-snapshots
+  namespace: default
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: OnFailure
+      containers:
+        - name: minio
+          image: docker.io/restic/restic:latest
+          args: ['unlock', '--remove-all']
+          env:
+            - name: RESTIC_REPOSITORY
+              value: s3:http://minio-api-service.default/volume-snapshots
+            - name: AWS_ENDPOINT_URL
+              value: http://minio-api-service.default
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: RESTIC_PASSWORD
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: MINIO_ACCESS_KEY
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: MINIO_SECRET_KEY
+          resources: {}

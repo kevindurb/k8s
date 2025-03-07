@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: 'true'
+data:
+  {{ ENV.APP }}.yml: |
+    endpoints:
+      - name: {{ ENV.APP }}
+        url: {{ ENV.PROTO }}://{{ ENV.APP }}-{{ ENV.COMP }}-service.{{ ENV.NS }}
+        conditions:
+          - '[STATUS] == 200'
+{% if ENV.PROTO == 'https' %}
+        client:
+          insecure: true
+{% endif %}

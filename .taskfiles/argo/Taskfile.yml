@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: '3'
+
+tasks:
+  refresh-app:
+    requires:
+      vars: [appname]
+    cmd: >
+      kubectl annotate -n argocd
+      application {{.appname}}
+      argocd.argoproj.io/refresh='normal'
+  refresh-all:
+    cmd: >
+      kubectl annotate -n argocd
+      applicationset applications
+      argocd.argoproj.io/application-set-refresh='true'

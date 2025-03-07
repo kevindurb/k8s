@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: "3"
+
+vars:
+  apps:
+    sh: ls ./k8s
+
+tasks:
+  force-update-external-secret:
+    cmd: "kubectl annotate externalsecret {{ .name }} force-sync=$(date +%s) --overwrite"
+    requires:
+      vars: [name]
+
+  build-all:
+    cmds:
+      - rm -rf ./dist
+      - mkdir ./dist
+      - for:
+          var: apps
+        cmd: kustomize build {{ joinPath "./k8s" .ITEM }} > ./dist/{{ .ITEM }}.yml
+    sources:
+      - k8s/**/*.{yml,yaml}
+    generates:
+      - dist/*.yml
+
+  validate:
+    vars:
+      kubeconformArgs: >-
+        -summary
+        -output pretty
+        -ignore-missing-schemas
+        -skip CustomResourceDefinition,Cluster,Password
+        -schema-location default
+        -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{`{{ .NormalizedKubernetesVersion }}`}}/{{`{{ .ResourceKind }}`}}{{`{{ .KindSuffix }}`}}.json'
+        -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{`{{.Group}}`}}/{{`{{.ResourceKind}}`}}_{{`{{.ResourceAPIVersion}}`}}.json'
+    cmds:
+      - task: build-all
+      - kubeconform {{ .kubeconformArgs }} ./dist
+
+  get-dashboard-token:
+    cmd: kubectl get secret dashboard-admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
