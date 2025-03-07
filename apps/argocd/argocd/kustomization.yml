@@ -12,9 +12,3 @@ resources:
 patches:
   - path: ./resources/config.patch.yml
   - path: ./resources/metrics-service.patch.yml
-
-labels:
-  - pairs:
-      app.kubernetes.io/name: argocd
-    includeTemplates: true
-    includeSelectors: true
