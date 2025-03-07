@@ -2,17 +2,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ ENV.APP }}
+  name: argocd
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
-    path: k8s/{{ ENV.NS }}/{{ ENV.APP }}
+    path: k8s/argocd/argocd
   destination:
     server: https://kubernetes.default.svc
-    namespace: {{ ENV.NS }}
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
