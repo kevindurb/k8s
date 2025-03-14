@@ -14,17 +14,13 @@ spec:
       chart: openebs
       helm:
         valuesObject:
+          nodeSelector:
+            openebs.io/engine: "mayastor"
           mayastor:
             csi:
               node:
                 initContainers:
                   enabled: false
-            etcd:
-              localpvScConfig:
-                basePath: "/var/local/openebs"
-            loki-stack:
-              localpvScConfig:
-                basePath: "/var/local/openebs"
           engines:
             local:
               lvm:
