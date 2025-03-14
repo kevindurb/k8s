@@ -54,6 +54,8 @@ nodes:
   - hostname: kube-storage-01
     ipAddress: 192.168.42.11
     installDisk: /dev/sda
+    patches:
+      - "@./patches/mayastor.yml"
     networkInterfaces:
       - interface: enp0s25
         dhcp: false
@@ -65,6 +67,8 @@ nodes:
   - hostname: kube-storage-02
     ipAddress: 192.168.42.12
     installDisk: /dev/sda
+    patches:
+      - "@./patches/mayastor.yml"
     networkInterfaces:
       - interface: enp0s25
         dhcp: false
@@ -76,6 +80,8 @@ nodes:
   - hostname: kube-storage-03
     ipAddress: 192.168.42.13
     installDisk: /dev/sda
+    patches:
+      - "@./patches/mayastor.yml"
     networkInterfaces:
       - interface: enp0s25
         dhcp: false
@@ -121,7 +127,7 @@ nodes:
     ipAddress: 192.168.42.31
     installDisk: /dev/sda
     patches:
-      - '@./patches/nvidia.yml'
+      - "@./patches/nvidia.yml"
     networkInterfaces:
       - interface: enp4s0
         dhcp: false
@@ -131,11 +137,12 @@ nodes:
             gateway: 192.168.1.1
 
 patches:
-  - '@./patches/dns.yml'
+  - "@./patches/dns.yml"
 
 controlPlane:
-  patches: []
+  patches:
+    - "@./patches/mayastor-cp.yml"
 
 worker:
   patches:
-    - '@./patches/iommu.yml'
+    - "@./patches/iommu.yml"
