@@ -8,7 +8,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: web
 spec:
-  replicas: 1
+  replicas: 3
   strategy:
     type: Recreate
   selector:
@@ -19,10 +19,6 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
-      volumes:
-        - name: volume
-          persistentVolumeClaim:
-            claimName: volume
       containers:
         - name: whoami
           image: docker.io/traefik/whoami:v1.10.4
@@ -40,27 +36,12 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          volumeMounts:
-            - name: volume
-              mountPath: /mnt
           env:
             - name: TZ
               value: America/Denver
           ports:
             - name: http
               containerPort: 80
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: openebs-mayastor-replicated
-  resources:
-    requests:
-      storage: 10G
 
 ---
 apiVersion: v1
