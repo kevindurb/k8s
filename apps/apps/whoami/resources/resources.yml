@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ ENV.COMP }}-deployment
+  name: web-deployment
   annotations:
-    reloader.stakater.com/auto: 'true'
+    reloader.stakater.com/auto: "true"
   labels: &labels
-    app.kubernetes.io/component: {{ ENV.COMP }}
+    app.kubernetes.io/component: web
 spec:
   replicas: 1
   strategy:
@@ -19,13 +19,13 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
-      # volumes:
-      #   - name: volume
-      #     persistentVolumeClaim:
-      #       claimName: volume
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
       containers:
-        - name: {{ ENV.APP }}
-          image: {{ ENV.IMG }}
+        - name: whoami
+          image: docker.io/traefik/whoami:v1.10.4
           resources:
             requests:
               memory: 100M
@@ -40,15 +40,15 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          # volumeMounts:
-          #   - name: volume
-          #     mountPath: /var/www/app/data
+          volumeMounts:
+            - name: volume
+              mountPath: /mnt
           env:
             - name: TZ
               value: America/Denver
           ports:
             - name: http
-              containerPort: {{ ENV.PORT }}
+              containerPort: 80
 
 ---
 apiVersion: v1
@@ -60,20 +60,20 @@ spec:
   storageClassName: openebs-mayastor-replicated
   resources:
     requests:
-      storage: {{ ENV.SIZE }}
+      storage: 10G
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ ENV.COMP }}-service
+  name: web-service
 spec:
   selector:
-    app.kubernetes.io/component: {{ ENV.COMP }}
+    app.kubernetes.io/component: web
   ports:
-    - name: {{ ENV.PROTO }}
+    - name: http
       port: 80
-      targetPort: {{ ENV.PROTO }}
+      targetPort: http
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -82,12 +82,12 @@ metadata:
   name: tailscale-ingress
 spec:
   ingressClassName: tailscale
-  tls: [ { hosts: [ {{ENV.SUBDOMAIN}} ] } ]
+  tls: [{ hosts: [whoami] }]
   defaultBackend:
     service:
-      name: {{ ENV.COMP }}-service
+      name: web-service
       port:
-        name: {{ ENV.PROTO }}
+        name: http
 
 ---
 apiVersion: v1
@@ -95,15 +95,11 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: 'true'
+    gatus.io/enabled: "true"
 data:
-  {{ ENV.APP }}.yml: |
+  whoami.yml: |
     endpoints:
-      - name: {{ ENV.APP }}
-        url: {{ ENV.PROTO }}://{{ ENV.APP }}-{{ ENV.COMP }}-service.{{ ENV.NS }}
+      - name: whoami
+        url: http://whoami-web-service.apps
         conditions:
           - '[STATUS] == 200'
-{% if ENV.PROTO == 'https' %}
-        client:
-          insecure: true
-{% endif %}
