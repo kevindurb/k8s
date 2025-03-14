@@ -2,65 +2,12 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress
-  annotations:
-    cert-manager.io/cluster-issuer: cloudflare-issuer
-    gethomepage.dev/href: 'https://argo.durbin.casa'
-    gethomepage.dev/enabled: 'true'
-    gethomepage.dev/group: Other
-    gethomepage.dev/icon: argo-cd
-    gethomepage.dev/name: ArgoCD
-    gethomepage.dev/pod-selector: >-
-      app.kubernetes.io/name in (
-        argocd-image-updater,
-        argocd-notifications-controller,
-        argocd-server,
-        argocd-application-controller,
-        argocd-applicationset-controller,
-        argocd-dex-server,
-        argocd-redis,
-        argocd-repo-server
-      )
-    nginx.ingress.kubernetes.io/backend-protocol: https
+  name: tailscale-ingress
 spec:
-  ingressClassName: internal
-  tls:
-    - hosts: [&host argo.durbin.casa]
-      secretName: durbin-casa-wildcard-cert
-  rules:
-    - host: *host
-      http:
-        paths:
-          - pathType: Prefix
-            path: /
-            backend:
-              service:
-                name: argocd-server
-                port:
-                  name: https
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: webhook-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: cloudflare-issuer
-    nginx.ingress.kubernetes.io/backend-protocol: https
-    external-dns.alpha.kubernetes.io/target: external.durbin.casa
-spec:
-  ingressClassName: external
-  tls:
-    - hosts: [&host argocdwebhook.durbin.casa]
-      secretName: durbin-casa-wildcard-cert
-  rules:
-    - host: *host
-      http:
-        paths:
-          - pathType: Exact
-            path: /api/webhook
-            backend:
-              service:
-                name: argocd-server
-                port:
-                  name: https
+  ingressClassName: tailscale
+  tls: [{ hosts: [argocd] }]
+  defaultBackend:
+    service:
+      name: argocd-server
+      port:
+        name: https
