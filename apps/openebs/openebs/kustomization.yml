@@ -7,6 +7,7 @@ namePrefix: openebs-
 
 resources:
   - ./resources/disk-pools.yml
+  - ./resources/storage-class.yml
 
 labels:
   - pairs:
