@@ -12,6 +12,19 @@ spec:
     - repoURL: https://openebs.github.io/openebs
       targetRevision: 4.2.0
       chart: openebs
+      helm:
+        valuesObject:
+          mayastor:
+            csi:
+              node:
+                initContainers:
+                  enabled: false
+          engines:
+            local:
+              lvm:
+                enabled: false
+              zfs:
+                enabled: false
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/openebs/openebs
