@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
 - ./namespace.yml
 - ./whoami/app.yml
+- ./fio/app.yml
