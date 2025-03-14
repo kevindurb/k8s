@@ -14,7 +14,7 @@ spec:
       chart: kube-prometheus-stack
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
-      path: apps/monitoring/kubekube-prometheus-stack
+      path: apps/monitoring/kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
