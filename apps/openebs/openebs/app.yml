@@ -20,10 +20,11 @@ spec:
                 initContainers:
                   enabled: false
             etcd:
-              replicaCount: 3
-            nats:
-              cluster:
-                replicas: 3
+              localpvScConfig:
+                basePath: "/var/local/openebs"
+            loki-stack:
+              localpvScConfig:
+                basePath: "/var/local/openebs"
           engines:
             local:
               lvm:
