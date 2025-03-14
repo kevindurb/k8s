@@ -5,7 +5,8 @@ kind: Kustomization
 namespace: openebs
 namePrefix: openebs-
 
-resources: []
+resources:
+  - ./resources/disk-pools.yml
 
 labels:
   - pairs:
