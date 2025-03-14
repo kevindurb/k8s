@@ -14,8 +14,6 @@ spec:
       chart: openebs
       helm:
         valuesObject:
-          nodeSelector:
-            openebs.io/engine: "mayastor"
           mayastor:
             csi:
               node:

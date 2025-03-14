@@ -146,3 +146,4 @@ controlPlane:
 worker:
   patches:
     - "@./patches/iommu.yml"
+    - "@./patches/var-local.yml"
