@@ -3,5 +3,4 @@ kind: Kustomization
 
 resources:
   - ./namespace.yml
-  # - ./wildcard-cert.yml
   - ./tailscale-operator/app.yml

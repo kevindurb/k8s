@@ -2,26 +2,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tailscale-operator
+  name: sealed-secrets
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
-    - repoURL: https://pkgs.tailscale.com/helmcharts
-      targetRevision: 1.78.3
-      chart: tailscale-operator
+    - repoURL: https://bitnami-labs.github.io/sealed-secrets
+      targetRevision: 2.16.2
+      chart: sealed-secrets
       helm:
         valuesObject:
-          apiServerProxyConfig:
-            mode: "true"
-    - repoURL: https://github.com/kevindurb/k8s.git
+          fullnameOverride: sealed-secrets-controller
+    - repoURL: https://github.com/kevindurb/infra.git
       targetRevision: HEAD
-      path: apps/tailscale/tailscale-operator
+      path: k8s/kube-system/sealed-secrets
   destination:
     server: https://kubernetes.default.svc
-    namespace: tailscale
+    namespace: kube-system
   syncPolicy:
     automated:
       prune: true

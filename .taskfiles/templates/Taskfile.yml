@@ -103,11 +103,11 @@ tasks:
           TEMPLATE: namespace
           OUT_FILE: "./apps/{{.NS}}/namespace.yml"
       - kustomize edit add resource ./{{.NS}}
-      - task: minijinja
-        vars:
-          TEMPLATE: wildcard-cert
-          OUT_FILE: "./apps/{{.NS}}/wildcard-cert.yml"
-      - cd ./{{.NS}} && kustomize edit add resource ./wildcard-cert.yml
+      # - task: minijinja
+      #   vars:
+      #     TEMPLATE: wildcard-cert
+      #     OUT_FILE: "./apps/{{.NS}}/wildcard-cert.yml"
+      # - cd ./{{.NS}} && kustomize edit add resource ./wildcard-cert.yml
 
   deployment:
     aliases: [deploy]
