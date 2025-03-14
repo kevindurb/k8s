@@ -19,6 +19,11 @@ spec:
               node:
                 initContainers:
                   enabled: false
+            etcd:
+              replicaCount: 3
+            nats:
+              cluster:
+                replicas: 3
           engines:
             local:
               lvm:
