@@ -22,6 +22,8 @@ spec:
       containers:
         - name: fio
           image: docker.io/library/alpine
+          command: ["/bin/bash", "-c", "--"]
+          args: ["while true; do sleep 30; done;"]
           volumeMounts:
             - name: volume
               mountPath: /mnt
