@@ -15,9 +15,9 @@ spec:
       helm:
         valuesObject:
           fullnameOverride: sealed-secrets-controller
-    - repoURL: https://github.com/kevindurb/infra.git
-      targetRevision: HEAD
-      path: k8s/kube-system/sealed-secrets
+    # - repoURL: https://github.com/kevindurb/k8s.git
+    #   targetRevision: HEAD
+    #   path: apps/kube-system/sealed-secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
