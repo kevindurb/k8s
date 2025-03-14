@@ -2,3 +2,9 @@ kube-kube-master-01.yaml
 kube-kube-master-02.yaml
 kube-kube-master-03.yaml
 talosconfig
+kube-kube-storage-01.yaml
+kube-kube-storage-02.yaml
+kube-kube-storage-03.yaml
+kube-kube-compute-01.yaml
+kube-kube-compute-02.yaml
+kube-kube-compute-03.yaml
