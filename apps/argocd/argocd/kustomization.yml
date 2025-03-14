@@ -7,7 +7,7 @@ namespace: argocd
 resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   # - ./resources/gatus-config.yml
-  # - ./resources/ingress.yml
+  - ./resources/ingress.yml
 
 patches:
   - path: ./resources/config.patch.yml
