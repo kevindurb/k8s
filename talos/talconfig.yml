@@ -55,7 +55,7 @@ nodes:
     ipAddress: 192.168.42.11
     installDisk: /dev/sda
     networkInterfaces:
-      - interface: enp1s0f0
+      - interface: enp0s25
         dhcp: false
         addresses: [192.168.42.11/16]
         routes:
@@ -66,7 +66,7 @@ nodes:
     ipAddress: 192.168.42.12
     installDisk: /dev/sda
     networkInterfaces:
-      - interface: enp1s0f0
+      - interface: enp0s25
         dhcp: false
         addresses: [192.168.42.12/16]
         routes:
@@ -77,48 +77,55 @@ nodes:
     ipAddress: 192.168.42.13
     installDisk: /dev/sda
     networkInterfaces:
-      - interface: enp1s0f0
+      - interface: enp0s25
         dhcp: false
         addresses: [192.168.42.13/16]
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.1.1
 
-  - hostname: kube-compute-01
-    ipAddress: 192.168.42.21
-    installDisk: /dev/sda
-    patches:
-      - '@./patches/nvidia.yml'
-    networkInterfaces:
-      - interface: enp1s0f0
-        dhcp: false
-        addresses: [192.168.42.21/16]
-        routes:
-          - network: 0.0.0.0/0
-            gateway: 192.168.1.1
+  # - hostname: kube-compute-01
+  #   ipAddress: 192.168.42.21
+  #   installDisk: /dev/sda
+  #   networkInterfaces:
+  #     - interface: enp1s0f0
+  #       dhcp: false
+  #       addresses: [192.168.42.21/16]
+  #       routes:
+  #         - network: 0.0.0.0/0
+  #           gateway: 192.168.1.1
+  #
+  # - hostname: kube-compute-02
+  #   ipAddress: 192.168.42.22
+  #   installDisk: /dev/sda
+  #   networkInterfaces:
+  #     - interface: enp1s0f0
+  #       dhcp: false
+  #       addresses: [192.168.42.22/16]
+  #       routes:
+  #         - network: 0.0.0.0/0
+  #           gateway: 192.168.1.1
+  #
+  # - hostname: kube-compute-03
+  #   ipAddress: 192.168.42.23
+  #   installDisk: /dev/sda
+  #   networkInterfaces:
+  #     - interface: enp1s0f0
+  #       dhcp: false
+  #       addresses: [192.168.42.23/16]
+  #       routes:
+  #         - network: 0.0.0.0/0
+  #           gateway: 192.168.1.1
 
-  - hostname: kube-compute-02
-    ipAddress: 192.168.42.22
+  - hostname: kube-big-01
+    ipAddress: 192.168.42.31
     installDisk: /dev/sda
     patches:
       - '@./patches/nvidia.yml'
     networkInterfaces:
-      - interface: enp1s0f0
+      - interface: enp4s0
         dhcp: false
-        addresses: [192.168.42.22/16]
-        routes:
-          - network: 0.0.0.0/0
-            gateway: 192.168.1.1
-
-  - hostname: kube-compute-03
-    ipAddress: 192.168.42.23
-    installDisk: /dev/sda
-    patches:
-      - '@./patches/nvidia.yml'
-    networkInterfaces:
-      - interface: enp1s0f0
-        dhcp: false
-        addresses: [192.168.42.23/16]
+        addresses: [192.168.42.31/16]
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.1.1

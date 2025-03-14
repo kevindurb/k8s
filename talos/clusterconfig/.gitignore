@@ -8,3 +8,4 @@ kube-kube-storage-03.yaml
 kube-kube-compute-01.yaml
 kube-kube-compute-02.yaml
 kube-kube-compute-03.yaml
+kube-kube-big-01.yaml
