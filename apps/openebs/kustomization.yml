@@ -3,4 +3,4 @@ kind: Kustomization
 
 resources:
   - ./namespace.yml
-# - ./openebs/app.yml
+  - ./openebs/app.yml
