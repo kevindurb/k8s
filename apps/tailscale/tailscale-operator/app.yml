@@ -16,6 +16,8 @@ spec:
         valuesObject:
           apiServerProxyConfig:
             mode: "true"
+          operatorConfig:
+            hostname: k8s-operator
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/tailscale/tailscale-operator
