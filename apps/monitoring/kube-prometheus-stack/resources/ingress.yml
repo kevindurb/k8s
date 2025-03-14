@@ -10,7 +10,7 @@ spec:
     service:
       name: kube-prometheus-stack-prometheus
       port:
-        name: http-web
+        number: 9090
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -24,4 +24,4 @@ spec:
     service:
       name: kube-prometheus-stack-grafana
       port:
-        name: http-web
+        number: 80
