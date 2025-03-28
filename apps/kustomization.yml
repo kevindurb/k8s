@@ -8,3 +8,4 @@ resources:
 - ./openebs
 - ./apps
 - ./monitoring
+- ./volsync-system
