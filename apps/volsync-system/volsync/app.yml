@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: volsync-system
+  name: volsync
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
