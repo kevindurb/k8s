@@ -9,9 +9,6 @@ spec:
     type: Recreate
   template:
     spec:
-      nodeSelector:
-        nvidia.com/gpu.present: "true"
-        nvidia.com/gpu.product: NVIDIA-GeForce-GTX-1060-6GB-SHARED
       runtimeClassName: nvidia
       volumes:
         - name: volume
@@ -22,7 +19,6 @@ spec:
           image: docker.io/ollama/ollama:0.5.12@sha256:251f814864b3ed17ea8740b89a00363c5f14a3ca3738644fdec622eea78d3305
           resources:
             limits:
-              nvidia.com/gpu: 1
               memory: 6G
             requests:
               memory: 4G
@@ -54,7 +50,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: local-storage
+  storageClassName: openebs-mayastor-replicated
   resources:
     requests:
       storage: 20Gi
@@ -65,6 +61,8 @@ kind: Service
 metadata:
   name: service
 spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
   ports:
     - name: http
       port: 80

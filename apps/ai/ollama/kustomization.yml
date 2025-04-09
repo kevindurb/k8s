@@ -5,7 +5,8 @@ kind: Kustomization
 namespace: ai
 namePrefix: ollama-
 
-resources: []
+resources:
+  - ./resources/ollama.yml
 
 labels:
   - pairs:
