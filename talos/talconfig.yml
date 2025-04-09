@@ -128,6 +128,12 @@ nodes:
     installDisk: /dev/sda
     patches:
       - "@./patches/nvidia.yml"
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/nonfree-kmod-nvidia-production
+            - siderolabs/nvidia-container-toolkit-production
     networkInterfaces:
       - interface: enp4s0
         dhcp: false
