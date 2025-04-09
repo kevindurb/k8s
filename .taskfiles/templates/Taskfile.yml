@@ -80,7 +80,7 @@ tasks:
       vars: [APP, IMG, PORT]
     dir: "{{.APP_DIR}}"
     vars:
-      OUT_FILE: "./resources/resources.yml"
+      OUT_FILE: "./resources/{{.APP}}.yml"
     cmds:
       - task: minijinja
         vars:

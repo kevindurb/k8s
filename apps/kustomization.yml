@@ -9,3 +9,5 @@ resources:
 - ./apps
 - ./monitoring
 - ./volsync-system
+- ./ai
+- ./node-feature-discovery
