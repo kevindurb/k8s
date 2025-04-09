@@ -6,7 +6,7 @@ metadata:
   namespace: openebs
 spec:
   node: *name
-  disks: [aio:///dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010201718]
+  disks: [aio:///dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010204187]
 
 ---
 apiVersion: openebs.io/v1beta2
@@ -26,4 +26,4 @@ metadata:
   namespace: openebs
 spec:
   node: *name
-  disks: [aio:///dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010204187]
+  disks: [aio:///dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010201718]
