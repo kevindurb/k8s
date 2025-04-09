@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      nodeSelector:
+        nvidia.com/gpu.present: "true"
+        nvidia.com/gpu.product: NVIDIA-GeForce-GTX-1060-6GB-SHARED
+      runtimeClassName: nvidia
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+      containers:
+        - name: ollama
+          image: docker.io/ollama/ollama:0.5.12@sha256:251f814864b3ed17ea8740b89a00363c5f14a3ca3738644fdec622eea78d3305
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+              memory: 6G
+            requests:
+              memory: 4G
+          env:
+            - name: PATH
+              value: /usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            - name: LD_LIBRARY_PATH
+              value: /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: compute,utility
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: OLLAMA_FLASH_ATTENTION
+              value: "1"
+            - name: OLLAMA_KV_CACHE_TYPE
+              value: q8_0
+          volumeMounts:
+            - name: volume
+              mountPath: /root/.ollama
+          ports:
+            - name: http
+              containerPort: 11434
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
