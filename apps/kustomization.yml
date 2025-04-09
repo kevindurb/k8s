@@ -11,3 +11,4 @@ resources:
 - ./volsync-system
 - ./ai
 - ./node-feature-discovery
+- ./nvidia-device-plugin
