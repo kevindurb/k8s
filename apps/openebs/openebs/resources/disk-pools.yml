@@ -2,10 +2,10 @@
 apiVersion: openebs.io/v1beta2
 kind: DiskPool
 metadata:
-  name: kube-storage-01
+  name: kube-storage-03
   namespace: openebs
 spec:
-  node: kube-storage-03
+  node: kube-storage-01
   disks: [aio:///dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010204187]
 
 ---
@@ -22,8 +22,8 @@ spec:
 apiVersion: openebs.io/v1beta2
 kind: DiskPool
 metadata:
-  name: kube-storage-03
+  name: kube-storage-01
   namespace: openebs
 spec:
-  node: kube-storage-01
+  node: kube-storage-03
   disks: [aio:///dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010201718]
