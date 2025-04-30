@@ -1,0 +1,114 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: miniflux
+          image: ghcr.io/miniflux/miniflux:2.2.5-distroless@sha256:2d566eddfe492cab757d1e9d8c92d083b3cab76c000e52addc707a48c96b993c
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux-postgres-app
+                  key: uri
+
+            - name: RUN_MIGRATIONS
+              value: "1"
+            - name: CREATE_ADMIN
+              value: "0"
+            - name: AUTH_PROXY_HEADER
+              value: X-Auth-Request-Preferred-Username
+            - name: AUTH_PROXY_USER_CREATION
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 8080
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+spec:
+  instances: 3
+  storage:
+    storageClass: openebs-mayastor-replicated
+    size: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tailscale-ingress
+spec:
+  ingressClassName: tailscale
+  tls: [{ hosts: [miniflux] }]
+  defaultBackend:
+    service:
+      name: web-service
+      port:
+        name: http
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: "true"
+data:
+  miniflux.yml: |
+    endpoints:
+      - name: miniflux
+        url: http://miniflux-web-service.apps
+        conditions:
+          - '[STATUS] == 200'
