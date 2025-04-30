@@ -54,7 +54,7 @@ spec:
             - name: CREATE_ADMIN
               value: "0"
             - name: AUTH_PROXY_HEADER
-              value: X-Auth-Request-Preferred-Username
+              value: Tailscale-User-Login
             - name: AUTH_PROXY_USER_CREATION
               value: "1"
           ports:
