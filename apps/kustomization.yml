@@ -12,3 +12,4 @@ resources:
 - ./ai
 - ./node-feature-discovery
 - ./nvidia-device-plugin
+- ./database
