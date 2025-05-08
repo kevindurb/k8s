@@ -93,12 +93,20 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: db-volume
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: postgres
           image: docker.io/library/postgres:17.4-alpine
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: data
+            - mountPath: /run
+              name: run
+            - mountPath: /tmp
+              name: tmp
           resources:
             requests:
               memory: 100M
@@ -110,6 +118,7 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
+            readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
           envFrom:
