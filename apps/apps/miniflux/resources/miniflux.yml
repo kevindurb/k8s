@@ -45,7 +45,7 @@ spec:
                 name: miniflux-postgres-secret
           env:
             - name: PGHOST
-              name: miniflux-db-service
+              value: miniflux-db-service
             - name: PGUSER
               value: miniflux
             - name: PGDATABASE
