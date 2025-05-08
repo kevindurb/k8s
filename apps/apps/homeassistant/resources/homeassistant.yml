@@ -11,14 +11,16 @@ spec:
     metadata:
       labels: *labels
     spec:
-      firmware:
-        bootloader:
-          efi:
-            secureBoot: false
       networks:
         - name: default
           pod: {}
       domain:
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        features:
+          acpi: {}
         machine:
           type: q35
         cpu:
