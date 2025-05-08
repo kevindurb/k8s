@@ -5,3 +5,4 @@ resources:
 - ./namespace.yml
 - ./whoami/app.yml
 - ./miniflux/app.yml
+- ./homeassistant/app.yml

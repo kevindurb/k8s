@@ -1,0 +1,58 @@
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: disk
+spec:
+  source:
+    http:
+      url: https://github.com/home-assistant/operating-system/releases/download/15.2/haos_generic-x86-64-15.2.img.xz
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 32Gi
+    storageClassName: openebs-mayastor-replicated
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tailscale-ingress
+spec:
+  ingressClassName: tailscale
+  tls: [{ hosts: [homeassistant] }]
+  defaultBackend:
+    service:
+      name: web-service
+      port:
+        name: http
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: "true"
+data:
+  homeassistant.yml: |
+    endpoints:
+      - name: homeassistant
+        url: http://homeassistant-web-service.apps
+        conditions:
+          - '[STATUS] == 200'
