@@ -44,17 +44,6 @@ spec:
             - secretRef:
                 name: miniflux-postgres-secret
           env:
-            - name: PGHOST
-              value: miniflux-db-service
-            - name: PGUSER
-              value: miniflux
-            - name: PGDATABASE
-              value: miniflux
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: miniflux-postgres-secret
-                  key: POSTGRES_PASSWORD
             - name: TZ
               value: America/Denver
             - name: RUN_MIGRATIONS
@@ -125,10 +114,6 @@ spec:
             - secretRef:
                 name: miniflux-postgres-secret
           env:
-            - name: POSTGRES_USER
-              value: miniflux
-            - name: POSTGRES_DB
-              value: miniflux
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           ports:
