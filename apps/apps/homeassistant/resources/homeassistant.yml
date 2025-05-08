@@ -11,6 +11,10 @@ spec:
     metadata:
       labels: *labels
     spec:
+      firmware:
+        bootloader:
+          efi:
+            secureBoot: false
       networks:
         - name: default
           pod: {}
