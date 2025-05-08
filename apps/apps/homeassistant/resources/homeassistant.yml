@@ -11,6 +11,9 @@ spec:
     metadata:
       labels: *labels
     spec:
+      networks:
+        - name: default
+          pod: {}
       domain:
         machine:
           type: q35
