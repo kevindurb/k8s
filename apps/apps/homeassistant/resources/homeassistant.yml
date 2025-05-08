@@ -1,62 +1,62 @@
-# ---
-# apiVersion: kubevirt.io/v1
-# kind: VirtualMachine
-# metadata:
-#   name: vm
-#   labels: &labels
-#     app.kubernetes.io/component: vm
-# spec:
-#   running: true
-#   template:
-#     metadata:
-#       labels: *labels
-#     spec:
-#       networks:
-#         - name: default
-#           pod: {}
-#       domain:
-#         firmware:
-#           bootloader:
-#             efi:
-#               secureBoot: false
-#         features:
-#           acpi: {}
-#         machine:
-#           type: q35
-#         cpu:
-#           cores: 2
-#         memory:
-#           guest: 2Gi
-#         devices:
-#           disks:
-#             - name: homeassistant-disk
-#               bootOrder: 1
-#               disk:
-#                 bus: virtio
-#           interfaces:
-#             - name: default
-#               masquerade: {}
-#       volumes:
-#         - name: homeassistant-disk
-#           persistentVolumeClaim:
-#             claimName: homeassistant-disk
-#
-# ---
-# apiVersion: cdi.kubevirt.io/v1beta1
-# kind: DataVolume
-# metadata:
-#   name: disk
-# spec:
-#   source:
-#     http:
-#       url: https://github.com/home-assistant/operating-system/releases/download/15.2/haos_generic-x86-64-15.2.img.xz
-#   pvc:
-#     accessModes:
-#       - ReadWriteOnce
-#     resources:
-#       requests:
-#         storage: 32Gi
-#     storageClassName: openebs-mayastor-replicated
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm
+  labels: &labels
+    app.kubernetes.io/component: vm
+spec:
+  running: true
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      networks:
+        - name: default
+          pod: {}
+      domain:
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        features:
+          acpi: {}
+        machine:
+          type: q35
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+            - name: homeassistant-disk
+              bootOrder: 1
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      volumes:
+        - name: homeassistant-disk
+          persistentVolumeClaim:
+            claimName: homeassistant-disk
+
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: disk
+spec:
+  source:
+    http:
+      url: https://github.com/home-assistant/operating-system/releases/download/15.2/haos_generic-x86-64-15.2.img.xz
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 32Gi
+    storageClassName: openebs-mayastor-replicated
 
 ---
 apiVersion: v1
