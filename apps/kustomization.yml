@@ -13,3 +13,4 @@ resources:
 - ./node-feature-discovery
 - ./nvidia-device-plugin
 - ./database
+- ./kubevirt
