@@ -1,45 +1,45 @@
-# ---
-# apiVersion: kubevirt.io/v1
-# kind: VirtualMachine
-# metadata:
-#   name: vm
-#   labels: &labels
-#     app.kubernetes.io/component: vm
-# spec:
-#   running: true
-#   template:
-#     metadata:
-#       labels: *labels
-#     spec:
-#       networks:
-#         - name: default
-#           pod: {}
-#       domain:
-#         firmware:
-#           bootloader:
-#             efi:
-#               secureBoot: false
-#         features:
-#           acpi: {}
-#         machine:
-#           type: q35
-#         cpu:
-#           cores: 2
-#         memory:
-#           guest: 2Gi
-#         devices:
-#           disks:
-#             - name: homeassistant-disk
-#               bootOrder: 1
-#               disk:
-#                 bus: virtio
-#           interfaces:
-#             - name: default
-#               masquerade: {}
-#       volumes:
-#         - name: homeassistant-disk
-#           persistentVolumeClaim:
-#             claimName: homeassistant-disk
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm
+  labels: &labels
+    app.kubernetes.io/component: vm
+spec:
+  running: true
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      networks:
+        - name: default
+          pod: {}
+      domain:
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        features:
+          acpi: {}
+        machine:
+          type: q35
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+            - name: homeassistant-disk
+              bootOrder: 1
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      volumes:
+        - name: homeassistant-disk
+          persistentVolumeClaim:
+            claimName: homeassistant-disk
 
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
