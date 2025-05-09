@@ -36,6 +36,9 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
+              ports:
+                - name: http
+                  port: 8123
       volumes:
         - name: homeassistant-disk
           persistentVolumeClaim:
