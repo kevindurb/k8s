@@ -2,6 +2,64 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
+  name: fedora-test-vm
+spec:
+  running: true # Set to false if you want to create it then start it manually with "virtctl start fedora-test-vm"
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: fedora-test-vm
+    spec:
+      domain:
+        machine:
+          type: q35
+        firmware: # Explicitly use EFI
+          bootloader:
+            efi:
+              secureBoot: false
+        resources:
+          requests:
+            memory: "2Gi"
+          limits:
+            memory: "2Gi"
+        cpu:
+          cores: 1
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+              bootOrder: 1 # Ensure it's the first boot device
+            - name: cloudinitdisk # Optional: for cloud-init, can be omitted for a basic boot test
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+          rng: {} # Add a random number generator, good practice for modern VMs
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest # Using a recent Fedora cloud base image
+        - name: cloudinitdisk # Optional: an empty cloud-init disk, often helps cloud images boot without errors
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              # You can add cloud-init user data here if needed, e.g., to set a password or add an SSH key.
+              # For a basic boot test, just an empty valid cloud-init is fine.
+              # Example to set a password for user 'fedora' (use with caution):
+              # password: mysecurepassword
+              # chpasswd: { expire: False }
+              # ssh_pwauth: True
+              user: fedora
+              hostname: fedora-test-vm
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
   name: vm
   labels: &labels
     app.kubernetes.io/component: vm
