@@ -40,24 +40,24 @@
 #         - name: homeassistant-disk
 #           persistentVolumeClaim:
 #             claimName: homeassistant-disk
-#
-# ---
-# apiVersion: cdi.kubevirt.io/v1beta1
-# kind: DataVolume
-# metadata:
-#   name: disk
-# spec:
-#   source:
-#     http:
-#       url: https://github.com/home-assistant/operating-system/releases/download/15.2/haos_generic-x86-64-15.2.img.xz
-#   pvc:
-#     accessModes:
-#       - ReadWriteOnce
-#     resources:
-#       requests:
-#         storage: 32Gi
-#     storageClassName: openebs-mayastor-replicated
-#
+
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: disk
+spec:
+  source:
+    http:
+      url: https://github.com/home-assistant/operating-system/releases/download/15.2/haos_ova-15.2.qcow2.xz
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 32Gi
+    storageClassName: openebs-mayastor-replicated
+
 ---
 apiVersion: v1
 kind: Service
