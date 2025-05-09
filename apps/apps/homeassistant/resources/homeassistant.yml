@@ -5,6 +5,7 @@ metadata:
   name: vm
   labels: &labels
     app.kubernetes.io/component: vm
+    app.kubernetes.io/name: homeassistant
 spec:
   running: true
   template:
@@ -35,6 +36,7 @@ spec:
                 bus: virtio
           interfaces:
             - name: default
+              model: virtio
               masquerade: {}
               ports:
                 - name: http
