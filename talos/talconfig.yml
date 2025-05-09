@@ -1,6 +1,6 @@
 ---
 clusterName: kube
-talosVersion: v1.9.4
+talosVersion: v1.10.1
 kubernetesVersion: v1.32.2
 endpoint: https://192.168.42.100:6443
 domain: cluster.local
