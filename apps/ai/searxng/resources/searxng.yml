@@ -23,6 +23,8 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: searxng
           image: docker.io/searxng/searxng:latest
@@ -43,6 +45,8 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /etc/searxng
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
