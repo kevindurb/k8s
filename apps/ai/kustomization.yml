@@ -4,3 +4,5 @@ kind: Kustomization
 resources:
 - ./namespace.yml
 - ./ollama/app.yml
+- ./n8n/app.yml
+- ./searxng/app.yml

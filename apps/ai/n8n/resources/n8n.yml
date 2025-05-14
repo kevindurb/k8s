@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+      containers:
+        - name: n8n
+          image: docker.n8n.io/n8nio/n8n:latest
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: volume
+              mountPath: /home/node/.n8n
+          env:
+            - name: TZ
+              value: America/Denver
+          ports:
+            - name: http
+              containerPort: 5678
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: openebs-mayastor-replicated
+  resources:
+    requests:
+      storage: 1G
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tailscale-ingress
+spec:
+  ingressClassName: tailscale
+  tls: [{ hosts: [n8n] }]
+  defaultBackend:
+    service:
+      name: web-service
+      port:
+        name: http
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: "true"
+data:
+  n8n.yml: |
+    endpoints:
+      - name: n8n
+        url: http://n8n-web-service.ai
+        conditions:
+          - '[STATUS] == 200'
