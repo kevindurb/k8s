@@ -116,6 +116,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-ip: 100.72.213.27
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
   name: workmac-arm
 spec:
   externalName: placeholder
