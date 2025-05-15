@@ -5,10 +5,12 @@ namespace: ai
 namePrefix: n8n-
 
 resources:
-- ./resources/n8n.yml
+  - ./resources/n8n.yml
+  - ./resources/pgvector.yml
+  - ./resources/pgvector-secret.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: n8n
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: n8n
