@@ -109,3 +109,14 @@ data:
         url: http://n8n-web-service.ai
         conditions:
           - '[STATUS] == 200'
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/tailnet-fqdn: workmac-arm
+  name: workmac-arm
+spec:
+  externalName: placeholder
+  type: ExternalName
