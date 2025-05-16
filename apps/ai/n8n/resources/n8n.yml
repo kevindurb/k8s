@@ -25,6 +25,8 @@ spec:
             claimName: volume
         - name: cache
           emptyDir: {}
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: n8n
           image: docker.n8n.io/n8nio/n8n:latest
@@ -47,6 +49,8 @@ spec:
               mountPath: /home/node/.n8n
             - name: cache
               mountPath: /home/node/.cache
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
