@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-media-pvc
+#  labels:
+#    snapscheduler/standard: 'true'
+spec:
+  accessModes: [ReadWriteOnce]
+  volumeMode: Filesystem
+  storageClassName: openebs-mayastor-replicated
+  resources:
+    requests:
+      storage: 100Gi
