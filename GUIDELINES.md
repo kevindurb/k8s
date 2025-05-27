@@ -23,7 +23,7 @@ This document outlines the standard procedure for adding new services to the Kub
       kind: Kustomization
       resources:
         - namespace.yml
-        # Add application kustomizations below
+        - <app-name> # Points to apps/<new-namespace-name>/<app-name>/
 ```
     - Add the new namespace to the main kustomization file `apps/kustomization.yml` under the `resources` section:
 ```yaml
@@ -46,7 +46,7 @@ This document outlines the standard procedure for adding new services to the Kub
     - **`spec.project`**: Typically `default`.
     - **`spec.source.repoURL`**: Use the correct Git repository URL (e.g., `https://github.com/kevindurb/k8s.git`).
     - **`spec.source.targetRevision`**: Typically `HEAD`.
-    - **`spec.source.path`**: Points to the application's kustomization directory for its resources: `apps/<namespace-name>/<app-name>/` (Note: This path itself contains a `kustomization.yml` that points to the `resources` directory or individual resource files).
+    - **`spec.source.path`**: Points to the application's resources kustomization directory: `apps/<namespace-name>/<app-name>/resources/`.
     - **`spec.destination.server`**: `https://kubernetes.default.svc`.
     - **`spec.destination.namespace`**: `<namespace-name>` where the app will be deployed.
     - **`spec.syncPolicy.automated`**:
@@ -56,15 +56,15 @@ This document outlines the standard procedure for adding new services to the Kub
         selfHeal: true
 ```
     - **`spec.syncPolicy.syncOptions`**: Generally, this should **not** be present. Namespace creation is handled by its own manifest.
-- Create `apps/<namespace-name>/<app-name>/kustomization.yml` to include the `app.yml`:
+- Create `apps/<namespace-name>/<app-name>/kustomization.yml` to include the `app.yml` and the `resources` directory:
 ```yaml
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
   resources:
     - app.yml
-    # Add other related manifests if any at this level
+    - resources # Points to apps/<namespace-name>/<app-name>/resources/
 ```
-- Add the application to its namespace's kustomization file (`apps/<namespace-name>/kustomization.yml`):
+- Add the application directory to its namespace's kustomization file (`apps/<namespace-name>/kustomization.yml`):
 ```yaml
   resources:
     - namespace.yml
@@ -154,7 +154,7 @@ This document outlines the standard procedure for adding new services to the Kub
 
 ### PersistentVolumeClaim (`<pvc-name>-pvc.yml`)
 - **`metadata.name`**: Should be unique for the claim (e.g., `{{ ENV.COMP }}-config-pvc`).
-- **`spec.storageClassName`**: Must be `openebs-mayastor-replicated`.
+- **`spec.storageClassName`**: Must be `openebs-mayastor-replicated` (unless using NFS or other specific storage).
 - **`spec.accessModes`**: Typically `[ReadWriteOnce]`.
 - Define appropriate `spec.resources.requests.storage`.
 **Template (Example: `{{ ENV.COMP }}-data-pvc.yml`):**
@@ -219,9 +219,9 @@ This document outlines the standard procedure for adding new services to the Kub
   resources:
     - deployment.yml
     - service.yml
-    - <pvc-name>-pvc.yml
+    - <pvc-name>-pvc.yml # Or specific PVC files like config-pvc.yml, media-pvc.yml
     - ingress.yml # If applicable
-    # Add other resource files
+    # Add other resource files (e.g., media-nfs-pv.yml if using NFS PV)
 ```
 
 ## 4. General Kustomization Practices
@@ -234,15 +234,16 @@ This document outlines the standard procedure for adding new services to the Kub
 apps/
 ├── media/
 │   ├── namespace.yml
-│   ├── kustomization.yml  (includes 'namespace.yml', 'jellyfin')
+│   ├── kustomization.yml  # Includes 'namespace.yml' and 'jellyfin' (directory)
 │   └── jellyfin/
-│       ├── app.yml
-│       ├── kustomization.yml (includes 'app.yml', points to 'resources' kustomization via path in app.yml)
+│       ├── app.yml          # source.path points to 'apps/media/jellyfin/resources/'
+│       ├── kustomization.yml # Includes 'app.yml' and 'resources' (directory)
 │       └── resources/
 │           ├── deployment.yml
 │           ├── service.yml
 │           ├── config-pvc.yml
+│           ├── media-nfs-pv.yml
 │           ├── media-pvc.yml
 │           ├── ingress.yml
-│           └── kustomization.yml (includes all files in this directory)
-└── kustomization.yml (includes 'media', 'ai', etc.)
+│           └── kustomization.yml # Includes all individual resource files in this directory
+└── kustomization.yml # Includes 'media' (directory), 'ai' (directory), etc.
