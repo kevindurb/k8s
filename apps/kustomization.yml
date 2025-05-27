@@ -2,16 +2,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ./argocd
-- ./tailscale
-- ./kube-system
-- ./openebs
-- ./apps
-- ./monitoring
-- ./volsync-system
-- ./ai
-- ./node-feature-discovery
-- ./nvidia-device-plugin
-- ./database
-- ./kubevirt
-- media
+  - ./argocd
+  - ./tailscale
+  - ./kube-system
+  - ./openebs
+  - ./apps
+  - ./monitoring
+  - ./volsync-system
+  - ./ai
+  - ./node-feature-discovery
+  - ./nvidia-device-plugin
+  - ./database
+  - ./kubevirt
+  - ./media
