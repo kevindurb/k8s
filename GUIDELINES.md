@@ -46,7 +46,7 @@ This document outlines the standard procedure for adding new services to the Kub
     - **`spec.project`**: Typically `default`.
     - **`spec.source.repoURL`**: Use the correct Git repository URL (e.g., `https://github.com/kevindurb/k8s.git`).
     - **`spec.source.targetRevision`**: Typically `HEAD`.
-    - **`spec.source.path`**: Points to the application's resources kustomization directory: `apps/<namespace-name>/<app-name>/resources/`.
+    - **`spec.source.path`**: Points to the application's directory: `apps/<namespace-name>/<app-name>/`.
     - **`spec.destination.server`**: `https://kubernetes.default.svc`.
     - **`spec.destination.namespace`**: `<namespace-name>` where the app will be deployed.
     - **`spec.syncPolicy.automated`**:
@@ -60,9 +60,7 @@ This document outlines the standard procedure for adding new services to the Kub
 ```yaml
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
-  resources:
-    - app.yml
-    - resources # Points to apps/<namespace-name>/<app-name>/resources/
+  resources: # Points to all resources created in apps/<namespace-name>/<app-name>/resources/
 ```
 - Add the application directory to its namespace's kustomization file (`apps/<namespace-name>/kustomization.yml`):
 ```yaml
@@ -212,15 +210,15 @@ This document outlines the standard procedure for adding new services to the Kub
 ```
 
 ### Kustomization for Resources
-- Create `apps/<namespace-name>/<app-name>/resources/kustomization.yml`:
+- Create `apps/<namespace-name>/<app-name>/kustomization.yml`:
 ```yaml
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
   resources:
-    - deployment.yml
-    - service.yml
-    - <pvc-name>-pvc.yml # Or specific PVC files like config-pvc.yml, media-pvc.yml
-    - ingress.yml # If applicable
+    - ./resources/deployment.yml
+    - ./resources/service.yml
+    - ./resources/<pvc-name>-pvc.yml # Or specific PVC files like config-pvc.yml, media-pvc.yml
+    - ./resources/ingress.yml # If applicable
     # Add other resource files (e.g., media-nfs-pv.yml if using NFS PV)
 ```
 
@@ -237,13 +235,12 @@ apps/
 │   ├── kustomization.yml  # Includes 'namespace.yml' and 'jellyfin' (directory)
 │   └── jellyfin/
 │       ├── app.yml          # source.path points to 'apps/media/jellyfin/resources/'
-│       ├── kustomization.yml # Includes 'app.yml' and 'resources' (directory)
+│       ├── kustomization.yml # Includes all individual resource files
 │       └── resources/
 │           ├── deployment.yml
 │           ├── service.yml
 │           ├── config-pvc.yml
 │           ├── media-nfs-pv.yml
 │           ├── media-pvc.yml
-│           ├── ingress.yml
-│           └── kustomization.yml # Includes all individual resource files in this directory
+│           └── ingress.yml
 └── kustomization.yml # Includes 'media' (directory), 'ai' (directory), etc.
