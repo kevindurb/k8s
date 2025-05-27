@@ -6,9 +6,9 @@ metadata:
 #  labels:
 #    snapscheduler/standard: 'true'
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes: [ReadWriteMany]
   volumeMode: Filesystem
-  storageClassName: openebs-mayastor-replicated
+  volumeName: jellyfin-media-nfs-pv
   resources:
     requests:
-      storage: 100Gi
+      storage: 12Ti
