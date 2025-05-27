@@ -10,27 +10,27 @@ This document outlines the standard procedure for adding new services to the Kub
     - Create `apps/<new-namespace-name>/namespace.yml` using the template below.
         - Replace `{{ ENV.NS }}` with `<new-namespace-name>`.
     **Template:**
-    ```yaml
+```yaml
     ---
     apiVersion: v1
     kind: Namespace
     metadata:
       name: {{ ENV.NS }}
-    ```
+```
     - Create `apps/<new-namespace-name>/kustomization.yml` with the following content:
-      ```yaml
+```yaml
       apiVersion: kustomize.config.k8s.io/v1beta1
       kind: Kustomization
       resources:
         - namespace.yml
         # Add application kustomizations below
-      ```
+```
     - Add the new namespace to the main kustomization file `apps/kustomization.yml` under the `resources` section:
-      ```yaml
+```yaml
       resources:
         # ... other namespaces ...
         - <new-namespace-name> # Points to apps/<new-namespace-name>/
-      ```
+```
 
 ## 2. Application Definition (ArgoCD)
 
@@ -39,10 +39,10 @@ This document outlines the standard procedure for adding new services to the Kub
     - **`metadata.name`**: Should be `<app-name>`.
     - **`metadata.namespace`**: Should be `argocd`.
     - **`metadata.finalizers`**: Include `resources-finalizer.argocd.argoproj.io`.
-      ```yaml
+```yaml
       finalizers:
         - resources-finalizer.argocd.argoproj.io
-      ```
+```
     - **`spec.project`**: Typically `default`.
     - **`spec.source.repoURL`**: Use the correct Git repository URL (e.g., `https://github.com/kevindurb/k8s.git`).
     - **`spec.source.targetRevision`**: Typically `HEAD`.
@@ -50,26 +50,26 @@ This document outlines the standard procedure for adding new services to the Kub
     - **`spec.destination.server`**: `https://kubernetes.default.svc`.
     - **`spec.destination.namespace`**: `<namespace-name>` where the app will be deployed.
     - **`spec.syncPolicy.automated`**:
-      ```yaml
+```yaml
       automated:
         prune: true
         selfHeal: true
-      ```
+```
     - **`spec.syncPolicy.syncOptions`**: Generally, this should **not** be present. Namespace creation is handled by its own manifest.
 - Create `apps/<namespace-name>/<app-name>/kustomization.yml` to include the `app.yml`:
-  ```yaml
+```yaml
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
   resources:
     - app.yml
     # Add other related manifests if any at this level
-  ```
+```
 - Add the application to its namespace's kustomization file (`apps/<namespace-name>/kustomization.yml`):
-  ```yaml
+```yaml
   resources:
     - namespace.yml
     - <app-name> # Points to apps/<namespace-name>/<app-name>/
-  ```
+```
 
 ## 3. Kubernetes Resource Definitions
 
@@ -80,7 +80,7 @@ This document outlines the standard procedure for adding new services to the Kub
 - Customize image, ports, environment variables, volumeMounts, and resource requests/limits.
 - Ensure `fsGroup` and `runAsUser`/`runAsGroup` are set appropriately for security.
 **Template:**
-  ```yaml
+```yaml
   ---
   apiVersion: apps/v1
   kind: Deployment
@@ -132,12 +132,12 @@ This document outlines the standard procedure for adding new services to the Kub
             ports:
               - name: http
                 containerPort: {{ ENV.PORT }} # e.g., 8096 for Jellyfin
-  ```
+```
 
 ### Service (`service.yml`)
 - Ensure selectors match deployment labels and ports are correctly defined.
 **Template:**
-  ```yaml
+```yaml
   ---
   apiVersion: v1
   kind: Service
@@ -150,7 +150,7 @@ This document outlines the standard procedure for adding new services to the Kub
       - name: {{ ENV.PROTO }} # e.g., http
         port: 80 # External port for the service
         targetPort: {{ ENV.PROTO }} # Named port from the deployment (e.g., http, which maps to containerPort)
-  ```
+```
 
 ### PersistentVolumeClaim (`<pvc-name>-pvc.yml`)
 - **`metadata.name`**: Should be unique for the claim (e.g., `{{ ENV.COMP }}-config-pvc`).
@@ -158,7 +158,7 @@ This document outlines the standard procedure for adding new services to the Kub
 - **`spec.accessModes`**: Typically `[ReadWriteOnce]`.
 - Define appropriate `spec.resources.requests.storage`.
 **Template (Example: `{{ ENV.COMP }}-data-pvc.yml`):**
-  ```yaml
+```yaml
   ---
   apiVersion: v1
   kind: PersistentVolumeClaim
@@ -170,7 +170,7 @@ This document outlines the standard procedure for adding new services to the Kub
     resources:
       requests:
         storage: {{ ENV.SIZE }} # e.g., 10Gi, 100Gi
-  ```
+```
 
 ### Ingress (`ingress.yml`)
 - For services exposed via Tailscale.
@@ -181,7 +181,7 @@ This document outlines the standard procedure for adding new services to the Kub
 - **`spec.rules.http.paths.backend.service.name`**: Name of your Kubernetes service.
 - **`spec.rules.http.paths.backend.service.port.name`**: Port name defined in your service.
 **Template:**
-  ```yaml
+```yaml
   ---
   apiVersion: networking.k8s.io/v1
   kind: Ingress
@@ -209,11 +209,11 @@ This document outlines the standard procedure for adding new services to the Kub
   #     name: {{ ENV.COMP }}-service
   #     port:
   #       name: {{ ENV.PROTO }}
-  ```
+```
 
 ### Kustomization for Resources
 - Create `apps/<namespace-name>/<app-name>/resources/kustomization.yml`:
-  ```yaml
+```yaml
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
   resources:
@@ -222,7 +222,7 @@ This document outlines the standard procedure for adding new services to the Kub
     - <pvc-name>-pvc.yml
     - ingress.yml # If applicable
     # Add other resource files
-  ```
+```
 
 ## 4. General Kustomization Practices
 - When referencing another kustomization file within the same repository, point to the directory containing the `kustomization.yml` file, not the file itself.
