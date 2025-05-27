@@ -5,4 +5,5 @@ resources:
   - service.yml
   - config-pvc.yml
   - media-pvc.yml
+  - media-nfs-pv.yml
   - ingress.yml
