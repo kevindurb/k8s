@@ -21,6 +21,19 @@ spec:
             requests:
               storage: 5Gi
           storageClassName: openebs-mayastor-replicated
+    - metadata:
+        name: virtio-drivers
+      spec:
+        source:
+          http:
+            url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: openebs-mayastor-replicated
   running: true
   template:
     metadata:
@@ -48,7 +61,7 @@ spec:
             - name: tiny-11-iso
               cdrom:
                 bus: sata
-            - name: virtiocontainerdisk
+            - name: virtio-drivers
               cdrom:
                 bus: sata
           interfaces:
@@ -68,9 +81,9 @@ spec:
         - name: tiny-11-iso
           dataVolume:
             name: tiny-11-iso
-        - containerDisk:
-            image: quay.io/kubevirt/virtio-container-disk
-          name: virtiocontainerdisk
+        - name: virtio-drivers
+          dataVolume:
+            name: virtio-drivers
         - name: rootdisk
           persistentVolumeClaim:
             claimName: tiny11-root-disk
