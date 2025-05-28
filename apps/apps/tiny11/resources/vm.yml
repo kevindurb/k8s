@@ -55,12 +55,12 @@ spec:
             memory: 4Gi
         devices:
           disks:
-            - name: rootdisk
-              disk:
-                bus: virtio
             - name: tiny-11-iso
               cdrom:
                 bus: sata
+            - name: rootdisk
+              disk:
+                bus: virtio
             - name: virtio-drivers
               cdrom:
                 bus: sata
