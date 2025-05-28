@@ -21,7 +21,7 @@ spec:
             requests:
               storage: 5Gi # ISO size is ~3.6GB, give some buffer
           storageClassName: openebs-mayastor-replicated # As per guidelines for PVCs
-  running: false
+  running: true
   template:
     metadata:
       labels:
