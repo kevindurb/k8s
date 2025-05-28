@@ -8,14 +8,12 @@ This document outlines the standard procedure for adding new services to the Kub
 - **Create Namespace (if needed):**
     - Create a new directory for the namespace: `apps/<new-namespace-name>/`
     - Create `apps/<new-namespace-name>/namespace.yml` using the template below.
-        - Replace `{{ ENV.NS }}` with `<new-namespace-name>`.
-    **Template:**
 ```yaml
     ---
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: {{ ENV.NS }}
+      name: <new-namespace-name>
 ```
     - Create `apps/<new-namespace-name>/kustomization.yml` with the following content:
 ```yaml
@@ -73,21 +71,24 @@ This document outlines the standard procedure for adding new services to the Kub
 
 - Create a `resources` directory for the application: `apps/<namespace-name>/<app-name>/resources/`
 - Define Kubernetes manifests (Deployment, Service, PersistentVolumeClaim, Ingress, etc.) within this directory using the templates below as a starting point.
+- For below templates `component-name` relates to the subcomponent within the app if the app has multiple components (ex web, db, etc). Default to "web"
 
 ### Deployment (`deployment.yml`)
 - Customize image, ports, environment variables, volumeMounts, and resource requests/limits.
 - Ensure `fsGroup` and `runAsUser`/`runAsGroup` are set appropriately for security.
-**Template:**
+- Never use `latest`, only point to specific tags, if you cant find the latest tag then ask the user for the tag
+- Prefer ghcr.io over docker hub images
+
 ```yaml
   ---
   apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: {{ ENV.COMP }}-deployment
+    name: <component-name>-deployment
     annotations:
       reloader.stakater.com/auto: 'true'
     labels: &labels
-      app.kubernetes.io/component: {{ ENV.COMP }}
+      app.kubernetes.io/component: <component-name>
   spec:
     replicas: 1
     strategy:
@@ -105,8 +106,8 @@ This document outlines the standard procedure for adding new services to the Kub
         #     persistentVolumeClaim:
         #       claimName: volume
         containers:
-          - name: {{ ENV.APP }}
-            image: {{ ENV.IMG }} # e.g., jellyfin/jellyfin:latest
+          - name: <app-name>
+            image: <image-ref> # e.g., ghcr.io/jellyfin/jellyfin:v1.2.3
             resources:
               requests:
                 memory: 100M
@@ -129,45 +130,45 @@ This document outlines the standard procedure for adding new services to the Kub
                 value: America/Denver # Adjust to your timezone
             ports:
               - name: http
-                containerPort: {{ ENV.PORT }} # e.g., 8096 for Jellyfin
+                containerPort: <port> # e.g., 8096 for Jellyfin
 ```
 
 ### Service (`service.yml`)
 - Ensure selectors match deployment labels and ports are correctly defined.
-**Template:**
+
 ```yaml
   ---
   apiVersion: v1
   kind: Service
   metadata:
-    name: {{ ENV.COMP }}-service
+    name: <component-name>-service
   spec:
     selector:
-      app.kubernetes.io/component: {{ ENV.COMP }}
+      app.kubernetes.io/component: <component-name>``
     ports:
-      - name: {{ ENV.PROTO }} # e.g., http
+      - name: <proto> # e.g., http
         port: 80 # External port for the service
-        targetPort: {{ ENV.PROTO }} # Named port from the deployment (e.g., http, which maps to containerPort)
+        targetPort: <port-name> # Named port from the deployment (e.g., http, which maps to containerPort)
 ```
 
 ### PersistentVolumeClaim (`<pvc-name>-pvc.yml`)
-- **`metadata.name`**: Should be unique for the claim (e.g., `{{ ENV.COMP }}-config-pvc`).
+- **`metadata.name`**: Should be unique for the claim (e.g., `<component-name>-config-pvc`).
 - **`spec.storageClassName`**: Must be `openebs-mayastor-replicated` (unless using NFS or other specific storage).
 - **`spec.accessModes`**: Typically `[ReadWriteOnce]`.
 - Define appropriate `spec.resources.requests.storage`.
-**Template (Example: `{{ ENV.COMP }}-data-pvc.yml`):**
+
 ```yaml
   ---
   apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: {{ ENV.COMP }}-data # Or {{ ENV.COMP }}-config, etc.
+    name: <component-name>-data # Or <component-name>-config, etc.
   spec:
     accessModes: [ReadWriteOnce]
     storageClassName: openebs-mayastor-replicated
     resources:
       requests:
-        storage: {{ ENV.SIZE }} # e.g., 10Gi, 100Gi
+        storage: <size> # e.g., 10Gi, 100Gi
 ```
 
 ### Ingress (`ingress.yml`)
@@ -178,39 +179,40 @@ This document outlines the standard procedure for adding new services to the Kub
 - **`spec.rules.host`**: Same as `tls.hosts`.
 - **`spec.rules.http.paths.backend.service.name`**: Name of your Kubernetes service.
 - **`spec.rules.http.paths.backend.service.port.name`**: Port name defined in your service.
-**Template:**
+
 ```yaml
   ---
   apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
-    name: {{ ENV.COMP }}-tailscale-ingress # Or more specific if {{ ENV.COMP }} is generic
+    name: <component-name>-tailscale-ingress # Or more specific if <component-name> is generic
   spec:
     ingressClassName: tailscale
     tls:
       - hosts:
-          - {{ ENV.SUBDOMAIN }} # e.g., jellyfin, my-app
+          - <subdomain> # e.g., jellyfin, my-app
     rules: # Older Ingress versions might not need/use 'rules' with defaultBackend
-      - host: {{ ENV.SUBDOMAIN }}
+      - host: <subdomain>
         http:
           paths:
             - path: /
               pathType: Prefix # Or ImplementationSpecific
               backend:
                 service:
-                  name: {{ ENV.COMP }}-service
+                  name: <component-name>-service
                   port:
-                    name: {{ ENV.PROTO }} # e.g., http
+                    name: <proto> # e.g., http
   # For older Kubernetes versions or simpler configs, defaultBackend might be used directly under spec:
   # defaultBackend:
   #   service:
-  #     name: {{ ENV.COMP }}-service
+  #     name: <component-name>-service
   #     port:
-  #       name: {{ ENV.PROTO }}
+  #       name: <proto>
 ```
 
 ### Kustomization for Resources
 - Create `apps/<namespace-name>/<app-name>/kustomization.yml`:
+
 ```yaml
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
@@ -229,6 +231,7 @@ This document outlines the standard procedure for adding new services to the Kub
 
 ## Example Structure:
 
+```
 apps/
 ├── media/
 │   ├── namespace.yml
@@ -244,3 +247,4 @@ apps/
 │           ├── media-pvc.yml
 │           └── ingress.yml
 └── kustomization.yml # Includes 'media' (directory), 'ai' (directory), etc.
+```
