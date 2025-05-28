@@ -8,19 +8,19 @@ metadata:
     app.kubernetes.io/component: vm
 spec:
   dataVolumeTemplates:
-  - metadata:
-      name: iso-dv
-    spec:
-      source:
-        http:
-          url: "https://archive.org/download/tiny-11-NTDEV/tiny11%2023H2%20x64.iso"
-      pvc:
-        accessModes:
-          - ReadWriteOnce # CDI needs RW to write the downloaded ISO
-        resources:
-          requests:
-            storage: 5Gi # ISO size is ~3.6GB, give some buffer
-        storageClassName: openebs-mayastor-replicated # As per guidelines for PVCs
+    - metadata:
+        name: iso-dv
+      spec:
+        source:
+          http:
+            url: "https://archive.org/download/tiny-11-NTDEV/tiny11%2023H2%20x64.iso"
+        pvc:
+          accessModes:
+            - ReadWriteOnce # CDI needs RW to write the downloaded ISO
+          resources:
+            requests:
+              storage: 5Gi # ISO size is ~3.6GB, give some buffer
+          storageClassName: openebs-mayastor-replicated # As per guidelines for PVCs
   running: false
   template:
     metadata:
@@ -29,6 +29,9 @@ spec:
         app.kubernetes.io/name: tiny11
         app.kubernetes.io/component: vm
     spec:
+      networks:
+        - name: default
+          pod: {}
       domain:
         cpu:
           cores: 2
@@ -50,6 +53,9 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
+              ports:
+                - name: rdp
+                  port: 3389
           rng: {}
         features:
           acpi:
