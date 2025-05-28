@@ -21,7 +21,7 @@ spec:
             requests:
               storage: 5Gi
           storageClassName: openebs-mayastor-replicated
-  running: false
+  running: true
   template:
     metadata:
       labels:
