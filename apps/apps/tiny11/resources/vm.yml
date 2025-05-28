@@ -9,7 +9,7 @@ metadata:
 spec:
   dataVolumeTemplates:
     - metadata:
-        name: iso-dv
+        name: tiny-11-iso
       spec:
         source:
           http:
@@ -20,19 +20,6 @@ spec:
           resources:
             requests:
               storage: 5Gi
-          storageClassName: openebs-mayastor-replicated
-    - metadata:
-        name: virtio-drivers
-      spec:
-        source:
-          http:
-            url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
-        pvc:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
           storageClassName: openebs-mayastor-replicated
   running: false
   template:
@@ -55,18 +42,15 @@ spec:
             memory: 4Gi
         devices:
           disks:
-            - name: cdromiso
-              cdrom:
-                bus: sata
-              bootOrder: 1
             - name: rootdisk
               disk:
                 bus: virtio
-              bootOrder: 2
-            - name: virtio-drivers
-              disk:
-                bus: virtio
-              bootOrder: 3
+            - name: tiny-11-iso
+              cdrom:
+                bus: sata
+            - name: virtiocontainerdisk
+              cdrom:
+                bus: sata
           interfaces:
             - name: default
               masquerade: {}
@@ -81,12 +65,12 @@ spec:
             enabled: true
           # Consider adding TPM support later if needed for Windows 11 features
       volumes:
-        - name: cdromiso
+        - name: tiny-11-iso
           dataVolume:
-            name: iso-dv
-        - name: virtio-drivers
-          dataVolume:
-            name: virtio-drivers
+            name: tiny-11-iso
+        - containerDisk:
+            image: quay.io/kubevirt/virtio-container-disk
+          name: virtiocontainerdisk
         - name: rootdisk
           persistentVolumeClaim:
             claimName: tiny11-root-disk
