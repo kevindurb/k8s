@@ -44,7 +44,7 @@ This document outlines the standard procedure for adding new services to the Kub
     - **`spec.project`**: Typically `default`.
     - **`spec.source.repoURL`**: Use the correct Git repository URL (e.g., `https://github.com/kevindurb/k8s.git`).
     - **`spec.source.targetRevision`**: Typically `HEAD`.
-    - **`spec.source.path`**: Points to the application's directory: `apps/<namespace-name>/<app-name>/`.
+    - **`spec.source.path`**: Points to the application's directory which contains its main `kustomization.yml` file, typically `apps/<namespace-name>/<app-name>/`. This `kustomization.yml` then includes manifests from a `resources/` subdirectory (e.g., `resources: [./resources/deployment.yml]`).
     - **`spec.destination.server`**: `https://kubernetes.default.svc`.
     - **`spec.destination.namespace`**: `<namespace-name>` where the app will be deployed.
     - **`spec.syncPolicy.automated`**:
@@ -237,7 +237,7 @@ apps/
 │   ├── namespace.yml
 │   ├── kustomization.yml  # Includes 'namespace.yml' and 'jellyfin' (directory)
 │   └── jellyfin/
-│       ├── app.yml          # source.path points to 'apps/media/jellyfin/resources/'
+│       ├── app.yml          # source.path points to 'apps/media/jellyfin/'
 │       ├── kustomization.yml # Includes all individual resource files
 │       └── resources/
 │           ├── deployment.yml

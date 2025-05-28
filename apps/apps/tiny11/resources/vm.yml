@@ -1,7 +1,7 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: tiny11-vm
+  name: vm
   namespace: apps
   labels:
     app.kubernetes.io/name: tiny11
@@ -9,7 +9,7 @@ metadata:
 spec:
   dataVolumeTemplates:
   - metadata:
-      name: tiny11-iso-dv
+      name: iso-dv
     spec:
       source:
         http:
@@ -25,7 +25,7 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/domain: tiny11-vm
+        kubevirt.io/domain: vm # This should match the new VM name
         app.kubernetes.io/name: tiny11
         app.kubernetes.io/component: vm
     spec:
@@ -60,15 +60,15 @@ spec:
       volumes:
         - name: cdromiso
           dataVolume:
-            name: tiny11-iso-dv
+            name: iso-dv
         - name: rootdisk
           persistentVolumeClaim: # This defines an empty disk for OS installation
-            claimName: tiny11-root-disk
+            claimName: root-disk
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: tiny11-root-disk
+  name: root-disk
   namespace: apps
   labels:
     app.kubernetes.io/name: tiny11
