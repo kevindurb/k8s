@@ -4,11 +4,13 @@ kind: Service
 metadata:
   name: rdp-service
   annotations:
-    tailscale.com/expose: "true"
+    tailscale.com/hostname: tiny11
   labels:
     app.kubernetes.io/name: tiny11
     app.kubernetes.io/component: rdp-service
 spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
   ports:
     - name: rdp
       protocol: TCP
