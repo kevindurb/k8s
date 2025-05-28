@@ -1,17 +1,19 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: rdp-loadbalancer # Service name for RDP access
-  namespace: apps # Namespace where tiny11 VM is running
+  name: rdp-service
+  annotations:
+    tailscale.com/expose: "true"
   labels:
     app.kubernetes.io/name: tiny11
     app.kubernetes.io/component: rdp-service
 spec:
-  type: LoadBalancer # Use LoadBalancer for external access
   ports:
     - name: rdp
       protocol: TCP
-      port: 3389       # External port exposed by the LoadBalancer
-      targetPort: 3389 # Target port on the VM where RDP is listening
+      port: 3389
+      targetPort: 3389
   selector:
-    kubevirt.io/domain: tiny11-vm # Selects the VirtualMachineInstance pod for tiny11-vm
+    app.kubernetes.io/name: tiny11
+    app.kubernetes.io/component: vm
