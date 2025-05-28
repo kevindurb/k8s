@@ -3,12 +3,10 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: media-pvc
-#  labels:
-#    snapscheduler/standard: 'true'
 spec:
   accessModes: [ReadWriteMany]
-  volumeMode: Filesystem
-  volumeName: jellyfin-media-nfs-pv
+  volumeName: media-nfs-pv
+  storageClassName: ""
   resources:
     requests:
       storage: 12Ti
