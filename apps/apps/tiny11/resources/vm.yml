@@ -69,7 +69,7 @@ spec:
             name: iso-dv
         - name: rootdisk
           persistentVolumeClaim: # This defines an empty disk for OS installation
-            claimName: root-disk
+            claimName: tiny11-root-disk
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
