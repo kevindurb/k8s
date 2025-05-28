@@ -56,12 +56,15 @@ spec:
         devices:
           disks:
             - name: tiny-11-iso
+              bootOrder: 1
               cdrom:
                 bus: sata
             - name: rootdisk
+              bootOrder: 2
               disk:
                 bus: virtio
             - name: virtio-drivers
+              bootOrder: 3
               cdrom:
                 bus: sata
           interfaces:
