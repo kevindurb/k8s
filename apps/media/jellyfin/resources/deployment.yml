@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jellyfin-deployment
+  name: deployment
   annotations:
-    reloader.stakater.com/auto: 'true'
+    reloader.stakater.com/auto: "true"
   labels: &labels
     app.kubernetes.io/component: jellyfin
 spec:
@@ -22,10 +22,10 @@ spec:
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: jellyfin-config-pvc
+            claimName: config-pvc
         - name: media
           persistentVolumeClaim:
-            claimName: jellyfin-media-pvc
+            claimName: media-pvc
       containers:
         - name: jellyfin
           image: jellyfin/jellyfin:latest

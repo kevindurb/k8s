@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: jellyfin-config-pvc
+  name: config-pvc
 #  labels:
 #    snapscheduler/standard: 'true'
 spec:
