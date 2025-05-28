@@ -1,0 +1,82 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: tiny11-vm
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: tiny11
+    app.kubernetes.io/component: vm
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      name: tiny11-iso-dv
+    spec:
+      source:
+        http:
+          url: "https://archive.org/download/tiny-11-NTDEV/tiny11%2023H2%20x64.iso"
+      pvc:
+        accessModes:
+          - ReadWriteOnce # CDI needs RW to write the downloaded ISO
+        resources:
+          requests:
+            storage: 5Gi # ISO size is ~3.6GB, give some buffer
+        storageClassName: openebs-mayastor-replicated # As per guidelines for PVCs
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: tiny11-vm
+        app.kubernetes.io/name: tiny11
+        app.kubernetes.io/component: vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 4Gi
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          disks:
+            - name: cdromiso
+              cdrom:
+                bus: sata
+              bootOrder: 1
+            - name: rootdisk
+              disk:
+                bus: virtio # Use virtio for better performance
+              bootOrder: 2 # Boot from rootdisk after OS installation
+          interfaces:
+            - name: default
+              masquerade: {}
+          rng: {}
+        features:
+          acpi:
+            enabled: true
+          smm:
+            enabled: true
+          # Consider adding TPM support later if needed for Windows 11 features
+      volumes:
+        - name: cdromiso
+          dataVolume:
+            name: tiny11-iso-dv
+        - name: rootdisk
+          persistentVolumeClaim: # This defines an empty disk for OS installation
+            claimName: tiny11-root-disk
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tiny11-root-disk
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: tiny11
+    app.kubernetes.io/component: vm-rootdisk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Gi # Size for the installed OS
+  storageClassName: openebs-mayastor-replicated # As per guidelines

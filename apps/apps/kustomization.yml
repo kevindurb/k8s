@@ -6,3 +6,4 @@ resources:
 - ./whoami/app.yml
 - ./miniflux/app.yml
 - ./homeassistant/app.yml
+- ./tiny11/app.yml
