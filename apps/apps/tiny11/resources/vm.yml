@@ -16,16 +16,29 @@ spec:
             url: "https://archive.org/download/tiny-11-NTDEV/tiny11%2023H2%20x64.iso"
         pvc:
           accessModes:
-            - ReadWriteOnce # CDI needs RW to write the downloaded ISO
+            - ReadWriteOnce
           resources:
             requests:
-              storage: 5Gi # ISO size is ~3.6GB, give some buffer
-          storageClassName: openebs-mayastor-replicated # As per guidelines for PVCs
-  running: true
+              storage: 5Gi
+          storageClassName: openebs-mayastor-replicated
+    - metadata:
+        name: virtio-drivers
+      spec:
+        source:
+          http:
+            url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: openebs-mayastor-replicated
+  running: false
   template:
     metadata:
       labels:
-        kubevirt.io/domain: vm # This should match the new VM name
+        kubevirt.io/domain: tiny11-vm
         app.kubernetes.io/name: tiny11
         app.kubernetes.io/component: vm
     spec:
@@ -48,8 +61,12 @@ spec:
               bootOrder: 1
             - name: rootdisk
               disk:
-                bus: virtio # Use virtio for better performance
-              bootOrder: 2 # Boot from rootdisk after OS installation
+                bus: virtio
+              bootOrder: 2
+            - name: virtio-drivers
+              disk:
+                bus: virtio
+              bootOrder: 3
           interfaces:
             - name: default
               masquerade: {}
@@ -67,8 +84,11 @@ spec:
         - name: cdromiso
           dataVolume:
             name: iso-dv
+        - name: virtio-drivers
+          dataVolume:
+            name: virtio-drivers
         - name: rootdisk
-          persistentVolumeClaim: # This defines an empty disk for OS installation
+          persistentVolumeClaim:
             claimName: tiny11-root-disk
 ---
 apiVersion: v1
