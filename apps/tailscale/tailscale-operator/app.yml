@@ -18,6 +18,9 @@ spec:
             mode: "true"
           operatorConfig:
             hostname: k8s-operator
+          ingress:
+            service:
+              type: LoadBalancer
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/tailscale/tailscale-operator
