@@ -1,0 +1,44 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://kubernetes-sigs.github.io/external-dns
+      targetRevision: 1.14.3
+      chart: external-dns
+      helm:
+        valuesObject:
+          interval: "1m"
+          logLevel: debug
+          sources:
+            - service
+            - ingress
+          provider: coredns
+          coredns:
+            etcdEndpoints: "http://coredns-local-etcd:2379"
+          policy: sync
+          domainFilters:
+            - "beaver-cloud.ts.net"
+          txtPrefix: "externaldns-"
+          txtOwnerId: "k8s"
+          serviceAccount:
+            create: true
+            name: external-dns
+          rbac:
+            create: true
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/dns-system/external-dns
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dns-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

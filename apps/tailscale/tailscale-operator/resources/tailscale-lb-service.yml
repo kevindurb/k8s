@@ -4,6 +4,8 @@ kind: Service
 metadata:
   name: tailscale-ingress-lb
   namespace: tailscale
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "*.beaver-cloud.ts.net"
   labels:
     app.kubernetes.io/name: tailscale-ingress
     app.kubernetes.io/component: ingress

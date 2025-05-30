@@ -1,0 +1,56 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coredns-local
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://coredns.github.io/helm
+      targetRevision: 1.24.2
+      chart: coredns
+      helm:
+        valuesObject:
+          service:
+            name: coredns-local
+            type: LoadBalancer
+          servers:
+          - zones:
+            - zone: beaver-cloud.ts.net.
+            port: 53
+            plugins:
+            - name: errors
+            - name: health
+              configBlock: |-
+                lameduck 5s
+            - name: ready
+            - name: etcd
+              parameters: beaver-cloud.ts.net
+              configBlock: |-
+                path /skydns
+                endpoint http://coredns-local-etcd:2379
+                fallthrough
+            - name: hosts
+              configBlock: |-
+                192.168.50.100 *.beaver-cloud.ts.net
+                fallthrough
+            - name: prometheus
+              parameters: 0.0.0.0:9153
+            - name: forward
+              parameters: . /etc/resolv.conf
+            - name: cache
+              parameters: 30
+            - name: loop
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/dns-system/coredns
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dns-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
