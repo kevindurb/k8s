@@ -34,7 +34,7 @@ spec:
               parameters: beaver-cloud.ts.net
               configBlock: |-
                 path /skydns
-                endpoint http://coredns-local-etcd.dns-system.svc.cluster.local:2379
+                endpoint http://10.111.135.170:2379
                 fallthrough
             - name: hosts
               configBlock: |-
