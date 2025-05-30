@@ -6,3 +6,4 @@ namespace: tailscale
 
 resources:
   - ./resources/deployment.yml
+  - ./resources/rbac.yml

@@ -14,6 +14,7 @@ spec:
       labels:
         app: tailscale-gateway
     spec:
+      serviceAccountName: tailscale-gateway
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       affinity:
