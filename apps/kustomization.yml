@@ -16,4 +16,3 @@ resources:
   - ./kubevirt
   - ./media
   - ./metallb-system
-  - ./dns-system
