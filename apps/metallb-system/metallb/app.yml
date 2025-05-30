@@ -10,7 +10,7 @@ spec:
   project: default
   sources:
     - repoURL: https://metallb.github.io/metallb
-      targetRevision: v0.14.10
+      targetRevision: 0.14.9
       chart: metallb
       helm:
         valuesObject:
@@ -34,4 +34,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-
