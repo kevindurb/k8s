@@ -21,12 +21,6 @@ spec:
             enabled: true
           speaker:
             enabled: true
-          prometheus:
-            serviceAccount:
-              create: true
-              name: metallb-prometheus
-            serviceMonitor:
-              enabled: true
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/metallb-system/metallb
