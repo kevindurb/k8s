@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: dns-system
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: external-dns
+  template:
+    metadata:
+      labels:
+        app: external-dns
+    spec:
+      serviceAccountName: external-dns
+      containers:
+      - name: external-dns
+        image: registry.k8s.io/external-dns/external-dns:v0.13.5
+        args:
+        - --source=service
+        - --source=ingress
+        - --domain-filter=beaver-cloud.ts.net
+        - --provider=coredns
+        - --policy=sync
+        - --registry=txt
+        - --txt-owner-id=k8s
+        - --txt-prefix=externaldns-
+        - --interval=1m
+        - --log-level=debug
+        env:
+        - name: ETCD_URLS
+          value: http://coredns-local-etcd.dns-system.svc.cluster.local:2379
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "200Mi"
+            cpu: "200m"
