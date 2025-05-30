@@ -6,11 +6,13 @@ metadata:
   namespace: tailscale
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.beaver-cloud.ts.net"
+    metallb.universe.tf/loadBalancerIPs: "192.168.50.1"
   labels:
     app.kubernetes.io/name: tailscale-ingress
     app.kubernetes.io/component: ingress
 spec:
   type: LoadBalancer
+  loadBalancerIP: "192.168.50.1"
   selector:
     tailscale.com/parent-resource: tailscale-ingress
     tailscale.com/parent-resource-type: ingress
