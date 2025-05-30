@@ -31,9 +31,9 @@ spec:
                     lameduck 5s
                 - name: ready
                 - name: template
+                  parameters: IN A
                   configBlock: |-
-                    match regex (.+)\.beaver-cloud\.ts\.net
-                    answer {{ .Name }} 60 IN A 192.168.50.1
+                    (^.+)\.beaver-cloud\.ts\.net 60 IN A 192.168.50.1
                     fallthrough
                 - name: prometheus
                   parameters: 0.0.0.0:9153
