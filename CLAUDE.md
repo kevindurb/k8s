@@ -137,3 +137,7 @@ talos/                         # Talos OS configuration
      - `namespace.yml` - The namespace definition
      - `<app-name>/app.yml` - Direct reference to application ArgoCD definition
    - Main kustomization.yml in `apps/` should include all namespace directories
+
+## Memories
+
+- Don't use extraneous quotes in YAML
