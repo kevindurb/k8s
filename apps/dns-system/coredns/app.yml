@@ -14,9 +14,6 @@ spec:
       chart: coredns
       helm:
         valuesObject:
-          isClusterService: false
-          rbac:
-            create: true
           serviceType: "LoadBalancer"
           service:
             name: coredns-local
@@ -33,12 +30,10 @@ spec:
                   configBlock: |-
                     lameduck 5s
                 - name: ready
-                - name: etcd
-                  parameters: beaver-cloud.ts.net
+                - name: hosts
                   configBlock: |-
-                    stubzones
-                    path /skydns
-                    endpoint http://10.111.135.170:2379
+                    192.168.50.1 *.beaver-cloud.ts.net
+                    fallthrough
                 - name: prometheus
                   parameters: 0.0.0.0:9153
                 - name: forward
@@ -56,4 +51,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-
