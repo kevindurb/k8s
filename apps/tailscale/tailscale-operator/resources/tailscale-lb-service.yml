@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tailscale-ingress-lb
+  namespace: tailscale
+  labels:
+    app.kubernetes.io/name: tailscale-ingress
+    app.kubernetes.io/component: ingress
+spec:
+  type: LoadBalancer
+  selector:
+    tailscale.com/parent-resource: tailscale-ingress
+    tailscale.com/parent-resource-type: ingress
+    tailscale.com/parent-resource-ns: argocd
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443

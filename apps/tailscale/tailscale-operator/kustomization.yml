@@ -6,3 +6,4 @@ namespace: tailscale
 
 resources:
   - ./resources/operator-oauth.yml
+  - ./resources/tailscale-lb-service.yml
