@@ -1,0 +1,36 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://metallb.github.io/metallb
+      targetRevision: 0.14.10
+      chart: metallb
+      helm:
+        valuesObject:
+          # Explicitly use Layer 2 mode
+          crds:
+            enabled: true
+          controller:
+            enabled: true
+          speaker:
+            enabled: true
+          prometheus:
+            serviceMonitor:
+              enabled: true
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/metallb-system/metallb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

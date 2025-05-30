@@ -15,3 +15,4 @@ resources:
   - ./database
   - ./kubevirt
   - ./media
+  - ./metallb-system
