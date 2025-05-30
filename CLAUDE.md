@@ -93,7 +93,16 @@ talos/                         # Talos OS configuration
 ### Networking Architecture
 
 1. Tailscale provides secure external access to services
-2. Ingress resources expose applications using Tailscale ingress controller
+   - Tailscale operator deploys ingress proxies for each ingress resource
+   - Each ingress gets a tailscale.com subdomain (e.g., app-name.beaver-cloud.ts.net)
+   - The main Tailscale ingress pod can be exposed to LAN via LoadBalancer service
+
+2. MetalLB provides LoadBalancer IP allocation on the LAN
+   - Uses Layer 2 mode to advertise IPs from the 192.168.50.0/24 range
+   - Configure in the metallb-system namespace
+   - Use LoadBalancer service type to expose services on LAN IPs
+
+3. Ingress resources should use Tailscale ingress class
 
 ### Storage Architecture
 
@@ -113,3 +122,18 @@ talos/                         # Talos OS configuration
    - Read-only root filesystem
    - Dropped capabilities
    - No privilege escalation
+
+## Important Workflows
+
+### GitOps Practices
+
+1. NEVER apply resources directly to the cluster with `kubectl apply`
+   - All changes must go through Git and ArgoCD
+   - Use `git add`, `git commit`, and `git push` for all changes
+
+2. Namespace organization:
+   - Namespace directories should match the namespace name (e.g., `apps/metallb-system` for the `metallb-system` namespace)
+   - Namespace kustomization.yml should include:
+     - `namespace.yml` - The namespace definition
+     - `<app-name>/app.yml` - Direct reference to application ArgoCD definition
+   - Main kustomization.yml in `apps/` should include all namespace directories
