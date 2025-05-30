@@ -14,12 +14,12 @@ spec:
       chart: coredns
       helm:
         valuesObject:
+          serviceType: "LoadBalancer"
           service:
             name: coredns-local
-            type: LoadBalancer
+            loadBalancerIP: "192.168.50.53"
             annotations:
               metallb.universe.tf/loadBalancerIPs: "192.168.50.53"
-            loadBalancerIP: "192.168.50.53"
           servers:
           - zones:
             - zone: beaver-cloud.ts.net.
