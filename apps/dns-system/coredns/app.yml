@@ -17,7 +17,6 @@ spec:
           serviceType: "LoadBalancer"
           service:
             name: coredns-local
-            loadBalancerIP: "192.168.50.53"
             annotations:
               metallb.universe.tf/loadBalancerIPs: "192.168.50.53"
           servers:
