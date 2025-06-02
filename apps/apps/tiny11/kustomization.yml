@@ -4,3 +4,4 @@ namePrefix: tiny11-
 namespace: apps
 resources:
   - ./resources/vm.yml
+  - ./resources/rdp-service.yml

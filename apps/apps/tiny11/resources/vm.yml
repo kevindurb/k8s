@@ -74,6 +74,9 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
+              ports:
+                - name: rdp
+                  port: 3389
           rng: {}
         features:
           acpi:
