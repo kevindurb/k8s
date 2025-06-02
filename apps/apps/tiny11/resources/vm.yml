@@ -54,6 +54,10 @@ spec:
           requests:
             memory: 4Gi
         devices:
+          inputs:
+            - type: tablet
+              bus: virtio
+              name: tablet1
           disks:
             - name: tiny-11-iso
               bootOrder: 1
