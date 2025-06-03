@@ -27,9 +27,9 @@ spec:
             - name: MAKEMKV_KEY
               value: T-iyhMMBV8nWtNo3BgMdcvypH8UL01nYmww2zFzQDtiZsdJUOaAuCURsPRQ1Hj3i75RE
             - name: USER_ID
-              value: '1000'
+              value: '0'
             - name: GROUP_ID
-              value: '1000'
+              value: '0'
             - name: TZ
               value: America/Denver
           securityContext:
