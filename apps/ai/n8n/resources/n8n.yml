@@ -23,6 +23,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-pvc
         - name: cache
           emptyDir: {}
         - name: tmp
@@ -51,6 +54,8 @@ spec:
               mountPath: /home/node/.cache
             - name: tmp
               mountPath: /tmp
+            - name: media
+              mountPath: /media
           env:
             - name: TZ
               value: America/Denver
@@ -71,6 +76,34 @@ spec:
   resources:
     requests:
       storage: 1G
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-pvc
+spec:
+  accessModes: [ReadWriteMany]
+  volumeName: media-nfs-pv
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 12Ti
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-nfs-pv
+spec:
+  capacity:
+    storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.50.43
+    path: /
+  mountOptions: [nfsvers=4.2]
 
 ---
 apiVersion: v1
