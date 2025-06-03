@@ -40,12 +40,22 @@ spec:
             - name: media
               mountPath: /output
               subPath: Downloads
+            - name: sg0
+              mountPath: /dev/sg0
+            - name: sg1
+              mountPath: /dev/sg1
             - name: sr0
               mountPath: /dev/sr0
       volumes:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
+        - name: sg0
+          hostPath:
+            path: /dev/sg0
+        - name: sg1
+          hostPath:
+            path: /dev/sg1
         - name: sr0
           hostPath:
             path: /dev/sr0
