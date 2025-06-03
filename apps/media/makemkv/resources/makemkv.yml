@@ -15,8 +15,8 @@ spec:
     metadata:
       labels: *labels
     spec:
-      # securityContext:
-      #   fsGroup: 1000
+      securityContext:
+        fsGroup: 1000
       nodeSelector:
         kubernetes.io/hostname: kube-storage-01
       containers:
