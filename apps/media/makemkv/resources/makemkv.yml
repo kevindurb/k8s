@@ -20,7 +20,7 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: kube-storage-01
       containers:
-        - image: jlesage/makemkv:v24.12.1@sha256:9c55c3bda98f00b352903dcc85cda0c6a7d0724cea81af784ec9a8d06de3cd25
+        - image: jlesage/makemkv:v25.05.1
           name: makemkv
           env:
             - name: USER_ID
