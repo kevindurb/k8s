@@ -1,0 +1,103 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    spec:
+      labels: *labels
+      securityContext:
+        fsGroup: 1000
+      nodeSelector:
+        kubernetes.io/hostname: kube-storage-01
+      containers:
+        - image: jlesage/makemkv:v24.12.1@sha256:9c55c3bda98f00b352903dcc85cda0c6a7d0724cea81af784ec9a8d06de3cd25
+          name: makemkv
+          env:
+            - name: USER_ID
+              value: '1000'
+            - name: GROUP_ID
+              value: '1000'
+            - name: TZ
+              value: America/Denver
+          securityContext:
+            privileged: true
+          ports:
+            - name: http
+              containerPort: 5800
+          volumeMounts:
+            - name: media
+              mountPath: /output
+              subPath: Downloads
+            - name: sr0
+              mountPath: /dev/sr0
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-pvc
+        - name: sr0
+          hostPath:
+            path: /dev/sr0
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-pvc
+spec:
+  accessModes: [ReadWriteMany]
+  volumeName: media-nfs-pv
+  storageClassName: ''
+  resources:
+    requests:
+      storage: 12Ti
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-nfs-pv
+spec:
+  capacity:
+    storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.50.43
+    path: /
+  mountOptions: [nfsvers=4.2]
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tailscale-ingress
+spec:
+  ingressClassName: tailscale
+  tls: [{ hosts: [makemkv] }]
+  defaultBackend:
+    service:
+      name: web-service
+      port:
+        name: http
