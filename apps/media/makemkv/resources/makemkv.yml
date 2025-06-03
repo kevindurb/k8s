@@ -12,8 +12,9 @@ spec:
   selector:
     matchLabels: *labels
   template:
-    spec:
+    metadata:
       labels: *labels
+    spec:
       securityContext:
         fsGroup: 1000
       nodeSelector:
