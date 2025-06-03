@@ -24,7 +24,7 @@ spec:
           name: makemkv
           env:
             - name: MAKEMKV_KEY
-              value: T-h1LzyYnZ0QwBXDvKmzQOOOCyPbS30k2dlxINBG5jrCQ54b6uYXDJfbrhViFlcZ_TUk
+              value: T-iyhMMBV8nWtNo3BgMdcvypH8UL01nYmww2zFzQDtiZsdJUOaAuCURsPRQ1Hj3i75RE
             - name: USER_ID
               value: '1000'
             - name: GROUP_ID
