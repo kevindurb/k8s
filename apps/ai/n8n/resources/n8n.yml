@@ -61,6 +61,8 @@ spec:
               value: America/Denver
             - name: N8N_EDITOR_BASE_URL
               value: https://n8n.beaver-cloud.ts.net
+            - name: WEBHOOK_URL
+              value: https://n8n.beaver-cloud.ts.net/webhook
           ports:
             - name: http
               containerPort: 5678
