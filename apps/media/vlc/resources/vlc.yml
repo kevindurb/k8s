@@ -27,7 +27,7 @@ spec:
           emptyDir: {}
       containers:
         - name: vlc
-          image: docker.io/kasmweb/vlc:1.17.0:latest
+          image: docker.io/kasmweb/vlc:1.17.0
           resources:
             requests:
               memory: 100M
