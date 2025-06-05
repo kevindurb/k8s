@@ -23,6 +23,8 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: vlc
           image: ghcr.io/galexrt/vlc:v20250605-124536-993
@@ -43,6 +45,8 @@ spec:
           volumeMounts:
             - name: media
               mountPath: /media
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
