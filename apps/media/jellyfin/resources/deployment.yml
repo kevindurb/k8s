@@ -24,7 +24,7 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
-        - name: renderD128
+        - name: renderd128
           hostPath:
             path: /dev/dri/renderD128
       nodeSelector:
@@ -45,7 +45,7 @@ spec:
               mountPath: /config
             - name: media
               mountPath: /media
-            - name: renderD128
+            - name: renderd128
               mountPath: /dev/dri/renderD128
           env:
             - name: TZ
