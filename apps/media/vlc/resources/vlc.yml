@@ -25,6 +25,8 @@ spec:
             claimName: media-pvc
         - name: tmp
           emptyDir: {}
+        - name: home
+          emptyDir: {}
       containers:
         - name: vlc
           image: docker.io/kasmweb/vlc:1.17.0
@@ -47,6 +49,8 @@ spec:
               mountPath: /media
             - name: tmp
               mountPath: /tmp
+            - name: home
+              mountPath: /home/kasm-user
           env:
             - name: TZ
               value: America/Denver
