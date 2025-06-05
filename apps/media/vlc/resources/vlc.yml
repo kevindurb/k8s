@@ -25,12 +25,9 @@ spec:
             claimName: media-pvc
         - name: tmp
           emptyDir: {}
-        - name: volume
-          persistentVolumeClaim:
-            claimName: volume
       containers:
         - name: vlc
-          image: ghcr.io/galexrt/vlc:v20250605-124536-993
+          image: docker.io/kasmweb/vlc:1.17.0:latest
           resources:
             requests:
               memory: 100M
@@ -38,26 +35,24 @@ spec:
               memory: 1G
           securityContext:
             privileged: false
-            # allowPrivilegeEscalation: false
-            # runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            # readOnlyRootFilesystem: true
-            # capabilities:
-            #   drop: [ALL]
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
           volumeMounts:
             - name: media
               mountPath: /media
             - name: tmp
               mountPath: /tmp
-            - name: volume
-              mountPath: /data
           env:
             - name: TZ
               value: America/Denver
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 6901
 
 ---
 apiVersion: v1
@@ -86,18 +81,6 @@ spec:
   resources:
     requests:
       storage: 12Ti
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: openebs-mayastor-replicated
-  resources:
-    requests:
-      storage: 1G
 
 ---
 apiVersion: v1
