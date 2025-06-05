@@ -27,6 +27,8 @@ spec:
           emptyDir: {}
         - name: home
           emptyDir: {}
+        - name: var-run
+          emptyDir: {}
       containers:
         - name: vlc
           image: docker.io/kasmweb/vlc:1.17.0
@@ -49,6 +51,8 @@ spec:
               mountPath: /media
             - name: tmp
               mountPath: /tmp
+            - name: var-run
+              mountPath: /var/run
             - name: home
               mountPath: /home/kasm-user
           env:
