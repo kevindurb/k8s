@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -26,6 +24,11 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
+        - name: renderD128
+          hostPath:
+            path: /dev/dri/renderD128
+      nodeSelector:
+        kubernetes.io/hostname: kube-big-01
       containers:
         - name: jellyfin
           image: jellyfin/jellyfin:latest
@@ -35,19 +38,15 @@ spec:
             limits:
               memory: 1G
           securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
+            privileged: true
             readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: config
               mountPath: /config
             - name: media
               mountPath: /media
+            - name: renderD128
+              mountPath: /dev/dri/renderD128
           env:
             - name: TZ
               value: America/Denver
