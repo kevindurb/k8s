@@ -78,7 +78,7 @@ spec:
             claimName: downloader-vm-root-disk
         - name: media-disk
           persistentVolumeClaim:
-            claimName: media-pvc
+            claimName: downloader-vm-media-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -95,3 +95,4 @@ spec:
     requests:
       storage: 30Gi # Size for the installed OS and downloads
   storageClassName: openebs-mayastor-replicated # As per guidelines
+
