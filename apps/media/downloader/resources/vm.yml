@@ -23,7 +23,7 @@ spec:
         cpu:
           cores: 4
         memory:
-          guest: 4Gi
+          guest: 8Gi
         devices:
           inputs:
             - type: tablet
