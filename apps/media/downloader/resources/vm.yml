@@ -15,7 +15,7 @@ spec:
         app.kubernetes.io/component: vm
     spec:
       nodeSelector:
-        kubernetes.io/hostname: kube-storage-02
+        kubernetes.io/hostname: kube-storage-01
       networks:
         - name: default
           pod: {}
