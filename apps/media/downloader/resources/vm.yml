@@ -76,10 +76,10 @@ spec:
             name: fedora-iso
         - name: rootdisk
           persistentVolumeClaim:
-            claimName: downloader-vm-root-disk
+            claimName: downloader-root-disk
         - name: media-disk
           persistentVolumeClaim:
-            claimName: downloader-vm-media-pvc
+            claimName: downloader-media-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
