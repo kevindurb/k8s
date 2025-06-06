@@ -19,7 +19,7 @@ spec:
           pod: {}
       domain:
         cpu:
-          cores: 2
+          cores: 4
         memory:
           guest: 8Gi
         resources:
