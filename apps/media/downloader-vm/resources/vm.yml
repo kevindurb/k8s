@@ -55,6 +55,7 @@ spec:
               disk:
                 bus: virtio
             - name: media-disk
+              bootOrder: 3
               disk:
                 bus: virtio
           interfaces:
