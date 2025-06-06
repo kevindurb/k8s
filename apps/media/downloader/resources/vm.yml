@@ -2,7 +2,6 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: vm
-  namespace: media
   labels:
     app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm
@@ -54,10 +53,6 @@ spec:
               bootOrder: 2
               disk:
                 bus: virtio
-            - name: media-disk
-              bootOrder: 3
-              disk:
-                bus: virtio
           interfaces:
             - name: default
               masquerade: {}
@@ -77,15 +72,11 @@ spec:
         - name: rootdisk
           persistentVolumeClaim:
             claimName: downloader-root-disk
-        - name: media-disk
-          persistentVolumeClaim:
-            claimName: downloader-media-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: root-disk
-  namespace: media
   labels:
     app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm-rootdisk

@@ -4,8 +4,5 @@ namePrefix: downloader-
 namespace: media
 resources:
   - ./resources/vm.yml
-  - ./resources/media-nfs-pv.yml
-  - ./resources/media-pvc.yml
 commonLabels:
   app.kubernetes.io/name: downloader
-
