@@ -4,7 +4,7 @@ metadata:
   name: vm
   namespace: media
   labels:
-    app.kubernetes.io/name: downloader-vm
+    app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm
 spec:
   dataVolumeTemplates:
@@ -25,8 +25,8 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/domain: downloader-vm
-        app.kubernetes.io/name: downloader-vm
+        kubevirt.io/domain: downloader
+        app.kubernetes.io/name: downloader
         app.kubernetes.io/component: vm
     spec:
       networks:
@@ -87,7 +87,7 @@ metadata:
   name: root-disk
   namespace: media
   labels:
-    app.kubernetes.io/name: downloader-vm
+    app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm-rootdisk
 spec:
   accessModes:
