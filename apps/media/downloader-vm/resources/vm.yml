@@ -1,0 +1,97 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm
+  namespace: media
+  labels:
+    app.kubernetes.io/name: downloader-vm
+    app.kubernetes.io/component: vm
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: fedora-iso
+      spec:
+        source:
+          http:
+            url: "https://download.fedoraproject.org/pub/fedora/linux/releases/42/Workstation/x86_64/iso/Fedora-Workstation-Live-42-1.1.x86_64.iso"
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: openebs-mayastor-replicated
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: downloader-vm
+        app.kubernetes.io/name: downloader-vm
+        app.kubernetes.io/component: vm
+    spec:
+      networks:
+        - name: default
+          pod: {}
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 4Gi
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          inputs:
+            - type: tablet
+              bus: virtio
+              name: tablet1
+          disks:
+            - name: fedora-iso
+              bootOrder: 1
+              cdrom:
+                bus: sata
+            - name: rootdisk
+              bootOrder: 2
+              disk:
+                bus: virtio
+            - name: media-disk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+              ports:
+                - name: ssh
+                  port: 22
+          rng: {}
+        features:
+          acpi:
+            enabled: true
+          smm:
+            enabled: true
+      volumes:
+        - name: fedora-iso
+          dataVolume:
+            name: fedora-iso
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: downloader-vm-root-disk
+        - name: media-disk
+          persistentVolumeClaim:
+            claimName: media-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: root-disk
+  namespace: media
+  labels:
+    app.kubernetes.io/name: downloader-vm
+    app.kubernetes.io/component: vm-rootdisk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi # Size for the installed OS and downloads
+  storageClassName: openebs-mayastor-replicated # As per guidelines
