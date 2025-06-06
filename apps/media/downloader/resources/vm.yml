@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm
 spec:
-  running: false
+  running: true
   template:
     metadata:
       labels:
@@ -47,9 +47,6 @@ spec:
           smm:
             enabled: true
       volumes:
-        - name: fedora-iso
-          dataVolume:
-            name: fedora-iso
         - name: rootdisk
           persistentVolumeClaim:
             claimName: downloader-root-disk
