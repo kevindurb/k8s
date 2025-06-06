@@ -24,9 +24,6 @@ spec:
           cores: 4
         memory:
           guest: 4Gi
-        resources:
-          requests:
-            memory: 8Gi
         devices:
           inputs:
             - type: tablet
