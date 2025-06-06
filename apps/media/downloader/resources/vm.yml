@@ -21,10 +21,10 @@ spec:
         cpu:
           cores: 2
         memory:
-          guest: 4Gi
+          guest: 8Gi
         resources:
           requests:
-            memory: 4Gi
+            memory: 8Gi
         devices:
           inputs:
             - type: tablet
