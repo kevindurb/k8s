@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
