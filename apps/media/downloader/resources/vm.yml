@@ -1,3 +1,4 @@
+---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -6,7 +7,21 @@ metadata:
     app.kubernetes.io/name: downloader
     app.kubernetes.io/component: vm
 spec:
-  running: false
+  dataVolumeTemplates:
+    - metadata:
+        name: fedora-iso
+      spec:
+        source:
+          http:
+            url: 'https://download.fedoraproject.org/pub/fedora/linux/releases/42/Workstation/x86_64/iso/Fedora-Workstation-Live-42-1.1.x86_64.iso'
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: openebs-mayastor-single
+  running: true
   template:
     metadata:
       labels:
@@ -30,7 +45,12 @@ spec:
               bus: virtio
               name: tablet1
           disks:
+            - name: fedora-iso
+              bootOrder: 1
+              cdrom:
+                bus: sata
             - name: rootdisk
+              bootOrder: 2
               disk:
                 bus: virtio
           interfaces:
@@ -46,6 +66,9 @@ spec:
           smm:
             enabled: true
       volumes:
+        - name: fedora-iso
+          dataVolume:
+            name: fedora-iso
         - name: rootdisk
           persistentVolumeClaim:
             claimName: downloader-root-disk
@@ -63,5 +86,4 @@ spec:
   resources:
     requests:
       storage: 100Gi # Size for the installed OS and downloads
-  storageClassName: openebs-mayastor-replicated # As per guidelines
-
+  storageClassName: openebs-mayastor-single
