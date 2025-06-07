@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment # Changed
+  namespace: monitoring # Will be set by kustomization if not here
+  annotations:
+    reloader.stakater.com/auto: "true" # Added
+  labels: &labels # Changed
+    app.kubernetes.io/component: guacamole
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Added from Jellyfin example, good for stateful apps
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext: # Added
+        fsGroup: 1000
+      volumes: # Changed
+        - name: guacamole-config-volume
+          persistentVolumeClaim:
+            claimName: config-pvc # Kustomize will prefix this
+      containers:
+        - name: guacd
+          image: guacamole/guacd:1.5.3 # Pinned version
+          ports:
+            - containerPort: 4822
+          securityContext: # Added
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: false # guacd might need to write
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          env: # Added TZ for guacd as well
+            - name: TZ
+              value: America/Denver
+        - name: guacamole
+          image: guacamole/guacamole:1.5.3 # Pinned version
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GUACD_HOSTNAME
+              value: localhost
+            - name: GUACD_PORT
+              value: "4822"
+            - name: GUACAMOLE_HOME
+              value: /config
+            - name: TZ # Added
+              value: America/Denver
+          volumeMounts:
+            - name: guacamole-config-volume
+              mountPath: /config
+          securityContext: # Added
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]

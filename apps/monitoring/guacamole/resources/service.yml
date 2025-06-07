@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service # Changed
+  # namespace: monitoring # Will be set by kustomization
+  labels: # Changed
+    app.kubernetes.io/component: guacamole
+spec:
+  # type: ClusterIP # Explicitly ClusterIP or remove for default
+  ports:
+    - name: http # Added
+      port: 80 # Changed
+      targetPort: 8080
+  selector: # Changed
+    app.kubernetes.io/component: guacamole
