@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./namespace.yml
   - ./kube-prometheus-stack/app.yml
+  - ./guacamole/app.yml
