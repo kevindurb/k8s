@@ -62,6 +62,6 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 30Gi # Size for the installed OS and downloads
+      storage: 100Gi # Size for the installed OS and downloads
   storageClassName: openebs-mayastor-replicated # As per guidelines
 
