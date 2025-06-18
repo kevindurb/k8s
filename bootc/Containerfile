@@ -4,12 +4,18 @@ ADD ./files/modules.conf /etc/modules-load.d/k8s.conf
 ADD ./files/sysctl.conf /etc/sysctl.d/k8s.conf
 
 RUN dnf install -y \
+    iptables \
+    iproute-tc \
     kubelet \
     kubeadm \
     kubectl \
     cri-o \
-    cri-o-runc && \
-    dnf clean all
+    containernetworking-plugins \
+    && dnf clean all
 
-RUN systemctl enable cri-o.service && \
-    systemctl enable kubelet.service
+RUN dnf remove -y \
+  zram-generator-defaults
+
+RUN systemctl disable firewalld \
+    && systemctl enable crio \
+    && systemctl enable kubelet
