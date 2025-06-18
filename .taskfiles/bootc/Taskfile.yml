@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: "3"
+
+tasks:
+  build:
+    desc: Build the bootc container image for K8s nodes
+    cmd: >
+      podman build
+      -t ghcr.io/kevindurb/k8s:latest
+      -f ./bootc/Containerfile
+      ./bootc
+
+  genignition:
+    desc: Generate ignition files for all hosts in hosts.yml
+    vars:
+      HOSTS:
+        sh: yq e 'keys | .[]' ./bootc/hosts.yml
+    cmds:
+      - for: { var: HOSTS }
+        cmd: |
+          minijinja-cli \
+            --select "{{.ITEM}}" \
+            ./bootc/node.bu.j2 \
+            ./bootc/hosts.yml | \
+          butane \
+            --strict \
+            -o ./bootc/ignition/{{.ITEM}}.ign \
+            --

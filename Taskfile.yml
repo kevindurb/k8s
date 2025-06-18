@@ -10,6 +10,8 @@ includes:
     aliases: [t, tmp, gen]
   argo:
     taskfile: .taskfiles/argo
+  bootc:
+    taskfile: .taskfiles/bootc
   cloudflare:
     taskfile: .taskfiles/cloudflare
   kubernetes:

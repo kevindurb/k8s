@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Kubernetes infrastructure repository managed using GitOps principles. It contains:
 
-1. Kubernetes cluster configuration via Talos OS
+1. Kubernetes cluster configuration via Talos OS and BootC
 2. Application deployments managed via ArgoCD and Kustomize
 3. Various applications organized by namespace (media, ai, apps, etc.)
 4. Infrastructure components like storage (OpenEBS), monitoring (Prometheus), and networking (Tailscale)
@@ -50,7 +50,29 @@ task tal:genconfig
 task tal:kubeconfig
 ```
 
+### BootC Management
+
+```bash
+# Build BootC container image
+task bootc:build
+
+# Push BootC container image to registry
+task bootc:push
+```
+
 ## Architecture and Code Structure
+
+### Node Deployment Options
+
+1. Talos OS
+   - Traditional Talos-based node deployment using `talos/` configuration
+
+2. BootC Container Image
+   - Container-based OS image for Kubernetes nodes using `bootc/` configuration
+   - Uses ghcr.io/ublue-os/ucore-minimal as base image
+   - Contains Kubernetes 1.32 and CRI-O 1.32
+   - Configured with proper kernel modules and sysctl settings for Kubernetes
+   - Node configuration templated using Butane
 
 ### Directory Structure
 
@@ -70,6 +92,13 @@ apps/
 talos/                         # Talos OS configuration
 └── clusterconfig/             # Generated cluster configs
     └── ...
+bootc/                         # BootC container image configuration
+├── Containerfile              # Container image definition for K8s nodes
+├── files/                     # Configuration files for the container
+│   ├── modules.conf           # Kernel modules for K8s
+│   └── sysctl.conf            # System settings for K8s
+├── hosts.yml                  # Host network configuration
+└── node.bu.j2                 # Butane template for node configuration
 ```
 
 ### Deployment Patterns

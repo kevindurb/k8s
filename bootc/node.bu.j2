@@ -1,9 +1,6 @@
 ---
 variant: fcos
 version: 1.6.0
-boot_device:
-  image:
-    url: ostree-unverified-registry:ghcr.io/kevindurb/k8s
 
 passwd:
   users:
@@ -42,3 +39,28 @@ storage:
 
           [ipv6]
           method=disabled
+
+  directories:
+    - path: /etc/ucore-autorebase
+      mode: 0754
+systemd:
+  units:
+    - name: ucore-autorebase.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=uCore autorebase
+        ConditionPathExists=!/etc/ucore-autorebase/rebased
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        Type=oneshot
+        StandardOutput=journal+console
+        ExecStart=/usr/bin/bootc switch ghcr.io/kevindurb/k8s:latest
+        ExecStart=/usr/bin/touch /etc/ucore-autorebase/rebased
+        ExecStart=/usr/bin/systemctl disable ucore-autorebase.service
+        ExecStart=/usr/bin/systemctl reboot
+
+        [Install]
+        WantedBy=multi-user.target
