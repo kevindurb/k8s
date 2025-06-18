@@ -1,0 +1,44 @@
+---
+variant: fcos
+version: 1.6.0
+boot_device:
+  image:
+    url: ostree-unverified-registry:ghcr.io/kevindurb/k8s
+
+passwd:
+  users:
+    - name: &user core
+
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: {{ hostname }}
+
+    - path: /home/core/.ssh/authorized_keys
+      mode: 0600
+      user:
+        name: *user
+      group:
+        name: *user
+      contents:
+        source: https://github.com/kevindurb.keys
+
+    - path: /etc/NetworkManager/system-connections/10-static-{{ net.interfaceName }}.nmconnection
+      mode: 0600
+      contents:
+        inline: |
+          [connection]
+          id=static-{{ net.interfaceName }}
+          type=ethernet
+          interface-name={{ net.interfaceName }}
+
+          [ipv4]
+          method=manual
+          addresses={{ net.addresses }}
+          gateway={{ net.gateway }}
+          dns={{ net.dns }}
+
+          [ipv6]
+          method=disabled
