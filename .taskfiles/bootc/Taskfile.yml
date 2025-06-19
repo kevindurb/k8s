@@ -25,5 +25,6 @@ tasks:
             ./bootc/hosts.yml | \
           butane \
             --strict \
+            --pretty \
             -o ./bootc/ignition/{{.ITEM}}.ign \
             --
