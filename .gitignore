@@ -14,7 +14,3 @@ secrets.yaml
 *.secret
 dist
 .task
-
-# Ignore bootc ignition files but keep directory
-bootc/ignition/*
-!bootc/ignition/.gitkeep
