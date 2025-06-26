@@ -20,4 +20,5 @@ RUN dnf remove -y \
 
 RUN systemctl disable firewalld \
     && systemctl enable crio \
-    && systemctl enable kubelet
+    && systemctl enable kubelet \
+    && systemctl enable tailscaled
