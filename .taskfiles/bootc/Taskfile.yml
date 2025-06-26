@@ -28,3 +28,28 @@ tasks:
             --pretty \
             -o ./bootc/ignition/{{.ITEM}}.ign \
             --
+
+  download-iso:
+    cmd: >
+      podman run --rm -v ~/Downloads:/data
+      quay.io/coreos/coreos-installer:release
+      download -s stable -p metal -f iso -a x86_64 -C /data
+
+  build-isos:
+    deps: [download-iso]
+    vars:
+      HOSTS:
+        sh: yq e 'keys | .[]' ./bootc/hosts.yml
+      ISO_FILENAME:
+        sh: ls ~/Downloads/fedora-coreos-*.iso | tail -1 | xargs basename
+    cmds:
+      - for: { var: HOSTS }
+        cmd: >
+          podman run --rm -it --privileged
+          -v ./bootc/ignition/{{.ITEM}}.ign:/config.ign:ro
+          -v ~/Downloads:/data
+          quay.io/coreos/coreos-installer:release
+          iso customize
+          --dest-ignition /config.ign
+          --output /data/{{.ITEM}}.iso
+          /data/{{.ISO_FILENAME}}
