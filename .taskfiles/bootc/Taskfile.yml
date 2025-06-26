@@ -50,6 +50,7 @@ tasks:
           -v ~/Downloads:/data
           quay.io/coreos/coreos-installer:release
           iso customize
+          --dest-device /dev/sda
           --dest-ignition /config.ign
           --output /data/{{.ITEM}}.iso
           /data/{{.ISO_FILENAME}}
