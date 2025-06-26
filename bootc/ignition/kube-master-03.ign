@@ -10,12 +10,6 @@
     ]
   },
   "storage": {
-    "directories": [
-      {
-        "path": "/etc/ucore-autorebase",
-        "mode": 492
-      }
-    ],
     "files": [
       {
         "path": "/etc/hostname",
@@ -37,23 +31,6 @@
           "source": "https://github.com/kevindurb.keys"
         },
         "mode": 384
-      },
-      {
-        "path": "/etc/NetworkManager/system-connections/10-static-enp1s0f0.nmconnection",
-        "contents": {
-          "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/1TMQQqDQAyF4X3u4tSxIu1iTiIu0smzDmgUk7Z4+0IXQpfv8fP1eVVF9rLqQEWSOXvJFXSLVo81+bEhwSfsCqeijn3kjEp5QTor6sv2bgda4NMqaWF98UwsssMMluK9CbG7hbYJ10vs6MmODx/nH0MkUfvbP7M7TSnGjxlC3wAAAP//EU6GCrIAAAA="
-        },
-        "mode": 384
-      }
-    ]
-  },
-  "systemd": {
-    "units": [
-      {
-        "contents": "[Unit]\nDescription=uCore autorebase\nConditionPathExists=!/etc/ucore-autorebase/rebased\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nStandardOutput=journal+console\nExecStart=/usr/bin/bootc switch ghcr.io/kevindurb/k8s:latest\nExecStart=/usr/bin/touch /etc/ucore-autorebase/rebased\nExecStart=/usr/bin/systemctl disable ucore-autorebase.service\nExecStart=/usr/bin/systemctl reboot\n\n[Install]\nWantedBy=multi-user.target\n",
-        "enabled": true,
-        "name": "ucore-autorebase.service"
       }
     ]
   }
