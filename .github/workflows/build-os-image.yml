@@ -8,6 +8,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  K8S_VERSION: 1.32
+
 jobs:
   build-os-image:
     name: Build and push os image
@@ -37,6 +40,7 @@ jobs:
             org.opencontainers.image.title=${{ inputs.image }}
 
           tags: |
+            type=raw,value=${{ env.K8S_VERSION }}
             type=raw,value=latest
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=sha
@@ -54,6 +58,8 @@ jobs:
         with:
           oci: false
           context: ./bootc
+          build-args: |
+            K8S_VERSION=${{ env.K8S_VERSION }}
           containerfiles: |
             ./bootc/Containerfile
           platforms: linux/amd64, linux/arm64
