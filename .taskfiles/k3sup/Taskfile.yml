@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: '3'
+
+tasks:
+  bootstrap:
+    cmds:
+      - >
+        k3sup install
+        --host kube-master-01
+        --cluster
+        --user core
+        --no-extras
