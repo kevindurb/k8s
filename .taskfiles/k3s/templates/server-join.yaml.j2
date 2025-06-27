@@ -1,0 +1,12 @@
+server: https://kube-master-01:6443
+token: {{ k3s_token }}
+disable:
+  - traefik
+  - servicelb
+flannel-iface: tailscale0
+node-ip: {{ tailscale_ip }}
+node-external-ip: {{ tailscale_ip }}
+tls-san:
+  - {{ tailscale_ip }}
+  - {{ hostname }}
+  - {{ hostname }}.beaver-cloud.ts.net

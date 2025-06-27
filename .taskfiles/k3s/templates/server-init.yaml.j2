@@ -1,0 +1,12 @@
+cluster-init: true
+disable:
+  - traefik
+  - servicelb
+flannel-iface: tailscale0
+node-ip: {{ tailscale_ip }}
+node-external-ip: {{ tailscale_ip }}
+advertise-address: {{ tailscale_ip }}
+tls-san:
+  - {{ tailscale_ip }}
+  - {{ hostname }}
+  - {{ hostname }}.beaver-cloud.ts.net
