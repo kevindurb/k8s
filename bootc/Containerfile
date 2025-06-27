@@ -3,6 +3,7 @@ FROM ghcr.io/ublue-os/ucore-minimal:stable-nvidia
 ARG TARGETARCH
 
 COPY ./files/k3s-1.33.1-$TARGETARCH /usr/local/bin/k3s
+COPY ./files/install-k3s.sh /opt/install.sh
 COPY ./files/k3s-selinux-1.6-1.coreos.noarch.rpm /tmp
 
 RUN dnf install -y \
