@@ -3,7 +3,8 @@
 version: '3'
 
 tasks:
-  bootstrap:
+  init-master-01:
+    desc: Initialize first master node
     cmds:
       - >
         k3sup install
@@ -11,3 +12,80 @@ tasks:
         --cluster
         --user core
         --no-extras
+
+  join-master-02:
+    desc: Join second master node to cluster
+    cmds:
+      - >
+        k3sup join
+        --host kube-master-02
+        --server-host kube-master-01
+        --server
+        --user core
+
+  join-master-03:
+    desc: Join third master node to cluster
+    cmds:
+      - >
+        k3sup join
+        --host kube-master-03
+        --server-host kube-master-01
+        --server
+        --user core
+
+  join-storage-01:
+    desc: Join storage worker node 01
+    cmds:
+      - >
+        k3sup join
+        --host kube-storage-01
+        --server-host kube-master-01
+        --user core
+
+  join-storage-02:
+    desc: Join storage worker node 02
+    cmds:
+      - >
+        k3sup join
+        --host kube-storage-02
+        --server-host kube-master-01
+        --user core
+
+  join-storage-03:
+    desc: Join storage worker node 03
+    cmds:
+      - >
+        k3sup join
+        --host kube-storage-03
+        --server-host kube-master-01
+        --user core
+
+  join-big-01:
+    desc: Join big worker node
+    cmds:
+      - >
+        k3sup join
+        --host kube-big-01
+        --server-host kube-master-01
+        --user core
+
+  join-all-masters:
+    desc: Join all remaining master nodes
+    deps:
+      - join-master-02
+      - join-master-03
+
+  join-all-workers:
+    desc: Join all worker nodes
+    deps:
+      - join-storage-01
+      - join-storage-02
+      - join-storage-03
+      - join-big-01
+
+  bootstrap:
+    desc: Bootstrap entire cluster (init + all joins)
+    cmds:
+      - task: init-master-01
+      - task: join-all-masters
+      - task: join-all-workers
