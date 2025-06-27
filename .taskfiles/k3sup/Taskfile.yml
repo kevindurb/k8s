@@ -29,6 +29,7 @@ tasks:
         --server-host kube-master-01
         --server
         --user core
+        --no-extras
         --k3s-extra-args "--flannel-iface tailscale0 --node-ip {{.TAILSCALE_IP}} --node-external-ip {{.TAILSCALE_IP}}"
 
   join-worker:
@@ -42,6 +43,7 @@ tasks:
         --host {{.HOST}}
         --server-host kube-master-01
         --user core
+        --no-extras
         --k3s-extra-args "--flannel-iface tailscale0 --node-ip {{.TAILSCALE_IP}} --node-external-ip {{.TAILSCALE_IP}}"
 
   join-all-masters:

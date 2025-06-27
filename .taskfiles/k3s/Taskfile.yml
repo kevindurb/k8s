@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: '3'
+
+vars:
+  K3S_TOKEN_PATH: /var/lib/rancher/k3s/server/node-token
+
+tasks:
+  init-master-01:
+    desc: Initialize first master node with vanilla k3s
+    vars:
+      TAILSCALE_IP:
+        sh: yq e '.["kube-master-01"].tailscale_ip' ./bootc/hosts.yml
+    cmds:
+      - |
+        ssh core@kube-master-01 'curl -sfL https://get.k3s.io | \
+        INSTALL_K3S_SKIP_DOWNLOAD=true \
+        INSTALL_K3S_EXEC="server \
+          --cluster-init \
+          --flannel-iface tailscale0 \
+          --node-ip {{.TAILSCALE_IP}} \
+          --node-external-ip {{.TAILSCALE_IP}} \
+          --advertise-address {{.TAILSCALE_IP}}" \
+        sh -'
+
+  join-master:
+    desc: Join master node to cluster with vanilla k3s
+    vars:
+      TAILSCALE_IP:
+        sh: yq e '.["{{.HOST}}"].tailscale_ip' ./bootc/hosts.yml
+      K3S_TOKEN:
+        sh: ssh core@kube-master-01 'sudo cat {{.K3S_TOKEN_PATH}}'
+    cmds:
+      - |
+        ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
+        K3S_TOKEN={{.K3S_TOKEN}} \
+        K3S_URL=https://kube-master-01:6443 \
+        INSTALL_K3S_SKIP_DOWNLOAD=true \
+        INSTALL_K3S_EXEC="server \
+          --flannel-iface tailscale0 \
+          --node-ip {{.TAILSCALE_IP}} \
+          --node-external-ip {{.TAILSCALE_IP}}" \
+        sh -'
+
+  join-worker:
+    desc: Join worker node to cluster with vanilla k3s
+    vars:
+      TAILSCALE_IP:
+        sh: yq e '.["{{.HOST}}"].tailscale_ip' ./bootc/hosts.yml
+      K3S_TOKEN:
+        sh: ssh core@kube-master-01 'sudo cat {{.K3S_TOKEN_PATH}}'
+    cmds:
+      - |
+        ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
+        K3S_TOKEN={{.K3S_TOKEN}} \
+        K3S_URL=https://kube-master-01:6443 \
+        INSTALL_K3S_SKIP_DOWNLOAD=true \
+        INSTALL_K3S_EXEC="agent \
+          --flannel-iface tailscale0 \
+          --node-ip {{.TAILSCALE_IP}} \
+          --node-external-ip {{.TAILSCALE_IP}}" \
+        sh -'
+
+  join-all-masters:
+    desc: Join all remaining master nodes
+    cmds:
+      - task: join-master
+        vars:
+          HOST: kube-master-02
+      - task: join-master
+        vars:
+          HOST: kube-master-03
+
+  join-all-workers:
+    desc: Join all worker nodes
+    cmds:
+      - task: join-worker
+        vars:
+          HOST: kube-storage-01
+      - task: join-worker
+        vars:
+          HOST: kube-storage-02
+      - task: join-worker
+        vars:
+          HOST: kube-storage-03
+      - task: join-worker
+        vars:
+          HOST: kube-big-01
+
+  bootstrap:
+    desc: Bootstrap entire cluster with vanilla k3s (init + all joins)
+    cmds:
+      - task: init-master-01
+      - task: join-all-masters
+      - task: join-all-workers

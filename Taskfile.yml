@@ -14,6 +14,8 @@ includes:
     taskfile: .taskfiles/bootc
   cloudflare:
     taskfile: .taskfiles/cloudflare
+  k3s:
+    taskfile: .taskfiles/k3s
   k3sup:
     taskfile: .taskfiles/k3sup
   kubernetes:
