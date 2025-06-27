@@ -4,6 +4,7 @@ version: '3'
 
 vars:
   K3S_TOKEN_PATH: /var/lib/rancher/k3s/server/node-token
+  K3S_INSTALL_SCRIPT: /usr/local/bin/k3s-install.sh
 
 tasks:
   init-master-01:
@@ -13,7 +14,7 @@ tasks:
         sh: yq e '.["kube-master-01"].tailscale_ip' ./bootc/hosts.yml
     cmds:
       - |
-        ssh core@kube-master-01 'curl -sfL https://get.k3s.io | \
+        ssh core@kube-master-01 '\
         INSTALL_K3S_SKIP_DOWNLOAD=true \
         INSTALL_K3S_EXEC="server \
           --cluster-init \
@@ -21,7 +22,7 @@ tasks:
           --node-ip {{.TAILSCALE_IP}} \
           --node-external-ip {{.TAILSCALE_IP}} \
           --advertise-address {{.TAILSCALE_IP}}" \
-        sh -'
+        {{.K3S_INSTALL_SCRIPT}}'
 
   join-master:
     desc: Join master node to cluster with vanilla k3s
@@ -32,7 +33,7 @@ tasks:
         sh: ssh core@kube-master-01 'sudo cat {{.K3S_TOKEN_PATH}}'
     cmds:
       - |
-        ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
+        ssh core@{{.HOST}} '\
         K3S_TOKEN={{.K3S_TOKEN}} \
         K3S_URL=https://kube-master-01:6443 \
         INSTALL_K3S_SKIP_DOWNLOAD=true \
@@ -40,7 +41,7 @@ tasks:
           --flannel-iface tailscale0 \
           --node-ip {{.TAILSCALE_IP}} \
           --node-external-ip {{.TAILSCALE_IP}}" \
-        sh -'
+        {{.K3S_INSTALL_SCRIPT}}'
 
   join-worker:
     desc: Join worker node to cluster with vanilla k3s
@@ -51,7 +52,7 @@ tasks:
         sh: ssh core@kube-master-01 'sudo cat {{.K3S_TOKEN_PATH}}'
     cmds:
       - |
-        ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
+        ssh core@{{.HOST}} '\
         K3S_TOKEN={{.K3S_TOKEN}} \
         K3S_URL=https://kube-master-01:6443 \
         INSTALL_K3S_SKIP_DOWNLOAD=true \
@@ -59,7 +60,7 @@ tasks:
           --flannel-iface tailscale0 \
           --node-ip {{.TAILSCALE_IP}} \
           --node-external-ip {{.TAILSCALE_IP}}" \
-        sh -'
+        {{.K3S_INSTALL_SCRIPT}}'
 
   join-all-masters:
     desc: Join all remaining master nodes
