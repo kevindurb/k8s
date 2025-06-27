@@ -5,6 +5,9 @@ version: '3'
 tasks:
   init-master-01:
     desc: Initialize first master node
+    vars:
+      TAILSCALE_IP:
+        sh: yq e '.["kube-master-01"].tailscale_ip' ./bootc/hosts.yml
     cmds:
       - >
         k3sup install
@@ -12,76 +15,60 @@ tasks:
         --cluster
         --user core
         --no-extras
+        --k3s-extra-args "--flannel-iface tailscale0 --node-ip {{.TAILSCALE_IP}} --node-external-ip {{.TAILSCALE_IP}} --advertise-address {{.TAILSCALE_IP}}"
 
-  join-master-02:
-    desc: Join second master node to cluster
+  join-master:
+    desc: Join master node to cluster
+    vars:
+      TAILSCALE_IP:
+        sh: yq e '.["{{.HOST}}"].tailscale_ip' ./bootc/hosts.yml
     cmds:
       - >
         k3sup join
-        --host kube-master-02
+        --host {{.HOST}}
         --server-host kube-master-01
         --server
         --user core
+        --k3s-extra-args "--flannel-iface tailscale0 --node-ip {{.TAILSCALE_IP}} --node-external-ip {{.TAILSCALE_IP}}"
 
-  join-master-03:
-    desc: Join third master node to cluster
+  join-worker:
+    desc: Join worker node to cluster
+    vars:
+      TAILSCALE_IP:
+        sh: yq e '.["{{.HOST}}"].tailscale_ip' ./bootc/hosts.yml
     cmds:
       - >
         k3sup join
-        --host kube-master-03
-        --server-host kube-master-01
-        --server
-        --user core
-
-  join-storage-01:
-    desc: Join storage worker node 01
-    cmds:
-      - >
-        k3sup join
-        --host kube-storage-01
+        --host {{.HOST}}
         --server-host kube-master-01
         --user core
-
-  join-storage-02:
-    desc: Join storage worker node 02
-    cmds:
-      - >
-        k3sup join
-        --host kube-storage-02
-        --server-host kube-master-01
-        --user core
-
-  join-storage-03:
-    desc: Join storage worker node 03
-    cmds:
-      - >
-        k3sup join
-        --host kube-storage-03
-        --server-host kube-master-01
-        --user core
-
-  join-big-01:
-    desc: Join big worker node
-    cmds:
-      - >
-        k3sup join
-        --host kube-big-01
-        --server-host kube-master-01
-        --user core
+        --k3s-extra-args "--flannel-iface tailscale0 --node-ip {{.TAILSCALE_IP}} --node-external-ip {{.TAILSCALE_IP}}"
 
   join-all-masters:
     desc: Join all remaining master nodes
-    deps:
-      - join-master-02
-      - join-master-03
+    cmds:
+      - task: join-master
+        vars:
+          HOST: kube-master-02
+      - task: join-master
+        vars:
+          HOST: kube-master-03
 
   join-all-workers:
     desc: Join all worker nodes
-    deps:
-      - join-storage-01
-      - join-storage-02
-      - join-storage-03
-      - join-big-01
+    cmds:
+      - task: join-worker
+        vars:
+          HOST: kube-storage-01
+      - task: join-worker
+        vars:
+          HOST: kube-storage-02
+      - task: join-worker
+        vars:
+          HOST: kube-storage-03
+      - task: join-worker
+        vars:
+          HOST: kube-big-01
 
   bootstrap:
     desc: Bootstrap entire cluster (init + all joins)
