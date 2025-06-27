@@ -9,4 +9,4 @@ node-external-ip: {{ tailscale_ip }}
 tls-san:
   - {{ tailscale_ip }}
   - {{ hostname }}
-  - {{ hostname }}.beaver-cloud.ts.net
+  - {{ tailscale_fqdn }}
