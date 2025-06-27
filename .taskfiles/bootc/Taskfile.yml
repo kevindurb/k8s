@@ -54,3 +54,14 @@ tasks:
           --dest-ignition /config.ign
           --output /data/{{.ITEM}}.iso
           /data/{{.ISO_FILENAME}}
+
+  upgrade-all-hosts:
+    desc: Upgrade bootc and reboot all hosts
+    vars:
+      HOSTS:
+        sh: yq e 'keys | .[]' ./bootc/hosts.yml
+    cmds:
+      - for: { var: HOSTS }
+        cmd: |
+          echo "Upgrading {{.ITEM}}..."
+          ssh core@{{.ITEM}} 'sudo bootc upgrade && sudo systemctl reboot' || true
