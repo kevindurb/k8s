@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-os-image:
-    name: Build and push os image
+  build-node-image:
+    name: Build and push node image
     runs-on: ubuntu-latest
 
     permissions:
@@ -30,11 +30,11 @@ jobs:
         id: meta
         with:
           images: |
-            ghcr.io/kevindurb/k8s
+            ghcr.io/kevindurb/k8s-node
 
           labels: |
             io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository }}/main/README.md
-            org.opencontainers.image.title=${{ inputs.image }}
+            org.opencontainers.image.title=k8s-node
 
           tags: |
             type=raw,value=latest
@@ -55,7 +55,64 @@ jobs:
           oci: false
           context: ./bootc
           containerfiles: |
-            ./bootc/Containerfile
+            ./bootc/node.Containerfile
+          platforms: linux/amd64, linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Push Image to GHCR
+        uses: redhat-actions/push-to-registry@v2
+        id: push
+        with:
+          tags: ${{ steps.meta.outputs.tags }}
+
+  build-gateway-image:
+    name: Build and push gateway image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Podman and Buildah
+        run: sudo apt update && sudo apt install -y buildah podman qemu-user-static
+
+      - name: Image Metadata
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: |
+            ghcr.io/kevindurb/k8s-gateway
+
+          labels: |
+            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository }}/main/README.md
+            org.opencontainers.image.title=k8s-gateway
+
+          tags: |
+            type=raw,value=latest
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=sha
+
+      - name: Login to GitHub Container Registry
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Image
+        id: build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          oci: false
+          context: ./bootc
+          containerfiles: |
+            ./bootc/gateway.Containerfile
           platforms: linux/amd64, linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

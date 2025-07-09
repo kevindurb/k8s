@@ -7,9 +7,21 @@ tasks:
     desc: Build the bootc container image for K8s nodes
     cmd: >
       podman build
-      -t ghcr.io/kevindurb/k8s:latest
-      -f ./bootc/Containerfile
+      -t ghcr.io/kevindurb/k8s-node:latest
+      -f ./bootc/node.Containerfile
       ./bootc
+
+  build-gateway:
+    desc: Build the bootc container image for K8s gateway
+    cmd: >
+      podman build
+      -t ghcr.io/kevindurb/k8s-gateway:latest
+      -f ./bootc/gateway.Containerfile
+      ./bootc
+
+  build-all:
+    desc: Build both node and gateway container images
+    deps: [build, build-gateway]
 
   genignition:
     desc: Generate ignition files for all hosts in hosts.yml
