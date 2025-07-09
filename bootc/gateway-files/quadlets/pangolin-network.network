@@ -1,0 +1,13 @@
+[Unit]
+Description=Pangolin bridge network
+Documentation=man:podman-network(1)
+
+[Network]
+NetworkName=pangolin-network
+Driver=bridge
+Subnet=172.18.0.0/16
+Gateway=172.18.0.1
+DNS=8.8.8.8,8.8.4.4
+
+[Install]
+WantedBy=multi-user.target

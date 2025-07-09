@@ -1,0 +1,28 @@
+[Unit]
+Description=Gerbil WireGuard interface manager
+Documentation=https://fossorial.io/
+After=pangolin.service
+Wants=pangolin.service
+
+[Container]
+Image=fosrl/gerbil:latest
+ContainerName=gerbil
+Network=pangolin-network
+PublishPort=51820:51820/udp
+PublishPort=443:443
+PublishPort=80:80
+AddCapability=NET_ADMIN
+AddCapability=SYS_MODULE
+Volume=/var/lib/pangolin/config:/var/config:Z
+Exec=--config /var/config/config.yaml --pangolin http://pangolin:3001
+AutoUpdate=registry
+Label=org.opencontainers.image.title=gerbil
+Label=org.opencontainers.image.description=Gerbil WireGuard interface manager
+
+[Service]
+Restart=unless-stopped
+TimeoutStartSec=300
+ExecStartPre=-/usr/bin/podman pull fosrl/gerbil:latest
+
+[Install]
+WantedBy=multi-user.target

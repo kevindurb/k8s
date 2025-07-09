@@ -1,0 +1,44 @@
+http:
+  routers:
+    pangolin-api:
+      rule: "Host(`gateway.example.com`) && PathPrefix(`/api`)"
+      service: pangolin-service
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+    
+    pangolin-web:
+      rule: "Host(`gateway.example.com`)"
+      service: pangolin-service
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    traefik-dashboard:
+      rule: "Host(`traefik.gateway.example.com`)"
+      service: api@internal
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    pangolin-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3001"
+        healthCheck:
+          path: /api/v1/
+          interval: 30s
+          timeout: 10s
+
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"

@@ -1,0 +1,56 @@
+server:
+  host: 0.0.0.0
+  port: 3001
+  debug: false
+
+wireguard:
+  interface: wg0
+  port: 51820
+  private_key: ""
+  public_key: ""
+  endpoint: "gateway.example.com:51820"
+  allowed_ips:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+
+clients:
+  - name: "k8s-cluster"
+    public_key: ""
+    allowed_ips:
+      - "10.0.0.0/8"
+    endpoint: "k8s.internal:51820"
+
+proxy:
+  upstream_servers:
+    - name: "k8s-ingress"
+      address: "10.0.0.10"
+      port: 80
+      health_check:
+        enabled: true
+        path: "/healthz"
+        interval: 30
+    - name: "k8s-ingress-ssl"
+      address: "10.0.0.10"
+      port: 443
+      health_check:
+        enabled: true
+        path: "/healthz"
+        interval: 30
+
+routes:
+  - path: "/"
+    upstream: "k8s-ingress"
+    strip_prefix: false
+
+logging:
+  level: info
+  format: json
+
+monitoring:
+  metrics:
+    enabled: true
+    path: "/metrics"
+  health_check:
+    enabled: true
+    path: "/health"
