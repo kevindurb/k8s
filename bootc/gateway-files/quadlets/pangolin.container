@@ -9,6 +9,7 @@ Image=docker.io/fosrl/pangolin:latest
 ContainerName=pangolin
 Network=pangolin-network
 Volume=/etc/pangolin:/app/config:Z
+EnvironmentFile=/etc/pangolin/pangolin.env
 HealthCmd=curl -f http://localhost:3001/api/v1/
 HealthInterval=30s
 HealthTimeout=10s
