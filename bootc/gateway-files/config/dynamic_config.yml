@@ -1,44 +1,53 @@
 http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
   routers:
-    pangolin-api:
-      rule: "Host(`gateway.beaver-cloud.xyz`) && PathPrefix(`/api`)"
-      service: pangolin-service
-      entrypoints:
-        - websecure
-      tls:
-        certResolver: letsencrypt
-    
-    pangolin-web:
-      rule: "Host(`gateway.beaver-cloud.xyz`)"
-      service: pangolin-service
-      entrypoints:
+    # HTTP to HTTPS redirect router
+    main-app-router-redirect:
+      rule: "Host(`pangolin.beaver-cloud.xyz`)"
+      service: next-service
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+
+    # Next.js router (handles everything except API and WebSocket paths)
+    next-router:
+      rule: "Host(`pangolin.beaver-cloud.xyz`) && !PathPrefix(`/api/v1`)"
+      service: next-service
+      entryPoints:
         - websecure
       tls:
         certResolver: letsencrypt
 
-    traefik-dashboard:
-      rule: "Host(`traefik.gateway.beaver-cloud.xyz`)"
-      service: api@internal
-      entrypoints:
+    # API router (handles /api/v1 paths)
+    api-router:
+      rule: "Host(`pangolin.beaver-cloud.xyz`) && PathPrefix(`/api/v1`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    # WebSocket router
+    ws-router:
+      rule: "Host(`pangolin.beaver-cloud.xyz`)"
+      service: api-service
+      entryPoints:
         - websecure
       tls:
         certResolver: letsencrypt
 
   services:
-    pangolin-service:
+    next-service:
       loadBalancer:
         servers:
-          - url: "http://pangolin:3001"
-        healthCheck:
-          path: /api/v1/
-          interval: 30s
-          timeout: 10s
+          - url: "http://pangolin:3002" # Next.js server
 
-tls:
-  options:
-    default:
-      minVersion: "VersionTLS12"
-      cipherSuites:
-        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
-        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
-        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3000" # API/WebSocket server
