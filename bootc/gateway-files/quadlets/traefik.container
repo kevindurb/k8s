@@ -5,7 +5,7 @@ After=gerbil.service
 Wants=gerbil.service
 
 [Container]
-Image=traefik:v3.3.3
+Image=docker.io/library/traefik:v3.3.3
 ContainerName=traefik
 Network=container:gerbil
 Volume=/var/lib/pangolin/config/traefik:/etc/traefik:Z
@@ -18,7 +18,7 @@ Label=org.opencontainers.image.description=Traefik HTTP reverse proxy and load b
 [Service]
 Restart=unless-stopped
 TimeoutStartSec=300
-ExecStartPre=-/usr/bin/podman pull traefik:v3.3.3
+ExecStartPre=-/usr/bin/podman pull docker.io/library/traefik:v3.3.3
 
 [Install]
 WantedBy=multi-user.target

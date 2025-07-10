@@ -5,7 +5,7 @@ After=pangolin-network.service
 Wants=pangolin-network.service
 
 [Container]
-Image=fosrl/pangolin:latest
+Image=docker.io/fosrl/pangolin:latest
 ContainerName=pangolin
 Network=pangolin-network
 Volume=/var/lib/pangolin/config:/app/config:Z
@@ -20,7 +20,7 @@ Label=org.opencontainers.image.description=Pangolin tunneled reverse proxy serve
 [Service]
 Restart=unless-stopped
 TimeoutStartSec=300
-ExecStartPre=-/usr/bin/podman pull fosrl/pangolin:latest
+ExecStartPre=-/usr/bin/podman pull docker.io/fosrl/pangolin:latest
 
 [Install]
 WantedBy=multi-user.target
