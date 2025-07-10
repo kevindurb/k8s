@@ -1,7 +1,7 @@
 http:
   routers:
     pangolin-api:
-      rule: "Host(`gateway.example.com`) && PathPrefix(`/api`)"
+      rule: "Host(`gateway.beaver-cloud.xyz`) && PathPrefix(`/api`)"
       service: pangolin-service
       entrypoints:
         - websecure
@@ -9,7 +9,7 @@ http:
         certResolver: letsencrypt
     
     pangolin-web:
-      rule: "Host(`gateway.example.com`)"
+      rule: "Host(`gateway.beaver-cloud.xyz`)"
       service: pangolin-service
       entrypoints:
         - websecure
@@ -17,7 +17,7 @@ http:
         certResolver: letsencrypt
 
     traefik-dashboard:
-      rule: "Host(`traefik.gateway.example.com`)"
+      rule: "Host(`traefik.gateway.beaver-cloud.xyz`)"
       service: api@internal
       entrypoints:
         - websecure

@@ -1,16 +1,16 @@
 [Unit]
 Description=Traefik HTTP reverse proxy and load balancer
 Documentation=https://doc.traefik.io/traefik/
-After=gerbil.service
-Wants=gerbil.service
+After=pangolin.service gerbil.service
+Wants=pangolin.service gerbil.service
 
 [Container]
-Image=docker.io/library/traefik:v3.3.3
+Image=docker.io/library/traefik:v3.4.0
 ContainerName=traefik
 Network=container:gerbil
-Volume=/var/lib/pangolin/config/traefik:/etc/traefik:Z
-Volume=/var/lib/pangolin/letsencrypt:/letsencrypt:Z
-Exec=--configfile=/etc/traefik/traefik_config.yml
+Volume=/etc/pangolin/traefik:/etc/traefik:Z,ro
+Volume=pangolin-letsencrypt:/letsencrypt:Z
+Exec=--configFile=/etc/traefik/traefik_config.yml
 AutoUpdate=registry
 Label=org.opencontainers.image.title=traefik
 Label=org.opencontainers.image.description=Traefik HTTP reverse proxy and load balancer
@@ -18,7 +18,7 @@ Label=org.opencontainers.image.description=Traefik HTTP reverse proxy and load b
 [Service]
 Restart=unless-stopped
 TimeoutStartSec=300
-ExecStartPre=-/usr/bin/podman pull docker.io/library/traefik:v3.3.3
+ExecStartPre=-/usr/bin/podman pull docker.io/library/traefik:v3.4.0
 
 [Install]
 WantedBy=multi-user.target

@@ -6,19 +6,18 @@ LABEL org.opencontainers.image.description="Fedora CoreOS bootc image with Pango
 LABEL org.opencontainers.image.source="https://github.com/kevindurb/k8s"
 
 # Create required directories
-RUN mkdir -p /var/lib/pangolin/config/traefik \
-    && mkdir -p /var/lib/pangolin/letsencrypt \
-    && mkdir -p /var/lib/pangolin/logs \
+RUN mkdir -p /etc/pangolin/traefik \
     && mkdir -p /etc/containers/systemd
 
 # Copy Podman Quadlet files
 COPY ./gateway-files/quadlets/*.network /etc/containers/systemd/
 COPY ./gateway-files/quadlets/*.container /etc/containers/systemd/
+COPY ./gateway-files/quadlets/*.volume /etc/containers/systemd/
 
 # Copy configuration files
-COPY ./gateway-files/config/traefik_config.yml /var/lib/pangolin/config/traefik/
-COPY ./gateway-files/config/dynamic_config.yml /var/lib/pangolin/config/traefik/
-COPY ./gateway-files/config/config.yaml /var/lib/pangolin/config/
+COPY ./gateway-files/config/traefik_config.yml /etc/pangolin/traefik/
+COPY ./gateway-files/config/dynamic_config.yml /etc/pangolin/traefik/
+COPY ./gateway-files/config/config.yaml /etc/pangolin/
 
 # Copy health check script and make executable
 COPY ./gateway-files/scripts/pangolin-health-check.sh /usr/local/bin/
@@ -35,13 +34,12 @@ RUN firewall-offline-cmd --add-port=80/tcp \
 # Note: Container images will be pulled automatically by systemd when services start
 
 # Set proper ownership and permissions
-RUN chown -R root:root /var/lib/pangolin \
+RUN chown -R root:root /etc/pangolin \
     && chown -R root:root /etc/containers/systemd \
-    && chmod 755 /var/lib/pangolin/config \
-    && chmod 755 /var/lib/pangolin/letsencrypt \
-    && chmod 755 /var/lib/pangolin/logs \
-    && chmod 600 /var/lib/pangolin/config/config.yaml \
-    && chmod 644 /var/lib/pangolin/config/traefik/*.yml \
+    && chmod 755 /etc/pangolin \
+    && chmod 755 /etc/pangolin/traefik \
+    && chmod 600 /etc/pangolin/config.yaml \
+    && chmod 644 /etc/pangolin/traefik/*.yml \
     && chmod 644 /etc/logrotate.d/pangolin-logrotate
 
 # Enable systemd services

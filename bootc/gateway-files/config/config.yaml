@@ -1,56 +1,31 @@
+---
+app:
+  dashboard_url: https://pangolin.beaver-cloud.xyz
+  log_level: info
+  save_logs: false
+
+domains:
+  beaver-cloud:
+    base_domain: beaver-cloud.xyz
+    cert_resolver: letsencrypt
+
 server:
-  host: 0.0.0.0
-  port: 3001
-  debug: false
+  external_port: 3000
+  internal_port: 3001
+  next_port: 3002
 
-wireguard:
-  interface: wg0
-  port: 51820
-  private_key: ""
-  public_key: ""
-  endpoint: "gateway.example.com:51820"
-  allowed_ips:
-    - "10.0.0.0/8"
-    - "172.16.0.0/12"
-    - "192.168.0.0/16"
+traefik:
+  cert_resolver: letsencrypt
+  http_entrypoint: web
+  https_entrypoint: websecure
 
-clients:
-  - name: "k8s-cluster"
-    public_key: ""
-    allowed_ips:
-      - "10.0.0.0/8"
-    endpoint: "k8s.internal:51820"
+gerbil:
+  start_port: 51820
+  base_endpoint: pangolin.beaver-cloud.xyz
 
-proxy:
-  upstream_servers:
-    - name: "k8s-ingress"
-      address: "10.0.0.10"
-      port: 80
-      health_check:
-        enabled: true
-        path: "/healthz"
-        interval: 30
-    - name: "k8s-ingress-ssl"
-      address: "10.0.0.10"
-      port: 443
-      health_check:
-        enabled: true
-        path: "/healthz"
-        interval: 30
-
-routes:
-  - path: "/"
-    upstream: "k8s-ingress"
-    strip_prefix: false
-
-logging:
-  level: info
-  format: json
-
-monitoring:
-  metrics:
-    enabled: true
-    path: "/metrics"
-  health_check:
-    enabled: true
-    path: "/health"
+flags:
+  require_email_verification: true
+  disable_signup_without_invite: true
+  disable_user_create_org: true
+  allow_raw_resources: true
+  allow_base_domain_resources: true

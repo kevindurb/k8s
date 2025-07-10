@@ -13,8 +13,8 @@ PublishPort=443:443
 PublishPort=80:80
 AddCapability=NET_ADMIN
 AddCapability=SYS_MODULE
-Volume=/var/lib/pangolin/config:/var/config:Z
-Exec=--config /var/config/config.yaml --pangolin http://pangolin:3001
+Volume=gerbil-config:/var/config:Z
+Exec=--reachableAt=http://gerbil:3003 --generateAndSaveKeyTo=/var/config/key --remoteConfig=http://pangolin:3001/api/v1/gerbil/get-config --reportBandwidthTo=http://pangolin:3001/api/v1/gerbil/receive-bandwidth
 AutoUpdate=registry
 Label=org.opencontainers.image.title=gerbil
 Label=org.opencontainers.image.description=Gerbil WireGuard interface manager

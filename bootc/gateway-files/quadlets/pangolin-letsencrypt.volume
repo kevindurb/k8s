@@ -1,0 +1,10 @@
+[Unit]
+Description=Pangolin Let's Encrypt certificates volume
+Documentation=man:podman-volume(1)
+
+[Volume]
+VolumeName=pangolin-letsencrypt
+Driver=local
+
+[Install]
+WantedBy=multi-user.target

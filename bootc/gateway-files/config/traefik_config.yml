@@ -17,7 +17,7 @@ certificatesResolvers:
   letsencrypt:
     acme:
       tlsChallenge: {}
-      email: admin@example.com
+      email: admin@beaver-cloud.xyz
       storage: /letsencrypt/acme.json
       caServer: https://acme-v02.api.letsencrypt.org/directory
 

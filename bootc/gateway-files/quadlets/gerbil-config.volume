@@ -1,0 +1,10 @@
+[Unit]
+Description=Gerbil configuration and keys volume
+Documentation=man:podman-volume(1)
+
+[Volume]
+VolumeName=gerbil-config
+Driver=local
+
+[Install]
+WantedBy=multi-user.target
