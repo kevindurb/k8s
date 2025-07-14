@@ -1,0 +1,36 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bitwarden-sm-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitwarden.com/
+      targetRevision: "0.1.0"
+      chart: sm-operator
+      helm:
+        valuesObject:
+          containers:
+            manager:
+              image:
+                tag: "0.1.0"
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/bitwarden-secrets/sm-operator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bitwarden-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
