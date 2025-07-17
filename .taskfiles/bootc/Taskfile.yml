@@ -79,3 +79,25 @@ tasks:
         cmd: |
           echo "Upgrading {{.ITEM}}..."
           ssh core@{{.ITEM}} 'sudo bootc upgrade && sudo systemctl reboot' || true
+
+  shutdown:
+    desc: Shutdown all bootc hosts
+    vars:
+      HOSTS:
+        sh: yq e 'keys | .[]' ./bootc/hosts.yml
+    cmds:
+      - for: { var: HOSTS }
+        cmd: |
+          echo "Shutting down {{.ITEM}}..."
+          ssh core@{{.ITEM}} 'sudo systemctl poweroff' || true
+
+  reboot:
+    desc: Reboot all bootc hosts
+    vars:
+      HOSTS:
+        sh: yq e 'keys | .[]' ./bootc/hosts.yml
+    cmds:
+      - for: { var: HOSTS }
+        cmd: |
+          echo "Rebooting {{.ITEM}}..."
+          ssh core@{{.ITEM}} 'sudo systemctl reboot' || true
