@@ -4,10 +4,16 @@ kind: Ingress
 metadata:
   name: tailscale-ingress
 spec:
-  ingressClassName: tailscale
-  tls: [{ hosts: [argocd] }]
-  defaultBackend:
-    service:
-      name: argocd-server
-      port:
-        name: https
+  ingressClassName: nginx
+  rules:
+    - host: argocd.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  name: http
+s

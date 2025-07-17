@@ -4,13 +4,18 @@ kind: Ingress
 metadata:
   name: tailscale-prometheus-ingress
 spec:
-  ingressClassName: tailscale
-  tls: [{ hosts: [prometheus] }]
-  defaultBackend:
-    service:
-      name: kube-prometheus-stack-prometheus
-      port:
-        number: 9090
+  ingressClassName: nginx
+  rules:
+    - host: prometheus.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-prometheus
+                port:
+                  number: 9090
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -18,10 +23,15 @@ kind: Ingress
 metadata:
   name: tailscale-grafana-ingress
 spec:
-  ingressClassName: tailscale
-  tls: [{ hosts: [grafana] }]
-  defaultBackend:
-    service:
-      name: kube-prometheus-stack-grafana
-      port:
-        number: 80
+  ingressClassName: nginx
+  rules:
+    - host: grafana.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-grafana
+                port:
+                  number: 80

@@ -3,9 +3,10 @@ kind: Kustomization
 
 resources:
   - ./argocd
-  # - ./tailscale
+  - ./tailscale
   - ./kube-system
   - ./longhorn-system
+  - ./ingress-nginx
   # - ./apps
   # - ./monitoring
   # - ./volsync-system
