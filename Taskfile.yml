@@ -23,9 +23,6 @@ includes:
     aliases: [k, k8s]
   restic:
     taskfile: .taskfiles/restic
-  talos:
-    taskfile: .taskfiles/talos
-    aliases: [tal]
 
 tasks:
   default: task --list-all

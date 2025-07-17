@@ -40,15 +40,6 @@ task argo:refresh-app appname=APPLICATION_NAME
 task argo:refresh-all
 ```
 
-### Talos Management
-
-```bash
-# Generate Talos cluster configuration
-task tal:genconfig
-
-# Get kubeconfig for cluster
-task tal:kubeconfig
-```
 
 ### BootC Management
 
@@ -64,10 +55,7 @@ task bootc:push
 
 ### Node Deployment Options
 
-1. Talos OS
-   - Traditional Talos-based node deployment using `talos/` configuration
-
-2. BootC Container Image
+1. BootC Container Image
    - Container-based OS image for Kubernetes nodes using `bootc/` configuration
    - Uses ghcr.io/ublue-os/ucore-minimal as base image
    - Contains Kubernetes 1.32 and CRI-O 1.32
@@ -89,9 +77,6 @@ apps/
 │           ├── service.yml
 │           └── etc...
 ├── kustomization.yml          # Main kustomization including all namespaces
-talos/                         # Talos OS configuration
-└── clusterconfig/             # Generated cluster configs
-    └── ...
 bootc/                         # BootC container image configuration
 ├── Containerfile              # Container image definition for K8s nodes
 ├── files/                     # Configuration files for the container
