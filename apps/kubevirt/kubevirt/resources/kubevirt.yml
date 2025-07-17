@@ -11,11 +11,11 @@ spec:
         - LiveMigration
         - NetworkBindingPlugins
     smbios:
-      sku: TalosCloud
-      version: v0.1.0
-      manufacturer: Talos Virtualization
-      product: talosvm
-      family: ccio
+      sku: K8sCloud
+      version: v1.0.0
+      manufacturer: Beaver Cloud Labs
+      product: k8s-vm
+      family: bootc
   workloadUpdateStrategy:
     workloadUpdateMethods:
       - LiveMigrate

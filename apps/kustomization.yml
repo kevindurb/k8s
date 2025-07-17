@@ -3,16 +3,16 @@ kind: Kustomization
 
 resources:
   - ./argocd
-  - ./tailscale
+  # - ./tailscale
   - ./kube-system
   - ./longhorn-system
-  - ./apps
-  - ./monitoring
-  - ./volsync-system
-  - ./ai
+  # - ./apps
+  # - ./monitoring
+  # - ./volsync-system
+  # - ./ai
   - ./node-feature-discovery
   - ./nvidia-device-plugin
-  - ./database
+  # - ./database
   - ./kubevirt
-  - ./media
+  # - ./media
   - ./metallb-system
