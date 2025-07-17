@@ -127,7 +127,7 @@ metadata:
   name: db-volume
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: openebs-mayastor-replicated
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 5Gi

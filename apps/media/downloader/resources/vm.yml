@@ -20,7 +20,7 @@ spec:
   #         resources:
   #           requests:
   #             storage: 5Gi
-  #         storageClassName: openebs-mayastor-single
+  #         storageClassName: longhorn-single
   running: true
   template:
     metadata:
@@ -85,4 +85,4 @@ spec:
   resources:
     requests:
       storage: 100Gi # Size for the installed OS and downloads
-  storageClassName: openebs-mayastor-single
+  storageClassName: longhorn-single

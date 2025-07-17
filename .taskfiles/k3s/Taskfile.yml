@@ -65,7 +65,9 @@ tasks:
         minijinja-cli \
           --define tailscale_ip={{.TAILSCALE_IP}} \
           --define k3s_token={{.K3S_TOKEN}} \
-          .taskfiles/k3s/templates/agent.yaml.j2 | \
+          --select {{.HOST}} \
+          .taskfiles/k3s/templates/agent.yaml.j2 \
+          ./bootc/hosts.yml | \
         ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
       - |
         ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
@@ -106,3 +108,24 @@ tasks:
       - task: init-master-01
       - task: join-all-masters
       - task: join-all-workers
+
+  restart-all:
+    desc: Restart k3s services on all nodes
+    cmds:
+      - task: restart-masters
+      - task: restart-workers
+
+  restart-masters:
+    desc: Restart k3s service on all master nodes
+    cmds:
+      - ssh core@kube-master-01 'sudo systemctl restart k3s'
+      - ssh core@kube-master-02 'sudo systemctl restart k3s'
+      - ssh core@kube-master-03 'sudo systemctl restart k3s'
+
+  restart-workers:
+    desc: Restart k3s-agent service on all worker nodes
+    cmds:
+      - ssh core@kube-storage-01 'sudo systemctl restart k3s-agent'
+      - ssh core@kube-storage-02 'sudo systemctl restart k3s-agent'
+      - ssh core@kube-storage-03 'sudo systemctl restart k3s-agent'
+      - ssh core@kube-big-01 'sudo systemctl restart k3s-agent'

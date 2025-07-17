@@ -5,7 +5,7 @@ resources:
   - ./argocd
   - ./tailscale
   - ./kube-system
-  - ./openebs
+  - ./longhorn-system
   - ./apps
   - ./monitoring
   - ./volsync-system

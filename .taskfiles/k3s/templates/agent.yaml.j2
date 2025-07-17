@@ -4,3 +4,9 @@ token: {{ k3s_token }}
 flannel-iface: tailscale0
 node-ip: {{ tailscale_ip }}
 node-external-ip: {{ tailscale_ip }}
+{% if labels is defined %}
+node-label:
+{% for label in labels %}
+  - {{ label }}
+{% endfor %}
+{% endif %}

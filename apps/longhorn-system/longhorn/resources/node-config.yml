@@ -1,0 +1,65 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: kube-storage-01
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  evictionRequested: false
+  tags:
+    - storage
+  disks:
+    nvme-storage:
+      allowScheduling: true
+      evictionRequested: false
+      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010204187
+      storageReserved: 0
+      diskType: block
+      tags:
+        - nvme
+        - fast
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: kube-storage-02
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  evictionRequested: false
+  tags:
+    - storage
+  disks:
+    nvme-storage:
+      allowScheduling: true
+      evictionRequested: false
+      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2411210020400514
+      storageReserved: 0
+      diskType: block
+      tags:
+        - nvme
+        - fast
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: kube-storage-03
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  evictionRequested: false
+  tags:
+    - storage
+  disks:
+    nvme-storage:
+      allowScheduling: true
+      evictionRequested: false
+      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010201718
+      storageReserved: 0
+      diskType: block
+      tags:
+        - nvme
+        - fast

@@ -8,7 +8,7 @@ metadata:
 spec:
   accessModes: [ReadWriteOnce]
   volumeMode: Filesystem
-  storageClassName: openebs-mayastor-replicated
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 10Gi

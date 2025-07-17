@@ -120,8 +120,8 @@ bootc/                         # BootC container image configuration
 
 ### Storage Architecture
 
-1. OpenEBS Mayastor provides block storage with replication
-2. Default storage class is `openebs-mayastor-replicated`
+1. Longhorn provides distributed block storage with replication
+2. Default storage class is `longhorn-replicated`
 
 ## Development Guidelines
 

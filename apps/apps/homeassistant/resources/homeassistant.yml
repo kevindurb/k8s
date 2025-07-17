@@ -61,7 +61,7 @@ spec:
     resources:
       requests:
         storage: 64Gi
-    storageClassName: openebs-mayastor-replicated
+    storageClassName: longhorn-replicated
 
 ---
 apiVersion: v1

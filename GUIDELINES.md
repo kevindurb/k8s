@@ -153,7 +153,7 @@ This document outlines the standard procedure for adding new services to the Kub
 
 ### PersistentVolumeClaim (`<pvc-name>-pvc.yml`)
 - **`metadata.name`**: Should be unique for the claim (e.g., `<component-name>-config-pvc`).
-- **`spec.storageClassName`**: Must be `openebs-mayastor-replicated` (unless using NFS or other specific storage).
+- **`spec.storageClassName`**: Must be `longhorn-replicated` (unless using NFS or other specific storage).
 - **`spec.accessModes`**: Typically `[ReadWriteOnce]`.
 - Define appropriate `spec.resources.requests.storage`.
 
@@ -165,7 +165,7 @@ This document outlines the standard procedure for adding new services to the Kub
     name: <component-name>-data # Or <component-name>-config, etc.
   spec:
     accessModes: [ReadWriteOnce]
-    storageClassName: openebs-mayastor-replicated
+    storageClassName: longhorn-replicated
     resources:
       requests:
         storage: <size> # e.g., 10Gi, 100Gi
