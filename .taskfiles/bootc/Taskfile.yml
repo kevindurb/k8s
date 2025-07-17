@@ -56,6 +56,8 @@ tasks:
         sh: ls ~/Downloads/fedora-coreos-*.iso | tail -1 | xargs basename
     cmds:
       - for: { var: HOSTS }
+        cmd: rm -f ~/Downloads/{{.ITEM}}.iso
+      - for: { var: HOSTS }
         cmd: >
           podman run --rm -it --privileged
           -v ./bootc/ignition/{{.ITEM}}.ign:/config.ign:ro
