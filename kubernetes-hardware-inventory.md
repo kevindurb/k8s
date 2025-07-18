@@ -50,6 +50,7 @@ This document provides a comprehensive hardware inventory of all nodes in the Ku
 **OS**: Fedora CoreOS 42.20250623.3.1 (uCore minimal)  
 **Kernel**: 6.14.11-300.fc42.x86_64  
 **Container Runtime**: containerd://2.0.5-k3s1.32  
+**Hardware Model**: Mac Mini 6,1 (2012) ⚠️ **11+ Years Old**
 
 #### Hardware Specifications
 - **CPU**: Intel Core i5-3210M @ 2.50GHz
@@ -71,6 +72,11 @@ This document provides a comprehensive hardware inventory of all nodes in the Ku
 - Broadcom BCM4331 802.11n WiFi
 - FireWire (IEEE 1394) Controller
 
+#### Reliability Issues
+- **Recent Crash**: System crashed on July 18, 2025 around 00:24 UTC
+- **Age Concern**: 11+ year old hardware, well beyond typical server lifespan
+- **Risk**: Potential for age-related hardware failures (power supply, thermal, capacitors)
+
 ---
 
 ### kube-master-02 (Control Plane)
@@ -79,6 +85,7 @@ This document provides a comprehensive hardware inventory of all nodes in the Ku
 **OS**: Fedora CoreOS 42.20250623.3.1 (uCore minimal)  
 **Kernel**: 6.14.11-300.fc42.x86_64  
 **Container Runtime**: containerd://2.0.5-k3s1.32  
+**Hardware Model**: Mac Mini 6,1 (2012) ⚠️ **11+ Years Old**
 
 #### Hardware Specifications
 - **CPU**: Intel Core i5-3210M @ 2.50GHz
@@ -109,6 +116,7 @@ This document provides a comprehensive hardware inventory of all nodes in the Ku
 **OS**: Fedora CoreOS 42.20250623.3.1 (uCore minimal)  
 **Kernel**: 6.14.11-300.fc42.x86_64  
 **Container Runtime**: containerd://2.0.5-k3s1.32  
+**Hardware Model**: Mac Mini 6,1 (2012) ⚠️ **11+ Years Old**
 
 #### Hardware Specifications
 - **CPU**: Intel Core i5-3210M @ 2.50GHz
@@ -269,12 +277,24 @@ This document provides a comprehensive hardware inventory of all nodes in the Ku
 3. **Storage nodes** have additional NVMe drives perfect for Longhorn distributed storage
 
 ### Hardware Observations
-1. All master nodes are identical MacBook Pro hardware (Intel i5-3210M)
+1. All master nodes are identical **Mac Mini 6,1 (2012)** hardware (Intel i5-3210M)
 2. All storage nodes are identical desktop hardware (Intel i5-4590)
 3. kube-big-01 stands out as a more powerful desktop system
 4. Consistent network setup with Tailscale VPN across all nodes
+5. **Age Concern**: Mac Mini nodes are 11+ years old, well beyond typical server lifespan
 
 ### Potential Issues
 - **kube-storage-02** has significantly less memory and primary storage
 - Some nodes show offline CPU cores (likely power management)
 - All nodes are running the same uCore minimal OS image
+- **Mac Mini Age**: 11+ year old hardware poses reliability risks
+  - **kube-master-01** recently crashed (July 18, 2025)
+  - Risk of age-related failures: power supplies, thermal management, capacitors
+  - Consider replacement or treating as potentially unreliable
+
+### Reliability Recommendations
+1. **Monitor Mac Mini nodes closely** for stability patterns
+2. **Plan hardware replacement** for the aging Mac Mini control plane
+3. **Consider hardware refresh** to newer, more reliable equipment
+4. **Implement proper monitoring** for temperature and hardware health
+5. **Ensure proper maintenance** - clean dust, check ventilation
