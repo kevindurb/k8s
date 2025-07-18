@@ -1,0 +1,227 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmagent-config
+  labels:
+    app: vmagent
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 30s
+      evaluation_interval: 30s
+    
+    scrape_configs:
+    # Node-exporter for system metrics and Mac Mini temperatures
+    - job_name: 'node-exporter'
+      static_configs:
+      - targets:
+        - '192.168.0.94:9100'   # kube-master-01 (crashed Mac Mini)
+        - '192.168.0.153:9100'  # kube-master-02 (Mac Mini)
+        - '192.168.0.202:9100'  # kube-master-03 (Mac Mini)
+        - '192.168.0.55:9100'   # kube-big-01
+        - '192.168.0.41:9100'   # kube-storage-01
+        - '192.168.0.38:9100'   # kube-storage-02
+        - '192.168.0.134:9100'  # kube-storage-03
+      scrape_interval: 30s
+      metrics_path: /metrics
+      relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.94:9100'
+        target_label: node_type
+        replacement: 'mac-mini-master-01'
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.153:9100'
+        target_label: node_type
+        replacement: 'mac-mini-master-02'
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.202:9100'
+        target_label: node_type
+        replacement: 'mac-mini-master-03'
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.55:9100'
+        target_label: node_type
+        replacement: 'desktop-big-01'
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.41:9100'
+        target_label: node_type
+        replacement: 'desktop-storage-01'
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.38:9100'
+        target_label: node_type
+        replacement: 'desktop-storage-02'
+      - source_labels: [__address__]
+        regex: '192\.168\.0\.134:9100'
+        target_label: node_type
+        replacement: 'desktop-storage-03'
+    
+    # Kubernetes API server metrics
+    - job_name: 'kubernetes-apiservers'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - default
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+    
+    # Kubernetes kubelet metrics
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+    
+    # Kubernetes cAdvisor metrics
+    - job_name: 'kubernetes-cadvisor'
+      kubernetes_sd_configs:
+      - role: node
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+    
+    # Kubernetes service endpoints
+    - job_name: 'kubernetes-service-endpoints'
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        action: replace
+        target_label: kubernetes_name
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmalert-rules
+  labels:
+    app: vmalert
+data:
+  rules.yml: |
+    groups:
+    - name: mac-mini-temperature
+      rules:
+      # Mac Mini overheating warning
+      - alert: MacMiniOverheating
+        expr: node_hwmon_temp_celsius{node_type=~"mac-mini-.*"} > 75
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mac Mini {{ $labels.node_type }} overheating"
+          description: "Mac Mini {{ $labels.node_type }} ({{ $labels.instance }}) temperature is {{ $value }}°C"
+      
+      # Mac Mini critical temperature
+      - alert: MacMiniCriticalTemp
+        expr: node_hwmon_temp_celsius{node_type=~"mac-mini-.*"} > 85
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mac Mini {{ $labels.node_type }} critical temperature"
+          description: "Mac Mini {{ $labels.node_type }} ({{ $labels.instance }}) critical temperature {{ $value }}°C"
+      
+      # Temperature difference between stacked Mac Minis
+      - alert: MacMiniTempDifference
+        expr: |
+          (
+            node_hwmon_temp_celsius{node_type="mac-mini-master-01"} - 
+            node_hwmon_temp_celsius{node_type="mac-mini-master-02"}
+          ) > 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Large temperature difference between stacked Mac Minis"
+          description: "Temperature difference between master-01 and master-02 is {{ $value }}°C"
+      
+      # CPU thermal throttling detection
+      - alert: CPUThermalThrottling
+        expr: rate(node_cpu_frequency_hertz{node_type=~"mac-mini-.*"}[5m]) < 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU thermal throttling detected on {{ $labels.node_type }}"
+          description: "CPU on {{ $labels.node_type }} ({{ $labels.instance }}) is throttling due to thermal limits"
+    
+    - name: general-system
+      rules:
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.node_type }}"
+          description: "Memory usage on {{ $labels.node_type }} ({{ $labels.instance }}) is {{ $value | humanizePercentage }}"
+      
+      # High disk usage
+      - alert: HighDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage on {{ $labels.node_type }}"
+          description: "Disk usage on {{ $labels.node_type }} ({{ $labels.instance }}) is {{ $value | humanizePercentage }}"
+      
+      # Node down
+      - alert: NodeDown
+        expr: up{job="node-exporter"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node {{ $labels.node_type }} is down"
+          description: "Node {{ $labels.node_type }} ({{ $labels.instance }}) has been down for more than 5 minutes"
