@@ -8,7 +8,7 @@ resources:
   - ./longhorn-system
   - ./ingress-nginx
   # - ./apps
-  # - ./monitoring
+  - ./monitoring
   # - ./volsync-system
   # - ./ai
   - ./node-feature-discovery
