@@ -2,7 +2,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: tailscale-ingress
+  name: argocd-nginx-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
   rules:
@@ -16,4 +19,3 @@ spec:
                 name: argocd-server
                 port:
                   name: http
-s
