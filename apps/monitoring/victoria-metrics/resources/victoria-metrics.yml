@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: victoria-metrics
+  namespace: monitoring
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoria-metrics
+  namespace: monitoring
+  labels:
+    app: victoria-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoria-metrics
+  template:
+    metadata:
+      labels:
+        app: victoria-metrics
+    spec:
+      serviceAccountName: victoria-metrics
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: victoria-metrics
+        image: victoriametrics/victoria-metrics:v1.97.1
+        args:
+        - --storageDataPath=/victoria-metrics-data
+        - --retentionPeriod=1y
+        - --memory.allowedPercent=80
+        - --search.maxQueryDuration=30s
+        - --httpListenAddr=:8428
+        - --loggerLevel=INFO
+        ports:
+        - containerPort: 8428
+          name: http
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8428
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8428
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 100m
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+        volumeMounts:
+        - name: victoria-metrics-data
+          mountPath: /victoria-metrics-data
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+      volumes:
+      - name: victoria-metrics-data
+        persistentVolumeClaim:
+          claimName: victoria-metrics-data

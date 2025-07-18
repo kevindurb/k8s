@@ -1,0 +1,50 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: victoria-metrics-ingress
+  namespace: monitoring
+  labels:
+    app: victoria-metrics
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: victoria.durbin.casa
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: victoria-metrics-service
+            port:
+              number: 8428
+  tls:
+  - secretName: durbin-casa-wildcard-cert
+    hosts:
+    - victoria.durbin.casa
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vmalert-ingress
+  namespace: monitoring
+  labels:
+    app: vmalert
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: vmalert.durbin.casa
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vmalert-service
+            port:
+              number: 8880
+  tls:
+  - secretName: durbin-casa-wildcard-cert
+    hosts:
+    - vmalert.durbin.casa
