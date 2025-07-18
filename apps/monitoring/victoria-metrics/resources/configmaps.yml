@@ -16,44 +16,44 @@ data:
     - job_name: 'node-exporter'
       static_configs:
       - targets:
-        - '192.168.0.94:9100'   # kube-master-01 (crashed Mac Mini)
-        - '192.168.0.153:9100'  # kube-master-02 (Mac Mini)
-        - '192.168.0.202:9100'  # kube-master-03 (Mac Mini)
-        - '192.168.0.55:9100'   # kube-big-01
-        - '192.168.0.41:9100'   # kube-storage-01
-        - '192.168.0.38:9100'   # kube-storage-02
-        - '192.168.0.134:9100'  # kube-storage-03
+        - '100.97.38.47:9100'   # kube-master-01 (crashed Mac Mini)
+        - '100.122.123.119:9100'  # kube-master-02 (Mac Mini)
+        - '100.123.21.88:9100'  # kube-master-03 (Mac Mini)
+        - '100.83.110.81:9100'   # kube-big-01
+        - '100.101.83.66:9100'   # kube-storage-01
+        - '100.93.95.94:9100'   # kube-storage-02
+        - '100.87.45.82:9100'  # kube-storage-03
       scrape_interval: 30s
       metrics_path: /metrics
       relabel_configs:
       - source_labels: [__address__]
         target_label: instance
       - source_labels: [__address__]
-        regex: '192\.168\.0\.94:9100'
+        regex: '100\.97\.38\.47:9100'
         target_label: node_type
         replacement: 'mac-mini-master-01'
       - source_labels: [__address__]
-        regex: '192\.168\.0\.153:9100'
+        regex: '100\.122\.123\.119:9100'
         target_label: node_type
         replacement: 'mac-mini-master-02'
       - source_labels: [__address__]
-        regex: '192\.168\.0\.202:9100'
+        regex: '100\.123\.21\.88:9100'
         target_label: node_type
         replacement: 'mac-mini-master-03'
       - source_labels: [__address__]
-        regex: '192\.168\.0\.55:9100'
+        regex: '100\.83\.110\.81:9100'
         target_label: node_type
         replacement: 'desktop-big-01'
       - source_labels: [__address__]
-        regex: '192\.168\.0\.41:9100'
+        regex: '100\.101\.83\.66:9100'
         target_label: node_type
         replacement: 'desktop-storage-01'
       - source_labels: [__address__]
-        regex: '192\.168\.0\.38:9100'
+        regex: '100\.93\.95\.94:9100'
         target_label: node_type
         replacement: 'desktop-storage-02'
       - source_labels: [__address__]
-        regex: '192\.168\.0\.134:9100'
+        regex: '100\.87\.45\.82:9100'
         target_label: node_type
         replacement: 'desktop-storage-03'
     
@@ -170,19 +170,19 @@ data:
           summary: "Mac Mini {{ $labels.node_type }} critical temperature"
           description: "Mac Mini {{ $labels.node_type }} ({{ $labels.instance }}) critical temperature {{ $value }}°C"
       
-      # Temperature difference between stacked Mac Minis
+      # Temperature difference between stacked Mac Minis (master-01 is on top)
       - alert: MacMiniTempDifference
         expr: |
           (
-            node_hwmon_temp_celsius{node_type="mac-mini-master-01"} - 
-            node_hwmon_temp_celsius{node_type="mac-mini-master-02"}
+            node_hwmon_temp_celsius{instance="100.97.38.47:9100"} - 
+            node_hwmon_temp_celsius{instance="100.122.123.119:9100"}
           ) > 15
         for: 10m
         labels:
           severity: warning
         annotations:
           summary: "Large temperature difference between stacked Mac Minis"
-          description: "Temperature difference between master-01 and master-02 is {{ $value }}°C"
+          description: "Temperature difference between master-01 (top) and master-02 (bottom) is {{ $value }}°C"
       
       # CPU thermal throttling detection
       - alert: CPUThermalThrottling
