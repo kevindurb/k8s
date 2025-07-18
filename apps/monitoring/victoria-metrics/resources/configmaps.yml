@@ -9,7 +9,6 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 30s
-      evaluation_interval: 30s
     
     scrape_configs:
     # Node-exporter for system metrics and Mac Mini temperatures
