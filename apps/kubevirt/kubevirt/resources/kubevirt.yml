@@ -1,26 +1,4 @@
 ---
-apiVersion: kubevirt.io/v1
-kind: KubeVirt
-metadata:
-  name: kubevirt
-  namespace: kubevirt
-spec:
-  configuration:
-    developerConfiguration:
-      featureGates:
-        - LiveMigration
-        - NetworkBindingPlugins
-    smbios:
-      sku: K8sCloud
-      version: v1.0.0
-      manufacturer: Beaver Cloud Labs
-      product: k8s-vm
-      family: bootc
-  workloadUpdateStrategy:
-    workloadUpdateMethods:
-      - LiveMigrate
-
----
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: CDI
 metadata:
