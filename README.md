@@ -2,7 +2,7 @@
 
 This repository contains the complete Kubernetes cluster configuration managed via GitOps principles using ArgoCD and Kustomize.
 
-## < Network Architecture & IP Allocation
+## 🌐 Network Architecture & IP Allocation
 
 ### Control Plane & Load Balancing
 
@@ -90,7 +90,7 @@ graph TD
     end
 ```
 
-## <� Architecture Overview
+## 🏗️ Architecture Overview
 
 ### Deployment Stack
 
@@ -115,7 +115,7 @@ graph TD
 | **Sealed Secrets**     | `kube-system`     | -                                   | Secret management              |
 | **MetalLB**            | `metallb-system`  | -                                   | LoadBalancer IP allocation     |
 
-## =� Documentation
+## 📖 Documentation
 
 For detailed information, see:
 
@@ -123,7 +123,7 @@ For detailed information, see:
 - [GUIDELINES.md](./GUIDELINES.md) - Standard procedures for adding new services
 - [kubernetes-hardware-inventory.md](./kubernetes-hardware-inventory.md) - Complete hardware specifications
 
-## =� Quick Start
+## 🚀 Quick Start
 
 ### Common Operations
 
@@ -149,7 +149,7 @@ task k8s:update-hosts
 - **Longhorn Dashboard**: https://longhorn.beaver-cloud.xyz
 - **Victoria Metrics**: https://victoria-metrics.beaver-cloud.xyz
 
-## = Security
+## 🔒 Security
 
 - **Network Isolation**: Tailscale mesh VPN for secure external access
 - **Certificate Management**: Wildcard certificates via cert-manager + Cloudflare
@@ -157,7 +157,7 @@ task k8s:update-hosts
 - **Network Policies**: Pod-to-pod communication controls
 - **RBAC**: Role-based access control throughout the cluster
 
-## =� Cluster Stats
+## 📊 Cluster Stats
 
 - **Total Nodes**: 7 (3 control plane, 4 workers)
 - **Total CPU Cores**: 30 (8 AMD + 22 Intel)
