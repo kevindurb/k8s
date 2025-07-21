@@ -8,16 +8,16 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: victoria.beaver-cloud.xyz
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: victoria-metrics
-            port:
-              number: 8428
+    - host: victoria.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: victoria-metrics
+                port:
+                  number: 8428
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -29,16 +29,16 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: vmagent.beaver-cloud.xyz
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: vmagent
-            port:
-              number: 8429
+    - host: vmagent.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vmagent
+                port:
+                  number: 8429
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -50,13 +50,13 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: vmalert.beaver-cloud.xyz
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: vmalert
-            port:
-              number: 8880
+    - host: vmalert.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vmalert
+                port:
+                  number: 8880

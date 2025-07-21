@@ -8,11 +8,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: "https://github.com/kevindurb/k8s.git"
+    repoURL: 'https://github.com/kevindurb/k8s.git'
     path: apps/media/jellyfin
     targetRevision: HEAD
   destination:
-    server: "https://kubernetes.default.svc"
+    server: 'https://kubernetes.default.svc'
     namespace: media
   syncPolicy:
     automated:

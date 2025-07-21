@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 ---
-version: "3"
+version: '3'
 
 vars:
   apps:
@@ -8,7 +8,7 @@ vars:
 
 tasks:
   force-update-external-secret:
-    cmd: "kubectl annotate externalsecret {{ .name }} force-sync=$(date +%s) --overwrite"
+    cmd: 'kubectl annotate externalsecret {{ .name }} force-sync=$(date +%s) --overwrite'
     requires:
       vars: [name]
 
@@ -46,13 +46,13 @@ tasks:
     cmd: |
       # Create backup of current hosts file
       sudo cp /etc/hosts /etc/hosts.backup.$(date +%Y%m%d_%H%M%S)
-      
+
       # Remove existing k8s ingress entries
       sudo sed -i '' '/# k8s-ingress-start/,/# k8s-ingress-end/d' /etc/hosts
-      
+
       # Get all unique hostnames from ingress resources
       HOSTS=$(kubectl get ingress -A -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}' | sort -u | grep -v '^$')
-      
+
       # Add k8s ingress section to hosts file
       echo "" | sudo tee -a /etc/hosts
       echo "# k8s-ingress-start" | sudo tee -a /etc/hosts
@@ -62,5 +62,5 @@ tasks:
         fi
       done
       echo "# k8s-ingress-end" | sudo tee -a /etc/hosts
-      
+
       echo "Updated /etc/hosts with ingress hosts pointing to 192.168.50.1"

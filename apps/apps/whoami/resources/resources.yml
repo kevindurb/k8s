@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: web-deployment
   annotations:
-    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -81,7 +81,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: "true"
+    gatus.io/enabled: 'true'
 data:
   whoami.yml: |
     endpoints:

@@ -8,18 +8,18 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 8428
-    targetPort: 8428
-    name: http
-  - port: 8089
-    targetPort: 8089
-    name: influx
-  - port: 2003
-    targetPort: 2003
-    name: graphite
-  - port: 4242
-    targetPort: 4242
-    name: opentsdb
+    - port: 8428
+      targetPort: 8428
+      name: http
+    - port: 8089
+      targetPort: 8089
+      name: influx
+    - port: 2003
+      targetPort: 2003
+      name: graphite
+    - port: 4242
+      targetPort: 4242
+      name: opentsdb
   selector:
     app: victoria-metrics
 
@@ -33,9 +33,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 8429
-    targetPort: 8429
-    name: http
+    - port: 8429
+      targetPort: 8429
+      name: http
   selector:
     app: vmagent
 
@@ -49,9 +49,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 8880
-    targetPort: 8880
-    name: http
+    - port: 8880
+      targetPort: 8880
+      name: http
   selector:
     app: vmalert
 
@@ -65,8 +65,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 9100
-    targetPort: 9100
-    name: metrics
+    - port: 9100
+      targetPort: 9100
+      name: metrics
   selector:
     app: node-exporter

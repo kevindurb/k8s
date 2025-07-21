@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: web-deployment
   annotations:
-    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -47,9 +47,9 @@ spec:
             - name: TZ
               value: America/Denver
             - name: RUN_MIGRATIONS
-              value: "1"
+              value: '1'
             - name: CREATE_ADMIN
-              value: "0"
+              value: '0'
           ports:
             - name: http
               containerPort: 8080
@@ -59,7 +59,7 @@ kind: Deployment
 metadata:
   name: db-deployment
   annotations:
-    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: db
 spec:
@@ -179,7 +179,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: "true"
+    gatus.io/enabled: 'true'
 data:
   miniflux.yml: |
     endpoints:

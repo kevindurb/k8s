@@ -9,7 +9,7 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 30s
-    
+
     scrape_configs:
     # Node-exporter for system metrics and Mac Mini temperatures
     - job_name: 'node-exporter'
@@ -55,7 +55,7 @@ data:
         regex: '100\.87\.45\.82:9100'
         target_label: node_type
         replacement: 'desktop-storage-03'
-    
+
     # Kubernetes API server metrics
     - job_name: 'kubernetes-apiservers'
       kubernetes_sd_configs:
@@ -72,7 +72,7 @@ data:
       - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
         action: keep
         regex: default;kubernetes;https
-    
+
     # Kubernetes kubelet metrics
     - job_name: 'kubernetes-nodes'
       kubernetes_sd_configs:
@@ -91,7 +91,7 @@ data:
         regex: (.+)
         target_label: __metrics_path__
         replacement: /api/v1/nodes/${1}/proxy/metrics
-    
+
     # Kubernetes cAdvisor metrics
     - job_name: 'kubernetes-cadvisor'
       kubernetes_sd_configs:
@@ -110,7 +110,7 @@ data:
         regex: (.+)
         target_label: __metrics_path__
         replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
-    
+
     # Kubernetes service endpoints
     - job_name: 'kubernetes-service-endpoints'
       kubernetes_sd_configs:
@@ -192,7 +192,7 @@ data:
         annotations:
           summary: "CPU thermal throttling detected on {{ $labels.node_type }}"
           description: "CPU on {{ $labels.node_type }} ({{ $labels.instance }}) is throttling due to thermal limits"
-    
+
     - name: general-system
       rules:
       # High memory usage

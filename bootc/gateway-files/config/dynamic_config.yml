@@ -7,7 +7,7 @@ http:
   routers:
     # HTTP to HTTPS redirect router
     main-app-router-redirect:
-      rule: "Host(`pangolin.beaver-cloud.xyz`)"
+      rule: 'Host(`pangolin.beaver-cloud.xyz`)'
       service: next-service
       entryPoints:
         - web
@@ -16,7 +16,7 @@ http:
 
     # Next.js router (handles everything except API and WebSocket paths)
     next-router:
-      rule: "Host(`pangolin.beaver-cloud.xyz`) && !PathPrefix(`/api/v1`)"
+      rule: 'Host(`pangolin.beaver-cloud.xyz`) && !PathPrefix(`/api/v1`)'
       service: next-service
       entryPoints:
         - websecure
@@ -25,7 +25,7 @@ http:
 
     # API router (handles /api/v1 paths)
     api-router:
-      rule: "Host(`pangolin.beaver-cloud.xyz`) && PathPrefix(`/api/v1`)"
+      rule: 'Host(`pangolin.beaver-cloud.xyz`) && PathPrefix(`/api/v1`)'
       service: api-service
       entryPoints:
         - websecure
@@ -34,7 +34,7 @@ http:
 
     # WebSocket router
     ws-router:
-      rule: "Host(`pangolin.beaver-cloud.xyz`)"
+      rule: 'Host(`pangolin.beaver-cloud.xyz`)'
       service: api-service
       entryPoints:
         - websecure
@@ -45,9 +45,9 @@ http:
     next-service:
       loadBalancer:
         servers:
-          - url: "http://pangolin:3002" # Next.js server
+          - url: 'http://pangolin:3002' # Next.js server
 
     api-service:
       loadBalancer:
         servers:
-          - url: "http://pangolin:3000" # API/WebSocket server
+          - url: 'http://pangolin:3000' # API/WebSocket server

@@ -13,7 +13,7 @@ spec:
       helm:
         valuesObject:
           apiServerProxyConfig:
-            mode: "true"
+            mode: 'true'
           operatorConfig:
             hostname: k8s-operator
           ingress:

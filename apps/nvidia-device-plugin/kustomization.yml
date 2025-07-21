@@ -2,5 +2,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ./namespace.yml
-- ./nvidia-device-plugin/app.yml
+  - ./namespace.yml
+  - ./nvidia-device-plugin/app.yml

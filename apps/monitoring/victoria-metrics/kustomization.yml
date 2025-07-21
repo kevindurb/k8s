@@ -5,19 +5,19 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-- ./resources/victoria-metrics.yml
-- ./resources/vmagent.yml
-- ./resources/vmalert.yml
-- ./resources/node-exporter.yml
-- ./resources/configmaps.yml
-- ./resources/services.yml
-- ./resources/storage.yml
-- ./resources/ingress.yml
+  - ./resources/victoria-metrics.yml
+  - ./resources/vmagent.yml
+  - ./resources/vmalert.yml
+  - ./resources/node-exporter.yml
+  - ./resources/configmaps.yml
+  - ./resources/services.yml
+  - ./resources/storage.yml
+  - ./resources/ingress.yml
 
 labels:
-- pairs:
-    app.kubernetes.io/name: victoria-metrics
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/component: monitoring
-  includeSelectors: true
-  includeTemplates: true
+  - pairs:
+      app.kubernetes.io/name: victoria-metrics
+      app.kubernetes.io/version: latest
+      app.kubernetes.io/component: monitoring
+    includeSelectors: true
+    includeTemplates: true

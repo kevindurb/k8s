@@ -4,20 +4,20 @@ api:
 
 providers:
   http:
-    endpoint: "http://pangolin:3001/api/v1/traefik-config"
-    pollInterval: "5s"
+    endpoint: 'http://pangolin:3001/api/v1/traefik-config'
+    pollInterval: '5s'
   file:
-    filename: "/etc/traefik/dynamic_config.yml"
+    filename: '/etc/traefik/dynamic_config.yml'
 
 experimental:
   plugins:
     badger:
-      moduleName: "github.com/fosrl/badger"
-      version: "v1.2.0"
+      moduleName: 'github.com/fosrl/badger'
+      version: 'v1.2.0'
 
 log:
-  level: "INFO"
-  format: "common"
+  level: 'INFO'
+  format: 'common'
 
 certificatesResolvers:
   letsencrypt:
@@ -25,20 +25,20 @@ certificatesResolvers:
       httpChallenge:
         entryPoint: web
       email: kevindurb@fastmail.com
-      storage: "/letsencrypt/acme.json"
-      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+      storage: '/letsencrypt/acme.json'
+      caServer: 'https://acme-v02.api.letsencrypt.org/directory'
 
 entryPoints:
   web:
-    address: ":80"
+    address: ':80'
   websecure:
-    address: ":443"
+    address: ':443'
     transport:
       respondingTimeouts:
-        readTimeout: "30m"
+        readTimeout: '30m'
     http:
       tls:
-        certResolver: "letsencrypt"
+        certResolver: 'letsencrypt'
 
 serversTransport:
   insecureSkipVerify: true

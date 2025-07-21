@@ -31,7 +31,7 @@ spec:
             # - name: NVIDIA_VISIBLE_DEVICES
             #   value: all
             - name: OLLAMA_FLASH_ATTENTION
-              value: "1"
+              value: '1'
             - name: OLLAMA_KV_CACHE_TYPE
               value: q8_0
           volumeMounts:

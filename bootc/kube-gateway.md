@@ -1,15 +1,18 @@
 # 🚀 kube-gateway-01 Pangolin Tunnel Gateway Requirements
 
 ## 📋 Project Overview
+
 Create a **Fedora CoreOS bootc container image** for a VPS named `kube-gateway-01` that will serve as a tunneled reverse proxy gateway for a Kubernetes cluster using **Pangolin**.
 
 ## 🎯 Core Requirements
 
 ### 1. **Base Image**
+
 - Use `ghcr.io/ublue-os/ucore:stable` as the base image
 - Target: Fedora CoreOS with Universal Blue's uCore enhancements
 
 ### 2. **Primary Software Stack**
+
 - **Pangolin** (`fosrl/pangolin:latest`) - Main tunneled reverse proxy server
 - **Gerbil** (`fosrl/gerbil:latest`) - WireGuard interface manager
 - **Traefik** (`traefik:v3.3.3`) - HTTP reverse proxy and load balancer
@@ -18,15 +21,19 @@ Create a **Fedora CoreOS bootc container image** for a VPS named `kube-gateway-0
 ### 3. **Podman Quadlet Services Required**
 
 #### Network Configuration
+
 - **pangolin-network.network**: Bridge network for all services
 
 #### Container Services
-- **pangolin.container**: 
+
+- **pangolin.container**:
+
   - Main server with health checks
   - Volume: `/var/lib/pangolin/config:/app/config:Z`
   - Health check: `curl -f http://localhost:3001/api/v1/`
 
 - **gerbil.container**:
+
   - WireGuard interface manager
   - Ports: `51820:51820/udp`, `443:443`, `80:80`
   - Capabilities: `NET_ADMIN`, `SYS_MODULE`
@@ -39,6 +46,7 @@ Create a **Fedora CoreOS bootc container image** for a VPS named `kube-gateway-0
   - Config file: `/etc/traefik/traefik_config.yml`
 
 ### 4. **Directory Structure**
+
 ```
 /var/lib/pangolin/
 ├── config/
@@ -52,12 +60,14 @@ Create a **Fedora CoreOS bootc container image** for a VPS named `kube-gateway-0
 ```
 
 ### 5. **System Configuration**
+
 - **Firewall**: Open ports 80/tcp, 443/tcp, 51820/udp
 - **Services**: Auto-enable all Pangolin services on boot
 - **Updates**: Enable podman-auto-update.timer
 - **Pre-pull**: Container images cached in the OS image
 
 ### 6. **Operational Requirements**
+
 - **Health Check Script**: `/usr/local/bin/pangolin-health-check.sh`
   - Check systemd service status
   - Check container health
@@ -68,6 +78,7 @@ Create a **Fedora CoreOS bootc container image** for a VPS named `kube-gateway-0
 - **Permissions**: All files owned by root:root with appropriate permissions
 
 ### 7. **Build Structure Required**
+
 ```
 build-context/
 ├── Containerfile
@@ -88,6 +99,7 @@ build-context/
 ## 🔧 Technical Specifications
 
 ### Quadlet Conversion Rules
+
 - Convert Docker Compose `depends_on` → Quadlet `Wants`/`After`
 - Convert `restart: unless-stopped` → `Restart=unless-stopped` in `[Service]` section
 - Convert `network_mode: service:gerbil` → `Network=container:gerbil`
@@ -96,12 +108,14 @@ build-context/
 - Use `AutoUpdate=registry` for automatic image updates
 
 ### Service Dependencies
+
 1. pangolin-network.service (starts first)
 2. pangolin.service (depends on network)
 3. gerbil.service (depends on pangolin, exposes ports)
 4. traefik.service (depends on both, uses gerbil's network)
 
 ### Container Image Labels
+
 - `org.opencontainers.image.title="kube-gateway-01"`
 - `org.opencontainers.image.description="Fedora CoreOS bootc image with Pangolin reverse proxy for Kubernetes cluster tunnel gateway"`
 
@@ -115,6 +129,7 @@ build-context/
 6. **Directory Structure Documentation** - What goes where
 
 ## 🎯 Success Criteria
+
 - [ ] Image builds successfully with `podman build` or `bootc build`
 - [ ] All services start automatically on boot
 - [ ] Health check script reports all services healthy
@@ -125,10 +140,12 @@ build-context/
 - [ ] Firewall properly configured for required ports
 
 ## 📚 Reference Materials
+
 - **Original Docker Compose**: Available at `github.com/fosrl/pangolin/blob/main/docker-compose.example.yml`
 - **Pangolin Documentation**: `https://fossorial.io/`
 - **Universal Blue uCore**: `https://github.com/ublue-os/ucore`
 - **Podman Quadlets**: systemd container management for Podman
 
 ---
-*This requirements document provides everything needed to create a production-ready tunneled reverse proxy gateway for a Kubernetes cluster using modern container technologies and immutable OS principles.*
+
+_This requirements document provides everything needed to create a production-ready tunneled reverse proxy gateway for a Kubernetes cluster using modern container technologies and immutable OS principles._

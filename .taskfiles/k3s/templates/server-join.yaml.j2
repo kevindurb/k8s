@@ -1,5 +1,5 @@
 ---
-server: https://100.97.38.47:6443
+server: https://192.168.42.1:6443
 token: {{ k3s_token }}
 disable:
   - traefik
@@ -11,3 +11,4 @@ tls-san:
   - {{ tailscale_ip }}
   - {{ hostname }}
   - {{ tailscale_fqdn }}
+  - 192.168.42.1

@@ -5,10 +5,10 @@ namespace: ai
 namePrefix: searxng-
 
 resources:
-- ./resources/searxng.yml
+  - ./resources/searxng.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: searxng
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: searxng

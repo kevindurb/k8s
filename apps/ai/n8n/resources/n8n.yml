@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: web-deployment
   annotations:
-    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -87,7 +87,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ""
+  storageClassName: ''
   resources:
     requests:
       storage: 12Ti
@@ -145,7 +145,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: "true"
+    gatus.io/enabled: 'true'
 data:
   n8n.yml: |
     endpoints:

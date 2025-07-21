@@ -5,10 +5,10 @@ namespace: apps
 namePrefix: homeassistant-
 
 resources:
-- ./resources/homeassistant.yml
+  - ./resources/homeassistant.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: homeassistant
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: homeassistant

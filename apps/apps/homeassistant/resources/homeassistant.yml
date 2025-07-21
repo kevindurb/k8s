@@ -101,7 +101,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: "true"
+    gatus.io/enabled: 'true'
 data:
   homeassistant.yml: |
     endpoints:

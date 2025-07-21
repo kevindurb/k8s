@@ -22,9 +22,9 @@ spec:
     syncOptions:
       - RespectIgnoreDifferences=true
   ignoreDifferences:
-    - group: "*"
+    - group: '*'
       kind: Application
-      namespace: "*"
+      namespace: '*'
       jsonPointers:
         - /spec/syncPolicy/automated
         - /metadata/annotations/argocd.argoproj.io~1refresh

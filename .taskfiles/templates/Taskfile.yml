@@ -1,22 +1,22 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 ---
-version: "3"
+version: '3'
 
 env:
-  NS: "{{.NS}}"
-  APP: "{{.APP}}"
+  NS: '{{.NS}}'
+  APP: '{{.APP}}'
   COMP: '{{or .COMP "web"}}'
-  IMG: "{{.IMG}}"
+  IMG: '{{.IMG}}'
   PORT: '{{or .PORT "80"}}'
   PROTO: '{{or .PROTO "http"}}'
-  SUBDOMAIN: "{{or .SUBDOMAIN .APP}}"
-  IP: "{{.IP}}"
+  SUBDOMAIN: '{{or .SUBDOMAIN .APP}}'
+  IP: '{{.IP}}'
   SIZE: '{{or .size "1G"}}'
-  APP_DIR: "{{.APP_DIR}}"
+  APP_DIR: '{{.APP_DIR}}'
 
 vars:
   APP_DIR: '{{list "apps" .NS .APP | join "/" | clean}}'
-  TEMPLATES_DIR: "{{.ROOT_DIR}}/.taskfiles/templates/resources"
+  TEMPLATES_DIR: '{{.ROOT_DIR}}/.taskfiles/templates/resources'
   MINIJINJA_ARGS: >-
     --env
     --trim-blocks
@@ -55,53 +55,53 @@ tasks:
     aliases: [ks]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: kustomization
-          OUT_FILE: "{{.APP_DIR}}/kustomization.yml"
+          OUT_FILE: '{{.APP_DIR}}/kustomization.yml'
 
   app:
     requires:
       vars: [APP, NS]
-    dir: "./apps/{{.NS}}"
+    dir: './apps/{{.NS}}'
     vars:
-      OUT_FILE: "./{{.APP}}/app.yml"
+      OUT_FILE: './{{.APP}}/app.yml'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: app
-          OUT_FILE: "./apps/{{.NS}}/{{.OUT_FILE}}"
+          OUT_FILE: './apps/{{.NS}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   app-resources:
     requires:
       vars: [APP, IMG, PORT]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
-      OUT_FILE: "./resources/{{.APP}}.yml"
+      OUT_FILE: './resources/{{.APP}}.yml'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: resources
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   namespace:
     aliases: [ns]
     requires:
       vars: [NS]
-    dir: "./apps"
+    dir: './apps'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: ns-kustomization
-          OUT_FILE: "./apps/{{.NS}}/kustomization.yml"
+          OUT_FILE: './apps/{{.NS}}/kustomization.yml'
       - task: minijinja
         vars:
           TEMPLATE: namespace
-          OUT_FILE: "./apps/{{.NS}}/namespace.yml"
+          OUT_FILE: './apps/{{.NS}}/namespace.yml'
       - kustomize edit add resource ./{{.NS}}
       # - task: minijinja
       #   vars:
@@ -113,138 +113,138 @@ tasks:
     aliases: [deploy]
     requires:
       vars: [APP, IMG, PORT]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: './resources/{{or .COMP "web"}}-deployment.yml'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: deployment
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   service:
     aliases: [svc]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: './resources/{{or .COMP "web"}}-service.yml'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: service
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   external-endpoint:
     aliases: [ext]
     requires:
       vars: [APP, IP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
-      OUT_FILE: "./resources/external-endpoint.yml"
+      OUT_FILE: './resources/external-endpoint.yml'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: external-endpoint
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   internal-ingress:
     aliases: [int-ing]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
-      OUT_FILE: "./resources/internal-ingress.yml"
+      OUT_FILE: './resources/internal-ingress.yml'
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: internal-ingress
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   external-ingress:
     aliases: [ext-ing]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: ./resources/external-ingress.yml
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: external-ingress
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   persistent-volume-claim:
     aliases: [pvc]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: ./resources/pvc.yml
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: pvc
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   postgres:
     aliases: [pg, db]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: ./resources/postgres.yml
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: postgres
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   valkey:
     aliases: [redis]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: ./resources/valkey.yml
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: valkey
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   bitwarden-secret:
     aliases: [secret]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: ./resources/bitwarden-secret.yml
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: bitwarden-secret
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
   gatus-config:
     aliases: [gatus]
     requires:
       vars: [APP]
-    dir: "{{.APP_DIR}}"
+    dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: ./resources/gatus-config.yml
     cmds:
       - task: minijinja
         vars:
           TEMPLATE: gatus-config
-          OUT_FILE: "{{.APP_DIR}}/{{.OUT_FILE}}"
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
