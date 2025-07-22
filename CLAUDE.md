@@ -9,7 +9,7 @@ This is a Kubernetes infrastructure repository managed using GitOps principles. 
 1. Kubernetes cluster configuration via Talos OS and BootC
 2. Application deployments managed via ArgoCD and Kustomize
 3. Various applications organized by namespace (media, ai, apps, etc.)
-4. Infrastructure components like storage (OpenEBS), monitoring (Prometheus), and networking (Tailscale)
+4. Infrastructure components like storage (OpenEBS), monitoring (Prometheus), networking (Tailscale), and secrets management (Bitwarden Secrets Manager)
 
 ## Common Commands
 
@@ -48,6 +48,20 @@ task bootc:build
 
 # Push BootC container image to registry
 task bootc:push
+```
+
+### Bitwarden Secrets Manager
+
+```bash
+# Create a SealedSecret for Bitwarden machine account token
+kubectl create secret generic bitwarden-auth-token \
+  --from-literal=token="<MACHINE_ACCOUNT_TOKEN>" \
+  --dry-run=client -o yaml | kubeseal -o yaml
+
+# Force refresh a BitwardenSecret
+kubectl annotate bitwardensecret <SECRET_NAME> \
+  --namespace=<NAMESPACE> \
+  bitwarden.com/force-sync=$(date +%s)
 ```
 
 ### K3s Cluster Management
@@ -158,6 +172,53 @@ bootc/                         # BootC container image configuration
 
 1. Longhorn provides distributed block storage with replication
 2. Default storage class is `longhorn-replicated`
+
+### Secrets Management
+
+1. **Bitwarden Secrets Manager**: Synchronizes secrets from Bitwarden Secrets Manager into Kubernetes secrets
+   - Deployed via official Helm chart in `bitwarden-secrets` namespace
+   - Uses machine account authentication with SealedSecret for secure token storage
+   - Supports automatic refresh of secrets at configurable intervals
+   - Creates standard Kubernetes secrets that can be referenced by applications
+
+2. **BitwardenSecret Resource**: Custom resource for defining secret synchronization
+   - Specifies organization ID, secret UUIDs, and key mappings
+   - References authentication token from SealedSecret
+   - Configurable refresh intervals (default: 15 minutes)
+
+3. **SealedSecrets**: Used for encrypting the Bitwarden machine account token
+   - Allows safe storage of authentication credentials in Git
+   - Namespace-wide sealed secrets for shared authentication
+
+#### Example BitwardenSecret Configuration
+
+```yaml
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: app-secrets
+  namespace: my-namespace
+spec:
+  organizationId: "your-org-id"
+  secretName: app-secret
+  map:
+    - bwSecretId: "secret-uuid-1"
+      secretKeyName: database_password
+    - bwSecretId: "secret-uuid-2"
+      secretKeyName: api_key
+  authToken:
+    secretName: bitwarden-auth-token
+    secretKey: token
+  refreshInterval: "10m"
+```
+
+#### Setup Process
+
+1. Create machine account in Bitwarden Secrets Manager
+2. Generate access token for machine account
+3. Create SealedSecret with the token
+4. Create BitwardenSecret resources as needed
+5. Reference the resulting Kubernetes secrets in applications
 
 ## Development Guidelines
 

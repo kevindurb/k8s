@@ -17,3 +17,4 @@ resources:
   - ./kubevirt
   # - ./media
   - ./metallb-system
+  - ./bitwarden-secrets
