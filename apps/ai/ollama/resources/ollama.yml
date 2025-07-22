@@ -31,7 +31,7 @@ spec:
             # - name: NVIDIA_VISIBLE_DEVICES
             #   value: all
             - name: OLLAMA_FLASH_ATTENTION
-              value: "1"
+              value: '1'
             - name: OLLAMA_KV_CACHE_TYPE
               value: q8_0
           volumeMounts:
@@ -49,7 +49,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: openebs-mayastor-replicated
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 20Gi
@@ -71,10 +71,15 @@ kind: Ingress
 metadata:
   name: tailscale-ingress
 spec:
-  ingressClassName: tailscale
-  tls: [{ hosts: [ollama] }]
-  defaultBackend:
-    service:
-      name: service
-      port:
-        name: http
+  ingressClassName: nginx
+  rules:
+    - host: ollama.beaver-cloud.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service
+                port:
+                  name: http

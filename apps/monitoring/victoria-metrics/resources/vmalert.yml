@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmalert
+  labels:
+    app: vmalert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vmalert
+  template:
+    metadata:
+      labels:
+        app: vmalert
+    spec:
+      containers:
+        - name: vmalert
+          image: victoriametrics/vmalert:latest
+          args:
+            - --datasource.url=http://victoria-metrics:8428
+            - --notifier.url=http://alertmanager:9093
+            - --rule=/etc/vmalert/rules.yml
+            - --httpListenAddr=:8880
+            - --evaluationInterval=30s
+            - --external.label=cluster=k8s
+            - --external.label=replica=vmalert
+          ports:
+            - containerPort: 8880
+              name: http
+          volumeMounts:
+            - name: vmalert-rules
+              mountPath: /etc/vmalert
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 50m
+            limits:
+              memory: 128Mi
+              cpu: 200m
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8880
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8880
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: vmalert-rules
+          configMap:
+            name: vmalert-rules

@@ -22,8 +22,8 @@ spec:
       containers:
         - name: fio
           image: docker.io/library/alpine
-          command: ["/bin/sh", "-c", "--"]
-          args: ["while true; do sleep 30; done;"]
+          command: ['/bin/sh', '-c', '--']
+          args: ['while true; do sleep 30; done;']
           volumeMounts:
             - name: volume
               mountPath: /mnt
@@ -35,7 +35,7 @@ metadata:
   name: volume
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: openebs-mayastor-replicated
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 20Gi

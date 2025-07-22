@@ -5,15 +5,16 @@ resources:
   - ./argocd
   - ./tailscale
   - ./kube-system
-  - ./openebs
-  - ./apps
+  - ./longhorn-system
+  - ./ingress-nginx
+  # - ./apps
   - ./monitoring
-  - ./volsync-system
-  - ./ai
+  # - ./volsync-system
+  # - ./ai
   - ./node-feature-discovery
   - ./nvidia-device-plugin
-  - ./database
+  # - ./database
   - ./kubevirt
-  - ./media
+  # - ./media
   - ./metallb-system
   - ./bitwarden-secrets

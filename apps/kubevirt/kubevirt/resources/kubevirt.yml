@@ -1,26 +1,4 @@
 ---
-apiVersion: kubevirt.io/v1
-kind: KubeVirt
-metadata:
-  name: kubevirt
-  namespace: kubevirt
-spec:
-  configuration:
-    developerConfiguration:
-      featureGates:
-        - LiveMigration
-        - NetworkBindingPlugins
-    smbios:
-      sku: TalosCloud
-      version: v0.1.0
-      manufacturer: Talos Virtualization
-      product: talosvm
-      family: ccio
-  workloadUpdateStrategy:
-    workloadUpdateMethods:
-      - LiveMigrate
-
----
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: CDI
 metadata:
@@ -30,11 +8,11 @@ spec:
     scratchSpaceStorageClass: local-path
     podResourceRequirements:
       requests:
-        cpu: "100m"
-        memory: "60M"
+        cpu: '100m'
+        memory: '60M'
       limits:
-        cpu: "750m"
-        memory: "2Gi"
+        cpu: '750m'
+        memory: '2Gi'
 
 ---
 apiVersion: apps/v1

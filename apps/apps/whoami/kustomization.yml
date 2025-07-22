@@ -5,10 +5,10 @@ namespace: apps
 namePrefix: whoami-
 
 resources:
-- ./resources/resources.yml
+  - ./resources/resources.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: whoami
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: whoami

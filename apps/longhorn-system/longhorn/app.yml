@@ -1,0 +1,53 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: 1.7.2
+    helm:
+      values: |
+        longhornManager:
+          nodeSelector:
+            nvme-storage: "true"
+        longhornDriver:
+          nodeSelector:
+            nvme-storage: "true"
+        longhornUI:
+          nodeSelector:
+            nvme-storage: "true"
+        defaultSettings:
+          defaultDataPath: /var/lib/longhorn
+          defaultReplicaCount: 3
+          createDefaultDiskLabeledNodes: true
+          nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+          guaranteedInstanceManagerCPU: 12
+          orphanAutoDeletion: true
+          storageOverProvisioningPercentage: 100
+          storageMinimalAvailablePercentage: 10
+          upgradeChecker: false
+          defaultLonghornStaticStorageClass: longhorn-replicated
+          backupstorePollInterval: 300
+          failedBackupTTL: 1440
+          restoreVolumeRecurringJobs: false
+          concurrentReplicaRebuildPerNodeLimit: 5
+          concurrentVolumeBackupRestorePerNodeLimit: 2
+          disableSchedulingOnCordonedNode: true
+          replicaZoneSoftAntiAffinity: false
+          volumeAttachmentRecoveryPolicy: wait
+          nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+          mkfsExt4Parameters: -O ^64bit,^metadata_csum
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

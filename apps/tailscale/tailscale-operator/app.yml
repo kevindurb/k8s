@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: tailscale-operator
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
@@ -15,7 +13,7 @@ spec:
       helm:
         valuesObject:
           apiServerProxyConfig:
-            mode: "true"
+            mode: 'true'
           operatorConfig:
             hostname: k8s-operator
           ingress:

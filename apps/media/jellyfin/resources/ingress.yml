@@ -4,12 +4,9 @@ metadata:
   name: tailscale-ingress
   namespace: media
 spec:
-  ingressClassName: tailscale
-  tls:
-    - hosts:
-        - jellyfin
+  ingressClassName: nginx
   rules:
-    - host: jellyfin
+    - host: jellyfin.beaver-cloud.xyz
       http:
         paths:
           - path: /

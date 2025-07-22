@@ -6,7 +6,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ""
+  storageClassName: ''
   resources:
     requests:
       storage: 12Ti

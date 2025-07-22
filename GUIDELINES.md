@@ -6,8 +6,9 @@ This document outlines the standard procedure for adding new services to the Kub
 
 - **Check for existing Namespace:** Before adding a new service, verify if an appropriate namespace already exists under the `apps/` directory.
 - **Create Namespace (if needed):**
-    - Create a new directory for the namespace: `apps/<new-namespace-name>/`
-    - Create `apps/<new-namespace-name>/namespace.yml` using the template below.
+  - Create a new directory for the namespace: `apps/<new-namespace-name>/`
+  - Create `apps/<new-namespace-name>/namespace.yml` using the template below.
+
 ```yaml
     ---
     apiVersion: v1
@@ -15,32 +16,38 @@ This document outlines the standard procedure for adding new services to the Kub
     metadata:
       name: <new-namespace-name>
 ```
+
     - Create `apps/<new-namespace-name>/kustomization.yml` with the following content:
+
 ```yaml
-      apiVersion: kustomize.config.k8s.io/v1beta1
-      kind: Kustomization
-      resources:
-        - namespace.yml
-        - <app-name> # Points to apps/<new-namespace-name>/<app-name>/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yml
+  - <app-name> # Points to apps/<new-namespace-name>/<app-name>/
 ```
+
     - Add the new namespace to the main kustomization file `apps/kustomization.yml` under the `resources` section:
+
 ```yaml
-      resources:
-        # ... other namespaces ...
-        - <new-namespace-name> # Points to apps/<new-namespace-name>/
+resources:
+  # ... other namespaces ...
+  - <new-namespace-name> # Points to apps/<new-namespace-name>/
 ```
 
 ## 2. Application Definition (ArgoCD)
 
 - Create a directory for the new application within its namespace: `apps/<namespace-name>/<app-name>/`
 - Create an ArgoCD Application manifest `apps/<namespace-name>/<app-name>/app.yml`.
-    - **`metadata.name`**: Should be `<app-name>`.
-    - **`metadata.namespace`**: Should be `argocd`.
-    - **`metadata.finalizers`**: Include `resources-finalizer.argocd.argoproj.io`.
+  - **`metadata.name`**: Should be `<app-name>`.
+  - **`metadata.namespace`**: Should be `argocd`.
+  - **`metadata.finalizers`**: Include `resources-finalizer.argocd.argoproj.io`.
+
 ```yaml
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
+finalizers:
+  - resources-finalizer.argocd.argoproj.io
 ```
+
     - **`spec.project`**: Typically `default`.
     - **`spec.source.repoURL`**: Use the correct Git repository URL (e.g., `https://github.com/kevindurb/k8s.git`).
     - **`spec.source.targetRevision`**: Typically `HEAD`.
@@ -48,23 +55,29 @@ This document outlines the standard procedure for adding new services to the Kub
     - **`spec.destination.server`**: `https://kubernetes.default.svc`.
     - **`spec.destination.namespace`**: `<namespace-name>` where the app will be deployed.
     - **`spec.syncPolicy.automated`**:
+
 ```yaml
-      automated:
-        prune: true
-        selfHeal: true
+automated:
+  prune: true
+  selfHeal: true
 ```
+
     - **`spec.syncPolicy.syncOptions`**: Generally, this should **not** be present. Namespace creation is handled by its own manifest.
+
 - Create `apps/<namespace-name>/<app-name>/kustomization.yml` to include the `app.yml` and the `resources` directory:
+
 ```yaml
-  apiVersion: kustomize.config.k8s.io/v1beta1
-  kind: Kustomization
-  resources: # Points to all resources created in apps/<namespace-name>/<app-name>/resources/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: # Points to all resources created in apps/<namespace-name>/<app-name>/resources/
 ```
+
 - Add the application directory to its namespace's kustomization file (`apps/<namespace-name>/kustomization.yml`):
+
 ```yaml
-  resources:
-    - namespace.yml
-    - <app-name> # Points to apps/<namespace-name>/<app-name>/
+resources:
+  - namespace.yml
+  - <app-name> # Points to apps/<namespace-name>/<app-name>/
 ```
 
 ## 3. Kubernetes Resource Definitions
@@ -74,6 +87,7 @@ This document outlines the standard procedure for adding new services to the Kub
 - For below templates `component-name` relates to the subcomponent within the app if the app has multiple components (ex web, db, etc). Default to "web"
 
 ### Deployment (`deployment.yml`)
+
 - Customize image, ports, environment variables, volumeMounts, and resource requests/limits.
 - Ensure `fsGroup` and `runAsUser`/`runAsGroup` are set appropriately for security.
 - Never use `latest`, only point to specific tags, if you cant find the latest tag then ask the user for the tag
@@ -134,6 +148,7 @@ This document outlines the standard procedure for adding new services to the Kub
 ```
 
 ### Service (`service.yml`)
+
 - Ensure selectors match deployment labels and ports are correctly defined.
 
 ```yaml
@@ -152,8 +167,9 @@ This document outlines the standard procedure for adding new services to the Kub
 ```
 
 ### PersistentVolumeClaim (`<pvc-name>-pvc.yml`)
+
 - **`metadata.name`**: Should be unique for the claim (e.g., `<component-name>-config-pvc`).
-- **`spec.storageClassName`**: Must be `openebs-mayastor-replicated` (unless using NFS or other specific storage).
+- **`spec.storageClassName`**: Must be `longhorn-replicated` (unless using NFS or other specific storage).
 - **`spec.accessModes`**: Typically `[ReadWriteOnce]`.
 - Define appropriate `spec.resources.requests.storage`.
 
@@ -165,13 +181,14 @@ This document outlines the standard procedure for adding new services to the Kub
     name: <component-name>-data # Or <component-name>-config, etc.
   spec:
     accessModes: [ReadWriteOnce]
-    storageClassName: openebs-mayastor-replicated
+    storageClassName: longhorn-replicated
     resources:
       requests:
         storage: <size> # e.g., 10Gi, 100Gi
 ```
 
 ### Ingress (`ingress.yml`)
+
 - For services exposed via Tailscale.
 - **`metadata.name`**: Should be unique within the namespace, e.g., `<app-name>-tailscale-ingress`.
 - **`spec.ingressClassName`**: `tailscale`.
@@ -211,23 +228,25 @@ This document outlines the standard procedure for adding new services to the Kub
 ```
 
 ### Kustomization for Resources
+
 - Create `apps/<namespace-name>/<app-name>/kustomization.yml`:
 
 ```yaml
-  apiVersion: kustomize.config.k8s.io/v1beta1
-  kind: Kustomization
-  resources:
-    - ./resources/deployment.yml
-    - ./resources/service.yml
-    - ./resources/<pvc-name>-pvc.yml # Or specific PVC files like config-pvc.yml, media-pvc.yml
-    - ./resources/ingress.yml # If applicable
-    # Add other resource files (e.g., media-nfs-pv.yml if using NFS PV)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./resources/deployment.yml
+  - ./resources/service.yml
+  - ./resources/<pvc-name>-pvc.yml # Or specific PVC files like config-pvc.yml, media-pvc.yml
+  - ./resources/ingress.yml # If applicable
+  # Add other resource files (e.g., media-nfs-pv.yml if using NFS PV)
 ```
 
 ## 4. General Kustomization Practices
+
 - When referencing another kustomization file within the same repository, point to the directory containing the `kustomization.yml` file, not the file itself.
-  - *Correct:* `  - my-app` (where `my-app` is a directory with `kustomization.yml`)
-  - *Incorrect:* `  - my-app/kustomization.yml`
+  - _Correct:_ `  - my-app` (where `my-app` is a directory with `kustomization.yml`)
+  - _Incorrect:_ `  - my-app/kustomization.yml`
 
 ## Example Structure:
 

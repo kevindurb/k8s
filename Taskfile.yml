@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 ---
-version: "3"
+version: '3'
 
 dotenv: [.env]
 
@@ -16,16 +16,11 @@ includes:
     taskfile: .taskfiles/cloudflare
   k3s:
     taskfile: .taskfiles/k3s
-  k3sup:
-    taskfile: .taskfiles/k3sup
   kubernetes:
     taskfile: .taskfiles/kubernetes
     aliases: [k, k8s]
   restic:
     taskfile: .taskfiles/restic
-  talos:
-    taskfile: .taskfiles/talos
-    aliases: [tal]
 
 tasks:
   default: task --list-all

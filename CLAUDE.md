@@ -40,16 +40,6 @@ task argo:refresh-app appname=APPLICATION_NAME
 task argo:refresh-all
 ```
 
-### Talos Management
-
-```bash
-# Generate Talos cluster configuration
-task tal:genconfig
-
-# Get kubeconfig for cluster
-task tal:kubeconfig
-```
-
 ### BootC Management
 
 ```bash
@@ -74,14 +64,36 @@ kubectl annotate bitwardensecret <SECRET_NAME> \
   bitwarden.com/force-sync=$(date +%s)
 ```
 
+### K3s Cluster Management
+
+```bash
+# Bootstrap entire cluster (init + all joins)
+task k3s:bootstrap
+
+# Initialize first master node only
+task k3s:init-master-01
+
+# Join additional master nodes
+task k3s:join-all-masters
+
+# Join all worker nodes
+task k3s:join-all-workers
+
+# Restart K3s services on all nodes
+task k3s:restart-all
+
+# Restart masters only
+task k3s:restart-masters
+
+# Restart workers only
+task k3s:restart-workers
+```
+
 ## Architecture and Code Structure
 
 ### Node Deployment Options
 
-1. Talos OS
-   - Traditional Talos-based node deployment using `talos/` configuration
-
-2. BootC Container Image
+1. BootC Container Image
    - Container-based OS image for Kubernetes nodes using `bootc/` configuration
    - Uses ghcr.io/ublue-os/ucore-minimal as base image
    - Contains Kubernetes 1.32 and CRI-O 1.32
@@ -103,9 +115,6 @@ apps/
 │           ├── service.yml
 │           └── etc...
 ├── kustomization.yml          # Main kustomization including all namespaces
-talos/                         # Talos OS configuration
-└── clusterconfig/             # Generated cluster configs
-    └── ...
 bootc/                         # BootC container image configuration
 ├── Containerfile              # Container image definition for K8s nodes
 ├── files/                     # Configuration files for the container
@@ -118,11 +127,13 @@ bootc/                         # BootC container image configuration
 ### Deployment Patterns
 
 1. Each application follows consistent directory structure:
+
    - `app.yml` - ArgoCD Application definition
    - `kustomization.yml` - Kustomize configuration
    - `resources/` - Kubernetes manifests
 
 2. ArgoCD Application specs:
+
    - Defined in `apps/<namespace>/<app-name>/app.yml`
    - Source path points to the app directory containing kustomization.yml
    - Automated sync with prune and self-heal enabled
@@ -135,22 +146,32 @@ bootc/                         # BootC container image configuration
 
 ### Networking Architecture
 
-1. Tailscale provides secure external access to services
+1. KubeVIP provides control plane high availability
+
+   - Virtual IP: `192.168.42.1` for API server access
+   - Automatic failover between control plane nodes
+   - All K3s configurations point to the VIP for cluster join operations
+   - Configured as DaemonSet targeting control plane nodes only
+
+2. Tailscale provides secure external access to services
+
    - Tailscale operator deploys ingress proxies for each ingress resource
    - Each ingress gets a tailscale.com subdomain (e.g., app-name.beaver-cloud.ts.net)
    - The main Tailscale ingress pod can be exposed to LAN via LoadBalancer service
 
-2. MetalLB provides LoadBalancer IP allocation on the LAN
-   - Uses Layer 2 mode to advertise IPs from the 192.168.50.0/24 range
+3. MetalLB provides LoadBalancer IP allocation on the LAN
+
+   - Uses Layer 2 mode to advertise IPs from the 192.168.42.10-254 range
    - Configure in the metallb-system namespace
    - Use LoadBalancer service type to expose services on LAN IPs
+   - Ingress-NGINX uses 192.168.42.10 as the primary entry point
 
-3. Ingress resources should use Tailscale ingress class
+4. Ingress resources should use nginx ingress class for LAN access
 
 ### Storage Architecture
 
-1. OpenEBS Mayastor provides block storage with replication
-2. Default storage class is `openebs-mayastor-replicated`
+1. Longhorn provides distributed block storage with replication
+2. Default storage class is `longhorn-replicated`
 
 ### Secrets Management
 
@@ -218,6 +239,7 @@ spec:
 ### GitOps Practices
 
 1. NEVER apply resources directly to the cluster with `kubectl apply`
+
    - All changes must go through Git and ArgoCD
    - Use `git add`, `git commit`, and `git push` for all changes
 

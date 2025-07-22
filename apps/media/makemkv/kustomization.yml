@@ -5,10 +5,10 @@ namespace: media
 namePrefix: makemkv-
 
 resources:
-- ./resources/makemkv.yml
+  - ./resources/makemkv.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: makemkv
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: makemkv

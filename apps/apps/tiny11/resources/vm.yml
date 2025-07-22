@@ -13,14 +13,14 @@ spec:
       spec:
         source:
           http:
-            url: "https://archive.org/download/tiny-11-NTDEV/tiny11%2023H2%20x64.iso"
+            url: 'https://archive.org/download/tiny-11-NTDEV/tiny11%2023H2%20x64.iso'
         pvc:
           accessModes:
             - ReadWriteOnce
           resources:
             requests:
               storage: 5Gi
-          storageClassName: openebs-mayastor-replicated
+          storageClassName: longhorn-replicated
     - metadata:
         name: virtio-drivers
       spec:
@@ -33,7 +33,7 @@ spec:
           resources:
             requests:
               storage: 1Gi
-          storageClassName: openebs-mayastor-replicated
+          storageClassName: longhorn-replicated
   running: true
   template:
     metadata:
@@ -109,4 +109,4 @@ spec:
   resources:
     requests:
       storage: 64Gi # Size for the installed OS
-  storageClassName: openebs-mayastor-replicated # As per guidelines
+  storageClassName: longhorn-replicated # As per guidelines
