@@ -3,6 +3,7 @@
 version: '3'
 
 vars:
+  ingressIp: 192.168.42.10
   apps:
     sh: ls ./apps
 
@@ -42,7 +43,7 @@ tasks:
     cmd: kubectl get secret dashboard-admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
 
   update-hosts:
-    desc: Add all ingress hosts to /etc/hosts pointing to 192.168.50.1
+    desc: Add all ingress hosts to /etc/hosts pointing to {{ .ingressIp }}
     cmd: |
       # Create backup of current hosts file
       sudo cp /etc/hosts /etc/hosts.backup.$(date +%Y%m%d_%H%M%S)
@@ -58,9 +59,9 @@ tasks:
       echo "# k8s-ingress-start" | sudo tee -a /etc/hosts
       echo "$HOSTS" | while read -r host; do
         if [ -n "$host" ]; then
-          echo "192.168.50.1 $host" | sudo tee -a /etc/hosts
+          echo "{{ .ingressIp }} $host" | sudo tee -a /etc/hosts
         fi
       done
       echo "# k8s-ingress-end" | sudo tee -a /etc/hosts
 
-      echo "Updated /etc/hosts with ingress hosts pointing to 192.168.50.1"
+      echo "Updated /etc/hosts with ingress hosts pointing to {{ .ingressIp }}"

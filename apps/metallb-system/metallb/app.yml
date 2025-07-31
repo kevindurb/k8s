@@ -12,15 +12,15 @@ spec:
     - repoURL: https://metallb.github.io/metallb
       targetRevision: 0.14.9
       chart: metallb
-      helm:
-        valuesObject:
-          # Explicitly use Layer 2 mode
-          crds:
-            enabled: true
-          controller:
-            enabled: true
-          speaker:
-            enabled: true
+      # helm:
+      #   valuesObject:
+      #     # Explicitly use Layer 2 mode
+      #     crds:
+      #       enabled: true
+      #     controller:
+      #       enabled: true
+      #     speaker:
+      #       enabled: true
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/metallb-system/metallb
