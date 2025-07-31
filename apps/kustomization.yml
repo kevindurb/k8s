@@ -15,7 +15,7 @@ resources:
 - ./monitoring
 - ./node-feature-discovery
 - ./nvidia-device-plugin
-- ./kubevirt
+# - ./kubevirt
 - ./metallb-system
 - ./bitwarden-secrets
 - ./networking
