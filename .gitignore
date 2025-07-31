@@ -15,3 +15,4 @@ secrets.yaml
 *.secret
 dist
 .task
+kubeconfig
