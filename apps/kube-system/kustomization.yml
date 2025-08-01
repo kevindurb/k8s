@@ -3,5 +3,4 @@ kind: Kustomization
 
 resources:
   - ./namespace.yml
-  - ./sealed-secrets/app.yml
   - ./kube-vip/app.yml
