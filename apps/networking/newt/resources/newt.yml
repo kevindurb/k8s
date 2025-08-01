@@ -17,31 +17,14 @@ spec:
     metadata:
       labels: *labels
     spec:
-      volumes:
-        - name: config
-          emptyDir: {}
-      securityContext:
-        fsGroup: 1000
       containers:
         - name: newt
           image: docker.io/fosrl/newt
-          # resources:
-          #   requests:
-          #     memory: 100M
-          #   limits:
-          #     memory: 1G
-          # securityContext:
-          #   privileged: false
-          #   allowPrivilegeEscalation: false
-          #   runAsNonRoot: true
-          #   runAsUser: 1000
-          #   runAsGroup: 1000
-          #   readOnlyRootFilesystem: true
-          #   capabilities:
-          #     drop: [ALL]
-          volumeMounts:
-            - mountPath: /.config
-              name: config
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
           env:
             - name: PANGOLIN_ENDPOINT
               value: https://pangolin.beaver-cloud.xyz
