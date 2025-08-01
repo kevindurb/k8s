@@ -44,7 +44,7 @@ spec:
               name: config
           env:
             - name: PANGOLIN_ENDPOINT
-              value: https://pangolintest.beaver-cloud.xyz
+              value: https://pangolin.beaver-cloud.xyz
             - name: NEWT_ID
               valueFrom:
                 secretKeyRef:
