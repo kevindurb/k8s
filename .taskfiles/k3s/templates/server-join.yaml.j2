@@ -1,9 +1,10 @@
 ---
-server: https://192.168.42.1:6443
+server: https://100.97.38.47:6443
 token: {{ k3s_token }}
 disable:
   - traefik
   - servicelb
+selinux: true
 flannel-iface: tailscale0
 node-ip: {{ tailscale_ip }}
 node-external-ip: {{ tailscale_ip }}

@@ -3,6 +3,7 @@ cluster-init: true
 disable:
   - traefik
   - servicelb
+selinux: true
 flannel-iface: tailscale0
 node-ip: {{ tailscale_ip }}
 node-external-ip: {{ tailscale_ip }}
