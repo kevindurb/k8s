@@ -65,3 +65,9 @@ tasks:
       echo "# k8s-ingress-end" | sudo tee -a /etc/hosts
 
       echo "Updated /etc/hosts with ingress hosts pointing to {{ .ingressIp }}"
+
+  create-bw-auth-token:
+    desc: create a bw auth token in a namespace
+    requires:
+      vars: [NS, token]
+    cmd: kubectl create secret generic bw-auth-token -n {{ .NS }} --from-literal=token="{{ .token }}"
