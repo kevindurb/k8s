@@ -17,6 +17,9 @@ spec:
     metadata:
       labels: *labels
     spec:
+      volumes:
+        - name: config
+          emptyDir: {}
       securityContext:
         fsGroup: 1000
       containers:
@@ -36,6 +39,9 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+          volumeMounts:
+            - mountPath: /.config
+              name: config
           env:
             - name: PANGOLIN_ENDPOINT
               value: https://pangolin.beaver-cloud.xyz
