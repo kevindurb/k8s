@@ -6,26 +6,29 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://charts.longhorn.io
-    chart: longhorn
-    targetRevision: 1.7.2
-    helm:
-      values: |
-        longhornManager:
-          nodeSelector:
-            nvme-storage: "true"
-        longhornDriver:
-          nodeSelector:
-            nvme-storage: "true"
-        longhornUI:
-          nodeSelector:
-            nvme-storage: "true"
-        defaultSettings:
-          defaultDataPath: /var/lib/longhorn
-          defaultReplicaCount: 3
-          createDefaultDiskLabeledNodes: true
-          defaultLonghornStaticStorageClass: longhorn-replicated
+  sources:
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: 1.7.2
+      helm:
+        values: |
+          longhornManager:
+            nodeSelector:
+              nvme-storage: "true"
+          longhornDriver:
+            nodeSelector:
+              nvme-storage: "true"
+          longhornUI:
+            nodeSelector:
+              nvme-storage: "true"
+          defaultSettings:
+            defaultDataPath: /var/lib/longhorn
+            defaultReplicaCount: 3
+            createDefaultDiskLabeledNodes: true
+            defaultLonghornStaticStorageClass: longhorn-replicated
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/longhorn-system/longhorn
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
