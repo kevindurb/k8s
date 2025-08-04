@@ -17,7 +17,7 @@ spec:
       evictionRequested: false
       path: /var/lib/longhorn
       storageReserved: 0
-      tags: []
+      tags: [nvme]
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -38,7 +38,7 @@ spec:
       evictionRequested: false
       path: /var/lib/longhorn
       storageReserved: 0
-      tags: []
+      tags: [nvme]
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -59,4 +59,4 @@ spec:
       evictionRequested: false
       path: /var/lib/longhorn
       storageReserved: 0
-      tags: []
+      tags: [nvme]
