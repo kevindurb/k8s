@@ -6,7 +6,7 @@ metadata:
 #  labels:
 #    snapscheduler/standard: 'true'
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes: [ReadWriteMany]
   storageClassName: longhorn
   resources:
     requests:
