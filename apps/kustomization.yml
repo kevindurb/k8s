@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ./argocd
   - ./bitwarden-secrets
+  - ./kube-system
   - ./longhorn-system
   - ./media
   - ./metallb-system
