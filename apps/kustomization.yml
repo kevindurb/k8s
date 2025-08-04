@@ -3,9 +3,10 @@ kind: Kustomization
 
 resources:
   - ./argocd
+  - ./bitwarden-secrets
+  - ./longhorn-system
+  - ./media
+  - ./metallb-system
+  - ./networking
   - ./node-feature-discovery
   - ./nvidia-device-plugin
-  - ./metallb-system
-  - ./bitwarden-secrets
-  - ./networking
-  - ./longhorn-system
