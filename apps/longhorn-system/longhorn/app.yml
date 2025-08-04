@@ -21,11 +21,6 @@ spec:
           longhornUI:
             nodeSelector:
               nvme-storage: "true"
-          defaultSettings:
-            defaultDataPath: /var/lib/longhorn
-            defaultReplicaCount: 3
-            createDefaultDiskLabeledNodes: true
-            defaultLonghornStaticStorageClass: longhorn-replicated
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/longhorn-system/longhorn
