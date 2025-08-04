@@ -7,7 +7,6 @@ metadata:
 #    snapscheduler/standard: 'true'
 spec:
   accessModes: [ReadWriteOnce]
-  volumeMode: Filesystem
   storageClassName: longhorn
   resources:
     requests:
