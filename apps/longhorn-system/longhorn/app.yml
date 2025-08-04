@@ -9,7 +9,7 @@ spec:
   sources:
     - repoURL: https://charts.longhorn.io
       chart: longhorn
-      targetRevision: 1.8.2
+      targetRevision: 1.9.1
       helm:
         values: |
           longhornManager:
