@@ -12,15 +12,11 @@ spec:
       targetRevision: 1.9.1
       helm:
         values: |
-          longhornManager:
+          global:
             nodeSelector:
               nvme-storage: "true"
-          longhornDriver:
-            nodeSelector:
-              nvme-storage: "true"
-          longhornUI:
-            nodeSelector:
-              nvme-storage: "true"
+          persistence:
+            volumeBindingMode: WaitForFirstConsumer
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/longhorn-system/longhorn
