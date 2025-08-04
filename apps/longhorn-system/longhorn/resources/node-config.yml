@@ -9,14 +9,15 @@ spec:
   evictionRequested: false
   tags:
     - storage
-  storage:
-    allowScheduling: true
-    diskDriver: ""
-    diskType: filesystem
-    evictionRequested: false
-    path: /var/lib/longhorn
-    storageReserved: 0
-    tags: []
+  disks:
+    storage:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags: []
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -29,14 +30,15 @@ spec:
   evictionRequested: false
   tags:
     - storage
-  storage:
-    allowScheduling: true
-    diskDriver: ""
-    diskType: filesystem
-    evictionRequested: false
-    path: /var/lib/longhorn
-    storageReserved: 0
-    tags: []
+  disks:
+    storage:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags: []
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -49,11 +51,12 @@ spec:
   evictionRequested: false
   tags:
     - storage
-  storage:
-    allowScheduling: true
-    diskDriver: ""
-    diskType: filesystem
-    evictionRequested: false
-    path: /var/lib/longhorn
-    storageReserved: 0
-    tags: []
+  disks:
+    storage:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags: []
