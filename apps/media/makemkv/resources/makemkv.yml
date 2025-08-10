@@ -32,20 +32,8 @@ spec:
               value: '0'
             - name: TZ
               value: America/Denver
-          # Override command to set date and start app
-          command:
-            - /bin/sh
-            - -c
-            - |
-              # Set container date to July 15, 2025
-              date -s "2025-07-15 12:00:00"
-              # Start the original application
-              exec /startapp.sh
           securityContext:
             privileged: true
-            capabilities:
-              add:
-                - SYS_TIME
           ports:
             - name: http
               containerPort: 5800
