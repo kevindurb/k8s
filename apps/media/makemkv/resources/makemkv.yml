@@ -34,7 +34,7 @@ spec:
               value: America/Denver
           # Override command to set date and start app
           command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Set container date to July 15, 2025
