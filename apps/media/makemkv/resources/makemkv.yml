@@ -32,6 +32,16 @@ spec:
               value: '0'
             - name: TZ
               value: America/Denver
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Install faketime
+              apk update && apk add libfaketime
+              # Set fake time environment and start app
+              export FAKETIME="2025-07-15 12:00:00"
+              export LD_PRELOAD="/usr/lib/faketime/libfaketime.so.1"
+              exec /startapp.sh
           securityContext:
             privileged: true
           ports:
