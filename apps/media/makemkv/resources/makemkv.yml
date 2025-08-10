@@ -18,14 +18,14 @@ spec:
       securityContext:
         fsGroup: 1000
       nodeSelector:
-        kubernetes.io/hostname: kube-storage-01
+        kubernetes.io/hostname: kube-big-01
       containers:
-        - image: jlesage/makemkv:v25.05.1
+        - image: jlesage/makemkv:v25.08.1
           name: makemkv
           env:
-            # https://forum.makemkv.com/forum/viewtopic.php?t=1053
-            - name: MAKEMKV_KEY
-              value: T-iyhMMBV8nWtNo3BgMdcvypH8UL01nYmww2zFzQDtiZsdJUOaAuCURsPRQ1Hj3i75RE
+            # # https://forum.makemkv.com/forum/viewtopic.php?t=1053
+            # - name: MAKEMKV_KEY
+            #   value: T-iyhMMBV8nWtNo3BgMdcvypH8UL01nYmww2zFzQDtiZsdJUOaAuCURsPRQ1Hj3i75RE
             - name: USER_ID
               value: '0'
             - name: GROUP_ID
