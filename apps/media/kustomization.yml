@@ -2,6 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yml
-  # - ./jellyfin/app.yml
+  - ./jellyfin/app.yml
   # - ./makemkv/app.yml
   # - ./downloader/app.yml
