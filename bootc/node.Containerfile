@@ -12,7 +12,6 @@ RUN dnf install -y \
 
 RUN dnf --setopt=tsflags=noscripts install -y iscsi-initiator-utils
 RUN echo "InitiatorName=$(/sbin/iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
-RUN systemctl enable iscsid
 
 RUN rm /tmp/k3s-selinux-1.6-1.coreos.noarch.rpm
 
@@ -23,4 +22,5 @@ RUN dnf remove -y \
   zram-generator-defaults
 
 RUN systemctl disable firewalld \
-    && systemctl enable tailscaled
+    && systemctl enable tailscaled \
+    && systemctl enable iscsid
