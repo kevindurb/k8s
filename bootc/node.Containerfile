@@ -4,7 +4,6 @@ COPY ./files/k3s-selinux-1.6-1.coreos.noarch.rpm /tmp
 
 RUN dnf install -y \
   nfs-utils \
-  nfs-acl-tools \
   container-selinux \
   policycoreutils \
   selinux-policy \
