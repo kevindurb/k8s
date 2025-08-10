@@ -23,17 +23,29 @@ spec:
         - image: jlesage/makemkv:v25.08.1
           name: makemkv
           env:
-            # # https://forum.makemkv.com/forum/viewtopic.php?t=1053
-            # - name: MAKEMKV_KEY
-            #   value: T-iyhMMBV8nWtNo3BgMdcvypH8UL01nYmww2zFzQDtiZsdJUOaAuCURsPRQ1Hj3i75RE
+            # https://forum.makemkv.com/forum/viewtopic.php?t=1053
+            - name: MAKEMKV_KEY
+              value: T-iyhMMBV8nWtNo3BgMdcvypH8UL01nYmww2zFzQDtiZsdJUOaAuCURsPRQ1Hj3i75RE
             - name: USER_ID
               value: '0'
             - name: GROUP_ID
               value: '0'
             - name: TZ
               value: America/Denver
+          # Override command to set date and start app
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Set container date to July 15, 2025
+              date -s "2025-07-15 12:00:00"
+              # Start the original application
+              exec /startapp.sh
           securityContext:
             privileged: true
+            capabilities:
+              add:
+                - SYS_TIME
           ports:
             - name: http
               containerPort: 5800
