@@ -40,9 +40,6 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          envFrom:
-            - secretRef:
-                name: miniflux-postgres-secret
           env:
             - name: TZ
               value: America/Denver
@@ -50,6 +47,11 @@ spec:
               value: '1'
             - name: CREATE_ADMIN
               value: '0'
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux-postgres-secret
+                  key: POSTGRES_URL
           ports:
             - name: http
               containerPort: 8080
@@ -106,12 +108,18 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          envFrom:
-            - secretRef:
-                name: miniflux-postgres-secret
           env:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux-postgres-secret
+                  key: POSTGRES_SECRET
+            - name: POSTGRES_USER
+              value: miniflux
+            - name: POSTGRES_DB
+              value: miniflux
           ports:
             - name: postgres
               containerPort: 5432
@@ -155,25 +163,6 @@ spec:
       targetPort: http
 
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: tailscale-ingress
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: miniflux.beaver-cloud.xyz
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: web-service
-                port:
-                  name: http
-
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -187,3 +176,22 @@ data:
         url: http://miniflux-web-service.apps
         conditions:
           - '[STATUS] == 200'
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: miniflux-postgres-secret
+  map:
+    - secretKeyName: POSTGRES_SECRET
+      bwSecretId: c681ce05-736b-405f-aa46-b33800e5c43f
+    - secretKeyName: POSTGRES_URL
+      bwSecretId: d328dccb-9e6d-4004-913d-b33800e732f1
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

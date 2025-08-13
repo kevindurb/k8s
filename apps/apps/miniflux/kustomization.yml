@@ -6,7 +6,6 @@ namePrefix: miniflux-
 
 resources:
   - ./resources/miniflux.yml
-  - ./resources/postgres-secret.yml
 
 labels:
   - includeSelectors: true
