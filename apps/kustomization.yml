@@ -12,4 +12,3 @@ resources:
   - ./metallb-system
   - ./networking
   - ./node-feature-discovery
-  - ./nvidia-device-plugin
