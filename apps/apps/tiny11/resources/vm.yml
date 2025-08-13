@@ -20,7 +20,7 @@ spec:
           resources:
             requests:
               storage: 5Gi
-          storageClassName: longhorn-replicated
+          storageClassName: longhorn
     - metadata:
         name: virtio-drivers
       spec:
@@ -33,7 +33,7 @@ spec:
           resources:
             requests:
               storage: 1Gi
-          storageClassName: longhorn-replicated
+          storageClassName: longhorn
   running: true
   template:
     metadata:
@@ -109,4 +109,4 @@ spec:
   resources:
     requests:
       storage: 64Gi # Size for the installed OS
-  storageClassName: longhorn-replicated # As per guidelines
+  storageClassName: longhorn
