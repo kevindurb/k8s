@@ -41,6 +41,8 @@ spec:
             capabilities:
               drop: [ALL]
           env:
+            - name: AUTH_PROXY_HEADER
+              value: Remote-User
             - name: TZ
               value: America/Denver
             - name: RUN_MIGRATIONS
