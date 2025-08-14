@@ -107,38 +107,6 @@ data:
         conditions:
           - '[STATUS] == 200'
 
-      - name: kube-master-01
-        url: https://kube-master-01:6443/readyz
-        client:
-          oauth2:
-            token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        conditions:
-          - '[STATUS] == 200'
-
-      - name: kube-master-02
-        url: https://kube-master-02:6443/readyz
-        client:
-          oauth2:
-            token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        conditions:
-          - '[STATUS] == 200'
-
-      - name: kube-master-03
-        url: https://kube-master-03:6443/readyz
-        client:
-          oauth2:
-            token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        conditions:
-          - '[STATUS] == 200'
-
-      - name: kubernetes-api
-        url: https://192.168.42.1:6443/readyz
-        client:
-          oauth2:
-            token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        conditions:
-          - '[STATUS] == 200'
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
