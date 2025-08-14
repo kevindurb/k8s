@@ -1,0 +1,171 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      serviceAccountName: service-account
+      containers:
+        - image: ghcr.io/twin/gatus:v5.22.0
+          name: gatus
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 500M
+          ports:
+            - name: web
+              containerPort: 8080
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+            - name: config
+              mountPath: /config
+            - name: config-map
+              mountPath: /config/gatus.yml
+              subPath: gatus.yml
+              readOnly: true
+          env:
+            - name: GATUS_CONFIG_PATH
+              value: /config
+        - image: ghcr.io/kiwigrid/k8s-sidecar:1.30.8
+          name: config-sync
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: FOLDER
+              value: /config
+            - name: LABEL
+              value: gatus.io/enabled
+            - name: LABEL_VALUE
+              value: 'true'
+            - name: NAMESPACE
+              value: ALL
+            - name: RESOURCE
+              value: both
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-volume
+        - name: config-map
+          configMap:
+            name: gatus-config
+        - name: config
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+data:
+  gatus.yml: |
+    ---
+    metrics: true
+
+    storage:
+      type: sqlite
+      path: /data/data.db
+
+    endpoints:
+      - name: Gatus
+        url: http://gatus-service
+        conditions:
+          - '[STATUS] == 200'
+
+      - name: Google
+        url: https://google.com
+        conditions:
+          - '[STATUS] == 200'
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+spec:
+  ports:
+    - name: web
+      port: 80
+      targetPort: web
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account
+
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: service-account-token
+  annotations:
+    kubernetes.io/service-account.name: gatus-service-account
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-role
+rules:
+  - apiGroups: ['']
+    resources: ['configmaps', 'secrets', 'namespaces']
+    verbs: ['get', 'watch', 'list']
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-role-binding
+roleRef:
+  kind: ClusterRole
+  name: cluster-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: service-account
+    namespace: default

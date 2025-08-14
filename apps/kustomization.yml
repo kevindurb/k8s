@@ -13,3 +13,4 @@ resources:
 - ./networking
 - ./node-feature-discovery
 - ./gpu-operator
+- ./monitoring
