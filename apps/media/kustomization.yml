@@ -3,6 +3,5 @@ kind: Kustomization
 resources:
   - namespace.yml
   - ./jellyfin/app.yml
-  # - ./makemkv/app.yml
-  - ./automatic-ripping-machine/app.yml
+  - ./makemkv/app.yml
   - ./downloader/app.yml
