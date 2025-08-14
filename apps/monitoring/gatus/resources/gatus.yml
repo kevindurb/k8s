@@ -97,12 +97,12 @@ data:
       path: /data/data.db
 
     endpoints:
-      - name: Gatus
+      - name: gatus
         url: http://gatus-service
         conditions:
           - '[STATUS] == 200'
 
-      - name: Google
+      - name: google
         url: https://google.com
         conditions:
           - '[STATUS] == 200'
