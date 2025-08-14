@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gpu-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://helm.ngc.nvidia.com/nvidia
+    targetRevision: v24.9.1
+    chart: gpu-operator
+    helm:
+      valuesObject:
+        sandboxWorkloads:
+          enabled: true
+        nfd:
+          enabled: false
+        toolkit:
+          env:
+            - name: CONTAINERD_CONFIG
+              value: '/etc/containerd/config.toml.tmpl'
+            - name: CONTAINERD_SOCKET
+              value: '/run/k3s/containerd/containerd.sock'
+            - name: CONTAINERD_RUNTIME_CLASS
+              value: 'nvidia'
+            - name: CONTAINERD_SET_AS_DEFAULT
+              value: 'true'
+        devicePlugin:
+          config:
+            name: time-slicing-config-all
+            default: any
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gpu-operator
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
