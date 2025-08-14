@@ -29,14 +29,6 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: config
               mountPath: /etc/arm/config
@@ -50,6 +42,10 @@ spec:
             - name: sr0
               mountPath: /dev/sr0
           env:
+            - name: ARM_UID
+              value: 1000
+            - name: ARM_GID
+              value: 1000
             - name: TZ
               value: America/Denver
           ports:
