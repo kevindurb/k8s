@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       nodeSelector:
         kubernetes.io/hostname: kube-big-01
       containers:
@@ -43,9 +41,9 @@ spec:
               mountPath: /dev/sr0
           env:
             - name: ARM_UID
-              value: '1000'
+              value: '0'
             - name: ARM_GID
-              value: '1000'
+              value: '0'
             - name: TZ
               value: America/Denver
           ports:
