@@ -43,9 +43,9 @@ spec:
               mountPath: /dev/sr0
           env:
             - name: ARM_UID
-              value: 1000
+              value: '1000'
             - name: ARM_GID
-              value: 1000
+              value: '1000'
             - name: TZ
               value: America/Denver
           ports:
