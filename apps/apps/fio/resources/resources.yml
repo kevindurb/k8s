@@ -35,7 +35,7 @@ metadata:
   name: volume
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: longhorn
   resources:
     requests:
       storage: 20Gi

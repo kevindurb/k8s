@@ -171,7 +171,7 @@ bootc/                         # BootC container image configuration
 ### Storage Architecture
 
 1. Longhorn provides distributed block storage with replication
-2. Default storage class is `longhorn-replicated`
+2. Default storage class is `longhorn`
 
 ### Secrets Management
 

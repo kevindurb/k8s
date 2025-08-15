@@ -61,7 +61,7 @@ spec:
     resources:
       requests:
         storage: 64Gi
-    storageClassName: longhorn-replicated
+    storageClassName: longhorn
 
 ---
 apiVersion: v1

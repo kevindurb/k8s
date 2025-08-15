@@ -169,7 +169,7 @@ resources:
 ### PersistentVolumeClaim (`<pvc-name>-pvc.yml`)
 
 - **`metadata.name`**: Should be unique for the claim (e.g., `<component-name>-config-pvc`).
-- **`spec.storageClassName`**: Must be `longhorn-replicated` (unless using NFS or other specific storage).
+- **`spec.storageClassName`**: Must be `longhorn` (unless using NFS or other specific storage).
 - **`spec.accessModes`**: Typically `[ReadWriteOnce]`.
 - Define appropriate `spec.resources.requests.storage`.
 
@@ -181,7 +181,7 @@ resources:
     name: <component-name>-data # Or <component-name>-config, etc.
   spec:
     accessModes: [ReadWriteOnce]
-    storageClassName: longhorn-replicated
+    storageClassName: longhorn
     resources:
       requests:
         storage: <size> # e.g., 10Gi, 100Gi
