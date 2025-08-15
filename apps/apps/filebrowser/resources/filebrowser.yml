@@ -1,0 +1,123 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: filebrowser
+        - image: filebrowser/filebrowser:v2.42.3
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: TZ
+              value: America/Denver
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: media
+              mountPath: /srv/media
+            - name: config-volume
+              mountPath: /config
+            - name: config-map
+              mountPath: /.filebrowser.json
+              subPath: config.json
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: nfs-media
+        - name: config-volume
+          persistentVolumeClaim:
+            claimName: config-volume
+        - name: config-map
+          configMap:
+            name: config
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config-volume
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1G
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  config.json: |
+    {
+      "port": 80,
+      "baseURL": "",
+      "address": "",
+      "log": "stdout",
+      "database": "/config/database.db",
+      "root": "/srv",
+      "auth": {
+        "method": "proxy",
+        "header": "Remote-User"
+      }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: 'true'
+data:
+  filebrowser.yml: |
+    endpoints:
+      - name: filebrowser
+        url: http://filebrowser-web-service.apps
+        conditions:
+          - '[STATUS] == 200'
+
