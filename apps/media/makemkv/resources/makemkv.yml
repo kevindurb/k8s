@@ -21,7 +21,7 @@ spec:
         kubernetes.io/hostname: kube-big-01
       containers:
         - image: jlesage/makemkv:v25.08.1
-          name: makemkv
+          name: makemkv-01
           env:
             - name: USER_ID
               value: '0'
@@ -32,18 +32,38 @@ spec:
           securityContext:
             privileged: true
           ports:
-            - name: http
-              containerPort: 5800
+            - name: http-01
+              containerPort: 5801
           volumeMounts:
             - name: media
               mountPath: /output
               subPath: Downloads
             - name: sg0
               mountPath: /dev/sg0
-            - name: sg1
-              mountPath: /dev/sg1
             - name: sr0
               mountPath: /dev/sr0
+        - image: jlesage/makemkv:v25.08.1
+          name: makemkv-02
+          env:
+            - name: USER_ID
+              value: '0'
+            - name: GROUP_ID
+              value: '0'
+            - name: TZ
+              value: America/Denver
+          securityContext:
+            privileged: true
+          ports:
+            - name: http-02
+              containerPort: 5802
+          volumeMounts:
+            - name: media
+              mountPath: /output
+              subPath: Downloads
+            - name: sg1
+              mountPath: /dev/sg1
+            - name: sr1
+              mountPath: /dev/sr1
       volumes:
         - name: media
           persistentVolumeClaim:
@@ -57,6 +77,9 @@ spec:
         - name: sr0
           hostPath:
             path: /dev/sr0
+        - name: sr1
+          hostPath:
+            path: /dev/sr1
 
 ---
 apiVersion: v1
@@ -67,9 +90,12 @@ spec:
   selector:
     app.kubernetes.io/component: web
   ports:
-    - name: http
-      port: 80
-      targetPort: http
+    - name: http-01
+      port: 81
+      targetPort: http-01
+    - name: http-02
+      port: 82
+      targetPort: http-02
 
 ---
 apiVersion: v1
