@@ -59,10 +59,14 @@ spec:
               mountPath: /dev/sg1
             - name: sr0
               mountPath: /dev/sr0
+            - name: tmp
+              mountPath: /tmp
             - name: hooks
               mountPath: /config/hooks
               readOnly: true
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
