@@ -24,11 +24,13 @@ spec:
           name: makemkv
           env:
             - name: USER_ID
-              value: '0'
+              value: "0"
             - name: GROUP_ID
-              value: '0'
+              value: "0"
             - name: TZ
               value: America/Denver
+            - name: DARK_MODE
+              value: 1
           securityContext:
             privileged: true
           ports:
@@ -79,7 +81,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ''
+  storageClassName: ""
   resources:
     requests:
       storage: 12Ti
@@ -105,7 +107,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: 'true'
+    gatus.io/enabled: "true"
 data:
   makemkv.yml: |
     endpoints:
