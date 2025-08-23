@@ -24,9 +24,9 @@ spec:
           name: makemkv
           env:
             - name: USER_ID
-              value: "0"
+              value: "1000"
             - name: GROUP_ID
-              value: "0"
+              value: "1000"
             - name: TZ
               value: America/Denver
             - name: DARK_MODE
@@ -37,14 +37,6 @@ spec:
               value: "1"
             - name: AUTO_DISC_RIPPER_PARALLEL_RIP
               value: "1"
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            capabilities:
-              drop: [ALL]
           ports:
             - name: http
               containerPort: 5800
