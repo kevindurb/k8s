@@ -48,8 +48,12 @@ spec:
               mountPath: /dev/sg0
             - name: sg1
               mountPath: /dev/sg1
+            - name: sg2
+              mountPath: /dev/sg2
             - name: sr0
               mountPath: /dev/sr0
+            - name: sr1
+              mountPath: /dev/sr1
             - name: hooks
               mountPath: /config/hooks
               readOnly: true
@@ -63,9 +67,15 @@ spec:
         - name: sg1
           hostPath:
             path: /dev/sg1
+        - name: sg2
+          hostPath:
+            path: /dev/sg2
         - name: sr0
           hostPath:
             path: /dev/sr0
+        - name: sr1
+          hostPath:
+            path: /dev/sr1
         - name: hooks
           configMap:
             name: hooks
