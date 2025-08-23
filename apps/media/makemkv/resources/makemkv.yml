@@ -37,6 +37,8 @@ spec:
               value: "1"
             - name: AUTO_DISC_RIPPER_PARALLEL_RIP
               value: "1"
+            - name: AUTO_DISC_RIPPER_MIN_TITLE_LENGTH
+              value: "900" # 15 minutes
           securityContext:
             privileged: true
           ports:
