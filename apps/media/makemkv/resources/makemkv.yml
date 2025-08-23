@@ -30,7 +30,13 @@ spec:
             - name: TZ
               value: America/Denver
             - name: DARK_MODE
-              value: 1
+              value: "1"
+            - name: AUTO_DISC_RIPPER
+              value: "1"
+            - name: AUTO_DISC_RIPPER_EJECT
+              value: "1"
+            - name: AUTO_DISC_RIPPER_PARALLEL_RIP
+              value: "1"
           securityContext:
             privileged: true
           ports:
