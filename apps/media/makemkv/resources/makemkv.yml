@@ -38,7 +38,7 @@ spec:
             - name: AUTO_DISC_RIPPER_PARALLEL_RIP
               value: "1"
           securityContext:
-            privileged: true
+            privileged: false
             allowPrivilegeEscalation: false
             runAsNonRoot: true
             runAsUser: 1000
