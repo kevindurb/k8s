@@ -17,10 +17,6 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
-      volumes:
-        - name: hooks
-          configMap:
-            name: hooks
       nodeSelector:
         kubernetes.io/hostname: kube-big-01
       containers:
@@ -72,6 +68,9 @@ spec:
         - name: sr0
           hostPath:
             path: /dev/sr0
+        - name: hooks
+          configMap:
+            name: hooks
 
 ---
 apiVersion: v1
