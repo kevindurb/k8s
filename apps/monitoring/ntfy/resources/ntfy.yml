@@ -27,6 +27,7 @@ spec:
         - name: ntfy
           image: docker.io/binwiederhier/ntfy
           command:
+            - ntfy
             - serve
           resources:
             requests:
