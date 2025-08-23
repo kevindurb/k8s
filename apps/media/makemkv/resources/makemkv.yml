@@ -43,7 +43,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
           ports:
@@ -59,18 +58,10 @@ spec:
               mountPath: /dev/sg1
             - name: sr0
               mountPath: /dev/sr0
-            - name: tmp
-              mountPath: /tmp
-            - name: var-tmp
-              mountPath: /var/tmp
             - name: hooks
               mountPath: /config/hooks
               readOnly: true
       volumes:
-        - name: tmp
-          emptyDir: {}
-        - name: var-tmp
-          emptyDir: {}
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
