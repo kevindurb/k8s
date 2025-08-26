@@ -80,6 +80,8 @@ data:
       sources:
         - path: /media
           name: media
+          config:
+            defaultEnabled: true
     auth:
       methods:
         noauth: false
