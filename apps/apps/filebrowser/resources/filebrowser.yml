@@ -79,8 +79,12 @@ data:
     server:
       sources: []
     auth:
-      adminUsername: admin
-      adminPassword: admin
+      methods:
+        noauth: false
+        proxy:
+          enabled: true
+          header: Remote-User
+          createUser: true
 
 ---
 apiVersion: v1
