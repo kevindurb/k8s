@@ -76,6 +76,9 @@ metadata:
 data:
   config.yaml: |
     ---
+    userDefaults:
+      singleClick: true
+      stickySidebar: false
     server:
       sources:
         - path: /media
