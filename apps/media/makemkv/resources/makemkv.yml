@@ -25,10 +25,10 @@ spec:
           env:
             - name: MAKEMKV_KEY
               value: T-PuNYycrTTHW4QEOfhDrMuJMpojNqmY5CGuESAKXzHvwBvBcXhtsJLj4g6OAXd1zfzk
-            - name: USER_ID
-              value: "1000"
-            - name: GROUP_ID
-              value: "1000"
+            # - name: USER_ID
+            #   value: "1000"
+            # - name: GROUP_ID
+            #   value: "1000"
             - name: TZ
               value: America/Denver
             - name: DARK_MODE
