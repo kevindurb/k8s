@@ -3,4 +3,4 @@ kind: Kustomization
 
 resources:
   - common.yml
-- ./gpu-operator/app.yml
+  - ./gpu-operator/app.yml
