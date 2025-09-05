@@ -71,3 +71,12 @@ tasks:
     requires:
       vars: [NS, token]
     cmd: kubectl create secret generic bw-auth-token -n {{ .NS }} --from-literal=token="{{ .token }}"
+
+  copy-bw-auth-token:
+    desc: copy bw auth token from default namespace
+    vars:
+      token:
+        sh: kubectl get secret bw-auth-token -o json | jq -r .data.token | base64 --decode
+    requires:
+      vars: [NS]
+    cmd: kubectl create secret generic bw-auth-token -n {{ .NS }} --from-literal=token="{{ .token }}"

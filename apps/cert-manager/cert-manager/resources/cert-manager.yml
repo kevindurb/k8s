@@ -1,0 +1,49 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cloudflare-issuer
+  namespace: cert-manager
+spec:
+  acme:
+    email: kevindurb@fastmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: acme-private-key-secret
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cert-manager-cloudflare-secret
+              key: CF_API_TOKEN
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: cloudflare-secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: cert-manager-cloudflare-secret
+  map:
+    - secretKeyName: CF_API_TOKEN
+      bwSecretId: 121f3f68-db40-4c6b-8b99-b34f00e9ed28
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: durbin-casa-wildcard-cert
+  namespace: cert-manager
+spec:
+  secretName: durbin-casa-wildcard-cert
+  issuerRef:
+    kind: ClusterIssuer
+    name: cloudflare-issuer
+  commonName: '*.beaver-cloud.xyz'
+  dnsNames: ['*.beaver-cloud.xyz']
