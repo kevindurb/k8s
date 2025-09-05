@@ -34,7 +34,7 @@ spec:
             requests:
               storage: 1Gi
           storageClassName: longhorn
-  running: true
+  running: false
   template:
     metadata:
       labels:

@@ -21,7 +21,7 @@ spec:
   #           requests:
   #             storage: 5Gi
   #         storageClassName: longhorn
-  running: true
+  running: false
   template:
     metadata:
       labels:
