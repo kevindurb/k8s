@@ -1,10 +1,12 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
+kind:
+  Kustomization
 
   # - ./homeassistant/app.yml
 resources:
   - common.yml
-- ./whoami/app.yml
-- ./miniflux/app.yml
-- ./tiny11/app.yml
-- ./filebrowser/app.yml
+  - ./whoami/app.yml
+  - ./miniflux/app.yml
+  - ./tiny11/app.yml
+  - ./filebrowser/app.yml
