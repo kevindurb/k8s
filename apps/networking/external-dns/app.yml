@@ -59,7 +59,7 @@ spec:
           registry: noop
           sources: [ingress, crd]
           extraArgs:
-            pihole-server: http://pihole-web-services.networking.svc.cluster.local
+            pihole-server: http://pihole-web-service.networking.svc.cluster.local
             ingress-class: internal
             crd-source-apiversion: externaldns.k8s.io/v1alpha1
             crd-source-kind: DNSEndpoint
