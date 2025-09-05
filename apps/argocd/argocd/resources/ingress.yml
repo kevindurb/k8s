@@ -1,0 +1,23 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  tls:
+    - hosts: [&host argocd.beaver-cloud.xyz]
+      secretName: beaver-cloud-wildcard-cert
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  name: https

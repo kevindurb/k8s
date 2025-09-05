@@ -92,3 +92,27 @@ data:
         url: http://homeassistant-web-service.apps
         conditions:
           - '[STATUS] == 200'
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  tls:
+    - hosts: [&host homeassistant.beaver-cloud.xyz]
+      secretName: beaver-cloud-wildcard-cert
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: web-service
+                port:
+                  name: http

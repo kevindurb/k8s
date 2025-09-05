@@ -108,3 +108,27 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  tls:
+    - hosts: [&host pihole.beaver-cloud.xyz]
+      secretName: beaver-cloud-wildcard-cert
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: web-service
+                port:
+                  name: http

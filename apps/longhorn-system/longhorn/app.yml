@@ -10,16 +10,16 @@ spec:
     - repoURL: https://charts.longhorn.io
       chart: longhorn
       targetRevision: 1.9.1
-      # helm:
-      #   values: |
-      #     persistence:
-      #       volumeBindingMode: WaitForFirstConsumer
-      #       defaultDiskSelector:
-      #         enable: true
-      #         selector: nvme
-      #       defaultNodeSelector:
-      #         enable: true
-      #         selector: storage
+      helm:
+        values: |
+          ingress:
+            enabled: true
+            host: longhorn.beaver-cloud.xyz
+            ingressClassName: internal
+            annotations:
+              "cert-manager.io/cluster-issuer": cloudflare-issuer
+            tls: true
+            tlsSecret: beaver-cloud-wildcard-cert
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/longhorn-system/longhorn
