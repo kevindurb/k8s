@@ -3,5 +3,5 @@ kind: Kustomization
 
 resources:
   - common.yml
-- ./gatus/app.yml
-- ./ntfy/app.yml
+  - ./gatus/app.yml
+  - ./ntfy/app.yml
