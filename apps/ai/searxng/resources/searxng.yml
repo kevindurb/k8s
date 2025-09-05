@@ -83,24 +83,7 @@ spec:
       port: 80
       targetPort: http
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: tailscale-ingress
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: searxng.beaver-cloud.xyz
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: web-service
-                port:
-                  name: http
+
 
 ---
 apiVersion: v1

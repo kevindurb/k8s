@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - common.yml
-  - ./newt/app.yml
   # - ./cloudflared/app.yml
   - ./pihole/app.yml
   - ./external-dns/app.yml

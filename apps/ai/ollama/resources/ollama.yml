@@ -65,21 +65,4 @@ spec:
       port: 80
       targetPort: http
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: tailscale-ingress
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: ollama.beaver-cloud.xyz
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: service
-                port:
-                  name: http
+

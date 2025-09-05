@@ -4,4 +4,3 @@ resources:
   - common.yml
   - ./jellyfin/app.yml
   - ./makemkv/app.yml
-  - ./downloader/app.yml
