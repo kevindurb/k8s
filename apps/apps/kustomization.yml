@@ -3,7 +3,7 @@ kind: Kustomization
 
   # - ./homeassistant/app.yml
 resources:
-- ./namespace.yml
+  - common.yml
 - ./whoami/app.yml
 - ./miniflux/app.yml
 - ./tiny11/app.yml

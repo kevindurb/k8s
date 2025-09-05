@@ -34,16 +34,4 @@ spec:
     secretName: bw-auth-token
     secretKey: token
 
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: beaver-cloud-wildcard-cert
-  namespace: cert-manager
-spec:
-  secretName: beaver-cloud-wildcard-cert
-  issuerRef:
-    kind: ClusterIssuer
-    name: cloudflare-issuer
-  commonName: '*.beaver-cloud.xyz'
-  dnsNames: ['*.beaver-cloud.xyz']
+

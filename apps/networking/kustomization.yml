@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ./namespace.yml
+  - common.yml
   - ./newt/app.yml
   # - ./cloudflared/app.yml
   - ./pihole/app.yml
