@@ -79,15 +79,25 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: tailscale-ingress
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
 spec:
-  ingressClassName: tailscale
-  tls: [ { hosts: [ {{ENV.SUBDOMAIN}} ] } ]
-  defaultBackend:
-    service:
-      name: {{ ENV.COMP }}-service
-      port:
-        name: {{ ENV.PROTO }}
+  ingressClassName: internal
+  tls:
+    - hosts: [&host {{ ENV.SUBDOMAIN }}.beaver-cloud.xyz]
+      secretName: beaver-cloud-wildcard-cert
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: {{ ENV.COMP }}-service
+                port:
+                  name: {{ ENV.PROTO }}
 
 ---
 apiVersion: v1
