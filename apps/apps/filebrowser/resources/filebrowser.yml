@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: web-deployment
   annotations:
-    reloader.stakater.com/auto: 'true'
+    reloader.stakater.com/auto: "true"
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: filebrowser
-          image: filebrowser/filebrowser:v2.42.3
+          image: ghcr.io/gtsteffaniak/filebrowser:0.8.2-beta
           resources:
             requests:
               memory: 100M
@@ -33,7 +33,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
           env:
@@ -44,34 +43,17 @@ spec:
               containerPort: 80
           volumeMounts:
             - name: media
-              mountPath: /srv/media
-            - name: config-volume
-              mountPath: /config
+              mountPath: /media
             - name: config-map
-              mountPath: /.filebrowser.json
-              subPath: config.json
+              mountPath: /home/filebrowser/config.yaml
+              subPath: config.yaml
       volumes:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
-        - name: config-volume
-          persistentVolumeClaim:
-            claimName: config-volume
         - name: config-map
           configMap:
             name: config
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: config-volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 1G
 
 ---
 apiVersion: v1
@@ -92,19 +74,26 @@ kind: ConfigMap
 metadata:
   name: config
 data:
-  config.json: |
-    {
-      "port": 80,
-      "baseURL": "",
-      "address": "",
-      "log": "stdout",
-      "database": "/config/database.db",
-      "root": "/srv",
-      "auth": {
-        "method": "proxy",
-        "header": "Remote-User"
-      }
-    }
+  config.yaml: |
+    ---
+    userDefaults:
+      singleClick: true
+      stickySidebar: false
+    server:
+      sources:
+        - path: /media
+          name: media
+          config:
+            defaultEnabled: true
+    auth:
+      methods:
+        noauth: false
+        password:
+          enabled: false
+        proxy:
+          enabled: true
+          header: Remote-User
+          createUser: true
 
 ---
 apiVersion: v1
@@ -112,7 +101,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: 'true'
+    gatus.io/enabled: "true"
 data:
   filebrowser.yml: |
     endpoints:
@@ -129,7 +118,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ''
+  storageClassName: ""
   resources:
     requests:
       storage: 12Ti

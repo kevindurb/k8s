@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
 - ./namespace.yml
 - ./gatus/app.yml
+- ./ntfy/app.yml

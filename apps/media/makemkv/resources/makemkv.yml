@@ -23,12 +23,26 @@ spec:
         - image: jlesage/makemkv:v25.08.1
           name: makemkv
           env:
+            - name: MAKEMKV_KEY
+              value: T-PuNYycrTTHW4QEOfhDrMuJMpojNqmY5CGuESAKXzHvwBvBcXhtsJLj4g6OAXd1zfzk
             - name: USER_ID
-              value: '0'
+              value: "1000"
             - name: GROUP_ID
-              value: '0'
+              value: "1000"
+            - name: SUP_GROUP_IDS
+              value: "11"
             - name: TZ
               value: America/Denver
+            - name: DARK_MODE
+              value: "1"
+            - name: AUTO_DISC_RIPPER
+              value: "1"
+            - name: AUTO_DISC_RIPPER_EJECT
+              value: "1"
+            - name: AUTO_DISC_RIPPER_MIN_TITLE_LENGTH
+              value: "600" # 10 minutes
+            - name: AUTO_DISC_RIPPER_FORCE_UNIQUE_OUTPUT_DIR
+              value: "1"
           securityContext:
             privileged: true
           ports:
@@ -38,25 +52,68 @@ spec:
             - name: media
               mountPath: /output
               subPath: Downloads
-            - name: sg0
-              mountPath: /dev/sg0
-            - name: sg1
-              mountPath: /dev/sg1
+
             - name: sr0
               mountPath: /dev/sr0
+
+            - name: sg1
+              mountPath: /dev/sg1
+
+            - name: sr1
+              mountPath: /dev/sr1
+
+            - name: sg2
+              mountPath: /dev/sg2
       volumes:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
-        - name: sg0
-          hostPath:
-            path: /dev/sg0
-        - name: sg1
-          hostPath:
-            path: /dev/sg1
+
         - name: sr0
           hostPath:
             path: /dev/sr0
+
+        - name: sg1
+          hostPath:
+            path: /dev/sg1
+
+        - name: sr1
+          hostPath:
+            path: /dev/sr1
+
+        - name: sg2
+          hostPath:
+            path: /dev/sg2
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hooks
+data:
+  disk_rip_started.sh: |
+    #! /bin/sh
+    DRV_ID="$1"
+    DISC_LABEL="$2"
+    OUTPUT_DIR="$3"
+
+    curl -d "The automatic disc ripper started ripping disc '$DISC_LABEL' (drive $DRV_ID) to '$OUTPUT_DIR'." http://ntfy-web-service.monitoring/makemkv
+
+  disk_rip_terminated.sh: |
+    #! /bin/sh
+    DRV_ID="$1"
+    DISC_LABEL="$2"
+    OUTPUT_DIR="$3"
+    STATUS="$4"
+
+    case "$STATUS" in
+        0)
+            curl -d "The automatic disc ripper successfully ripped disc '$DISC_LABEL' (drive $DRV_ID)." http://ntfy-web-service.monitoring/makemkv
+            ;;
+        *)
+            curl -d "The automatic disc ripper failed to rip disc '$DISC_LABEL' (drive $DRV_ID)." http://ntfy-web-service.monitoring/makemkv
+            ;;
+    esac
 
 ---
 apiVersion: v1
@@ -79,7 +136,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ''
+  storageClassName: ""
   resources:
     requests:
       storage: 12Ti
@@ -105,7 +162,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: 'true'
+    gatus.io/enabled: "true"
 data:
   makemkv.yml: |
     endpoints:
