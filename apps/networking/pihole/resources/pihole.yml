@@ -36,7 +36,7 @@ spec:
                   name: pihole-secret
                   key: WEBPASSWORD
           ports:
-            - name: web
+            - name: http
               containerPort: 80
             - name: dns
               containerPort: 53
