@@ -103,11 +103,7 @@ tasks:
           TEMPLATE: common
           OUT_FILE: './apps/{{.NS}}/common.yml'
       - kustomize edit add resource ./{{.NS}}
-      # - task: minijinja
-      #   vars:
-      #     TEMPLATE: wildcard-cert
-      #     OUT_FILE: "./apps/{{.NS}}/wildcard-cert.yml"
-      # - cd ./{{.NS}} && kustomize edit add resource ./wildcard-cert.yml
+      
 
   deployment:
     aliases: [deploy]
@@ -248,3 +244,4 @@ tasks:
           TEMPLATE: gatus-config
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
+ add resource {{.OUT_FILE}}
