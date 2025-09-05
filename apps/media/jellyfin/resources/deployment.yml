@@ -64,11 +64,11 @@ metadata:
     cert-manager.io/cluster-issuer: cloudflare-issuer
 spec:
   ingressClassName: internal
-  # tls:
-  #   - hosts: [&host jellyfin.beaver-cloud.xyz]
-  #     secretName: durbin-casa-wildcard-cert
+  tls:
+    - hosts: [&host jellyfin.beaver-cloud.xyz]
+      secretName: beaver-cloud-wildcard-cert
   rules:
-    - host: jellyfin.beaver-cloud.xyz
+    - host: *host
       http:
         paths:
           - pathType: Prefix

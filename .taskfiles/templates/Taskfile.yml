@@ -100,8 +100,8 @@ tasks:
           OUT_FILE: './apps/{{.NS}}/kustomization.yml'
       - task: minijinja
         vars:
-          TEMPLATE: namespace
-          OUT_FILE: './apps/{{.NS}}/namespace.yml'
+          TEMPLATE: common
+          OUT_FILE: './apps/{{.NS}}/common.yml'
       - kustomize edit add resource ./{{.NS}}
       # - task: minijinja
       #   vars:
