@@ -101,7 +101,7 @@ spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
   secretName: pihole-secret
   map:
-    - secretKeyName: PIHOLE_WEBPASSWORD
+    - secretKeyName: WEBPASSWORD
       bwSecretId: 4064bfb3-c15b-4ba1-b0c5-b34f00ea2db3
   authToken:
     secretName: bw-auth-token
