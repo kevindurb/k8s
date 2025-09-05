@@ -9,9 +9,13 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: oci://quay.io/jetstack/charts/cert-manager
+    - repoURL: https://charts.jetstack.io
       targetRevision: v1.18.2
       chart: cert-manager
+      helm:
+        valuesObject:
+          crds:
+            enabled: true
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/cert-manager/cert-manager
