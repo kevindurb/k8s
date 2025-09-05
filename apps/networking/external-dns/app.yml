@@ -13,8 +13,8 @@ spec:
       targetRevision: 1.18.0
       chart: external-dns
       helm:
-        nameOverride: pihole-external-dns
         valuesObject:
+          nameOverride: cloudflare-external-dns
           provider:
             name: cloudflare
           txtOwnerId: kevindurb
@@ -52,8 +52,8 @@ spec:
       targetRevision: 1.18.0
       chart: external-dns
       helm:
-        nameOverride: pihole-external-dns
         valuesObject:
+          nameOverride: pihole-external-dns
           provider:
             name: pihole
           registry: noop
