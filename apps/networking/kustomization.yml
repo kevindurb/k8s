@@ -5,5 +5,5 @@ resources:
   - ./namespace.yml
   - ./newt/app.yml
   # - ./cloudflared/app.yml
-  # - ./pihole/app.yml
+  - ./pihole/app.yml
   - ./external-dns/app.yml

@@ -19,48 +19,30 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
-      # volumes:
-      #   - name: volume
-      #     persistentVolumeClaim:
-      #       claimName: volume
       containers:
         - name: pihole
-          image: 
+          image: docker.io/pihole/pihole:2025.08.0
           resources:
             requests:
-              memory: 100M
+              memory: 130M
             limits:
-              memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
-          # volumeMounts:
-          #   - name: volume
-          #     mountPath: /var/www/app/data
+              memory: 200M
           env:
             - name: TZ
               value: America/Denver
+            - name: WEBPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pihole-secret
+                  key: WEBPASSWORD
           ports:
-            - name: http
+            - name: web
               containerPort: 80
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 1G
+            - name: dns
+              containerPort: 53
+            - name: dns-udp
+              protocol: UDP
+              containerPort: 53
 
 ---
 apiVersion: v1
@@ -76,18 +58,22 @@ spec:
       targetPort: http
 
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: v1
+kind: Service
 metadata:
-  name: tailscale-ingress
+  name: dns-service
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.42.100
 spec:
-  ingressClassName: tailscale
-  tls: [ { hosts: [ pihole ] } ]
-  defaultBackend:
-    service:
-      name: web-service
-      port:
-        name: http
+  type: LoadBalancer
+  ports:
+    - name: dns
+      port: 53
+      targetPort: dns
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+      targetPort: dns-udp
 
 ---
 apiVersion: v1
@@ -104,3 +90,19 @@ data:
         conditions:
           - '[STATUS] == 200'
 
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: pihole-secret
+  map:
+    - secretKeyName: PIHOLE_WEBPASSWORD
+      bwSecretId: 4064bfb3-c15b-4ba1-b0c5-b34f00ea2db3
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
