@@ -103,7 +103,6 @@ tasks:
           TEMPLATE: common
           OUT_FILE: './apps/{{.NS}}/common.yml'
       - kustomize edit add resource ./{{.NS}}
-      
 
   deployment:
     aliases: [deploy]
@@ -244,4 +243,3 @@ tasks:
           TEMPLATE: gatus-config
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
- add resource {{.OUT_FILE}}
