@@ -26,23 +26,13 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
+            sizeLimit: 1Gi
       containers:
         - name: webtop
           image: lscr.io/linuxserver/webtop:latest
-          # resources:
-          #   requests:
-          #     memory: 100M
-          #   limits:
-          #     memory: 1G
-          # securityContext:
-          #   privileged: false
-          #   allowPrivilegeEscalation: false
-          #   runAsNonRoot: true
-          #   runAsUser: 1000
-          #   runAsGroup: 1000
-          #   readOnlyRootFilesystem: true
-          #   capabilities:
-          #     drop: [ALL]
+          securityContext:
+            seccompProfile:
+              type: Unconfined
           volumeMounts:
             - name: volume
               mountPath: /config
