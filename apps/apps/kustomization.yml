@@ -8,5 +8,4 @@ resources:
   - common.yml
   - ./whoami/app.yml
   - ./miniflux/app.yml
-  - ./tiny11/app.yml
   - ./filebrowser/app.yml
