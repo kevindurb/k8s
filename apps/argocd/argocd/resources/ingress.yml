@@ -5,8 +5,7 @@ metadata:
   name: ingress
   annotations:
     cert-manager.io/cluster-issuer: cloudflare-issuer
-    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
-    nginx.ingress.kubernetes.io/backend-protocol: 'HTTP'
+    nginx.ingress.kubernetes.io/backend-protocol: https
 spec:
   ingressClassName: internal
   tls:
@@ -22,4 +21,4 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  name: http
+                  name: https
