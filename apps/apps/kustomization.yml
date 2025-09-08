@@ -7,3 +7,4 @@ resources:
 - ./whoami/app.yml
 - ./miniflux/app.yml
 - ./filebrowser/app.yml
+- ./neko/app.yml
