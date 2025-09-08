@@ -20,11 +20,9 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
-        - name: tmp
-          emptyDir: {}
-      #   - name: volume
-      #     persistentVolumeClaim:
-      #       claimName: volume
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
       containers:
         - name: neko
           image: ghcr.io/m1k1o/neko/firefox:latest
@@ -34,10 +32,8 @@ spec:
           #   limits:
           #     memory: 1G
           volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-          #   - name: volume
-          #     mountPath: /var/www/app/data
+            - name: volume
+              mountPath: /home/neko/.mozilla/firefox
           env:
             - name: TZ
               value: America/Denver
