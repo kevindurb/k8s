@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: web-deployment
   annotations:
-    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -87,11 +87,11 @@ data:
             defaultEnabled: true
     auth:
       methods:
-        noauth: false
+        noauth: true
         password:
           enabled: false
         proxy:
-          enabled: true
+          enabled: false
           header: Remote-User
           createUser: true
 
@@ -101,7 +101,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: "true"
+    gatus.io/enabled: 'true'
 data:
   filebrowser.yml: |
     endpoints:
@@ -118,7 +118,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ""
+  storageClassName: ''
   resources:
     requests:
       storage: 12Ti
