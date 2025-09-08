@@ -19,7 +19,9 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
-      # volumes:
+      volumes:
+        - name: tmp
+          emptyDir: {}
       #   - name: volume
       #     persistentVolumeClaim:
       #       claimName: volume
@@ -40,7 +42,9 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          # volumeMounts:
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           #   - name: volume
           #     mountPath: /var/www/app/data
           env:
