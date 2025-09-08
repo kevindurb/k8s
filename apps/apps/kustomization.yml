@@ -7,4 +7,3 @@ resources:
 - ./whoami/app.yml
 - ./miniflux/app.yml
 - ./filebrowser/app.yml
-- ./webtop/app.yml
