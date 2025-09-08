@@ -23,6 +23,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: dshm
+          emptyDir:
+            medium: Memory
       containers:
         - name: webtop
           image: lscr.io/linuxserver/webtop:latest
@@ -43,6 +46,8 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /config
+            - mountPath: /dev/shm
+              name: dshm
           env:
             - name: TZ
               value: America/Denver
