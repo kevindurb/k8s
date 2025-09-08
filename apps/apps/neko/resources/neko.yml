@@ -35,6 +35,8 @@ spec:
             - name: volume
               mountPath: /home/neko/.mozilla/firefox
           env:
+            - name: NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD
+              value: admin
             - name: TZ
               value: America/Denver
           ports:
