@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: whoami
-          image: docker.io/traefik/whoami:v1.10.4
+          image: docker.io/traefik/whoami:v1.11.0@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
           resources:
             requests:
               memory: 100M
