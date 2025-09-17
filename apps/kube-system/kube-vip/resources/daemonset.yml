@@ -55,7 +55,7 @@ spec:
               value: '1'
             - name: address
               value: '192.168.42.1'
-          image: ghcr.io/kube-vip/kube-vip:v0.8.7
+          image: ghcr.io/kube-vip/kube-vip:v1.0.0@sha256:4f256554a83a6d824ea9c5307450a2c3fd132e09c52b339326f94fefaf67155c
           imagePullPolicy: Always
           name: kube-vip
           resources: {}
