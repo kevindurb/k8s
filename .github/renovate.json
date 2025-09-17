@@ -9,9 +9,9 @@
   "platform": "github",
   "repositories": ["kevindurb/k8s"],
   "kubernetes": {
-    "fileMatch": ["apps/.+\\.yaml$", "apps/.+\\.yml$"]
+    "managerFilePatterns": ["/apps/.+\\.yaml$/", "/apps/.+\\.yml$/"]
   },
   "argocd": {
-    "fileMatch": ["apps/.+\\app.yml$", "apps/.+\\app.yaml$"]
+    "managerFilePatterns": ["/apps/.+\\app.yml$/", "/apps/.+\\app.yaml$/"]
   }
 }
