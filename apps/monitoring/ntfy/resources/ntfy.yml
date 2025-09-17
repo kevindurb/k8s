@@ -25,7 +25,7 @@ spec:
             name: config
       containers:
         - name: ntfy
-          image: docker.io/binwiederhier/ntfy
+          image: docker.io/binwiederhier/ntfy@sha256:5a051798d14138c3ecb12c038652558ab6a077e1aceeb867c151cbf5fa8451ef
           command:
             - ntfy
             - serve
