@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests",
+    ":automergePatch",
+    ":disableRateLimiting"
+  ],
+  "platform": "github",
+  "repositories": ["kevindurb/k8s"],
+  "kubernetes": {
+    "fileMatch": ["apps/.+\\.yaml$", "apps/.+\\.yml$"]
+  },
+  "argocd": {
+    "fileMatch": ["apps/.+\\app.yml$", "apps/.+\\app.yaml$"]
+  }
+}
