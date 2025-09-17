@@ -1,7 +1,7 @@
 FROM ghcr.io/ublue-os/ucore-minimal:stable-nvidia
 
 RUN dnf install -y \
-  nfs-utils \
+  nfs-utils-coreos \
   cryptsetup \
   && dnf clean all
 
