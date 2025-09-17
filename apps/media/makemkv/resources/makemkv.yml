@@ -20,7 +20,7 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: kube-big-01
       containers:
-        - image: jlesage/makemkv:v25.08.1
+        - image: jlesage/makemkv:v25.09.1@sha256:aff87a69c553a17e0b41480b3a142995186c209ba2ff5c4ac0a004d7b0cb6812
           name: makemkv
           env:
             - name: MAKEMKV_KEY
