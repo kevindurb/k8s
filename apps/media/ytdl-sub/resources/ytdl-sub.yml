@@ -11,15 +11,15 @@ spec:
   schedule: '*/15 * * * *'
   jobTemplate:
     spec:
-      volumes:
-        - name: media
-          persistentVolumeClaim:
-            claimName: media-pvc
-        - name: config
-          configMap:
-            name: config
       template:
         spec:
+          volumes:
+            - name: media
+              persistentVolumeClaim:
+                claimName: media-pvc
+            - name: config
+              configMap:
+                name: config
           restartPolicy: OnFailure
           containers:
             - name: ytdl-sub
