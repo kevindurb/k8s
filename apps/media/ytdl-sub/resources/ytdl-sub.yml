@@ -24,11 +24,24 @@ spec:
           containers:
             - name: ytdl-sub
               image: ghcr.io/jmbannon/ytdl-sub:2025.09.13
+              command:
+                - ytdl-sub
+                - sub
+                - /config/subscriptions.yaml
               resources:
                 requests:
                   memory: 100M
                 limits:
                   memory: 1G
+              securityContext:
+                privileged: false
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
               volumeMounts:
                 - name: media
                   mountPath: /media
@@ -39,10 +52,6 @@ spec:
               env:
                 - name: TZ
                   value: America/Denver
-                - name: PUID
-                  value: '1000'
-                - name: PGID
-                  value: '1000'
 
 ---
 apiVersion: v1
