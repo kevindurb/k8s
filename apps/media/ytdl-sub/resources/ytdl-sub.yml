@@ -16,7 +16,7 @@ spec:
           volumes:
             - name: tmp
               emptyDir: {}
-            - name: configTmp
+            - name: config-tmp
               emptyDir: {}
             - name: media
               persistentVolumeClaim:
@@ -51,7 +51,7 @@ spec:
                   mountPath: /tmp
                 - name: media
                   mountPath: /media
-                - name: configTmp
+                - name: config-tmp
                   mountPath: /config
                 - name: config
                   mountPath: /config/subscriptions.yaml
