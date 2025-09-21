@@ -103,8 +103,8 @@ data:
       overrides:
         tv_show_directory: /media/YouTube
         music_directory: /media/Music
-        only_recent_date_range: 1month
-        only_recent_max_files: 30
+        only_recent_date_range: 1week
+        only_recent_max_files: 5
 
     Jellyfin TV Show by Date | Only Recent:
       "No Boilerplate": "https://www.youtube.com/@NoBoilerplate"
