@@ -29,8 +29,6 @@ spec:
                   memory: 100M
                 limits:
                   memory: 1G
-              securityContext:
-                readOnlyRootFilesystem: true
               volumeMounts:
                 - name: media
                   mountPath: /media
