@@ -14,6 +14,8 @@ spec:
       template:
         spec:
           volumes:
+            - name: tmp
+              emptyDir: {}
             - name: media
               persistentVolumeClaim:
                 claimName: media-pvc
@@ -43,6 +45,8 @@ spec:
                 capabilities:
                   drop: [ALL]
               volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
                 - name: media
                   mountPath: /media
                 - name: config
