@@ -60,9 +60,9 @@ spec:
             - name: TZ
               value: America/Denver
             - name: N8N_EDITOR_BASE_URL
-              value: https://n8n.beaver-cloud.ts.net
+              value: https://n8n.beaver-cloud.xyz
             - name: WEBHOOK_URL
-              value: https://n8n.beaver-cloud.ts.net
+              value: https://n8n.beaver-cloud.xyz
           ports:
             - name: http
               containerPort: 5678
@@ -119,8 +119,6 @@ spec:
     - name: http
       port: 80
       targetPort: http
-
-
 
 ---
 apiVersion: v1
