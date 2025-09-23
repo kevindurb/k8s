@@ -6,8 +6,6 @@ namePrefix: n8n-
 
 resources:
   - ./resources/n8n.yml
-  - ./resources/pgvector.yml
-  - ./resources/pgvector-secret.yml
 
 labels:
   - includeSelectors: true
