@@ -46,6 +46,13 @@ spec:
           env:
             - name: TZ
               value: America/Denver
+            - name: WEBUI_URL
+              value: https://open-webui.beaver-cloud.xyz
+            - name: WEBUI_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: open-webui-secret
+                  key: WEBUI_SECRET_KEY
           ports:
             - name: http
               containerPort: 8080
@@ -113,3 +120,20 @@ data:
         url: http://open-webui-web-service.ai
         conditions:
           - '[STATUS] == 200'
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: open-webui-secret
+  map:
+    - secretKeyName: WEBUI_SECRET_KEY
+      bwSecretId: b5aa7492-8e55-4bfb-ae58-b362015ab224
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
