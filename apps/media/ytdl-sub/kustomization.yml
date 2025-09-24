@@ -5,10 +5,11 @@ namespace: media
 namePrefix: ytdl-sub-
 
 resources:
-- ./resources/ytdl-sub.yml
+  - ./resources/ytdl-sub.yml
+  - ./resources/config.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: ytdl-sub
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: ytdl-sub
