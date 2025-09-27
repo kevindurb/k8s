@@ -27,7 +27,7 @@ spec:
           emptyDir: {}
       containers:
         - name: searxng
-          image: docker.io/searxng/searxng:latest@sha256:022bbd20f4702ce42c1f3086aebab457016c3d536715148b2a9657e0dd74dd3b
+          image: docker.io/searxng/searxng:latest@sha256:50e3a9591c1e9ab223aed8f5b1cd2c34340b48c91fce74f3a077755f2900b479
           resources:
             requests:
               memory: 100M
