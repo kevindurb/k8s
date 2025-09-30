@@ -10,7 +10,7 @@ spec:
   project: default
   sources:
     - repoURL: https://charts.bitwarden.com/
-      targetRevision: "0.1.0"
+      targetRevision: "1.0.0"
       chart: sm-operator
       helm:
         valuesObject:
