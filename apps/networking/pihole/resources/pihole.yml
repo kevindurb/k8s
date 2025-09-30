@@ -88,7 +88,7 @@ data:
   pihole.yml: |
     endpoints:
       - name: pihole
-        url: http://pihole-web-service.networking
+        url: http://pihole-web-service.networking/admin/login
         conditions:
           - '[STATUS] == 200'
 
