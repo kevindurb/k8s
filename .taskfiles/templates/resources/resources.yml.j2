@@ -50,17 +50,17 @@ spec:
             - name: http
               containerPort: {{ ENV.PORT }}
 
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: {{ ENV.SIZE }}
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: volume
+# spec:
+#   accessModes: [ReadWriteOnce]
+#   storageClassName: openebs-local-zfs
+#   resources:
+#     requests:
+#       storage: {{ ENV.SIZE }}
 
 ---
 apiVersion: v1
