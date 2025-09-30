@@ -8,7 +8,6 @@ resources:
   - ./bitwarden-secrets
   - ./kube-system
   - ./kubevirt
-  - ./longhorn-system
   - ./media
   - ./metallb-system
   - ./networking
