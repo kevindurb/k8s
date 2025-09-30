@@ -172,7 +172,7 @@ data:
     data_dir = "/var/lib/garage/data"
 
     replication_mode = '1'
-    compression_level = '1'
+    compression_level = 1
 
     [s3_api]
     s3_region = "garage"
