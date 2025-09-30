@@ -115,7 +115,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: longhorn
+  storageClassName: openebs-zfspv
   resources:
     requests:
       storage: 2Gi
@@ -158,7 +158,16 @@ rules:
   - apiGroups: ['']
     resources: ['nodes', 'nodes/status']
     verbs: ['get', 'list']
-  - nonResourceURLs: ['/healthz', '/healthz/*', '/livez', '/livez/*', '/readyz', '/readyz/*', '/version']
+  - nonResourceURLs:
+      [
+        '/healthz',
+        '/healthz/*',
+        '/livez',
+        '/livez/*',
+        '/readyz',
+        '/readyz/*',
+        '/version',
+      ]
     verbs: ['get']
 
 ---
