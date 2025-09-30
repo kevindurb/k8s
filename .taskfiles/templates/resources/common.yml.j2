@@ -9,7 +9,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: beaver-cloud-wildcard-cert
-  namespace: cert-manager
+  namespace: {{ ENV.NS }}
 spec:
   secretName: beaver-cloud-wildcard-cert
   issuerRef:

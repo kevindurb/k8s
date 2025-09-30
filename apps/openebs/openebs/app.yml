@@ -14,7 +14,7 @@ spec:
       path: apps/openebs/openebs
 
     - repoURL: https://openebs.github.io/openebs
-      targetRevision: v0.0.0
+      targetRevision: 4.3.3
       chart: openebs
   destination:
     server: https://kubernetes.default.svc
