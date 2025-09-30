@@ -19,3 +19,4 @@ resources:
 - ./openebs
 - ./garage
 - ./volsync-system
+- ./longhorn-system
