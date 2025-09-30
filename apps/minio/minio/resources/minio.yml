@@ -11,9 +11,9 @@ spec:
     spec:
       hostname: minio
       volumes:
-        - name: truenas-minio
+        - name: media-pvc
           persistentVolumeClaim:
-            claimName: truenas-minio
+            claimName: media-pvc
       containers:
         - name: minio
           image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -23,8 +23,9 @@ spec:
             - --console-address
             - :9001
           volumeMounts:
-            - name: truenas-minio
+            - name: media-pvc
               mountPath: /data
+              subPath: minio
           env:
             - name: MINIO_ROOT_USER
               value: admin
@@ -55,6 +56,34 @@ spec:
               port: 9000
             initialDelaySeconds: 10
             periodSeconds: 20
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-pvc
+spec:
+  accessModes: [ReadWriteMany]
+  volumeName: media-nfs-pv
+  storageClassName: ''
+  resources:
+    requests:
+      storage: 12Ti
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-nfs-pv
+spec:
+  capacity:
+    storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.50.43
+    path: /
+  mountOptions: [nfsvers=4.2]
 
 ---
 apiVersion: k8s.bitwarden.com/v1
