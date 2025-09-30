@@ -26,6 +26,9 @@ spec:
         - name: media-pvc
           persistentVolumeClaim:
             claimName: media-pvc
+        - name: config
+          configMap:
+            name: config
       containers:
         - name: garage
           image: dxflrs/garage:v2.1.0
@@ -49,14 +52,19 @@ spec:
             - name: media-pvc
               mountPath: /var/lib/garage/data
               subPath: garage
+            - name: config
+              mountPath: /etc/garage.toml
+              subPath: garage.toml
           env:
             - name: TZ
               value: America/Denver
           ports:
-            - name: http
+            - name: s3-web
               containerPort: 3902
-            - name: s3
+            - name: s3-api
               containerPort: 3900
+            - name: admin
+              containerPort: 3903
 
 ---
 apiVersion: v1
@@ -107,9 +115,12 @@ spec:
   selector:
     app.kubernetes.io/component: web
   ports:
-    - name: http
-      port: 80
-      targetPort: http
+    - name: s3-web
+      port: 3900
+      targetPort: s3-web
+    - name: s3-api
+      port: 3902
+      targetPort: s3-api
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -149,3 +160,26 @@ data:
         url: http://garage-web-service.garage
         conditions:
           - '[STATUS] == 200'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  garage.toml: |-
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = "/var/lib/garage/data"
+
+    replication_mode = 1
+    compression_level = 1
+
+    [s3_api]
+    s3_region = "garage"
+    api_bind_addr = "[::]:3900"
+
+    [s3_web]
+    bind_addr = "[::]:3902"
+
+    [admin]
+    api_bind_addr = "[::]:3903"
