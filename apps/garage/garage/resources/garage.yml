@@ -166,7 +166,7 @@ spec:
               service:
                 name: web-service
                 port:
-                  name: http
+                  name: s3-web
 
 ---
 apiVersion: v1
