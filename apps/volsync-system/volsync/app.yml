@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: volsync
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://backube.github.io/helm-charts/
+      targetRevision: 0.13.1
+      chart: volsync
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: volsync-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
