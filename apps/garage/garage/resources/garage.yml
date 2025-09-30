@@ -58,6 +58,11 @@ spec:
           env:
             - name: TZ
               value: America/Denver
+            - name: GARAGE_RPC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: garage-secret
+                  key: GARAGE_RPC_SECRET
           ports:
             - name: s3-web
               containerPort: 3902
@@ -65,6 +70,23 @@ spec:
               containerPort: 3900
             - name: admin
               containerPort: 3903
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: garage-secret
+  map:
+    - secretKeyName: GARAGE_RPC_SECRET
+      bwSecretId: f3321951-4796-4ddf-aaa5-b368014e6707
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
 
 ---
 apiVersion: v1
