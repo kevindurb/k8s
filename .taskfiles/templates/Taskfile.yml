@@ -99,7 +99,7 @@ tasks:
 
   app-resources:
     requires:
-      vars: [APP, IMG, PORT]
+      vars: [APP, IMG, PORT, NS]
     dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: './resources/{{.APP}}.yml'
@@ -109,6 +109,21 @@ tasks:
       - task: minijinja
         vars:
           TEMPLATE: resources
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
+      - kustomize edit add resource {{.OUT_FILE}}
+
+  pvc:
+    requires:
+      vars: [APP, NS]
+    dir: '{{.APP_DIR}}'
+    vars:
+      OUT_FILE: './resources/pvc.yml'
+    generates:
+      - '{{.APP_DIR}}/{{.OUT_FILE}}'
+    cmds:
+      - task: minijinja
+        vars:
+          TEMPLATE: pvc
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
