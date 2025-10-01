@@ -6,6 +6,7 @@ metadata:
   annotations:
     storageclass.kubernetes.io/is-default-class: 'true'
 allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
 parameters:
   fstype: zfs
   poolname: tank/storage
