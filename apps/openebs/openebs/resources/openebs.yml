@@ -17,3 +17,13 @@ allowedTopologies:
           - kube-storage-01
           - kube-storage-02
           - kube-storage-03
+
+---
+kind: VolumeSnapshotClass
+apiVersion: snapshot.storage.k8s.io/v1
+metadata:
+  name: zfspv
+  annotations:
+    snapshot.storage.kubernetes.io/is-default-class: 'true'
+driver: zfs.csi.openebs.io
+deletionPolicy: Delete
