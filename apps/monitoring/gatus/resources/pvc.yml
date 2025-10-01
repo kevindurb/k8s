@@ -65,6 +65,8 @@ kind: ReplicationDestination
 metadata:
   name: data-volume
 spec:
+  trigger:
+    manual: restore-once
   restic:
     repository: gatus-restic-config
     copyMethod: Snapshot
