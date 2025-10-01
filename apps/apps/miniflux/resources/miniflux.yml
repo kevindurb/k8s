@@ -78,6 +78,15 @@ spec:
     metadata:
       labels: *labels
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - kube-big-01
       securityContext:
         fsGroup: 1000
       volumes:
