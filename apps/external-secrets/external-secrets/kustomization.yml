@@ -1,13 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: external-secrets
-
 resources:
   - ./resources/kubernetes-cluster-secret-store.yml
-
-labels:
-  - includeSelectors: true
-    includeTemplates: true
-    pairs:
-      app.kubernetes.io/name: external-secrets
