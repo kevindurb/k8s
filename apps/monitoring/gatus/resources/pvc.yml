@@ -49,6 +49,7 @@ spec:
     schedule: '*/30 * * * *'
   restic:
     pruneIntervalDays: 7
+    volumeSnapshotClassName: openebs-zfspv
     repository: gatus-restic-config
     retain:
       hourly: 6
@@ -67,5 +68,8 @@ spec:
   restic:
     repository: gatus-restic-config
     copyMethod: Snapshot
+    capacity: 2Gi
+    storageClassName: openebs-zfspv
+    volumeSnapshotClassName: openebs-zfspv
     accessModes:
       - ReadWriteOnce
