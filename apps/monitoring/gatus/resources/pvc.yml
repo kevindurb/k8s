@@ -67,3 +67,5 @@ spec:
   restic:
     repository: gatus-restic-config
     copyMethod: Snapshot
+    accessModes:
+      - ReadWriteOnce
