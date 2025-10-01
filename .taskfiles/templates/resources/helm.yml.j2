@@ -9,6 +9,9 @@ metadata:
 spec:
   project: default
   sources:
+    - repoURL: {{ ENV.HELM_REPO }}
+      targetRevision: {{ ENV.HELM_VERSION }}
+      chart: {{ ENV.APP }}
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: apps/{{ ENV.NS }}/{{ ENV.APP }}
