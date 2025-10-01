@@ -41,16 +41,10 @@ spec:
             capabilities:
               drop: [ALL]
           env:
-            - name: AUTH_PROXY_USER_CREATION
-              value: '1'
-            - name: AUTH_PROXY_HEADER
-              value: Remote-User
             - name: TZ
               value: America/Denver
             - name: RUN_MIGRATIONS
               value: '1'
-            - name: CREATE_ADMIN
-              value: '0'
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -78,15 +72,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: NotIn
-                    values:
-                      - kube-big-01
       securityContext:
         fsGroup: 1000
       volumes:
