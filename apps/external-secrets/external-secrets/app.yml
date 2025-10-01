@@ -19,6 +19,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: external-secrets
   syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
     automated:
       prune: true
       selfHeal: true
