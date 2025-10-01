@@ -6,6 +6,7 @@ namePrefix: gatus-
 
 resources:
   - ./resources/gatus.yml
+  - ./resources/pvc.yml
 
 labels:
   - includeSelectors: true
