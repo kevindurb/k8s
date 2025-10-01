@@ -88,5 +88,3 @@ spec:
                 name: service
                 port:
                   name: http
-
-

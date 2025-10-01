@@ -83,8 +83,6 @@ spec:
       port: 80
       targetPort: http
 
-
-
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -5,6 +5,7 @@ This repository contains the complete Kubernetes cluster configuration managed v
 ## Overview
 
 The infrastructure includes:
+
 - Application deployments organized by namespace
 - Kubernetes cluster configuration via K3s and BootC
 - Infrastructure components (storage, monitoring, networking)
@@ -173,6 +174,7 @@ task k8s:update-hosts
 - **Total Storage**: 2.5TB+ distributed across nodes
 - **High Availability**: 3-node control plane with KubeVIP
 - **Storage Replication**: 3x replication via Longhorn
+
 ## Quick Start
 
 See [CLAUDE.md](./CLAUDE.md) for comprehensive development guidelines and common commands.
@@ -192,6 +194,7 @@ The cluster uses the Bitwarden Secrets Manager Kubernetes Operator to synchroniz
 #### Setup
 
 1. **Create the authentication secret**:
+
    ```bash
    # Create a temporary secret with your machine account token
    kubectl create secret generic bitwarden-auth-token \
@@ -213,20 +216,21 @@ metadata:
   name: my-app-secrets
   namespace: my-namespace
 spec:
-  organizationId: "<ORG_ID_GUID>"
+  organizationId: '<ORG_ID_GUID>'
   secretName: my-app-secret
   map:
-    - bwSecretId: "<SECRET_UUID_1>"
+    - bwSecretId: '<SECRET_UUID_1>'
       secretKeyName: database_password
-    - bwSecretId: "<SECRET_UUID_2>"
+    - bwSecretId: '<SECRET_UUID_2>'
       secretKeyName: api_key
   authToken:
     secretName: bitwarden-auth-token
     secretKey: token
-  refreshInterval: "10m"
+  refreshInterval: '10m'
 ```
 
 Replace:
+
 - `<ORG_ID_GUID>`: Your Bitwarden organization ID
 - `<SECRET_UUID_1>`, `<SECRET_UUID_2>`: UUIDs of secrets in your Bitwarden Secrets Manager
 - `secretKeyName`: The key names in the resulting Kubernetes secret

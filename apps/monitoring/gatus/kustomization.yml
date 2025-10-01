@@ -5,10 +5,10 @@ namespace: monitoring
 namePrefix: gatus-
 
 resources:
-- ./resources/gatus.yml
+  - ./resources/gatus.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: gatus
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: gatus

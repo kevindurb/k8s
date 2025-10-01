@@ -1,0 +1,14 @@
+{
+  "name": "k8s",
+  "version": "1.0.0",
+  "description": "This repository contains the complete Kubernetes cluster configuration managed via GitOps principles using ArgoCD and Kustomize.",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kevindurb/k8s.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "lefthook": "^1.13.6",
+    "prettier": "^3.6.2"
+  }
+}

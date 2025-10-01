@@ -42,6 +42,10 @@ tasks:
     internal: true
     requires:
       vars: [OUT_FILE, TEMPLATE]
+    sources:
+      - '{{.TEMPLATES_DIR}}/{{.TEMPLATE}}.yml.j2'
+    generates:
+      - '{{.OUT_FILE}}'
     cmds:
       - mkdir -p {{dir .OUT_FILE}}
       - >
@@ -55,6 +59,8 @@ tasks:
     requires:
       vars: [APP]
     dir: '{{.APP_DIR}}'
+    generates:
+      - '{{.APP_DIR}}/kustomization.yml'
     cmds:
       - task: minijinja
         vars:
@@ -67,6 +73,8 @@ tasks:
     dir: './apps/{{.NS}}'
     vars:
       OUT_FILE: './{{.APP}}/app.yml'
+    generates:
+      - './apps/{{.NS}}/{{.OUT_FILE}}'
     cmds:
       - task: minijinja
         vars:
@@ -80,6 +88,8 @@ tasks:
     dir: './apps/{{.NS}}'
     vars:
       OUT_FILE: './{{.APP}}/app.yml'
+    generates:
+      - './apps/{{.NS}}/{{.OUT_FILE}}'
     cmds:
       - task: minijinja
         vars:
@@ -93,6 +103,8 @@ tasks:
     dir: '{{.APP_DIR}}'
     vars:
       OUT_FILE: './resources/{{.APP}}.yml'
+    generates:
+      - '{{.APP_DIR}}/{{.OUT_FILE}}'
     cmds:
       - task: minijinja
         vars:
@@ -105,6 +117,9 @@ tasks:
     requires:
       vars: [NS]
     dir: './apps'
+    generates:
+      - './apps/{{.NS}}/kustomization.yml'
+      - './apps/{{.NS}}/common.yml'
     cmds:
       - task: minijinja
         vars:

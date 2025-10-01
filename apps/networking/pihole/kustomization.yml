@@ -5,10 +5,10 @@ namespace: networking
 namePrefix: pihole-
 
 resources:
-- ./resources/pihole.yml
+  - ./resources/pihole.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: pihole
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: pihole

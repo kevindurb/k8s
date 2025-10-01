@@ -26,23 +26,23 @@ spec:
             - name: MAKEMKV_KEY
               value: T-PuNYycrTTHW4QEOfhDrMuJMpojNqmY5CGuESAKXzHvwBvBcXhtsJLj4g6OAXd1zfzk
             - name: USER_ID
-              value: "1000"
+              value: '1000'
             - name: GROUP_ID
-              value: "1000"
+              value: '1000'
             - name: SUP_GROUP_IDS
-              value: "11"
+              value: '11'
             - name: TZ
               value: America/Denver
             - name: DARK_MODE
-              value: "1"
+              value: '1'
             - name: AUTO_DISC_RIPPER
-              value: "1"
+              value: '1'
             - name: AUTO_DISC_RIPPER_EJECT
-              value: "1"
+              value: '1'
             - name: AUTO_DISC_RIPPER_MIN_TITLE_LENGTH
-              value: "600" # 10 minutes
+              value: '600' # 10 minutes
             - name: AUTO_DISC_RIPPER_FORCE_UNIQUE_OUTPUT_DIR
-              value: "1"
+              value: '1'
           securityContext:
             privileged: true
           ports:
@@ -136,7 +136,7 @@ metadata:
 spec:
   accessModes: [ReadWriteMany]
   volumeName: media-nfs-pv
-  storageClassName: ""
+  storageClassName: ''
   resources:
     requests:
       storage: 12Ti
@@ -162,7 +162,7 @@ kind: ConfigMap
 metadata:
   name: gatus-config
   labels:
-    gatus.io/enabled: "true"
+    gatus.io/enabled: 'true'
 data:
   makemkv.yml: |
     endpoints:

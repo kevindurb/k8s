@@ -5,10 +5,10 @@ namespace: apps
 namePrefix: filebrowser-
 
 resources:
-- ./resources/filebrowser.yml
+  - ./resources/filebrowser.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: filebrowser
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: filebrowser

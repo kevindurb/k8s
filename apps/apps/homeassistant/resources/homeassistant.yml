@@ -76,8 +76,6 @@ spec:
       port: 8123
       targetPort: http
 
-
-
 ---
 apiVersion: v1
 kind: ConfigMap

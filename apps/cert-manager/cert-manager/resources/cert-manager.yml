@@ -33,5 +33,3 @@ spec:
   authToken:
     secretName: bw-auth-token
     secretKey: token
-
-

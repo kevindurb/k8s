@@ -5,10 +5,10 @@ namespace: ai
 namePrefix: open-webui-
 
 resources:
-- ./resources/open-webui.yml
+  - ./resources/open-webui.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: open-webui
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: open-webui

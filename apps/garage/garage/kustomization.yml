@@ -5,10 +5,10 @@ namespace: garage
 namePrefix: garage-
 
 resources:
-- ./resources/garage.yml
+  - ./resources/garage.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: garage
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: garage
