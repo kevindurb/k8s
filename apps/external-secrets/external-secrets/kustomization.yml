@@ -5,10 +5,10 @@ namespace: external-secrets
 namePrefix: external-secrets-
 
 resources:
-- ./resources/external-secrets.yml
+  - ./resources/external-secrets.yml
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    app.kubernetes.io/name: external-secrets
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: external-secrets
