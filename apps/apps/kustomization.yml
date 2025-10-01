@@ -5,6 +5,6 @@ kind: Kustomization
 resources:
   - common.yml
   - ./whoami/app.yml
-  - ./miniflux/app.yml
+  # - ./miniflux/app.yml
   - ./filebrowser/app.yml
   # - ./homeassistant/app.yml
