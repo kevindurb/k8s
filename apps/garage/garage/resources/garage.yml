@@ -143,6 +143,9 @@ spec:
     - name: s3-api
       port: 3902
       targetPort: s3-api
+    - name: admin
+      port: 3903
+      targetPort: admin
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -179,7 +182,7 @@ data:
   garage.yml: |
     endpoints:
       - name: garage
-        url: http://garage-web-service.garage
+        url: http://garage-web-service.garage:3903/health
         conditions:
           - '[STATUS] == 200'
 
