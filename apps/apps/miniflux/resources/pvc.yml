@@ -26,7 +26,7 @@ spec:
   secretName: miniflux-restic-config
   map:
     - secretKeyName: RESTIC_REPOSITORY
-      bwSecretId: '' # Update
+      bwSecretId: b924acec-4101-4421-9026-b3690157cc47
     - secretKeyName: RESTIC_PASSWORD
       bwSecretId: b90148ba-a111-4dd0-b463-b369010605d0
     - secretKeyName: AWS_ACCESS_KEY_ID
