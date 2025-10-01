@@ -130,18 +130,6 @@ spec:
 
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: db-volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 5Gi
-
----
-apiVersion: v1
 kind: Service
 metadata:
   name: db-service
