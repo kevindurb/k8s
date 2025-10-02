@@ -6,6 +6,7 @@ namePrefix: n8n-
 
 resources:
   - ./resources/n8n.yml
+  - ./resources/pvc.yml
 
 labels:
   - includeSelectors: true

@@ -6,6 +6,7 @@ namePrefix: searxng-
 
 resources:
   - ./resources/searxng.yml
+  - ./resources/pvc.yml
 
 labels:
   - includeSelectors: true

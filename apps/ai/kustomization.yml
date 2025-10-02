@@ -4,7 +4,7 @@ kind: Kustomization
 
 resources:
   - common.yml
-# - ./ollama/app.yml
-# - ./n8n/app.yml
-# - ./searxng/app.yml
-# - ./open-webui/app.yml
+  - ./ollama/app.yml
+  - ./n8n/app.yml
+  - ./searxng/app.yml
+  - ./open-webui/app.yml
