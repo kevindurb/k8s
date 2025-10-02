@@ -29,6 +29,7 @@ spec:
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2025.10.0
+          command: [python, -m, homeassistant]
           resources:
             requests:
               memory: 100M
