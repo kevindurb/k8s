@@ -5,6 +5,12 @@ metadata:
   name: config
 data:
   glance.yml: |
+    theme:
+      background-color: 220 16 22    # nord0 (darkest background)
+      contrast-multiplier: 1.2
+      primary-color: 210 34 63       # nord8 (frost blue)
+      positive-color: 150 25 55      # nord14 (green)
+      negative-color: 354 42 56      # nord11 (red)
     pages:
       - name: Home
         columns:
