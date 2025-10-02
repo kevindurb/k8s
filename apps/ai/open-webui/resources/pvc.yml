@@ -6,10 +6,10 @@ metadata:
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: openebs-zfspv
-  dataSourceRef:
-    kind: ReplicationDestination
-    apiGroup: volsync.backube
-    name: open-webui-volume
+  # dataSourceRef:
+  #   kind: ReplicationDestination
+  #   apiGroup: volsync.backube
+  #   name: open-webui-volume
   resources:
     requests:
       storage: 10G

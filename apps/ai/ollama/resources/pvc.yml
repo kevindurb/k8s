@@ -6,10 +6,10 @@ metadata:
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: openebs-zfspv
-  dataSourceRef:
-    kind: ReplicationDestination
-    apiGroup: volsync.backube
-    name: ollama-volume
+  # dataSourceRef:
+  #   kind: ReplicationDestination
+  #   apiGroup: volsync.backube
+  #   name: ollama-volume
   resources:
     requests:
       storage: 20G
