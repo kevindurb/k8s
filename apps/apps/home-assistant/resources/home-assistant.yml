@@ -23,6 +23,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: config
+          configMap:
+            name: config
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2025.10.0
@@ -43,7 +46,7 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /config
-            - name: config-map
+            - name: config
               mountPath: /config/configuration.yaml
               subPath: configuration.yaml
               readOnly: true
