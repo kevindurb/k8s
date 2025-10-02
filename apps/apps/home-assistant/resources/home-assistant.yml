@@ -26,6 +26,8 @@ spec:
         - name: config
           configMap:
             name: config
+        - name: dot-homeassistant
+          emptyDir: {}
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2025.10.0
@@ -51,6 +53,8 @@ spec:
               mountPath: /config/configuration.yaml
               subPath: configuration.yaml
               readOnly: true
+            - name: dot-homeassistant
+              mountPath: /.homeassistant
           env:
             - name: TZ
               value: America/Denver
