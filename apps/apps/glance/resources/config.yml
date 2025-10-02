@@ -33,6 +33,6 @@ data:
           - size: small
             widgets:
               - type: weather
-                location: Colorado Springs, CO
+                location: Colorado Springs, Colorado, United States
                 units: imperial
                 hour-format: 12h
