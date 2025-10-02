@@ -6,7 +6,6 @@ namePrefix: whoami-
 
 resources:
   - ./resources/resources.yml
-  - ./resources/pvc.yml
 
 labels:
   - includeSelectors: true
