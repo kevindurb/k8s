@@ -8,10 +8,10 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/kevindurb/k8s.git
-    targetRevision: HEAD
-    path: apps/apps/homeassistant
+  sources:
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/apps/homeassistant
   destination:
     server: https://kubernetes.default.svc
     namespace: apps
