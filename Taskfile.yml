@@ -21,6 +21,9 @@ includes:
     aliases: [k, k8s]
   restic:
     taskfile: .taskfiles/restic
+  bitwarden:
+    aliases: [bws]
+    taskfile: .taskfiles/bitwarden
 
 tasks:
   default: task --list-all
