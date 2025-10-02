@@ -7,3 +7,4 @@ resources:
   - ./miniflux/app.yml
   - ./filebrowser/app.yml
   - ./home-assistant/app.yml
+  - ./glance/app.yml
