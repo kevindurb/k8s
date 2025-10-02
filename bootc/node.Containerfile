@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/ucore-minimal:stable-nvidia@sha256:ab879ee71090c161358bb71720d1992cc1ef7097a540ae3f23e98ed194cdb276
+FROM ghcr.io/ublue-os/ucore-minimal:stable-nvidia@sha256:abf13571a2ab91e30eac44c57f3b96f2a186bc63e2e1019d6c0c619d45b84a49
 
 RUN dnf install -y \
   nfs-utils-coreos \
