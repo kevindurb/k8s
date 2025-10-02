@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  glance.yml: |
+    pages:
+      - name: Home
+        columns:
+          - size: small
+            widgets:
+              - type: calendar
+                first-day-of-week: sunday
+
+          - size: full
+            widgets:
+              - type: hacker-news
+              - type: lobsters
+
+          - size: small
+            widgets:
+              - type: weather
+                location: Colorado Springs, CO
+                units: imperial
+                hour-format: 12h

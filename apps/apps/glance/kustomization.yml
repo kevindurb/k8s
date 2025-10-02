@@ -6,6 +6,7 @@ namePrefix: glance-
 
 resources:
   - ./resources/glance.yml
+  - ./resources/config.yml
 
 labels:
   - includeSelectors: true
