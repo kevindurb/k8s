@@ -42,7 +42,7 @@ spec:
               drop: [ALL]
           volumeMounts:
             - name: config
-              mountPath: /config/glance.yml
+              mountPath: /app/config/glance.yml
               subPath: glance.yml
               readOnly: true
           env:
