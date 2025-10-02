@@ -3,9 +3,11 @@
   "extends": [
     "config:recommended",
     "docker:pinDigests",
-    ":automergePatch",
+    ":automergeMinor",
     ":disableRateLimiting"
   ],
+  "automergeType": "pr",
+  "automergeStrategy": "merge-commit",
   "platform": "github",
   "repositories": ["kevindurb/k8s"],
   "kubernetes": {
