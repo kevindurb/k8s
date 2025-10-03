@@ -7,3 +7,4 @@ resources:
   - ./makemkv/app.yml
   - ./ytdl-sub/app.yml
   - ./importarr/app.yml
+  - ./analyzarr/app.yml
