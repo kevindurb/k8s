@@ -28,7 +28,7 @@ spec:
             claimName: media-pvc
       initContainers:
         - name: migrate
-          image: &image ghcr.io/kevindurb/analyzarr:sha-6709178
+          image: &image ghcr.io/kevindurb/analyzarr:sha-ee58fca
           command: [bunx, prisma, migrate, deploy]
           env:
             - name: DATABASE_URL
