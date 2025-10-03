@@ -28,7 +28,7 @@ spec:
             claimName: media-pvc
       initContainers:
         - name: migrate
-          image: ghcr.io/kevindurb/importarr:sha-6709178
+          image: &image ghcr.io/kevindurb/importarr:sha-6709178
           command: [bunx, prisma, migrate, deploy]
           env:
             - name: DATABASE_URL
@@ -42,7 +42,7 @@ spec:
             runAsNonRoot: true
       containers:
         - name: importarr
-          image: ghcr.io/kevindurb/importarr:2025.10.03
+          image: *image
           resources:
             requests:
               memory: 100M
