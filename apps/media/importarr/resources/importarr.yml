@@ -28,7 +28,7 @@ spec:
             claimName: media-pvc
       containers:
         - name: importarr
-          image:
+          image: ghcr.io/kevindurb/importarr:2025.10.03
           resources:
             requests:
               memory: 100M
