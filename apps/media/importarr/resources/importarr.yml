@@ -26,6 +26,20 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc
+      initContainers:
+        - name: migrate
+          image: ghcr.io/kevindurb/importarr:2025.10.03
+          command: [bunx, prisma, migrate, deploy]
+          env:
+            - name: DATABASE_URL
+              value: file:/config/database.db
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
       containers:
         - name: importarr
           image: ghcr.io/kevindurb/importarr:2025.10.03
@@ -52,7 +66,7 @@ spec:
             - name: TZ
               value: America/Denver
             - name: DATABASE_URL
-              value: file:/config/dev.db
+              value: file:/config/database.db
             - name: SOURCE_PATH
               value: /media/Downloads
             - name: LIBRARY_MOVIES_PATH
