@@ -14,6 +14,5 @@ kube-vip manifest daemonset \
     --inCluster \
     --taint \
     --controlplane \
-    --services \
     --arp \
     --leaderElection > ./apps/kube-system/kube-vip/resources/kube-vip.yml
