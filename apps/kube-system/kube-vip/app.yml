@@ -1,14 +1,17 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: kube-vip
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/kevindurb/k8s
-    targetRevision: HEAD
-    path: apps/kube-system/kube-vip
+  sources:
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/kube-system/kube-vip
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
