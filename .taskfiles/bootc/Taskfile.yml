@@ -2,78 +2,19 @@
 ---
 version: '3'
 
+vars:
+  HOSTS:
+    - kube-master-01
+    - kube-master-02
+    - kube-master-03
+    - kube-storage-01
+    - kube-storage-02
+    - kube-storage-03
+    - kube-big-01
+
 tasks:
-  build:
-    desc: Build the bootc container image for K8s nodes
-    cmd: >
-      podman build
-      -t ghcr.io/kevindurb/k8s-node:latest
-      -f ./bootc/node.Containerfile
-      ./bootc
-
-  build-gateway:
-    desc: Build the bootc container image for K8s gateway
-    cmd: >
-      podman build
-      -t ghcr.io/kevindurb/k8s-gateway:latest
-      -f ./bootc/gateway.Containerfile
-      ./bootc
-
-  build-all:
-    desc: Build both node and gateway container images
-    deps: [build, build-gateway]
-
-  genignition:
-    desc: Generate ignition files for all hosts in hosts.yml
-    vars:
-      HOSTS:
-        sh: yq e 'keys | .[]' ./bootc/hosts.yml
-    cmds:
-      - for: { var: HOSTS }
-        cmd: |
-          minijinja-cli \
-            --select "{{.ITEM}}" \
-            ./bootc/node.bu.j2 \
-            ./bootc/hosts.yml | \
-          butane \
-            --strict \
-            --pretty \
-            -o ./bootc/ignition/{{.ITEM}}.ign \
-            --
-
-  download-iso:
-    cmd: >
-      podman run --rm -v ~/Downloads:/data
-      quay.io/coreos/coreos-installer:release
-      download -s stable -p metal -f iso -a x86_64 -C /data
-
-  build-isos:
-    deps: [download-iso]
-    vars:
-      HOSTS:
-        sh: yq e 'keys | .[]' ./bootc/hosts.yml
-      ISO_FILENAME:
-        sh: ls ~/Downloads/fedora-coreos-*.iso | tail -1 | xargs basename
-    cmds:
-      - for: { var: HOSTS }
-        cmd: rm -f ~/Downloads/{{.ITEM}}.iso
-      - for: { var: HOSTS }
-        cmd: >
-          podman run --rm -it --privileged
-          -v ./bootc/ignition/{{.ITEM}}.ign:/config.ign:ro
-          -v ~/Downloads:/data
-          quay.io/coreos/coreos-installer:release
-          iso customize
-          --dest-device /dev/sda
-          --dest-ignition /config.ign
-          --output /data/{{.ITEM}}.iso
-          /data/{{.ISO_FILENAME}}
-
   upgrade-all-hosts:
     desc: Upgrade bootc and reboot all hosts
-    vars:
-      HOSTS:
-        sh: yq e 'keys | .[]' ./bootc/hosts.yml
     cmds:
       - for: { var: HOSTS }
         cmd: |
@@ -82,9 +23,6 @@ tasks:
 
   shutdown:
     desc: Shutdown all bootc hosts
-    vars:
-      HOSTS:
-        sh: yq e 'keys | .[]' ./bootc/hosts.yml
     cmds:
       - for: { var: HOSTS }
         cmd: |
@@ -93,9 +31,6 @@ tasks:
 
   reboot:
     desc: Reboot all bootc hosts
-    vars:
-      HOSTS:
-        sh: yq e 'keys | .[]' ./bootc/hosts.yml
     cmds:
       - for: { var: HOSTS }
         cmd: |
