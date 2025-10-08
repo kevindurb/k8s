@@ -3,144 +3,76 @@
 version: '3'
 
 vars:
+  KUBE_VIP: 192.168.42.1
   K3S_TOKEN_PATH: /var/lib/rancher/k3s/server/node-token
+  SERVERS:
+    - unimatrix01 # 192.168.42.11
+    - unimatrix02 # 192.168.42.12
+    - unimatrix03 # 192.168.42.13
+  AGENTS:
+    - drone01 # 192.168.42.21
+    - drone02 # 192.168.42.22
+    - drone03 # 192.168.42.23
+    - drone04 # 192.168.42.24
 
 tasks:
-  init-master-01:
-    desc: Initialize first master node with vanilla k3s
-    vars:
-      TAILSCALE_IP:
-        sh: yq e '.["kube-master-01"].tailscale_ip' ./bootc/hosts.yml
-      HOSTNAME:
-        sh: yq e '.["kube-master-01"].hostname' ./bootc/hosts.yml
+  cluster-init:
+    requires:
+      vars: [HOST]
     cmds:
       - |
         minijinja-cli \
-          --define tailscale_ip={{.TAILSCALE_IP}} \
-          --define hostname={{.HOSTNAME}} \
-          --define tailscale_fqdn={{.HOSTNAME}}.beaver-cloud.ts.net \
-          .taskfiles/k3s/templates/server-init.yaml.j2 | \
-        ssh core@kube-master-01 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
-      - |
-        ssh core@kube-master-01 'curl -sfL https://get.k3s.io | \
-        INSTALL_K3S_SKIP_SELINUX_RPM=true \
-        INSTALL_K3S_EXEC="server" \
-        sh -'
-      - ssh core@kube-master-01 'sudo restorecon -v /usr/local/bin/k3s'
-
-  join-master:
-    desc: Join master node to cluster with vanilla k3s
-    vars:
-      TAILSCALE_IP:
-        sh: yq e '.["{{.HOST}}"].tailscale_ip' ./bootc/hosts.yml
-      HOSTNAME:
-        sh: yq e '.["{{.HOST}}"].hostname' ./bootc/hosts.yml
-      K3S_TOKEN:
-        sh: ssh core@kube-master-01 'sudo cat {{.K3S_TOKEN_PATH}}'
-    cmds:
-      - |
-        minijinja-cli \
-          --define tailscale_ip={{.TAILSCALE_IP}} \
-          --define hostname={{.HOSTNAME}} \
-          --define tailscale_fqdn={{.HOSTNAME}}.beaver-cloud.ts.net \
-          --define k3s_token={{.K3S_TOKEN}} \
-          .taskfiles/k3s/templates/server-join.yaml.j2 | \
+          --define hostname={{.HOST}} \
+          .taskfiles/k3s/templates/cluster-init.yaml.j2 | \
         ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
-      - |
-        ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
-        INSTALL_K3S_SKIP_SELINUX_RPM=true \
-        INSTALL_K3S_EXEC="server" \
-        sh -'
-      - ssh core@{{.HOST}} 'sudo restorecon -v /usr/local/bin/k3s'
+      - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s.service'
 
-  join-worker:
-    desc: Join worker node to cluster with vanilla k3s
+  join-server:
+    requires:
+      vars: [HOST, SERVER]
     vars:
-      TAILSCALE_IP:
-        sh: yq e '.["{{.HOST}}"].tailscale_ip' ./bootc/hosts.yml
       K3S_TOKEN:
-        sh: ssh core@kube-master-01 'sudo cat {{.K3S_TOKEN_PATH}}'
+        sh: ssh core@{{.SERVER}} 'sudo cat {{.K3S_TOKEN_PATH}}'
     cmds:
       - |
         minijinja-cli \
-          --define tailscale_ip={{.TAILSCALE_IP}} \
-          --define k3s_token={{.K3S_TOKEN}} \
-          --select {{.HOST}} \
-          .taskfiles/k3s/templates/agent.yaml.j2 \
-          ./bootc/hosts.yml | \
+          --define hostname={{.HOST}} \
+          --define server={{.SERVER}} \
+          .taskfiles/k3s/templates/server.yaml.j2 | \
         ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
+      - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s.service'
+
+  join-agent:
+    requires:
+      vars: [HOST, SERVER]
+    vars:
+      K3S_TOKEN:
+        sh: ssh core@{{.SERVER}} 'sudo cat {{.K3S_TOKEN_PATH}}'
+    cmds:
       - |
-        ssh core@{{.HOST}} 'curl -sfL https://get.k3s.io | \
-        INSTALL_K3S_SKIP_SELINUX_RPM=true \
-        INSTALL_K3S_EXEC="agent" \
-        sh -'
-      - ssh core@{{.HOST}} 'sudo restorecon -v /usr/local/bin/k3s'
-
-  join-all-masters:
-    desc: Join all remaining master nodes
-    cmds:
-      - task: join-master
-        vars:
-          HOST: kube-master-02
-      - task: join-master
-        vars:
-          HOST: kube-master-03
-
-  join-all-workers:
-    desc: Join all worker nodes
-    cmds:
-      - task: join-worker
-        vars:
-          HOST: kube-storage-01
-      - task: join-worker
-        vars:
-          HOST: kube-storage-02
-      - task: join-worker
-        vars:
-          HOST: kube-storage-03
-      - task: join-worker
-        vars:
-          HOST: kube-big-01
+        minijinja-cli \
+          --define hostname={{.HOST}} \
+          --define server={{.SERVER}} \
+          .taskfiles/k3s/templates/agent.yaml.j2 | \
+        ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
+      - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s-agent.service'
 
   bootstrap:
-    desc: Bootstrap entire cluster with vanilla k3s (init + all joins)
     cmds:
-      - task: init-master-01
-      - task: join-all-masters
-      - task: join-all-workers
-
-  restart-all:
-    desc: Restart k3s services on all nodes
-    cmds:
-      - task: restart-masters
-      - task: restart-workers
-
-  restart-masters:
-    desc: Restart k3s service on all master nodes
-    cmds:
-      - ssh core@kube-master-01 'sudo systemctl restart k3s'
-      - ssh core@kube-master-02 'sudo systemctl restart k3s'
-      - ssh core@kube-master-03 'sudo systemctl restart k3s'
-
-  restart-workers:
-    desc: Restart k3s-agent service on all worker nodes
-    cmds:
-      - ssh core@kube-storage-01 'sudo systemctl restart k3s-agent'
-      - ssh core@kube-storage-02 'sudo systemctl restart k3s-agent'
-      - ssh core@kube-storage-03 'sudo systemctl restart k3s-agent'
-      - ssh core@kube-big-01 'sudo systemctl restart k3s-agent'
-
-  uninstall-all:
-    desc: Uninstall k3s from all nodes
-    cmds:
-      - ssh core@kube-master-01 'sudo /usr/local/bin/k3s-uninstall.sh'
-      - ssh core@kube-master-02 'sudo /usr/local/bin/k3s-uninstall.sh'
-      - ssh core@kube-master-03 'sudo /usr/local/bin/k3s-uninstall.sh'
-      - ssh core@kube-storage-01 'sudo /usr/local/bin/k3s-agent-uninstall.sh'
-      - ssh core@kube-storage-02 'sudo /usr/local/bin/k3s-agent-uninstall.sh'
-      - ssh core@kube-storage-03 'sudo /usr/local/bin/k3s-agent-uninstall.sh'
-      - ssh core@kube-big-01 'sudo /usr/local/bin/k3s-agent-uninstall.sh'
+      - task: cluster-init
+        vars:
+          HOST: unimatrix01
+      - for: [unimatrix02, unimatrix03]
+        task: join-server
+        vars:
+          SERVER: 192.168.42.11
+          HOST: '{{.ITEM}}'
+      - for: { var: AGENTS }
+        task: join-agent
+        vars:
+          SERVER: 192.168.42.11
+          HOST: '{{.ITEM}}'
 
   get-kubeconfig:
     desc: Pull the kubeconfig from kube-master-01
-    cmd: ssh core@kube-master-01 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig
+    cmd: ssh core@unimatrix01 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig

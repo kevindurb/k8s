@@ -1,13 +1,4 @@
 ---
-server: https://100.97.38.47:6443
+server: https://{{ kube_vip }}:6443
 token: {{ k3s_token }}
 selinux: true
-flannel-iface: tailscale0
-node-ip: {{ tailscale_ip }}
-node-external-ip: {{ tailscale_ip }}
-{% if labels is defined -%}
-node-label:
-{% for label in labels -%}
-  - {{ label }}
-{% endfor -%}
-{% endif -%}
