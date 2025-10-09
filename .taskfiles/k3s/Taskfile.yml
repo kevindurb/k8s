@@ -64,6 +64,19 @@ tasks:
           SERVER: 192.168.42.11
           HOST: '{{.ITEM.hostname}}'
 
+  update-config:
+    cmds:
+      - for: { var: servers }
+        task: join-server
+        vars:
+          SERVER: '{{.KUBE_VIP}}'
+          HOST: '{{.ITEM}}'
+      - for: { var: agents }
+        task: join-agent
+        vars:
+          SERVER: '{{.KUBE_VIP}}'
+          HOST: '{{.ITEM.hostname}}'
+
   get-kubeconfig:
     desc: Pull the kubeconfig from kube-master-01
     cmd: ssh core@unimatrix01 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig
