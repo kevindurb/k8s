@@ -18,10 +18,11 @@ spec:
           allowSnippetAnnotations: true
           service:
             annotations:
-              metallb.universe.tf/loadBalancerIPs: 192.168.42.11
               prometheus.io/port: '10254'
               prometheus.io/scrape: 'true'
             externalTrafficPolicy: Cluster
+            spec:
+              loadBalancerIP: 192.168.42.2
           metrics:
             enabled: true
           ingressClass: internal
@@ -66,10 +67,11 @@ spec:
           allowSnippetAnnotations: true
           service:
             annotations:
-              metallb.universe.tf/loadBalancerIPs: 192.168.42.12
               prometheus.io/port: '10254'
               prometheus.io/scrape: 'true'
             externalTrafficPolicy: Cluster
+            spec:
+              loadBalancerIP: 192.168.42.3
           metrics:
             enabled: true
           ingressClass: external

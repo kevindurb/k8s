@@ -8,13 +8,13 @@ vars:
   servers:
     - hostname: unimatrix-01
       ip: 192.168.42.11
-      interface: eno1
+      interface: enp1s0f0
     - hostname: unimatrix-02
       ip: 192.168.42.12
-      interface: eno1
+      interface: enp1s0f0
     - hostname: unimatrix-03
       ip: 192.168.42.13
-      interface: eno1
+      interface: enp1s0f0
   agents:
     - hostname: drone-01
       ip: 192.168.42.21

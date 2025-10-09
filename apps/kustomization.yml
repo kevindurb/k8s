@@ -9,7 +9,7 @@ resources:
   - ./kube-system
   - ./kubevirt
   - ./media
-  - ./metallb-system
+  # - ./metallb-system
   - ./networking
   - ./node-feature-discovery
   - ./gpu-operator
