@@ -7,6 +7,8 @@ vars:
 
 tasks:
   gen-ignition:
+    sources: [./node.bu.j2]
+    generates: ['{{.DIST}}/{{.hostname}}.ign']
     requires:
       vars: [hostname, interface, ip]
     cmd: |
@@ -37,6 +39,8 @@ tasks:
           ip: '{{.ITEM.ip}}'
 
   download-iso:
+    status:
+      - test -f {{.DIST}}/fedora-coreos-*.iso
     generates:
       - '{{.DIST}}/fedora-coreos-*.iso'
     cmd: >
@@ -45,6 +49,8 @@ tasks:
       download -s stable -p metal -f iso -a x86_64 -C /data
 
   build-iso:
+    sources: ['{{.DIST}}/{{.hostname}}.ign', '{{.DIST}}/fedora-coreos-*.iso']
+    generates: ['{{.DIST}}/{{.hostname}}.iso']
     deps: [download-iso]
     vars:
       ISO_FILENAME:
@@ -54,7 +60,7 @@ tasks:
     cmds:
       - cmd: rm -f {{.DIST}}/{{.hostname}}.iso
       - cmd: >
-          podman run --rm -it --privileged
+          podman run --rm --privileged
           -v {{.DIST}}:/data
           quay.io/coreos/coreos-installer:release
           iso customize
