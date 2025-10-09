@@ -4,6 +4,31 @@ version: '3'
 
 dotenv: [.env]
 
+vars:
+  servers:
+    - hostname: unimatrix01
+      ip: 192.168.42.11
+      interface: eno1
+    - hostname: unimatrix02
+      ip: 192.168.42.12
+      interface: eno1
+    - hostname: unimatrix03
+      ip: 192.168.42.13
+      interface: eno1
+  agents:
+    - hostname: drone01
+      ip: 192.168.42.21
+      interface: eno1
+    - hostname: drone02
+      ip: 192.168.42.22
+      interface: eno1
+    - hostname: drone03
+      ip: 192.168.42.23
+      interface: eno1
+    - hostname: drone04
+      ip: 192.168.42.24
+      interface: eno1
+
 includes:
   templates:
     taskfile: .taskfiles/templates

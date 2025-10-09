@@ -5,15 +5,6 @@ version: '3'
 vars:
   KUBE_VIP: 192.168.42.1
   K3S_TOKEN_PATH: /var/lib/rancher/k3s/server/node-token
-  SERVERS:
-    - unimatrix01 # 192.168.42.11
-    - unimatrix02 # 192.168.42.12
-    - unimatrix03 # 192.168.42.13
-  AGENTS:
-    - drone01 # 192.168.42.21
-    - drone02 # 192.168.42.22
-    - drone03 # 192.168.42.23
-    - drone04 # 192.168.42.24
 
 tasks:
   cluster-init:
@@ -67,11 +58,11 @@ tasks:
         vars:
           SERVER: 192.168.42.11
           HOST: '{{.ITEM}}'
-      - for: { var: AGENTS }
+      - for: { var: hosts.agents }
         task: join-agent
         vars:
           SERVER: 192.168.42.11
-          HOST: '{{.ITEM}}'
+          HOST: '{{.ITEM.hostname}}'
 
   get-kubeconfig:
     desc: Pull the kubeconfig from kube-master-01

@@ -3,23 +3,94 @@
 version: '3'
 
 vars:
-  HOSTS:
-    - kube-master-01
-    - kube-master-02
-    - kube-master-03
-    - kube-storage-01
-    - kube-storage-02
-    - kube-storage-03
-    - kube-big-01
+  DIST: ./dist
 
 tasks:
-  upgrade-all-hosts:
-    desc: Upgrade bootc and reboot all hosts
+  gen-ignition:
+    requires:
+      vars: [hostname, interface, ip]
+    cmd: |
+      minijinja-cli \
+        -D hostnanme={{.hostname}} \
+        -D interface={{.interface}} \
+        -D ip={{.ip}} \
+        ./node.bu.j2 | \
+      butane \
+        --strict \
+        --pretty \
+        -o {{.DIST}}/{{.hostname}}.ign \
+        --
+
+  gen-all-ignition-files:
+    deps:
+      - for: { var: servers }
+        task: gen-ignition
+        vars:
+          hostname: '{{.ITEM.hostname}}'
+          interface: '{{.ITEM.interface}}'
+          ip: '{{.ITEM.ip}}'
+      - for: { var: agents }
+        task: gen-ignition
+        vars:
+          hostname: '{{.ITEM.hostname}}'
+          interface: '{{.ITEM.interface}}'
+          ip: '{{.ITEM.ip}}'
+
+  download-iso:
+    generates:
+      - '{{.DIST}}/fedora-coreos-*.iso'
+    cmd: >
+      podman run --rm -v {{.DIST}}:/data
+      quay.io/coreos/coreos-installer:release
+      download -s stable -p metal -f iso -a x86_64 -C /data
+
+  build-iso:
+    deps: [download-iso]
+    vars:
+      ISO_FILENAME:
+        sh: ls {{.DIST}}/fedora-coreos-*.iso | tail -1 | xargs basename
+    requires:
+      vars: [hostname]
     cmds:
-      - for: { var: HOSTS }
-        cmd: |
-          echo "Upgrading {{.ITEM}}..."
-          ssh core@{{.ITEM}} 'sudo bootc upgrade && sudo systemctl reboot' || true
+      - cmd: rm -f {{.DIST}}/{{.hostname}}.iso
+      - cmd: >
+          podman run --rm -it --privileged
+          -v {{.DIST}}:/data
+          quay.io/coreos/coreos-installer:release
+          iso customize
+          --dest-device /dev/sda
+          --dest-ignition /data/{{.hostname}}.ign
+          --output /data/{{.hostname}}.iso
+          /data/{{.ISO_FILENAME}}
+
+  build-all-isos:
+    deps:
+      - for: { var: servers }
+        task: build-iso
+        vars:
+          hostname: '{{.ITEM.hostname}}'
+      - for: { var: agents }
+        task: build-iso
+        vars:
+          hostname: '{{.ITEM.hostname}}'
+
+  upgrade-host:
+    requires:
+      vars: [hostname]
+    cmd: |
+      echo "Upgrading {{.hostname}}..."
+      ssh core@{{.hostname}} 'sudo bootc upgrade && sudo systemctl reboot' || true
+
+  upgrade-all-hosts:
+    deps:
+      - for: { var: servers }
+        task: upgrade-host
+        vars:
+          hostname: '{{.ITEM.hostname}}'
+      - for: { var: agents }
+        task: upgrade-host
+        vars:
+          hostname: '{{.ITEM.hostname}}'
 
   shutdown:
     desc: Shutdown all bootc hosts

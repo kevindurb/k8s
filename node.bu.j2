@@ -1,0 +1,39 @@
+---
+variant: fcos
+version: 1.6.0
+
+passwd:
+  users:
+    - name: &user core
+
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: {{ hostname }}
+
+    - path: /home/core/.ssh/authorized_keys
+      mode: 0600
+      user:
+        name: *user
+      group:
+        name: *user
+      contents:
+        source: https://github.com/kevindurb.keys
+
+    - path: /etc/NetworkManager/system-connections/${interface}.nmconnection
+      mode: 0600
+      contents:
+        inline: |
+          [connection]
+          id=${interface}
+          type=ethernet
+          interface-name=${interface}
+          [ipv4]
+          address1=${ip}/16,192.168.1.1
+          dhcp-hostname=${hostname}
+          dns=192.168.1.1;
+          dns-search=
+          may-fail=false
+          method=manual

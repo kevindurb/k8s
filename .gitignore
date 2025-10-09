@@ -13,6 +13,7 @@ bootc/gateway-files/config/pangolin.env
 *.tfstate.backup
 secrets.yaml
 *.secret
-dist
+dist/*
+!dist/.gitkeep
 .task
 kubeconfig
