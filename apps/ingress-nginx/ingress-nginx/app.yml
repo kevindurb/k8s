@@ -21,8 +21,7 @@ spec:
               prometheus.io/port: '10254'
               prometheus.io/scrape: 'true'
             externalTrafficPolicy: Cluster
-            spec:
-              loadBalancerIP: 192.168.42.2
+            loadBalancerIP: 192.168.42.2
           metrics:
             enabled: true
           ingressClass: internal
@@ -70,8 +69,7 @@ spec:
               prometheus.io/port: '10254'
               prometheus.io/scrape: 'true'
             externalTrafficPolicy: Cluster
-            spec:
-              loadBalancerIP: 192.168.42.3
+            loadBalancerIP: 192.168.42.3
           metrics:
             enabled: true
           ingressClass: external
