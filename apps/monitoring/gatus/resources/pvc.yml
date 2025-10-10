@@ -7,10 +7,10 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: openebs-zfspv
-  dataSourceRef:
-    kind: ReplicationDestination
-    apiGroup: volsync.backube
-    name: gatus-data-volume
+  # dataSourceRef:
+  #   kind: ReplicationDestination
+  #   apiGroup: volsync.backube
+  #   name: gatus-data-volume
   resources:
     requests:
       storage: 2Gi
