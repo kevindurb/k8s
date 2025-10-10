@@ -7,6 +7,10 @@ vars:
   K3S_TOKEN_PATH: /var/lib/rancher/k3s/server/node-token
   K3S_CONFIG_DIR: /etc/rancher/k3s
   K3S_CONFIG_PATH: '{{.K3S_CONFIG_DIR}}/config.yaml'
+  MINIJINJA_ARGS: >-
+    --trim-blocks
+    --lstrip-blocks
+    --autoescape=none
 
 tasks:
   cluster-init:
@@ -15,6 +19,7 @@ tasks:
     cmds:
       - |
         minijinja-cli \
+        {{.MINIJINJA_ARGS}} \
           --define hostname={{.HOST}} \
           .taskfiles/k3s/templates/cluster-init.yaml.j2 | \
         ssh core@{{.HOST}} 'sudo mkdir -p {{.K3S_CONFIG_DIR}} && sudo tee {{.K3S_CONFIG_PATH}}'
@@ -29,8 +34,10 @@ tasks:
     cmds:
       - |
         minijinja-cli \
+        {{.MINIJINJA_ARGS}} \
           --define hostname={{.HOST}} \
           --define server={{.SERVER}} \
+          --define k3s_token={{.K3S_TOKEN}} \
           .taskfiles/k3s/templates/server.yaml.j2 | \
         ssh core@{{.HOST}} 'sudo mkdir -p {{.K3S_CONFIG_DIR}} && sudo tee {{.K3S_CONFIG_PATH}}'
       - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s.service'
@@ -44,8 +51,10 @@ tasks:
     cmds:
       - |
         minijinja-cli \
+        {{.MINIJINJA_ARGS}} \
           --define hostname={{.HOST}} \
           --define server={{.SERVER}} \
+          --define k3s_token={{.K3S_TOKEN}} \
           .taskfiles/k3s/templates/agent.yaml.j2 | \
         ssh core@{{.HOST}} 'sudo mkdir -p {{.K3S_CONFIG_DIR}} && sudo tee {{.K3S_CONFIG_PATH}}'
       - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s-agent.service'
@@ -54,13 +63,13 @@ tasks:
     cmds:
       - task: cluster-init
         vars:
-          HOST: unimatrix01
-      - for: [unimatrix02, unimatrix03]
+          HOST: unimatrix-01
+      - for: [unimatrix-02, unimatrix-03]
         task: join-server
         vars:
           SERVER: 192.168.42.11
           HOST: '{{.ITEM}}'
-      - for: { var: hosts.agents }
+      - for: { var: agents }
         task: join-agent
         vars:
           SERVER: 192.168.42.11
@@ -81,4 +90,11 @@ tasks:
 
   get-kubeconfig:
     desc: Pull the kubeconfig from kube-master-01
-    cmd: ssh core@unimatrix01 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig
+    cmd: ssh core@unimatrix-01 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig
+
+  restart-k3s:
+    cmds:
+      - for: { var: servers }
+        cmd: ssh core@{{.ITEM.hostname}} 'sudo systemctl restart k3s.service'
+      - for: { var: agents }
+        cmd: ssh core@{{.ITEM.hostname}} 'sudo systemctl restart k3s-agent.service'

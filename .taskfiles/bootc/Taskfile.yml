@@ -83,11 +83,11 @@ tasks:
       - for: { var: servers }
         task: upgrade-host
         vars:
-          hostname: '{{.ITEM.hostname}}'
+          hostname: '{{.ITEM.ip}}'
       - for: { var: agents }
         task: upgrade-host
         vars:
-          hostname: '{{.ITEM.hostname}}'
+          hostname: '{{.ITEM.ip}}'
 
   shutdown:
     desc: Shutdown all bootc hosts
