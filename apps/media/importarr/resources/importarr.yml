@@ -158,7 +158,7 @@ spec:
   ingressClassName: internal
   tls:
     - hosts: [&host importarr.beaver-cloud.xyz]
-      secretName: beaver-cloud-wildcard-cert
+      secretName: *host
   rules:
     - host: *host
       http:

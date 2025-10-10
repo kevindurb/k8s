@@ -82,7 +82,7 @@ spec:
   ingressClassName: internal
   tls:
     - hosts: [&host whoami.beaver-cloud.xyz]
-      secretName: beaver-cloud-wildcard-cert
+      secretName: *host
   rules:
     - host: *host
       http:

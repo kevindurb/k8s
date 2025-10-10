@@ -5,16 +5,3 @@ metadata:
   name: apps
   annotations:
     volsync.backube/privileged-movers: 'true'
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: beaver-cloud-wildcard-cert
-  namespace: apps
-spec:
-  secretName: beaver-cloud-wildcard-cert
-  issuerRef:
-    kind: ClusterIssuer
-    name: cloudflare-issuer
-  commonName: '*.beaver-cloud.xyz'
-  dnsNames: ['*.beaver-cloud.xyz']
