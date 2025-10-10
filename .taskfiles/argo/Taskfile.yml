@@ -11,6 +11,12 @@ tasks:
       application {{.appname}}
       argocd.argoproj.io/refresh='normal'
 
-  refresh-all:
-    cmd: >
-      kubectl get applications -n argocd -o name | xargs -I % kubectl annotate -n argocd % argocd.argoproj.io/refresh='normal'
+  refresh-all: >
+    kubectl get applications -n argocd -o name
+    | xargs -I % kubectl annotate -n argocd % argocd.argoproj.io/refresh='normal'
+
+  get-initial-admin-password: >
+    kubectl get secret -o json -n argocd
+    argocd-initial-admin-secret
+    | jq -r .data.password
+    | base64 --decode
