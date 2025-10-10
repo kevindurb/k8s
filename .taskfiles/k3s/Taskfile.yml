@@ -81,7 +81,7 @@ tasks:
         task: join-server
         vars:
           SERVER: '{{.KUBE_VIP}}'
-          HOST: '{{.ITEM}}'
+          HOST: '{{.ITEM.hostname}}'
       - for: { var: agents }
         task: join-agent
         vars:
