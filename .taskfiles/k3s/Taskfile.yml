@@ -5,6 +5,8 @@ version: '3'
 vars:
   KUBE_VIP: 192.168.42.1
   K3S_TOKEN_PATH: /var/lib/rancher/k3s/server/node-token
+  K3S_CONFIG_DIR: /etc/rancher/k3s
+  K3S_CONFIG_PATH: '{{.K3S_CONFIG_DIR}}/config.yaml'
 
 tasks:
   cluster-init:
@@ -15,7 +17,7 @@ tasks:
         minijinja-cli \
           --define hostname={{.HOST}} \
           .taskfiles/k3s/templates/cluster-init.yaml.j2 | \
-        ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
+        ssh core@{{.HOST}} 'sudo mkdir -p {{.K3S_CONFIG_DIR}} && sudo tee {{.K3S_CONFIG_PATH}}'
       - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s.service'
 
   join-server:
@@ -30,7 +32,7 @@ tasks:
           --define hostname={{.HOST}} \
           --define server={{.SERVER}} \
           .taskfiles/k3s/templates/server.yaml.j2 | \
-        ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
+        ssh core@{{.HOST}} 'sudo mkdir -p {{.K3S_CONFIG_DIR}} && sudo tee {{.K3S_CONFIG_PATH}}'
       - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s.service'
 
   join-agent:
@@ -45,7 +47,7 @@ tasks:
           --define hostname={{.HOST}} \
           --define server={{.SERVER}} \
           .taskfiles/k3s/templates/agent.yaml.j2 | \
-        ssh core@{{.HOST}} 'sudo mkdir -p /etc/rancher/k3s && sudo tee /etc/rancher/k3s/config.yaml'
+        ssh core@{{.HOST}} 'sudo mkdir -p {{.K3S_CONFIG_DIR}} && sudo tee {{.K3S_CONFIG_PATH}}'
       - ssh core@{{.HOST}} 'sudo systemctl enable --now k3s-agent.service'
 
   bootstrap:

@@ -70,7 +70,7 @@ tasks:
           /data/{{.ISO_FILENAME}}
 
   build-all-isos:
-    deps:
+    cmds:
       - for: { var: servers }
         task: build-iso
         vars:

@@ -27,12 +27,12 @@ storage:
       contents:
         inline: |
           [connection]
-          id=${interface}
+          id={{ interface }}
           type=ethernet
-          interface-name=${interface}
+          interface-name={{ interface }}
           [ipv4]
-          address1=${ip}/16,192.168.1.1
-          dhcp-hostname=${hostname}
+          address1={{ ip }}/16,192.168.1.1
+          dhcp-hostname={{ hostname }}
           dns=192.168.1.1;
           dns-search=
           may-fail=false
