@@ -72,11 +72,8 @@ metadata:
     cert-manager.io/cluster-issuer: cloudflare-issuer
 spec:
   ingressClassName: internal
-  tls:
-    - hosts: [&host {{ ENV.SUBDOMAIN }}.beaver-cloud.xyz]
-      secretName: beaver-cloud-wildcard-cert
   rules:
-    - host: *host
+    - host: &host {{ ENV.SUBDOMAIN }}.beaver-cloud.xyz
       http:
         paths:
           - pathType: Prefix
@@ -86,6 +83,9 @@ spec:
                 name: {{ ENV.COMP }}-service
                 port:
                   name: {{ ENV.PROTO }}
+  tls:
+    - hosts: [*host]
+      secretName: *host
 
 ---
 apiVersion: v1
