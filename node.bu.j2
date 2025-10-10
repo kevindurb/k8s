@@ -22,7 +22,7 @@ storage:
       contents:
         source: https://github.com/kevindurb.keys
 
-    - path: /etc/NetworkManager/system-connections/${interface}.nmconnection
+    - path: /etc/NetworkManager/system-connections/{{ interface }}.nmconnection
       mode: 0600
       contents:
         inline: |

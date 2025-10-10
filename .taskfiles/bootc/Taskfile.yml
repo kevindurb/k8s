@@ -7,13 +7,11 @@ vars:
 
 tasks:
   gen-ignition:
-    sources: [./node.bu.j2]
-    generates: ['{{.DIST}}/{{.hostname}}.ign']
     requires:
       vars: [hostname, interface, ip]
     cmd: |
       minijinja-cli \
-        -D hostnanme={{.hostname}} \
+        -D hostname={{.hostname}} \
         -D interface={{.interface}} \
         -D ip={{.ip}} \
         ./node.bu.j2 | \
@@ -39,18 +37,12 @@ tasks:
           ip: '{{.ITEM.ip}}'
 
   download-iso:
-    status:
-      - test -f {{.DIST}}/fedora-coreos-*.iso
-    generates:
-      - '{{.DIST}}/fedora-coreos-*.iso'
     cmd: >
       podman run --rm -v {{.DIST}}:/data
       quay.io/coreos/coreos-installer:release
       download -s stable -p metal -f iso -a x86_64 -C /data
 
   build-iso:
-    sources: ['{{.DIST}}/{{.hostname}}.ign', '{{.DIST}}/fedora-coreos-*.iso']
-    generates: ['{{.DIST}}/{{.hostname}}.iso']
     deps: [download-iso]
     vars:
       ISO_FILENAME:
