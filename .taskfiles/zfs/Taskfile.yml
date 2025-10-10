@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: '3'
+
+tasks:
+  wipefs:
+    prompt: About to WIPE /dev/nvme0n1 on {{.HOST}}! Are you sure you want to continue?
+    cmd: ssh core@{{.HOST}} 'sudo wipefs -a /dev/nvme0n1'
+  zpool-create: ssh core@{{.HOST}} 'sudo zpool create tank -m /var/mnt/tank /dev/nvme0n1'
+  zfs-create: ssh core@{{.HOST}} 'sudo zfs create -o compression=lz4 tank/storage'
+  zpool-status: ssh core@{{.HOST}} 'zpool status'
+  zfs-list: ssh core@{{.HOST}} 'zfs list'
+
+  build-all:
+    cmds:
+      - for: { var: agents }
+        task: wipefs
+        vars: { HOST: '{{.ITEM.hostname}}' }
+      - for: { var: agents }
+        task: zpool-create
+        vars: { HOST: '{{.ITEM.hostname}}' }
+      - for: { var: agents }
+        task: zfs-create
+        vars: { HOST: '{{.ITEM.hostname}}' }
+
+  zpool-status-all:
+    cmds:
+      - for: { var: agents }
+        task: zpool-status
+        vars: { HOST: '{{.ITEM.hostname}}' }
+
+  zfs-list-all:
+    cmds:
+      - for: { var: agents }
+        task: zfs-list
+        vars: { HOST: '{{.ITEM.hostname}}' }

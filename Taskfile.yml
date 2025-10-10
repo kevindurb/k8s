@@ -49,6 +49,8 @@ includes:
   bitwarden:
     aliases: [bws]
     taskfile: .taskfiles/bitwarden
+  zfs:
+    taskfile: .taskfiles/zfs
 
 tasks:
   default: task --list-all
