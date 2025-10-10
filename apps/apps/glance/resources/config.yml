@@ -30,6 +30,24 @@ data:
                         url: https://n8n.beaver-cloud.xyz
                       - title: Open WebUI
                         url: https://open-webui.beaver-cloud.xyz
+                      - title: Filebrowser
+                        url: https://filebrowser.beaver-cloud.xyz
+                      - title: Miniflux
+                        url: https://miniflux.beaver-cloud.xyz
+                  - title: Arrrrrrrrr
+                    links:
+                      - title: MakeMKV
+                        url: https://makemkv.beaver-cloud.xyz
+                      - title: Importarr
+                        url: https://importarr.beaver-cloud.xyz
+                      - title: Analyzarr
+                        url: https://analyzarr.beaver-cloud.xyz
+                  - title: Infra
+                    links:
+                      - title: Gatus
+                        url: https://gatus.beaver-cloud.xyz
+                      - title: PiHole
+                        url: https://pihole.beaver-cloud.xyz
 
           - size: full
             widgets:
