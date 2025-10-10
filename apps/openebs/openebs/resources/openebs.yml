@@ -15,10 +15,10 @@ allowedTopologies:
   - matchLabelExpressions:
       - key: kubernetes.io/hostname
         values:
-          - kube-storage-01
-          - kube-storage-02
-          - kube-storage-03
-          - kube-big-01
+          - drone-01
+          - drone-02
+          - drone-03
+          - drone-04
 
 ---
 kind: VolumeSnapshotClass
