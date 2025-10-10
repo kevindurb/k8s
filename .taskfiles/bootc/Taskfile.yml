@@ -38,12 +38,11 @@ tasks:
 
   download-iso:
     cmd: >
-      podman run --rm -v {{.DIST}}:/data
+      podman run --privileged --rm -v {{.DIST}}:/data
       quay.io/coreos/coreos-installer:release
       download -s stable -p metal -f iso -a x86_64 -C /data
 
   build-iso:
-    deps: [download-iso]
     vars:
       ISO_FILENAME:
         sh: ls {{.DIST}}/fedora-coreos-*.iso | tail -1 | xargs basename
