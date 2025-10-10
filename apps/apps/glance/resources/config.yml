@@ -47,7 +47,7 @@ data:
                       - title: Gatus
                         url: https://gatus.beaver-cloud.xyz
                       - title: PiHole
-                        url: https://pihole.beaver-cloud.xyz
+                        url: https://pihole.beaver-cloud.xyz/admin
 
           - size: full
             widgets:
