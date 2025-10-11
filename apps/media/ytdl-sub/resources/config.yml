@@ -33,6 +33,8 @@ data:
       "Minute Food": "https://www.youtube.com/@MinuteFood"
       "Minute Physics": "https://www.youtube.com/@MinutePhysics"
       "Miranda Goes Outside": "https://www.youtube.com/@MirandaGoesOutside"
+      "My Mechanics Insights": "https://www.youtube.com/c/mymechanicsinsights"
+      "My Mechanics": "https://www.youtube.com/@mymechanics"
       "No Boilerplate": "https://www.youtube.com/@NoBoilerplate"
       "Playing with Sticks": "https://www.youtube.com/@PlayingwithSticks"
       "Project Farm": "https://www.youtube.com/@ProjectFarm"
@@ -46,4 +48,7 @@ data:
       "xkcd's What If?": "https://www.youtube.com/@xkcd_whatif"
 
     Jellyfin TV Show Collection:
-      "GrandMA 3 Tutorials": "https://www.youtube.com/playlist?list=PLhh6ZoFPnUu1hMCDT2YhuYJxLgW_G0rTn"
+      = Tutorials:
+        "~Event Lightning":
+          s01_name: "GrandMA 3 Tutorials"
+          s01_url: "https://www.youtube.com/playlist?list=PLhh6ZoFPnUu1hMCDT2YhuYJxLgW_G0rTn"
