@@ -22,6 +22,12 @@ data:
           - Jellyfin TV Show Collection
         overrides:
           tv_show_directory: /media/YouTube
+      Music:
+        preset:
+          - YouTube Releases
+          - Max Audio Quality
+        overrides:
+          music_directory: /media/Music
   subscriptions.yaml: |
     ---
     TV Show:
@@ -61,3 +67,7 @@ data:
         "~Event Lightning":
           s01_name: "GrandMA 3 Tutorials"
           s01_url: "https://www.youtube.com/playlist?list=PLhh6ZoFPnUu1hMCDT2YhuYJxLgW_G0rTn"
+
+    Music:
+      = Christian:
+        "Josiah Queen": "https://www.youtube.com/@josiahqueenmusic/releases"
