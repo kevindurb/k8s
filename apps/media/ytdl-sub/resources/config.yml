@@ -5,17 +5,25 @@ metadata:
   name: config
 data:
   config.yaml: |
-    # config.yaml
+    configuration:
+      working_directory: /media/.ytdl-sub-working-directory
+    presets:
+      TV Show:
+        preset:
+          - Jellyfin TV Show by Date
+          - Only Recent
+        overrides:
+          tv_show_directory: /media/YouTube
+          only_recent_date_range: 1week
+          only_recent_max_files: 5
+      TV Show Collection:
+        preset:
+          - Jellyfin TV Show Collection
+        overrides:
+          tv_show_directory: /media/YouTube
   subscriptions.yaml: |
     ---
-    __preset__:
-      overrides:
-        tv_show_directory: /media/YouTube
-        music_directory: /media/Music
-        only_recent_date_range: 1week
-        only_recent_max_files: 5
-
-    Jellyfin TV Show by Date | Only Recent:
+    TV Show:
       "3Blue1Brown": "https://www.youtube.com/@3blue1brown"
       "Action Retro": "https://www.youtube.com/@ActionRetro"
       "Aging Wheels": "https://www.youtube.com/@agingwheels"
@@ -47,7 +55,7 @@ data:
       "thruhikers": "https://www.youtube.com/@reneeandtim"
       "xkcd's What If?": "https://www.youtube.com/@xkcd_whatif"
 
-    Jellyfin TV Show Collection:
+    TV Show Collection:
       = Tutorials:
         "~Event Lightning":
           s01_name: "GrandMA 3 Tutorials"

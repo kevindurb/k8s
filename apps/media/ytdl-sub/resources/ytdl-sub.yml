@@ -31,6 +31,8 @@ spec:
               image: ghcr.io/jmbannon/ytdl-sub:2025.09.27@sha256:edf4b926600cb450721b386aec657a2d9867c065076be11ffee6e483a96eeda9
               command:
                 - ytdl-sub
+                - --config
+                - /config/config.yaml
                 - sub
                 - /config/subscriptions.yaml
               resources:
@@ -57,6 +59,10 @@ spec:
                 - name: config
                   mountPath: /config/subscriptions.yaml
                   subPath: subscriptions.yaml
+                  readOnly: true
+                - name: config
+                  mountPath: /config/config.yaml
+                  subPath: config.yaml
                   readOnly: true
               env:
                 - name: TZ
