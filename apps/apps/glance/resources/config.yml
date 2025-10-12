@@ -44,10 +44,16 @@ data:
                         url: https://analyzarr.beaver-cloud.xyz
                   - title: Infra
                     links:
-                      - title: Gatus
-                        url: https://gatus.beaver-cloud.xyz
                       - title: PiHole
                         url: https://pihole.beaver-cloud.xyz/admin
+                  - title: Monitoring
+                    links:
+                      - title: Gatus
+                        url: https://gatus.beaver-cloud.xyz
+                      - title: Prometheus
+                        url: https://prometheus.beaver-cloud.xyz
+                      - title: Alertmanager
+                        url: https://alertmanager.beaver-cloud.xyz
 
           - size: full
             widgets:
