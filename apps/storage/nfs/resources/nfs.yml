@@ -28,7 +28,7 @@ spec:
             path: /lib/modules
       containers:
         - name: nfs
-          image: docker.io/erichough/nfs-server:2.2.1
+          image: docker.io/erichough/nfs-server:2.2.1@sha256:1efd4ece380c5ba27479417585224ef857006daa46ab84560a28c1224bc71e9e
           resources:
             requests:
               memory: 100M
