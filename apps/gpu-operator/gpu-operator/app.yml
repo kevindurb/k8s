@@ -14,8 +14,6 @@ spec:
     chart: gpu-operator
     helm:
       valuesObject:
-        sandboxWorkloads:
-          enabled: true
         nfd:
           enabled: false
         toolkit:
@@ -28,6 +26,10 @@ spec:
               value: 'nvidia'
             - name: CONTAINERD_SET_AS_DEFAULT
               value: 'true'
+        devicePlugin:
+          config:
+            name: time-slicing-config-all
+            default: any
   destination:
     server: https://kubernetes.default.svc
     namespace: gpu-operator
