@@ -84,7 +84,7 @@ spec:
               value: tls.key
           ports:
             - name: https
-              containerPort: 443
+              containerPort: 8043
 
 ---
 apiVersion: v1
