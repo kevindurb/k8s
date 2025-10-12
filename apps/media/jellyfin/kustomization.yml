@@ -4,7 +4,5 @@ namePrefix: jellyfin-
 resources:
   - ./resources/config-pvc.yml
   - ./resources/deployment.yml
-  - ./resources/media-nfs-pv.yml
-  - ./resources/media-pvc.yml
   - ./resources/service.yml
   - ./resources/ingress.yml

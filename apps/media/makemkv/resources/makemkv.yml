@@ -67,7 +67,7 @@ spec:
       volumes:
         - name: media
           persistentVolumeClaim:
-            claimName: media-pvc
+            claimName: nfs-media
 
         - name: sr0
           hostPath:
@@ -127,34 +127,6 @@ spec:
     - name: http
       port: 80
       targetPort: http
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: media-pvc
-spec:
-  accessModes: [ReadWriteMany]
-  volumeName: media-nfs-pv
-  storageClassName: ''
-  resources:
-    requests:
-      storage: 12Ti
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: media-nfs-pv
-spec:
-  capacity:
-    storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 10.43.0.42
-    path: /
-  mountOptions: [nfsvers=4.2]
 
 ---
 apiVersion: v1
