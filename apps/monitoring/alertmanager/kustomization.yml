@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+namePrefix: alertmanager-
+
+resources:
+  - ./resources/deployment.yml
+  - ./resources/pushover-secret.yml
+  - ./resources/ingress.yml
+  - ./resources/gatus-config.yml
+
+configMapGenerator:
+  - name: config
+    files:
+      - ./resources/alertmanager.yml
+
+commonLabels:
+  app.kubernetes.io/name: alertmanager

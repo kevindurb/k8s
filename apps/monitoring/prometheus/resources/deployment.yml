@@ -1,0 +1,77 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      serviceAccount: prometheus-service-account
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 2000
+      hostname: prometheus
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-volume
+        - name: config-volume
+          configMap:
+            name: config
+        - name: consoles-volume
+          configMap:
+            name: consoles
+      containers:
+        - name: prometheus
+          image: docker.io/prom/prometheus:v3.1.0@sha256:6559acbd5d770b15bb3c954629ce190ac3cbbdb2b7f1c30f0385c4e05104e218
+          args:
+            - --storage.tsdb.retention.size=18GB
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --web.console.libraries=/usr/share/prometheus/console_libraries
+            - --web.console.templates=/usr/share/prometheus/consoles
+            - --web.external-url=https://prometheus.durbin.casa
+          resources:
+            limits:
+              memory: 4G
+            requests:
+              memory: 2G
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+            - name: consoles-volume
+              mountPath: /usr/share/prometheus/consoles
+            - name: data-volume
+              mountPath: /prometheus
+          ports:
+            - name: web
+              containerPort: 9090
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  ports:
+    - name: web
+      port: 80
+      targetPort: web

@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 2000
+      hostname: alertmanager
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-volume
+        - name: config-volume
+          configMap:
+            name: config
+        - name: pushover-secret
+          secret:
+            secretName: alertmanager-pushover-credentials
+      containers:
+        - name: alertmanager
+          image: docker.io/prom/alertmanager@sha256:d5155cfac40a6d9250ffc97c19db2c5e190c7bc57c6b67125c94903358f8c7d8
+          resources:
+            requests:
+              memory: 50M
+            limits:
+              memory: 500M
+          args:
+            - --config.file=/etc/alertmanager/alertmanager.yml
+            - --storage.path=/alertmanager
+            - --web.external-url=https://alertmanager.durbin.casa
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/alertmanager
+            - name: data-volume
+              mountPath: /alertmanager
+            - name: pushover-secret
+              mountPath: /run/secrets/pushover
+          ports:
+            - name: web
+              containerPort: 9093
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  ports:
+    - name: web
+      port: 80
+      targetPort: web

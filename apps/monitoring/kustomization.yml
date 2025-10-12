@@ -6,3 +6,6 @@ resources:
   - common.yml
   - ./gatus/app.yml
   - ./ntfy/app.yml
+  - ./prometheus/app.yml
+  - ./alertmanager/app.yml
+  - ./node-exporter/app.yml

@@ -1,0 +1,32 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+namePrefix: prometheus-
+
+resources:
+  - ./resources/deployment.yml
+  - ./resources/rbac.yml
+  - ./resources/ingress.yml
+  - ./resources/gatus-config.yml
+
+configMapGenerator:
+  - name: config
+    files:
+      - ./resources/prometheus.yml
+      - ./resources/rules/rules.yml
+      - ./resources/rules/node-exporter.rules.yml
+      - ./resources/rules/gatus.rules.yml
+      - ./resources/rules/smartctl-exporter.rules.yml
+      - ./resources/rules/prometheus.rules.yml
+      - ./resources/rules/kubernetes.rules.yml
+      - ./resources/rules/volsync.rules.yml
+      - ./resources/rules/argocd.rules.yml
+      - ./resources/rules/nginx-ingress.rules.yml
+  - name: consoles
+    files:
+      - ./resources/consoles/synapse.html
+
+commonLabels:
+  app.kubernetes.io/name: prometheus
