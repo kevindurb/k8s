@@ -54,7 +54,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: local-storage
+  storageClassName: openebs-zfspv
   resources:
     requests:
       storage: 2Gi
