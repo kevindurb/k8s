@@ -40,7 +40,6 @@ spec:
               nvidia.com/gpu: '1'
               memory: 4G
           securityContext:
-            privileged: true
             runAsUser: 1000
             runAsGroup: 1000
           volumeMounts:
