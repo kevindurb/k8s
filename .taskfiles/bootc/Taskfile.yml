@@ -92,15 +92,23 @@ tasks:
   shutdown:
     desc: Shutdown all bootc hosts
     cmds:
-      - for: { var: HOSTS }
+      - for: { var: servers }
         cmd: |
-          echo "Shutting down {{.ITEM}}..."
-          ssh core@{{.ITEM}} 'sudo systemctl poweroff' || true
+          echo "Shutting down {{.ITEM.hostname}}..."
+          ssh core@{{.ITEM.hostname}} 'sudo systemctl poweroff' || true
+      - for: { var: agents }
+        cmd: |
+          echo "Shutting down {{.ITEM.hostname}}..."
+          ssh core@{{.ITEM.hostname}} 'sudo systemctl poweroff' || true
 
   reboot:
     desc: Reboot all bootc hosts
     cmds:
-      - for: { var: HOSTS }
+      - for: { var: servers }
         cmd: |
-          echo "Rebooting {{.ITEM}}..."
-          ssh core@{{.ITEM}} 'sudo systemctl reboot' || true
+          echo "Rebooting {{.ITEM.hostname}}..."
+          ssh core@{{.ITEM.hostname}} 'sudo systemctl reboot' || true
+      - for: { var: agents }
+        cmd: |
+          echo "Rebooting {{.ITEM.hostname}}..."
+          ssh core@{{.ITEM.hostname}} 'sudo systemctl reboot' || true
