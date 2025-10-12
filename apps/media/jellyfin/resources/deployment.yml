@@ -30,24 +30,6 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: nfs-media
-        - name: nvidia-caps
-          hostPath:
-            path: /dev/nvidia-caps
-        - name: nvidia0
-          hostPath:
-            path: /dev/nvidia0
-        - name: nvidiactl
-          hostPath:
-            path: /dev/nvidiactl
-        - name: nvidia-modeset
-          hostPath:
-            path: /dev/nvidia-modeset
-        - name: nvidia-uvm
-          hostPath:
-            path: /dev/nvidia-uvm
-        - name: nvidia-uvm-tools
-          hostPath:
-            path: /dev/nvidia-uvm-tools
       containers:
         - name: jellyfin
           image: jellyfin/jellyfin:latest@sha256:7ae36aab93ef9b6aaff02b37f8bb23df84bb2d7a3f6054ec8fc466072a648ce2
@@ -66,18 +48,6 @@ spec:
               mountPath: /config
             - name: media
               mountPath: /media
-            - name: nvidia-caps
-              mountPath: /dev/nvidia-caps
-            - name: nvidia0
-              mountPath: /dev/nvidia0
-            - name: nvidiactl
-              mountPath: /dev/nvidiactl
-            - name: nvidia-modeset
-              mountPath: /dev/nvidia-modeset
-            - name: nvidia-uvm
-              mountPath: /dev/nvidia-uvm
-            - name: nvidia-uvm-tools
-              mountPath: /dev/nvidia-uvm-tools
           env:
             - name: TZ
               value: America/Denver
