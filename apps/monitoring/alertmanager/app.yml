@@ -4,10 +4,12 @@ kind: Application
 metadata:
   name: alertmanager
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/kevindurb/infra.git
+    repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
     path: k8s/monitoring/alertmanager
   destination:
