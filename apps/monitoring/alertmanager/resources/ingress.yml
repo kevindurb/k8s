@@ -20,4 +20,4 @@ spec:
               service:
                 name: service
                 port:
-                  name: http
+                  name: web
