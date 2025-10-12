@@ -5,20 +5,11 @@ metadata:
   name: ingress
   annotations:
     cert-manager.io/cluster-issuer: cloudflare-issuer
-    gethomepage.dev/href: 'https://alertmanager.durbin.casa'
-    gethomepage.dev/enabled: 'true'
-    gethomepage.dev/app: alertmanager
-    gethomepage.dev/group: Status
-    gethomepage.dev/icon: alertmanager
-    gethomepage.dev/name: Alertmanager
-    nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy-web-service.auth.svc.cluster.local/oauth2/auth
-    nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.durbin.casa/oauth2/start
-    nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email,X-Auth-Request-Preferred-Username
 spec:
   ingressClassName: internal
   tls:
-    - hosts: [&host alertmanager.durbin.casa]
-      secretName: durbin-casa-wildcard-cert
+    - hosts: [&host alertmanager.beaver-cloud.xyz]
+      secretName: *host
   rules:
     - host: *host
       http:
@@ -29,4 +20,4 @@ spec:
               service:
                 name: service
                 port:
-                  name: web
+                  name: http
