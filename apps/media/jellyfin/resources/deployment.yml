@@ -40,12 +40,8 @@ spec:
               nvidia.com/gpu: 1
               memory: 4G
           securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            readOnlyRootFilesystem: true
           volumeMounts:
             - name: config
               mountPath: /config
