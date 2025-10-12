@@ -124,7 +124,7 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    server: 192.168.50.43
+    server: 10.43.0.42
     path: /
   mountOptions: [nfsvers=4.2]
 
