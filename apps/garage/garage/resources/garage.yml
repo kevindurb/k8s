@@ -25,7 +25,7 @@ spec:
             claimName: volume
         - name: media-pvc
           persistentVolumeClaim:
-            claimName: media-pvc
+            claimName: nfs-media
         - name: config
           configMap:
             name: config
