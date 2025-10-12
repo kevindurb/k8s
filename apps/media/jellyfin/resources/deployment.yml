@@ -8,7 +8,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: jellyfin
 spec:
-  replicas: 1
+  replicas: 0
   strategy:
     type: Recreate
   selector:
@@ -19,6 +19,8 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+      nodeSelector:
+        kubernetes.io/hostname: drone-04
       volumes:
         - name: config
           persistentVolumeClaim:
