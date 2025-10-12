@@ -17,6 +17,7 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostNetwork: true
       securityContext:
         fsGroup: 1000
       volumes:
