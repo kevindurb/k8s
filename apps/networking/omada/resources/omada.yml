@@ -31,15 +31,15 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
+          # securityContext:
+          #   privileged: false
+          #   allowPrivilegeEscalation: false
+          #   runAsNonRoot: true
+          #   runAsUser: 1000
+          #   runAsGroup: 1000
+          #   readOnlyRootFilesystem: true
+          #   capabilities:
+          #     drop: [ALL]
           volumeMounts:
             - name: volume
               subPath: data
@@ -50,7 +50,6 @@ spec:
           env:
             - name: TZ
               value: America/Denver
-
             - name: PUID
               value: '508'
             - name: PGID
