@@ -6,6 +6,7 @@
     ":automergeMinor",
     ":disableRateLimiting"
   ],
+  "ignoreTests": true,
   "automergeType": "pr",
   "automergeStrategy": "merge-commit",
   "platform": "github",
