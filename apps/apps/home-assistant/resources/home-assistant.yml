@@ -26,6 +26,8 @@ spec:
         - name: config
           configMap:
             name: config
+        - name: tmp
+          emptyDir: {}
       initContainers:
         - name: init-config
           image: busybox:1.37@sha256:d82f458899c9696cb26a7c02d5568f81c8c8223f8661bb2a7988b269c8b9051e
@@ -67,6 +69,8 @@ spec:
               mountPath: /config/configuration.yaml
               subPath: configuration.yaml
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
