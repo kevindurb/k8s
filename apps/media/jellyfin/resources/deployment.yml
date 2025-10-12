@@ -55,10 +55,10 @@ spec:
             requests:
               memory: 1G
             limits:
-              nvidia.com/gpu: 1
+              nvidia.com/gpu: '1'
               memory: 4G
           securityContext:
-            priviledged: true
+            privileged: true
             runAsUser: 1000
             runAsGroup: 1000
           volumeMounts:
