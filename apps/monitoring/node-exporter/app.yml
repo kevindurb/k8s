@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: node-exporter
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kevindurb/infra.git
+    targetRevision: HEAD
+    path: k8s/monitoring/node-exporter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
