@@ -17,33 +17,34 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostNetwork: true
       securityContext:
         fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        # - name: config
-        #   configMap:
-        #     name: config
+        - name: config
+          configMap:
+            name: config
         - name: tmp
           emptyDir: {}
-      # initContainers:
-      #   - name: init-config
-      #     image: busybox:1.37@sha256:d82f458899c9696cb26a7c02d5568f81c8c8223f8661bb2a7988b269c8b9051e
-      #     command:
-      #       - sh
-      #       - -c
-      #       - |
-      #         if [ ! -f /config/automations.yaml ]; then
-      #           echo "# Empty automations file" > /config/automations.yaml
-      #         fi
-      #     securityContext:
-      #       runAsUser: 1000
-      #       runAsGroup: 1000
-      #     volumeMounts:
-      #       - name: volume
-      #         mountPath: /config
+      initContainers:
+        - name: init-config
+          image: busybox:1.37@sha256:d82f458899c9696cb26a7c02d5568f81c8c8223f8661bb2a7988b269c8b9051e
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -f /config/automations.yaml ]; then
+                echo "# Empty automations file" > /config/automations.yaml
+              fi
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - name: volume
+              mountPath: /config
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2025.10.2@sha256:5ae78cf2e6d8b53439cac50ed184ff1336cfbbb878fce16f75589e048fcdcdd9
@@ -65,10 +66,10 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /config
-            # - name: config
-            #   mountPath: /config/configuration.yaml
-            #   subPath: configuration.yaml
-            #   readOnly: true
+            - name: config
+              mountPath: /config/configuration.yaml
+              subPath: configuration.yaml
+              readOnly: true
             - name: tmp
               mountPath: /tmp
           env:
