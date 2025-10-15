@@ -24,6 +24,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: ts-state
+          persistentVolumeClaim:
+            claimName: ts-state
         - name: dev-net-tun
           hostPath:
             path: /dev/net/tun
@@ -54,9 +57,16 @@ spec:
             - name: http
               containerPort: 8080
         - name: tailscale
-          imagePullPolicy: Always
           image: ghcr.io/tailscale/tailscale:v1.88.4
           env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
             - name: TS_KUBE_SECRET
               value: qbittorrent-tailscale-auth
             - name: TS_USERSPACE
@@ -73,12 +83,26 @@ spec:
           volumeMounts:
             - name: dev-net-tun
               mountPath: /dev/net/tun
+            - name: ts-state
+              mountPath: /var/lib/tailscale
           securityContext:
             privileged: true
             capabilities:
               add:
                 - NET_ADMIN
                 - SYS_MODULE
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ts-state
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: openebs-zfspv
+  resources:
+    requests:
+      storage: 1G
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -105,12 +129,8 @@ metadata:
   name: role
 rules:
   - apiGroups: ['']
-    resources: [secrets]
-    verbs: [create]
-  - apiGroups: ['']
-    resourceNames: [qbittorrent-tailscale-auth]
-    resources: [secrets]
-    verbs: [get, update, patch]
+    resources: ['events']
+    verbs: ['get', 'create', 'patch']
 
 ---
 apiVersion: v1
