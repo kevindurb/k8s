@@ -50,29 +50,9 @@ spec:
           env:
             - name: TZ
               value: America/Denver
-            - name: QBITTORRENT__PORT
-              value: '80'
-            - name: QBITTORRENT__BT_PORT
-              value: '50413'
-            - name: QBT_Preferences__WebUI__AlternativeUIEnabled
-              value: 'false'
-            - name: QBT_Preferences__WebUI__AuthSubnetWhitelistEnabled
-              value: 'true'
-            - name: QBT_Preferences__WebUI__AuthSubnetWhitelist
-              value: 10.0.0.0/8
-            - name: QBT_Preferences__WebUI__LocalHostAuth
-              value: 'false'
-            - name: QBT_BitTorrent__Session__Interface
-              value: tailscale0
-            - name: QBT_BitTorrent__Session__InterfaceAddress
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-            - name: QBT_BitTorrent__Session__InterfaceName
-              value: tailscale0
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
         - name: tailscale
           imagePullPolicy: Always
           image: ghcr.io/tailscale/tailscale:v1.88.4
