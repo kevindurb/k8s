@@ -59,6 +59,8 @@ spec:
         - name: tailscale
           image: ghcr.io/tailscale/tailscale:v1.88.4
           env:
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
             - name: TS_USERSPACE
               value: 'false'
             - name: TS_ACCEPT_DNS
