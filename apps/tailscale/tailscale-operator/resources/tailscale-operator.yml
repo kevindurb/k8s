@@ -9,9 +9,9 @@ spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
   secretName: operator-oauth
   map:
-    - secretKeyName: clientId
+    - secretKeyName: client_id
       bwSecretId: 66056934-5e9a-4f3f-b444-b3770019700b
-    - secretKeyName: clientSecret
+    - secretKeyName: client_secret
       bwSecretId: f7726a3c-3658-45cb-a96f-b3770019952a
   authToken:
     secretName: bw-auth-token
