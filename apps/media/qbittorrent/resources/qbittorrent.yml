@@ -17,7 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      serviceAccountName: service-account
       securityContext:
         fsGroup: 1000
       volumes:
@@ -66,7 +65,7 @@ spec:
             - name: TS_ACCEPT_DNS
               value: 'false'
             - name: TS_EXTRA_ARGS
-              value: --advertise-tags=tag:qbittorrent --exit-node=100.117.167.110 --exit-node-allow-lan-access
+              value: --advertise-tags=tag:qbittorrent --exit-node=100.117.167.110 --exit-node-allow-lan-access --reset
             - name: TS_AUTHKEY
               valueFrom:
                 secretKeyRef:
@@ -95,34 +94,6 @@ spec:
   resources:
     requests:
       storage: 1G
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: service-account
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: role-binding
-subjects:
-  - kind: ServiceAccount
-    name: service-account
-roleRef:
-  kind: Role
-  name: role
-  apiGroup: rbac.authorization.k8s.io
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: role
-rules:
-  - apiGroups: ['']
-    resources: ['events']
-    verbs: ['get', 'create', 'patch']
 
 ---
 apiVersion: v1
