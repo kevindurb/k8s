@@ -1,0 +1,103 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        fsGroup: 1000
+      # volumes:
+      #   - name: volume
+      #     persistentVolumeClaim:
+      #       claimName: volume
+      containers:
+        - name: tailscale-operator
+          image:
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          # volumeMounts:
+          #   - name: volume
+          #     mountPath: /var/www/app/data
+          env:
+            - name: TZ
+              value: America/Denver
+          ports:
+            - name: http
+              containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  rules:
+    - host: &host tailscale-operator.beaver-cloud.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: web-service
+                port:
+                  name: http
+  tls:
+    - hosts: [*host]
+      secretName: *host
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: 'true'
+data:
+  tailscale-operator.yml: |
+    endpoints:
+      - name: tailscale-operator
+        url: http://tailscale-operator-web-service.tailscale
+        conditions:
+          - '[STATUS] == 200'
