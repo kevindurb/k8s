@@ -1,0 +1,199 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      serviceAccountName: service-account
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+      containers:
+        - name: qbittorrent
+          image: ghcr.io/home-operations/qbittorrent:5.1.2
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: QBITTORRENT__PORT
+              value: '80'
+            - name: QBITTORRENT__BT_PORT
+              value: '50413'
+            - name: QBT_Preferences__WebUI__AlternativeUIEnabled
+              value: 'false'
+            - name: QBT_Preferences__WebUI__AuthSubnetWhitelistEnabled
+              value: 'true'
+            - name: QBT_Preferences__WebUI__AuthSubnetWhitelist
+              value: 10.0.0.0/8
+            - name: QBT_Preferences__WebUI__LocalHostAuth
+              value: 'false'
+            - name: QBT_BitTorrent__Session__Interface
+              value: tailscale0
+            - name: QBT_BitTorrent__Session__InterfaceAddress
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: QBT_BitTorrent__Session__InterfaceName
+              value: tailscale0
+          ports:
+            - name: http
+              containerPort: 80
+        - name: tailscale
+          imagePullPolicy: Always
+          image: ghcr.io/tailscale/tailscale:v1.88.4
+          env:
+            - name: TS_KUBE_SECRET
+              value: qbittorrent-tailscale-auth
+            - name: TS_USERSPACE
+              value: 'false'
+            - name: TS_ACCEPT_DNS
+              value: 'true'
+            - name: TS_EXTRA_ARGS
+              value: --advertise-tags=tag:qbittorrent --exit-node=100.117.167.110 --exit-node-allow-lan-access --reset
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-secret
+                  key: TS_AUTHKEY
+          volumeMounts:
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_MODULE
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: role-binding
+subjects:
+  - kind: ServiceAccount
+    name: service-account
+roleRef:
+  kind: Role
+  name: role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role
+rules:
+  - apiGroups: ['']
+    resources: [secrets]
+    verbs: [create]
+  - apiGroups: ['']
+    resourceNames: [qbittorrent-tailscale-auth]
+    resources: [secrets]
+    verbs: [get, update, patch]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  rules:
+    - host: &host qbittorrent.beaver-cloud.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: web-service
+                port:
+                  name: http
+  tls:
+    - hosts: [*host]
+      secretName: *host
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  labels:
+    gatus.io/enabled: 'true'
+data:
+  qbittorrent.yml: |
+    endpoints:
+      - name: qbittorrent
+        url: http://qbittorrent-web-service.media
+        conditions:
+          - '[STATUS] == 200'
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: qbittorrent-secret
+  map:
+    - secretKeyName: TS_AUTHKEY
+      bwSecretId: 8ea8d720-3d3a-4813-8553-b1f500f0164e
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

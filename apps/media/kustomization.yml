@@ -8,3 +8,4 @@ resources:
   - ./importarr/app.yml
   - ./analyzarr/app.yml
   - ./jellyfin/app.yml
+  - ./qbittorrent/app.yml
