@@ -31,7 +31,7 @@ spec:
             path: /dev/net/tun
       containers:
         - name: qbittorrent
-          image: ghcr.io/home-operations/qbittorrent:5.1.2
+          image: ghcr.io/home-operations/qbittorrent:5.1.2@sha256:31ac39705e31f7cdcc04dc46c1c0b0cdf8dc6f9865d4894efc097a33adc41524
           resources:
             requests:
               memory: 100M
@@ -56,7 +56,7 @@ spec:
             - name: http
               containerPort: 8080
         - name: tailscale
-          image: ghcr.io/tailscale/tailscale:v1.88.4
+          image: ghcr.io/tailscale/tailscale:v1.88.4@sha256:360e10ad95ad03950f66df03e0dab66287f9f89076ee4012d50bc6adceafcdf3
           env:
             - name: TS_KUBE_SECRET
               value: ''
