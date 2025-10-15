@@ -62,7 +62,7 @@ spec:
             - name: TS_USERSPACE
               value: 'false'
             - name: TS_ACCEPT_DNS
-              value: 'true'
+              value: 'false'
             - name: TS_EXTRA_ARGS
               value: --advertise-tags=tag:qbittorrent --exit-node=100.117.167.110 --exit-node-allow-lan-access
             - name: TS_AUTHKEY
