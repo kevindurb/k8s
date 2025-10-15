@@ -24,6 +24,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
       containers:
         - name: qbittorrent
           image: ghcr.io/home-operations/qbittorrent:5.1.2
