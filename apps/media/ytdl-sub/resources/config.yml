@@ -70,7 +70,7 @@ data:
           s01_url: "https://www.youtube.com/playlist?list=PLhh6ZoFPnUu1hMCDT2YhuYJxLgW_G0rTn"
       = Christian:
         "~The Promised Land":
-          s01_name: "Season 1",
+          s01_name: "Season 1"
           s01_url: "https://www.youtube.com/playlist?list=PLaKYsaAeVpIaO4QGF41-ZvvuG6rPqYPI3"
 
     Music:
