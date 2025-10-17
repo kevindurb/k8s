@@ -28,7 +28,7 @@ spec:
             claimName: nfs-media
       initContainers:
         - name: migrate
-          image: &image ghcr.io/kevindurb/analyzarr:sha-b529b06
+          image: &image ghcr.io/kevindurb/analyzarr:sha-f42a18a
           command: [bunx, prisma, migrate, deploy]
           env:
             - name: DATABASE_URL
