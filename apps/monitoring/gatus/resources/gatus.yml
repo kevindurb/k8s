@@ -72,6 +72,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: data-volume
           persistentVolumeClaim:
@@ -80,6 +82,8 @@ spec:
           configMap:
             name: gatus-config
         - name: config
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
 
 ---
