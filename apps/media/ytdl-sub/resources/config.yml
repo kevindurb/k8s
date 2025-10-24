@@ -23,6 +23,7 @@ data:
           - Jellyfin TV Show Collection
         overrides:
           tv_show_directory: /media/YouTube
+          episode_title: "{title}"
       Music:
         preset:
           - YouTube Releases
