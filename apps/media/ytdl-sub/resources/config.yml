@@ -17,6 +17,7 @@ data:
           tv_show_directory: /media/YouTube
           only_recent_date_range: 1month
           only_recent_max_files: 30
+          episode_title: "{title}"
       TV Show Collection:
         preset:
           - Jellyfin TV Show Collection
@@ -97,6 +98,11 @@ data:
         "~Event Lightning":
           s01_name: "GrandMA 3 Tutorials"
           s01_url: "https://www.youtube.com/playlist?list=PLhh6ZoFPnUu1hMCDT2YhuYJxLgW_G0rTn"
+        "~Aria Hailey"
+          s01_name: "Phaser Friday"
+          s01_url: "https://www.youtube.com/playlist?list=PLcl55cI1T_GxbwcgzPTvrOZ0-3Gp6_ApB"
+          s02_name: "Timing Tuesday"
+          s02_url: "https://www.youtube.com/playlist?list=PLcl55cI1T_GxPad4tGmZG2lGhtArrI2WX"
       = Christian:
         "~The Promised Land":
           s01_name: "Season 1"
