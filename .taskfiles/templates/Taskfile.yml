@@ -134,15 +134,6 @@ tasks:
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
-  restic-repository-config:
-    requires:
-      vars: [APP]
-    cmd:
-      task: bws:create-secret
-      vars:
-        KEY: '{{.APP}}-restic-repository'
-        VALUE: 's3:http://garage-web-service.garage.svc.cluster.local:3902/volsync/{{.APP}}'
-
   pvc:
     requires:
       vars: [APP, NS]

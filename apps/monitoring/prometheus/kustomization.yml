@@ -20,7 +20,6 @@ configMapGenerator:
       - ./resources/rules/smartctl-exporter.rules.yml
       - ./resources/rules/prometheus.rules.yml
       - ./resources/rules/kubernetes.rules.yml
-      - ./resources/rules/volsync.rules.yml
       - ./resources/rules/argocd.rules.yml
       - ./resources/rules/nginx-ingress.rules.yml
   - name: consoles

@@ -11,7 +11,6 @@ rule_files:
   - ./smartctl-exporter.rules.yml
   - ./prometheus.rules.yml
   - ./kubernetes.rules.yml
-  - ./volsync.rules.yml
   - ./argocd.rules.yml
   - ./nginx-ingress.rules.yml
 
@@ -27,16 +26,6 @@ scrape_configs:
     scrape_timeout: 60s
     static_configs:
       - targets: [speedtest-exporter-service.default]
-
-  - job_name: volsync
-    scheme: https
-    tls_config:
-      insecure_skip_verify: true
-      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    static_configs:
-      - targets:
-          - volsync-metrics.volsync-system:8443
 
   - job_name: kubelet
     kubernetes_sd_configs:
