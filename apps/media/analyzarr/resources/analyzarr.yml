@@ -142,18 +142,3 @@ spec:
                 name: web-service
                 port:
                   name: http
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  analyzarr.yml: |
-    endpoints:
-      - name: analyzarr
-        url: http://analyzarr-web-service.media
-        conditions:
-          - '[STATUS] == 200'

@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: jellyfin
+    url: http://jellyfin-service.media
+    conditions:
+      - '[STATUS] == 200'

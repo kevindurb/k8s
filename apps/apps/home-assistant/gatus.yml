@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: home-assistant
+    url: http://home-assistant-web-service.apps
+    conditions:
+      - '[STATUS] == 200'

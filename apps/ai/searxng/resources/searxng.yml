@@ -72,21 +72,6 @@ spec:
       targetPort: http
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  searxng.yml: |
-    endpoints:
-      - name: searxng
-        url: http://searxng-web-service.ai
-        conditions:
-          - '[STATUS] == 200'
-
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

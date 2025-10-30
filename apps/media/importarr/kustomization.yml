@@ -8,6 +8,14 @@ resources:
   - ./resources/importarr.yml
   - ./resources/pvc.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - importarr.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

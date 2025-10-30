@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: prometheus
+    url: http://prometheus-service.monitoring/-/healthy
+    conditions:
+      - '[STATUS] == 200'

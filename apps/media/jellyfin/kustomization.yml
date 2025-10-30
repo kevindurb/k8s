@@ -6,3 +6,11 @@ resources:
   - ./resources/deployment.yml
   - ./resources/service.yml
   - ./resources/ingress.yml
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - jellyfin.yml=gatus.yml

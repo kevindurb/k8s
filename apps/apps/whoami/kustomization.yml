@@ -7,6 +7,14 @@ namePrefix: whoami-
 resources:
   - ./resources/resources.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - whoami.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

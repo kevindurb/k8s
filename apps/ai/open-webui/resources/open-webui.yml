@@ -103,21 +103,6 @@ spec:
                   name: http
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  open-webui.yml: |
-    endpoints:
-      - name: open-webui
-        url: http://open-webui-web-service.ai
-        conditions:
-          - '[STATUS] == 200'
-
----
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:

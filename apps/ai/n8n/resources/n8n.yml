@@ -81,21 +81,6 @@ spec:
       targetPort: http
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  n8n.yml: |
-    endpoints:
-      - name: n8n
-        url: http://n8n-web-service.ai
-        conditions:
-          - '[STATUS] == 200'
-
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

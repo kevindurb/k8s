@@ -129,20 +129,3 @@ spec:
   tls:
     - hosts: [*host]
       secretName: *host
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  omada.yml: |
-    endpoints:
-      - name: omada
-        url: https://omada-web-service.networking/login
-        client:
-          insecure: true
-        conditions:
-          - '[STATUS] == 200'

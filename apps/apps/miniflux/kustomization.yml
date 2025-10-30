@@ -8,6 +8,14 @@ resources:
   - ./resources/miniflux.yml
   - ./resources/pvc.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - miniflux.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

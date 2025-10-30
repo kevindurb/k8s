@@ -9,7 +9,6 @@ resources:
   - ./resources/deployment.yml
   - ./resources/rbac.yml
   - ./resources/ingress.yml
-  - ./resources/gatus-config.yml
 
 configMapGenerator:
   - name: config
@@ -27,6 +26,12 @@ configMapGenerator:
   - name: consoles
     files:
       - ./resources/consoles/synapse.html
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - prometheus.yml=gatus.yml
 
 commonLabels:
   app.kubernetes.io/name: prometheus

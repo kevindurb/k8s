@@ -7,6 +7,14 @@ namePrefix: garage-
 resources:
   - ./resources/garage.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - garage.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

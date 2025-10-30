@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: makemkv
+    url: http://makemkv-web-service.media
+    conditions:
+      - '[STATUS] == 200'

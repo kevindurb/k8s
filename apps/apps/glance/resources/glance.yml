@@ -88,18 +88,3 @@ spec:
                 name: web-service
                 port:
                   name: http
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  glance.yml: |
-    endpoints:
-      - name: glance
-        url: http://glance-web-service.apps
-        conditions:
-          - '[STATUS] == 200'

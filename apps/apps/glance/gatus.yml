@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: glance
+    url: http://glance-web-service.apps
+    conditions:
+      - '[STATUS] == 200'

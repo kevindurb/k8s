@@ -8,6 +8,14 @@ resources:
   - ./resources/home-assistant.yml
   - ./resources/pvc.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - home-assistant.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

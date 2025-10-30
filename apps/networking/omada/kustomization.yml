@@ -8,6 +8,14 @@ resources:
   - ./resources/omada.yml
   - ./resources/pvc.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - omada.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

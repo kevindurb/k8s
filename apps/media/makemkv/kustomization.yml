@@ -7,6 +7,14 @@ namePrefix: makemkv-
 resources:
   - ./resources/makemkv.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - makemkv.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

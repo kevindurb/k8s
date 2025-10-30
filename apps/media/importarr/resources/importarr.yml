@@ -142,18 +142,3 @@ spec:
                 name: web-service
                 port:
                   name: http
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  importarr.yml: |
-    endpoints:
-      - name: importarr
-        url: http://importarr-web-service.media
-        conditions:
-          - '[STATUS] == 200'

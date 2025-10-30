@@ -8,6 +8,14 @@ resources:
   - ./resources/n8n.yml
   - ./resources/pvc.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - n8n.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

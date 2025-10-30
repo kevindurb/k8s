@@ -9,12 +9,17 @@ resources:
   - ./resources/deployment.yml
   - ./resources/pushover-secret.yml
   - ./resources/ingress.yml
-  - ./resources/gatus-config.yml
 
 configMapGenerator:
   - name: config
     files:
       - ./resources/alertmanager.yml
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - alertmanager.yml=gatus.yml
 
 commonLabels:
   app.kubernetes.io/name: alertmanager

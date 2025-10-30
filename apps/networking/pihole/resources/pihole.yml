@@ -77,21 +77,6 @@ spec:
       targetPort: dns-udp
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  pihole.yml: |
-    endpoints:
-      - name: pihole
-        url: http://pihole-web-service.networking/admin/login
-        conditions:
-          - '[STATUS] == 200'
-
----
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:

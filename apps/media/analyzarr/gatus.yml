@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: analyzarr
+    url: http://analyzarr-web-service.media
+    conditions:
+      - '[STATUS] == 200'

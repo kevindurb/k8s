@@ -147,21 +147,6 @@ spec:
       targetPort: http
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-  labels:
-    gatus.io/enabled: 'true'
-data:
-  miniflux.yml: |
-    endpoints:
-      - name: miniflux
-        url: http://miniflux-web-service.apps
-        conditions:
-          - '[STATUS] == 200'
-
----
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:

@@ -1,0 +1,6 @@
+---
+endpoints:
+  - name: miniflux
+    url: http://miniflux-web-service.apps
+    conditions:
+      - '[STATUS] == 200'

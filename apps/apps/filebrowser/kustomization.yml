@@ -7,6 +7,14 @@ namePrefix: filebrowser-
 resources:
   - ./resources/filebrowser.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - filebrowser.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true
