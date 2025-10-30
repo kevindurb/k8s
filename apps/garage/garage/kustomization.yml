@@ -8,6 +8,9 @@ resources:
   - ./resources/garage.yml
 
 configMapGenerator:
+  - name: config
+    files:
+      - ./config/garage.toml
   - name: gatus
     options:
       labels:
