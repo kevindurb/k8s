@@ -35,7 +35,7 @@ spec:
             requests:
               storage: 1Gi
           storageClassName: openebs-zfspv
-  running: false
+  running: true
   template:
     metadata:
       labels: *labels
