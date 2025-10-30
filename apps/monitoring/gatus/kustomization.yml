@@ -11,7 +11,7 @@ resources:
 configMapGenerator:
   - name: config
     files:
-      - ./resources/config/gatus.yml
+      - ./config/gatus.yml
 
 labels:
   - includeSelectors: true
