@@ -8,6 +8,10 @@ resources:
   - ./resources/makemkv.yml
 
 configMapGenerator:
+  - name: hooks
+    files:
+      - ./config/disk_rip_started.sh
+      - ./config/disk_rip_terminated.sh
   - name: gatus
     options:
       labels:
