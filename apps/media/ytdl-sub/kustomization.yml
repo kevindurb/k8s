@@ -6,7 +6,12 @@ namePrefix: ytdl-sub-
 
 resources:
   - ./resources/ytdl-sub.yml
-  - ./resources/config.yml
+
+configMapGenerator:
+  - name: config
+    files:
+      - ./config/config.yaml
+      - ./config/subscriptions.yaml
 
 labels:
   - includeSelectors: true

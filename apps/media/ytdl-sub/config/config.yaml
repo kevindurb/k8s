@@ -1,0 +1,25 @@
+configuration:
+  working_directory: /media/.ytdl-sub-working-directory
+presets:
+  TV Show:
+    preset:
+      - Jellyfin TV Show by Date
+      - Only Recent
+      - Max 1080p
+    overrides:
+      tv_show_directory: /media/YouTube
+      only_recent_date_range: 1month
+      only_recent_max_files: 30
+      episode_title: '{title}'
+  TV Show Collection:
+    preset:
+      - Jellyfin TV Show Collection
+    overrides:
+      tv_show_directory: /media/YouTube
+      episode_title: '{title}'
+  Music:
+    preset:
+      - YouTube Releases
+      - Max Audio Quality
+    overrides:
+      music_directory: /media/Music
