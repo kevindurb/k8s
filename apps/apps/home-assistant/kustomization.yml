@@ -9,6 +9,9 @@ resources:
   - ./resources/pvc.yml
 
 configMapGenerator:
+  - name: config
+    files:
+      - ./config/configuration.yaml
   - name: gatus
     options:
       labels:
