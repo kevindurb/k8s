@@ -111,6 +111,11 @@ data:
         conditions:
           - '[STATUS] == 200'
 
+    alerting:
+      ntfy:
+        topic: gatus
+        url: http://ntfy-web-service.monitoring.svc.cluster.local
+
 ---
 apiVersion: v1
 kind: Service
