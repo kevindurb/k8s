@@ -119,6 +119,7 @@ tasks:
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
+  # TODO: add kustomize call to automagically add config map
   gatus:
     requires:
       vars: [APP, COMP, PROTO, NS]
@@ -132,7 +133,6 @@ tasks:
         vars:
           TEMPLATE: gatus
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
-      - kustomize edit add resource {{.OUT_FILE}}
 
   pvc:
     requires:
