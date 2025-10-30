@@ -9,6 +9,9 @@ resources:
   - ./resources/ntfy.yml
 
 configMapGenerator:
+  - name: config
+    files:
+      - ./config/server.yml
   - name: gatus
     options:
       labels:

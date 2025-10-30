@@ -1,3 +1,4 @@
+---
 configuration:
   working_directory: /media/.ytdl-sub-working-directory
 presets:
