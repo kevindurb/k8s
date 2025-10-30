@@ -1,0 +1,19 @@
+---
+userDefaults:
+  singleClick: true
+  stickySidebar: false
+server:
+  sources:
+    - path: /media
+      name: media
+      config:
+        defaultEnabled: true
+auth:
+  methods:
+    noauth: true
+    password:
+      enabled: false
+    proxy:
+      enabled: false
+      header: Remote-User
+      createUser: true

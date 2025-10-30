@@ -70,33 +70,6 @@ spec:
 
 ---
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config
-data:
-  config.yaml: |
-    ---
-    userDefaults:
-      singleClick: true
-      stickySidebar: false
-    server:
-      sources:
-        - path: /media
-          name: media
-          config:
-            defaultEnabled: true
-    auth:
-      methods:
-        noauth: true
-        password:
-          enabled: false
-        proxy:
-          enabled: false
-          header: Remote-User
-          createUser: true
-
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: media-pvc
