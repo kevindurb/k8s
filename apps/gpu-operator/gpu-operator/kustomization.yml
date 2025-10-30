@@ -3,8 +3,12 @@ kind: Kustomization
 
 namespace: gpu-operator
 
-resources:
-  - ./resources/time-slicing.yml
+configMapGenerator:
+  - name: time-slicing-config-all
+    options:
+      disableNameSuffixHash: true
+    files:
+      - any=./config/any.yaml
 
 labels:
   - includeSelectors: true
