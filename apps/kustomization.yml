@@ -20,3 +20,4 @@ resources:
   - ./external-secrets
   - ./storage
   - ./tailscale
+  - ./cdi
