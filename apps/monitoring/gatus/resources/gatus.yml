@@ -82,46 +82,11 @@ spec:
             claimName: data-volume
         - name: config-map
           configMap:
-            name: gatus-config
+            name: config
         - name: config
           emptyDir: {}
         - name: tmp
           emptyDir: {}
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gatus-config
-data:
-  gatus.yml: |
-    ---
-    metrics: true
-
-    storage:
-      type: sqlite
-      path: /data/data.db
-
-    endpoints:
-      - name: gatus
-        url: http://gatus-service
-        conditions:
-          - '[STATUS] == 200'
-
-      - name: google
-        url: https://google.com
-        conditions:
-          - '[STATUS] == 200'
-
-    alerting:
-      ntfy:
-        topic: gatus
-        url: http://ntfy-web-service.monitoring
-        default-alert:
-          enabled: true
-          failure-threshold: 3
-          success-threshold: 3
-          send-on-resolved: true
 
 ---
 apiVersion: v1

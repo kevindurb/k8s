@@ -8,6 +8,11 @@ resources:
   - ./resources/gatus.yml
   - ./resources/pvc.yml
 
+configMapGenerator:
+  - name: config
+    files:
+      - ./resources/config/gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true
