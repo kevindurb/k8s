@@ -115,6 +115,11 @@ data:
       ntfy:
         topic: gatus
         url: http://ntfy-web-service.monitoring.svc.cluster.local
+        default-alert:
+          enabled: true
+          failure-threshold: 3
+          success-threshold: 3
+          send-on-resolved: true
 
 ---
 apiVersion: v1
