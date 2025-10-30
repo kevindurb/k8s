@@ -116,7 +116,7 @@ data:
     alerting:
       ntfy:
         topic: gatus
-        url: http://ntfy-web-service.monitoring.svc.cluster.local
+        url: http://ntfy-web-service.monitoring
         default-alert:
           enabled: true
           failure-threshold: 3

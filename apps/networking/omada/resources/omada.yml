@@ -141,6 +141,8 @@ data:
   omada.yml: |
     endpoints:
       - name: omada
-        url: http://omada-web-service.networking
+        url: https://omada-web-service.networking/login
+        client:
+          insecure: true
         conditions:
           - '[STATUS] == 200'
