@@ -12,7 +12,7 @@ configMapGenerator:
   - name: gatus
     options:
       labels:
-        gatus.io/enabled: true
+        gatus.io/enabled: 'true'
     files:
       - ./resources/config/gatus.yml=ntfy.yml
 
