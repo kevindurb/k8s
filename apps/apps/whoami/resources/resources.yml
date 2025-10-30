@@ -1,6 +1,6 @@
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: web-deployment
   annotations:
@@ -8,9 +8,6 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: web
 spec:
-  replicas: 4
-  strategy:
-    type: Recreate
   selector:
     matchLabels: *labels
   template:

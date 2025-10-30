@@ -47,6 +47,8 @@ spec:
               subPath: gatus.yml
               readOnly: true
           env:
+            - name: GATUS_LOG_LEVEL
+              value: DEBUG
             - name: GATUS_CONFIG_PATH
               value: /config
         - image: ghcr.io/kiwigrid/k8s-sidecar:1.30.9
