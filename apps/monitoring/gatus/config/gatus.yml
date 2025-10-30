@@ -25,3 +25,4 @@ alerting:
       failure-threshold: 3
       success-threshold: 3
       send-on-resolved: true
+      description: 'Service Down'
