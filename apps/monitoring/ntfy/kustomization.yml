@@ -14,7 +14,7 @@ configMapGenerator:
       labels:
         gatus.io/enabled: 'true'
     files:
-      - ./resources/config/gatus.yml=ntfy.yml
+      - ntfy.yml=gatus.yml
 
 labels:
   - includeSelectors: true
