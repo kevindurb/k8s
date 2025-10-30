@@ -3,6 +3,11 @@
 version: '3'
 
 tasks:
+  view-app:
+    requires:
+      vars: [appname]
+    cmd: open https://argocd.beaver-cloud.xyz/applications/argocd/{{.appname}}
+
   refresh-app:
     requires:
       vars: [appname]
