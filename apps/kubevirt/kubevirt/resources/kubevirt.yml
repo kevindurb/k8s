@@ -5,7 +5,7 @@ metadata:
   name: cdi
 spec:
   config:
-    scratchSpaceStorageClass: local-path
+    scratchSpaceStorageClass: openebs-zfspv
     podResourceRequirements:
       requests:
         cpu: '100m'
@@ -13,43 +13,3 @@ spec:
       limits:
         cpu: '750m'
         memory: '2Gi'
-
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: disable-selinux
-  namespace: cozy-kubevirt
-  labels:
-    app: disable-selinux
-spec:
-  selector:
-    matchLabels:
-      app: disable-selinux
-  template:
-    metadata:
-      labels:
-        app: disable-selinux
-    spec:
-      containers:
-        - command:
-            - sh
-            - -exc
-            - test -f /host/sys/fs/selinux/enforce && mount -t tmpfs tmpfs /host/sys/fs/selinux || sleep infinity
-          image: docker.io/library/alpine@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412
-          name: mount
-          securityContext:
-            privileged: true
-          volumeMounts:
-            - mountPath: /host
-              mountPropagation: Bidirectional
-              name: host-root
-      hostIPC: true
-      hostNetwork: true
-      hostPID: true
-      tolerations:
-        - operator: Exists
-      volumes:
-        - hostPath:
-            path: /
-          name: host-root
