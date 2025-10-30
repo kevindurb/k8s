@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: media
 namePrefix: ytdl-sub-
 
-resources:
-  - ./resources/ytdl-sub.yml
+resources: []
+  # - ./resources/ytdl-sub.yml
 
 configMapGenerator:
   - name: config
