@@ -20,6 +20,8 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
+        - name: cache
+          emptyDir: {}
         - name: config
           configMap:
             name: config
@@ -38,6 +40,8 @@ spec:
             - name: config
               mountPath: /etc/ntfy
               readOnly: true
+            - name: cache
+              mountPath: /var/cache/ntfy
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false

@@ -6,9 +6,11 @@ namePrefix: glance-
 
 resources:
   - ./resources/glance.yml
-  - ./resources/config.yml
 
 configMapGenerator:
+  - name: config
+    files:
+      - ./config/glance.yml
   - name: gatus
     options:
       labels:
