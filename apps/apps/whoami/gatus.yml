@@ -4,3 +4,4 @@ endpoints:
     url: http://whoami-web-service.apps
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

@@ -4,3 +4,4 @@ endpoints:
     url: http://alertmanager-service.monitoring/-/healthy
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

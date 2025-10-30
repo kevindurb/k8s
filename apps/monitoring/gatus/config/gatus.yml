@@ -10,19 +10,19 @@ endpoints:
     url: http://gatus-service
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
 
   - name: google
     url: https://google.com
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
 
 alerting:
   ntfy:
     topic: gatus
     url: https://ntfy.beaver-cloud.xyz
     default-alert:
-      enabled: true
       failure-threshold: 3
       success-threshold: 3
       send-on-resolved: true
-      description: 'Service Down'

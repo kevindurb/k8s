@@ -4,3 +4,4 @@ endpoints:
     url: http://jellyfin-service.media
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

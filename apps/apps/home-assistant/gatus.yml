@@ -4,3 +4,4 @@ endpoints:
     url: http://home-assistant-web-service.apps
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

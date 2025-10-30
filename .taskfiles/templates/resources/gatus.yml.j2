@@ -4,6 +4,7 @@ endpoints:
     url: {{ ENV.PROTO }}://{{ ENV.APP }}-{{ ENV.COMP }}-service.{{ ENV.NS }}
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
 {% if ENV.PROTO == 'https' %}
     client:
       insecure: true

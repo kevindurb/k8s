@@ -4,3 +4,4 @@ endpoints:
     url: http://garage-web-service.garage:3903/health
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

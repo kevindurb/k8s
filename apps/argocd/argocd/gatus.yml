@@ -6,3 +6,4 @@ endpoints:
       insecure: true
     conditions:
       - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
