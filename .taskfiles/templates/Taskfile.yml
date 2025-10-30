@@ -35,12 +35,14 @@ tasks:
     cmds:
       - task: app
       - task: kustomization
+      - task: gatus
       - task: app-resources
 
   mk-helm:
     cmds:
       - task: helm-app
       - task: kustomization
+      - task: gatus
       - task: app-resources
 
   minijinja:
@@ -114,6 +116,21 @@ tasks:
       - task: minijinja
         vars:
           TEMPLATE: resources
+          OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
+      - kustomize edit add resource {{.OUT_FILE}}
+
+  gatus:
+    requires:
+      vars: [APP, COMP, PROTO, NS]
+    dir: '{{.APP_DIR}}'
+    vars:
+      OUT_FILE: './gatus.yml'
+    generates:
+      - '{{.APP_DIR}}/{{.OUT_FILE}}'
+    cmds:
+      - task: minijinja
+        vars:
+          TEMPLATE: gatus
           OUT_FILE: '{{.APP_DIR}}/{{.OUT_FILE}}'
       - kustomize edit add resource {{.OUT_FILE}}
 
