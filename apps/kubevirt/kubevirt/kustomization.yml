@@ -6,4 +6,4 @@ namespace: kubevirt
 resources:
   - https://github.com/kubevirt/kubevirt/releases/download/v1.5.2/kubevirt-operator.yaml
   - https://github.com/kubevirt/kubevirt/releases/download/v1.5.2/kubevirt-cr.yaml
-  # - ./resources/kubevirt.yml
+  - ./resources/kubevirt.yml
