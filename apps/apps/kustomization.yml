@@ -8,3 +8,4 @@ resources:
   - ./filebrowser/app.yml
   - ./home-assistant/app.yml
   - ./glance/app.yml
+  - ./tiny11/app.yml
