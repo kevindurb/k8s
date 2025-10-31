@@ -51,6 +51,9 @@ includes:
     taskfile: .taskfiles/bitwarden
   zfs:
     taskfile: .taskfiles/zfs
+  tailscale:
+    aliases: [ts]
+    taskfile: .taskfiles/tailscale
 
 tasks:
   default: task --list-all

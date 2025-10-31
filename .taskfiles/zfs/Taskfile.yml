@@ -34,3 +34,12 @@ tasks:
       - for: { var: agents }
         task: zfs-list
         vars: { HOST: '{{.ITEM.hostname}}' }
+
+  setup-scrub:
+    desc: Setup zfs scrubs on all hosts
+    cmds:
+      - for: { var: agents }
+        cmd: |
+          ssh core@{{.ITEM.hostname}} 'sudo systemctl enable --now zfs-scrub-weekly@tank.timer'
+      - cmd: |
+          ssh core@drone-04 'sudo systemctl enable --now zfs-scrub-monthly@rust.timer'
