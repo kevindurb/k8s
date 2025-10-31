@@ -46,7 +46,7 @@ spec:
   secretName: ollama-secret
   map:
     - secretKeyName: OLLAMA_API_KEY
-      bwSecretId: ollama-api-key
+      bwSecretId: 783fbffc-3565-428d-9090-b387011abcc1
   authToken:
     secretName: bw-auth-token
     secretKey: token
