@@ -22,7 +22,7 @@ spec:
             requests:
               memory: 4G
           env:
-            OLLAMA_API_KEY:
+            - name: OLLAMA_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: ollama-secret
