@@ -17,9 +17,27 @@ tasks:
         vars:
           TS_AUTH_KEY: '{{.TS_AUTH_KEY}}'
           HOSTNAME: '{{.ITEM.hostname}}'
+
+  up-all:
+    cmds:
+      - for: { var: servers }
+        task: up
+        vars:
+          HOSTNAME: '{{.ITEM.hostname}}'
+      - for: { var: agents }
+        task: up
+        vars:
+          HOSTNAME: '{{.ITEM.hostname}}'
   auth:
     requires:
       vars: [TS_AUTH_KEY, HOSTNAME]
     cmd: >
       ssh core@{{.HOSTNAME}}
-      'sudo tailscale up --advertise-exit-node --auth-key={{.TS_AUTH_KEY}} || true'
+      'sudo tailscale up --advertise-exit-node --ssh --auth-key={{.TS_AUTH_KEY}} || true'
+
+  up:
+    requires:
+      vars: [HOSTNAME]
+    cmd: >
+      ssh core@{{.HOSTNAME}}
+      'sudo tailscale up --advertise-exit-node --ssh || true'
