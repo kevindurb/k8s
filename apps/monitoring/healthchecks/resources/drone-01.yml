@@ -4,7 +4,7 @@ kind: CronJob
 metadata:
   name: cronjob-drone-01
 spec:
-  schedule: '0 * * * *'
+  schedule: '6 * * * *'
   jobTemplate:
     spec:
       template:
