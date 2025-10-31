@@ -1,0 +1,35 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-unimatrix-03
+spec:
+  schedule: '0 * * * *'
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            kubernetes.io/hostname: unimatrix-03
+          containers:
+            - name: pinger
+              image: curlimages/curl:8.10.1
+              env:
+                - name: PING_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: healthchecks-secret
+                      key: PING_KEY
+                - name: NODE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+                  curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                    "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                    || echo "Ping failed"
