@@ -6,6 +6,7 @@ metadata:
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: openebs-zfspv
+  volumeName: n8n-volume
   resources:
     requests:
       storage: 1G
