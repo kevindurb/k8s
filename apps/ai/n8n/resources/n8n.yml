@@ -30,6 +30,8 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+        - name: npm
+          emptyDir: {}
       containers:
         - name: n8n
           image: docker.n8n.io/n8nio/n8n:latest@sha256:14248a2a18487c3e1669d2e2bfeee797f0648f606e0c168e36ef20c3a1f47eac
@@ -52,6 +54,8 @@ spec:
               mountPath: /home/node/.n8n
             - name: cache
               mountPath: /home/node/.cache
+            - name: npm
+              mountPath: /home/node/.npm
             - name: tmp
               mountPath: /tmp
             - name: media
