@@ -4,4 +4,5 @@ endpoints:
     url: http://analyzarr-web-service.media
     conditions:
       - '[STATUS] == 200'
+      - '[RESPONSE_TIME] < 9000'
     alerts: [{ type: ntfy }]
