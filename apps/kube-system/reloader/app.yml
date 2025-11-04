@@ -10,7 +10,7 @@ spec:
   project: default
   sources:
     - repoURL: https://stakater.github.io/stakater-charts
-      targetRevision: 2.2.3
+      targetRevision: 2.2.4
       chart: reloader
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
