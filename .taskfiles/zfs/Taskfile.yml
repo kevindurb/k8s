@@ -43,3 +43,10 @@ tasks:
           ssh core@{{.ITEM.hostname}} 'sudo systemctl enable --now zfs-scrub-weekly@tank.timer'
       - cmd: |
           ssh core@drone-04 'sudo systemctl enable --now zfs-scrub-monthly@rust.timer'
+
+  enable-sanoid:
+    desc: Enable sanoid on all agents
+    cmds:
+      - for: { var: agents }
+        cmd: |
+          ssh core@{{.ITEM.hostname}} 'sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer'
