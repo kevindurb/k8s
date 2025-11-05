@@ -14,7 +14,7 @@ spec:
             kubernetes.io/hostname: drone-01
           containers:
             - name: pinger
-              image: curlimages/curl:8.10.1
+              image: curlimages/curl:8.17.0@sha256:0f3b048f5b1454b60a5c1bb337c1203df4295430ba047da15b4308133eac96d6
               env:
                 - name: PING_KEY
                   valueFrom:
