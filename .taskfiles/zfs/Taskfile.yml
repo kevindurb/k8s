@@ -10,6 +10,14 @@ tasks:
   zfs-create: ssh core@{{.HOST}} 'sudo zfs create -o compression=lz4 tank/storage'
   zpool-status: ssh core@{{.HOST}} 'zpool status'
   zfs-list: ssh core@{{.HOST}} 'zfs list'
+  zpool-status-all: pssh -i -h ./hosts/agents 'zpool status'
+  zfs-list-all: pssh -i -h ./hosts/agents 'zfs list'
+  enable-sanoid: >
+    pssh -i -h ./hosts/agents
+    'sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer'
+  setup-scrub:
+    - pssh -i -h ./hosts/agents 'sudo systemctl enable --now zfs-scrub-weekly@tank.timer'
+    - ssh core@drone-04 'sudo systemctl enable --now zfs-scrub-monthly@rust.timer'
 
   build-all:
     cmds:
@@ -22,31 +30,3 @@ tasks:
       - for: { var: agents }
         task: zfs-create
         vars: { HOST: '{{.ITEM.hostname}}' }
-
-  zpool-status-all:
-    cmds:
-      - for: { var: agents }
-        task: zpool-status
-        vars: { HOST: '{{.ITEM.hostname}}' }
-
-  zfs-list-all:
-    cmds:
-      - for: { var: agents }
-        task: zfs-list
-        vars: { HOST: '{{.ITEM.hostname}}' }
-
-  setup-scrub:
-    desc: Setup zfs scrubs on all hosts
-    cmds:
-      - for: { var: agents }
-        cmd: |
-          ssh core@{{.ITEM.hostname}} 'sudo systemctl enable --now zfs-scrub-weekly@tank.timer'
-      - cmd: |
-          ssh core@drone-04 'sudo systemctl enable --now zfs-scrub-monthly@rust.timer'
-
-  enable-sanoid:
-    desc: Enable sanoid on all agents
-    cmds:
-      - for: { var: agents }
-        cmd: |
-          ssh core@{{.ITEM.hostname}} 'sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer'

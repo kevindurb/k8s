@@ -94,7 +94,5 @@ tasks:
 
   restart-k3s:
     cmds:
-      - for: { var: servers }
-        cmd: ssh core@{{.ITEM.hostname}} 'sudo systemctl restart k3s.service'
-      - for: { var: agents }
-        cmd: ssh core@{{.ITEM.hostname}} 'sudo systemctl restart k3s-agent.service'
+      - pssh -i -h ./hosts/servers 'sudo systemctl restart k3s.service'
+      - pssh -i -h ./hosts/agents 'sudo systemctl restart k3s-agent.service'
