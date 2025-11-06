@@ -3,21 +3,36 @@
 version: '3'
 
 tasks:
-  wipefs:
-    prompt: About to WIPE /dev/nvme0n1 on {{.HOST}}! Are you sure you want to continue?
-    cmd: ssh core@{{.HOST}} 'sudo wipefs -a /dev/nvme0n1'
-  zpool-create: ssh core@{{.HOST}} 'sudo zpool create tank -m /var/mnt/tank /dev/nvme0n1'
-  zfs-create: ssh core@{{.HOST}} 'sudo zfs create -o compression=lz4 tank/storage'
   zpool-status: ssh core@{{.HOST}} 'zpool status'
   zfs-list: ssh core@{{.HOST}} 'zfs list'
   zpool-status-all: pssh -i -h ./hosts/agents 'zpool status'
   zfs-list-all: pssh -i -h ./hosts/agents 'zfs list'
-  enable-sanoid: >
-    pssh -i -h ./hosts/agents
-    'sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer'
+
+  enable-sanoid:
+    cmd:
+      task: on:agents
+      vars:
+        CMD: sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer
+
   setup-scrub:
-    - pssh -i -h ./hosts/agents 'sudo systemctl enable --now zfs-scrub-weekly@tank.timer'
-    - ssh core@drone-04 'sudo systemctl enable --now zfs-scrub-monthly@rust.timer'
+    - task: on:agents
+      vars:
+        CMD: sudo systemctl enable --now zfs-scrub-weekly@tank.timer
+    - task: on:node
+      vars:
+        NODE: drone-04
+        CMD: sudo systemctl enable --now zfs-scrub-monthly@rust.timer
+
+  wipefs:
+    prompt: About to WIPE /dev/nvme0n1 on {{.HOST}}! Are you sure you want to continue?
+    cmd:
+      task: on:node
+      vars:
+        NODE: '{{.HOST}}'
+        CMD: sudo wipefs -a /dev/nvme0n1
+
+  zpool-create: ssh core@{{.HOST}} 'sudo zpool create tank -m /var/mnt/tank /dev/nvme0n1'
+  zfs-create: ssh core@{{.HOST}} 'sudo zfs create -o compression=lz4 tank/storage'
 
   build-all:
     cmds:

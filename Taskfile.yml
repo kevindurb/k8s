@@ -51,6 +51,8 @@ includes:
     taskfile: .taskfiles/bitwarden
   zfs:
     taskfile: .taskfiles/zfs
+  nodes:
+    taskfile: .taskfiles/nodes
   tailscale:
     aliases: [ts]
     taskfile: .taskfiles/tailscale
