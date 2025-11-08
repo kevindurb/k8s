@@ -14,6 +14,24 @@ tasks:
   zpool-status-all: pssh -i -h ./hosts/agents 'zpool status'
   zfs-list-all: pssh -i -h ./hosts/agents 'zfs list'
 
+  backup-tank-storage:
+    - task: on:node
+      vars:
+        NODE: drone-04
+        CMD: syncoid --recursive --skip-parent --no-privilege-elevation drone-01:tank/storage rust/backup
+    - task: on:node
+      vars:
+        NODE: drone-04
+        CMD: syncoid --recursive --skip-parent --no-privilege-elevation drone-02:tank/storage rust/backup
+    - task: on:node
+      vars:
+        NODE: drone-04
+        CMD: syncoid --recursive --skip-parent --no-privilege-elevation drone-03:tank/storage rust/backup
+    - task: on:node
+      vars:
+        NODE: drone-04
+        CMD: syncoid --recursive --skip-parent --no-privilege-elevation tank/storage rust/backup
+
   setup-backup-permissions:
     - task: on:agents
       vars:
