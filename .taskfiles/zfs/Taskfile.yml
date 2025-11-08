@@ -2,11 +2,26 @@
 ---
 version: '3'
 
+includes:
+  nodes:
+    taskfile: ../nodes
+    internal: true
+    flatten: true
+
 tasks:
   zpool-status: ssh core@{{.HOST}} 'zpool status'
   zfs-list: ssh core@{{.HOST}} 'zfs list'
   zpool-status-all: pssh -i -h ./hosts/agents 'zpool status'
   zfs-list-all: pssh -i -h ./hosts/agents 'zfs list'
+
+  setup-backup-permissions:
+    - task: on:agents
+      vars:
+        CMD: sudo zfs allow -u core send,hold,mount,snapshot,destroy tank
+    - task: on:node
+      vars:
+        NODE: drone-04
+        CMD: sudo zfs allow -u core compression,mountpoint,create,mount,receive,rollback,destroy rust/backup
 
   enable-sanoid:
     cmd:
