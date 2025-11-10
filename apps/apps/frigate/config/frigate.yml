@@ -9,33 +9,12 @@ cameras:
   doorbell:
     ffmpeg:
       inputs:
-        - path: rtsp://127.0.0.1:8554/doorbell
-          input_args: preset-rtsp-restream
+        - path: http://192.168.50.1/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}
           roles:
             - record
-        # - path: rtsp://127.0.0.1:8554/doorbell_ext
-        #   input_args: preset-rtsp-restream
-        #   roles:
-        #     - detect
   garage:
     ffmpeg:
       inputs:
-        - path: rtsp://127.0.0.1:8554/garage
-          input_args: preset-rtsp-restream
+        - path: http://192.168.50.2/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}
           roles:
             - record
-        # - path: rtsp://127.0.0.1:8554/garage_ext
-        #   input_args: preset-rtsp-restream
-        #   roles:
-        #     - detect
-
-go2rtc:
-  streams:
-    doorbell:
-      - ffmpeg:http://192.168.50.1/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}#video=copy#audio=copy#audio=opus
-    doorbell_ext:
-      - ffmpeg:http://192.168.50.1/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}#video=copy#audio=copy#audio=opus
-    garage:
-      - ffmpeg:http://192.168.50.2/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}#video=copy#audio=copy#audio=opus
-    garage_ext:
-      - ffmpeg:http://192.168.50.2/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}#video=copy#audio=copy#audio=opus
