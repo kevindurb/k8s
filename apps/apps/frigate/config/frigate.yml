@@ -5,6 +5,9 @@ mqtt:
 detect:
   enabled: false
 
+auth:
+  enabled: false
+
 cameras:
   doorbell:
     ffmpeg:
