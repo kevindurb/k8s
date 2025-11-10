@@ -34,7 +34,7 @@ spec:
         - name: dev-shm
           emptyDir:
             medium: Memory
-            sizeLimit: 256M
+            sizeLimit: 1G
         - name: config
           configMap:
             name: config
@@ -71,7 +71,7 @@ spec:
                   key: FRIGATE_REOLINK_PASSWORD
           ports:
             - name: http
-              containerPort: 8871
+              containerPort: 8971
             - name: rtsp
               containerPort: 8554
             - name: webrtc
