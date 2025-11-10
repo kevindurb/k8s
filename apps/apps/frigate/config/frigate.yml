@@ -2,18 +2,8 @@
 mqtt:
   enabled: false
 
-detectors:
-  onnx_0:
-    type: onnx
-
-model:
-  model_type: yolo-generic
-  width: 320
-  height: 320
-  input_tensor: nchw
-  input_dtype: float
-  path: /config/model_cache/yolo.onnx
-  labelmap_path: /labelmap/coco-80.txt
+detect:
+  enabled: false
 
 cameras:
   doorbell:
@@ -23,10 +13,10 @@ cameras:
           input_args: preset-rtsp-restream
           roles:
             - record
-        - path: rtsp://127.0.0.1:8554/doorbell_ext
-          input_args: preset-rtsp-restream
-          roles:
-            - detect
+        # - path: rtsp://127.0.0.1:8554/doorbell_ext
+        #   input_args: preset-rtsp-restream
+        #   roles:
+        #     - detect
   garage:
     ffmpeg:
       inputs:
@@ -34,10 +24,10 @@ cameras:
           input_args: preset-rtsp-restream
           roles:
             - record
-        - path: rtsp://127.0.0.1:8554/garage_ext
-          input_args: preset-rtsp-restream
-          roles:
-            - detect
+        # - path: rtsp://127.0.0.1:8554/garage_ext
+        #   input_args: preset-rtsp-restream
+        #   roles:
+        #     - detect
 
 go2rtc:
   streams:
