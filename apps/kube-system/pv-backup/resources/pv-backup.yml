@@ -53,9 +53,9 @@ metadata:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  name: role
+  name: cluster-role
 rules:
   - apiGroups: ['']
     resources: [persistentvolumes]
@@ -63,13 +63,13 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  name: role-binding
+  name: cluster-role-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: role
+  kind: ClusterRole
+  name: cluster-role
 subjects:
   - kind: ServiceAccount
     name: service-account
