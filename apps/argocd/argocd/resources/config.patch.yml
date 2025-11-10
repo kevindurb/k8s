@@ -8,8 +8,3 @@ metadata:
     app.kubernetes.io/part-of: argocd
 data:
   url: https://argocd.beaver-cloud.xyz
-  # resource.customizations.ignoreDifferences.all: |
-  #   managedFieldsManagers:
-  #     - MetalLB
-  #   jsonPointers:
-  #     - /spec/conversion/webhook/clientConfig/caBundle
