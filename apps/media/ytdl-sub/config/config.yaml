@@ -9,7 +9,7 @@ presets:
       - Max 1080p
     overrides:
       tv_show_directory: /media/YouTube
-      only_recent_date_range: 1month
+      only_recent_date_range: 2month
       only_recent_max_files: 30
       episode_title: '{title}'
   TV Show Collection:
