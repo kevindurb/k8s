@@ -10,7 +10,6 @@ cameras:
     ffmpeg:
       inputs:
         - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_main
-          input_args: preset-rtsp-restream
           roles:
             - record
         # - path: rtsp://127.0.0.1:8554/doorbell_ext
@@ -21,7 +20,6 @@ cameras:
     ffmpeg:
       inputs:
         - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_main
-          input_args: preset-rtsp-restream
           roles:
             - record
         # - path: rtsp://127.0.0.1:8554/garage_ext
