@@ -15,6 +15,9 @@ configMapGenerator:
     options:
       labels:
         gatus.io/enabled: 'true'
+  - files:
+      - config/frigate.yml
+    name: config
 
 labels:
   - includeSelectors: true

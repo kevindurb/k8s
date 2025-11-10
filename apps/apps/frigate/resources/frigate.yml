@@ -35,6 +35,9 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 256M
+        - name: config
+          configMap:
+            name: config
       containers:
         - name: frigate
           image: ghcr.io/blakeblackshear/frigate:0.16.2-tensorrt
@@ -52,11 +55,20 @@ spec:
               mountPath: /config/model_cache
             - name: dev-shm
               mountPath: /dev/shm
+            - name: config
+              mountPath: /config/config.yaml
+              subPath: frigate.yml
+              readOnly: true
           env:
             - name: TZ
               value: America/Denver
             - name: YOLO_MODELS
               value: yolov7-320
+            - name: FRIGATE_REOLINK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: frigate-secret
+                  key: FRIGATE_REOLINK_PASSWORD
           ports:
             - name: http
               containerPort: 8871
@@ -67,6 +79,23 @@ spec:
             - name: webrtc-udp
               protocol: UDP
               containerPort: 8555
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: frigate-secret
+  map:
+    - secretKeyName: FRIGATE_REOLINK_PASSWORD
+      bwSecretId: 4fb11013-6ee4-47d1-83b7-b1c6012061cc
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
 
 ---
 apiVersion: v1
