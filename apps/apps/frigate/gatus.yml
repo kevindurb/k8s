@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: frigate
+    url: http://frigate-web-service.apps
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

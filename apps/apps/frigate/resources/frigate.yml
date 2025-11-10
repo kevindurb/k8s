@@ -1,0 +1,113 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: model-cache
+        - name: dev-shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256M
+      containers:
+        - name: frigate
+          image: ghcr.io/blakeblackshear/frigate:0.16.2-tensorrt
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 4G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+            - name: media
+              mountPath: /media
+            - name: model-cache
+              mountPath: /config/model_cache
+            - name: dev-shm
+              mountPath: /dev/shm
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: YOLO_MODELS
+              value: yolov7-320
+          ports:
+            - name: http
+              containerPort: 8871
+            - name: rtsp
+              containerPort: 8554
+            - name: webrtc
+              containerPort: 8555
+            - name: webrtc-udp
+              protocol: UDP
+              containerPort: 8555
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  rules:
+    - host: &host frigate.beaver-cloud.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: web-service
+                port:
+                  name: http
+  tls:
+    - hosts: [*host]
+      secretName: *host
