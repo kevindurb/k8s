@@ -9,12 +9,22 @@ cameras:
   doorbell:
     ffmpeg:
       inputs:
-        - path: http://192.168.50.1/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}
+        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_main
+          input_args: preset-rtsp-restream
           roles:
             - record
+        # - path: rtsp://127.0.0.1:8554/doorbell_ext
+        #   input_args: preset-rtsp-restream
+        #   roles:
+        #     - detect
   garage:
     ffmpeg:
       inputs:
-        - path: http://192.168.50.2/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={FRIGATE_REOLINK_PASSWORD}
+        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_main
+          input_args: preset-rtsp-restream
           roles:
             - record
+        # - path: rtsp://127.0.0.1:8554/garage_ext
+        #   input_args: preset-rtsp-restream
+        #   roles:
+        #     - detect
