@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - ./kube-vip/app.yml
   - ./reloader/app.yml
-  - ./pv-backup/app.yml
+  # - ./pv-backup/app.yml
