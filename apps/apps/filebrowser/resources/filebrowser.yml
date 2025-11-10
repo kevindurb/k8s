@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: filebrowser
-          image: ghcr.io/gtsteffaniak/filebrowser:0.8.11-beta@sha256:2d94904ede9e612f4948110e06054b220c3990c7841f567711029d85eb1210db
+          image: ghcr.io/gtsteffaniak/filebrowser:1.0.1-beta@sha256:38b58c74d72304b829ed8fc14baf189fbd3bfa468c1b1cc3d114e4f47123d67c
           resources:
             requests:
               memory: 100M
