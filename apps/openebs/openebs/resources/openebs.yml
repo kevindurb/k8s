@@ -5,6 +5,7 @@ metadata:
   name: zfspv
   annotations:
     storageclass.kubernetes.io/is-default-class: 'true'
+reclaimPolicy: Retain
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
 parameters:
