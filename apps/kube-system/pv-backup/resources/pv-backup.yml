@@ -12,6 +12,15 @@ spec:
         spec:
           serviceAccountName: service-account
           restartPolicy: OnFailure
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
           containers:
             - name: pv-backup
               image: bitnami/kubectl:latest
@@ -19,15 +28,6 @@ spec:
                 - /bin/sh
                 - -c
                 - kubectl get pv -o yaml > /data/pvs.yml
-              securityContext:
-                privileged: false
-                allowPrivilegeEscalation: false
-                runAsNonRoot: true
-                runAsUser: 1000
-                runAsGroup: 1000
-                readOnlyRootFilesystem: true
-              capabilities:
-                drop: [ALL]
               volumeMounts:
                 - name: volume
                   mountPath: /data
