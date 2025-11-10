@@ -2,6 +2,10 @@
 mqtt:
   enabled: false
 
+detectors:
+  onnx_0:
+    type: onnx
+
 cameras:
   doorbell:
     ffmpeg:
