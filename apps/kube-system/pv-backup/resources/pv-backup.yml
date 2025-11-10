@@ -18,7 +18,10 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - kubectl get pv -o yaml > /data/pvs.yml
+                - >
+                  echo "=== Exporting PersistentVolumes ===" &&
+                  kubectl get pv -o yaml | tee /data/pvs.yml &&
+                  echo "=== PersistentVolumes successfully saved to /data/pvs.yml ==="
               securityContext:
                 privileged: false
                 allowPrivilegeEscalation: false
