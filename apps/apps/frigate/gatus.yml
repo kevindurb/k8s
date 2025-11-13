@@ -1,7 +1,9 @@
 ---
 endpoints:
   - name: frigate
-    url: http://frigate-web-service.apps
+    url: https://frigate-web-service.apps
+    client:
+      insecure: true
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
