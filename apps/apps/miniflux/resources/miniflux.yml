@@ -84,7 +84,7 @@ spec:
           emptyDir: {}
       containers:
         - name: postgres
-          image: docker.io/library/postgres:18.1-alpine
+          image: docker.io/library/postgres:18.0-alpine
           volumeMounts:
             - mountPath: /var/lib/postgresql
               name: data
