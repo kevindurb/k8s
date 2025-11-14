@@ -20,9 +20,6 @@ spec:
       # securityContext:
       #   fsGroup: 1000
       volumes:
-        - name: volume
-          persistentVolumeClaim:
-            claimName: volume
         - name: media
           persistentVolumeClaim:
             claimName: nfs-media
@@ -44,22 +41,9 @@ spec:
           #   capabilities:
           #     drop: [ALL]
           volumeMounts:
-            # - name: volume
-            #   mountPath: /var/www/app/data
             - name: media
-              mountPath: /media
+              mountPath: /home/dropbox/Dropbox
+              subPath: Dropbox
           env:
             - name: TZ
               value: America/Denver
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: openebs-zfspv
-  resources:
-    requests:
-      storage: 1G
