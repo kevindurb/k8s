@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sync-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: sync
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+        - name: media
+          persistentVolumeClaim:
+            claimName: nfs-media
+      containers:
+        - name: dropbox
+          image: ghcr.io/kevindurb/dropbox
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            # - name: volume
+            #   mountPath: /var/www/app/data
+            - name: media
+              mountPath: /media
+          env:
+            - name: TZ
+              value: America/Denver
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: openebs-zfspv
+  resources:
+    requests:
+      storage: 1G
