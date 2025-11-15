@@ -28,7 +28,7 @@ spec:
             claimName: nfs-media
       containers:
         - name: dropbox
-          image: docker.io/janeczku/dropbox
+          image: docker.io/otherguy/dropbox
           resources:
             requests:
               memory: 100M
@@ -45,10 +45,9 @@ spec:
           #     drop: [ALL]
           volumeMounts:
             - name: volume
-              mountPath: /dbox/.dropbox
-              subPath: Dropbox
+              mountPath: /opt/dropbox/.dropbox
             - name: media
-              mountPath: /dbox/Dropbox
+              mountPath: /opt/dropbox/Dropbox
               subPath: Dropbox
           env:
             - name: TZ
