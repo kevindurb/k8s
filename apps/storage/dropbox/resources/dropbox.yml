@@ -28,7 +28,7 @@ spec:
             claimName: nfs-media
       containers:
         - name: dropbox
-          image: ghcr.io/kevindurb/dropbox
+          image: ghcr.io/kevindurb/dropbox:2025.11.15
           resources:
             requests:
               memory: 100M
