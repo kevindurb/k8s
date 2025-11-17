@@ -27,6 +27,8 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+        - name: etcpostgresql
+          emptyDir: {}
       containers:
         - name: postgres
           image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
@@ -37,6 +39,8 @@ spec:
               name: run
             - mountPath: /tmp
               name: tmp
+            - mountPath: /etc/postgresql
+              name: etcpostgresql
           resources:
             requests:
               memory: 100M
