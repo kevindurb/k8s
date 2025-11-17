@@ -17,44 +17,21 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: db-volume
-        - name: run
-          emptyDir: {}
-        - name: tmp
-          emptyDir: {}
-        - name: etcpostgresql
-          emptyDir: {}
       containers:
         - name: postgres
           image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
           volumeMounts:
             - mountPath: /var/lib/postgresql
               name: data
-            - mountPath: /run
-              name: run
-            - mountPath: /tmp
-              name: tmp
-            - mountPath: /etc/postgresql
-              name: etcpostgresql
           resources:
             requests:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
