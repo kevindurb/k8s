@@ -6,6 +6,8 @@ namePrefix: immich-
 
 resources:
   - ./resources/immich.yml
+  - ./resources/postgres.yml
+  - ./resources/redis.yml
 
 configMapGenerator:
   - files:
