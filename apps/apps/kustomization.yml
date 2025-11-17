@@ -11,3 +11,4 @@ resources:
   - ./tiny11/app.yml
   - ./rsshub/app.yml
   - ./frigate/app.yml
+  - ./immich/app.yml
