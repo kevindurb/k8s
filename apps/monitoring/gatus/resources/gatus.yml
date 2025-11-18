@@ -51,7 +51,7 @@ spec:
               value: DEBUG
             - name: GATUS_CONFIG_PATH
               value: /config
-        - image: ghcr.io/kiwigrid/k8s-sidecar:2.1.2@sha256:8b875915be0869624cf5dfd48a1dfbfb627e778793cc1612d00fb281a8805c63
+        - image: ghcr.io/kiwigrid/k8s-sidecar:2.1.2@sha256:5304aa2b45f80a19f84a5e9dfb139c9caeaeecf1f9e507d0bdb9bc1cdb87a58a
           name: config-sync
           securityContext:
             privileged: false
