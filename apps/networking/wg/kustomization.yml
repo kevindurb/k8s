@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -6,6 +7,11 @@ namePrefix: wg-
 
 resources:
   - ./resources/wg.yml
+
+configMapGenerator:
+  - name: config
+    files:
+      - ./config/wg0.conf
 
 labels:
   - includeSelectors: true

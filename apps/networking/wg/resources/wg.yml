@@ -17,6 +17,12 @@ spec:
     metadata:
       labels: *labels
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: config
+        - name: key
+          secretName: wg-secret
       containers:
         - name: wg
           image: ghcr.io/kevindurb/wireguard
@@ -25,6 +31,15 @@ spec:
               memory: 100M
             limits:
               memory: 1G
+          volumeMounts:
+            - name: config
+              mountPath: /etc/wireguard/wg0.conf
+              subPath: wg0.conf
+              readOnly: true
+            - name: key
+              mountPath: /etc/wireguard/wg0.key
+              subPath: wg0.key
+              readOnly: true
           securityContext:
             capabilities:
               add: [NET_ADMIN, SYS_MODULE]
@@ -32,6 +47,23 @@ spec:
             - name: wg
               containerPort: 51820
               protocol: UDP
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: wg-secret
+  map:
+    - secretKeyName: wg0.key
+      bwSecretId: 0d390d6d-7c5e-4234-9319-b39c015fba89
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
 
 ---
 apiVersion: v1
