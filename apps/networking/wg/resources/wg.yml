@@ -22,7 +22,11 @@ spec:
           configMap:
             name: config
         - name: key
-          secretName: wg-secret
+          secret:
+            secretName: wg-secret
+            items:
+              - key: wg0.key
+                path: wg0.key
       containers:
         - name: wg
           image: ghcr.io/kevindurb/wireguard
