@@ -5,15 +5,15 @@ version: '3'
 tasks:
   view-app:
     requires:
-      vars: [appname]
-    cmd: open https://argocd.beaver-cloud.xyz/applications/argocd/{{.appname}}
+      vars: [APP]
+    cmd: open https://argocd.beaver-cloud.xyz/applications/argocd/{{.APP}}
 
   refresh-app:
     requires:
-      vars: [appname]
+      vars: [APP]
     cmd: >
       kubectl annotate -n argocd
-      application {{.appname}}
+      application {{.APP}}
       argocd.argoproj.io/refresh='normal'
 
   refresh-all: >
