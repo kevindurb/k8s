@@ -30,7 +30,6 @@ spec:
       containers:
         - name: wg
           image: ghcr.io/kevindurb/wireguard
-          command: [ls, -lah, /etc/wireguard/]
           resources:
             requests:
               memory: 100M
