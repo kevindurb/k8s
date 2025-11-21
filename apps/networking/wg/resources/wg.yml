@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: wg
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: wg
+          image: ghcr.io/kevindurb/wireguard
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          securityContext:
+            capabilities:
+              add: [NET_ADMIN, SYS_MODULE]
+          ports:
+            - name: wg
+              containerPort: 51820
+              protocol: UDP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.42.42
+  selector:
+    app.kubernetes.io/component: wg
+  ports:
+    - name: wg
+      port: 51820
+      protocol: UDP
+      targetPort: wg
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: endpoint
+spec:
+  endpoints:
+    - dnsName: wg.beaver-cloud.xyz
+      recordType: A
+      targets: [192.168.42.42]

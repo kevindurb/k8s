@@ -1,7 +1,7 @@
 ---
 endpoints:
-  - name: wg-easy
-    url: http://wg-easy-web-service.networking
+  - name: wg
+    url: http://wg-web-service.networking
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
