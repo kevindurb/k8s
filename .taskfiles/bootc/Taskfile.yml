@@ -14,7 +14,7 @@ tasks:
         -D hostname={{.hostname}} \
         -D interface={{.interface}} \
         -D ip={{.ip}} \
-        ./node.bu.j2 | \
+        ./butane/node.bu.j2 | \
       butane \
         --strict \
         --pretty \

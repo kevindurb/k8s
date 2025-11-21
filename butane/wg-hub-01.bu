@@ -1,0 +1,23 @@
+---
+variant: fcos
+version: 1.6.0
+
+passwd:
+  users:
+    - name: &user core
+
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: wg-hub-01
+
+    - path: /home/core/.ssh/authorized_keys
+      mode: 0600
+      user:
+        name: *user
+      group:
+        name: *user
+      contents:
+        source: https://github.com/kevindurb.keys
