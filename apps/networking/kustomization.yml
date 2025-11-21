@@ -9,3 +9,4 @@ resources:
   - ./external-dns/app.yml
   - ./omada/app.yml
   - ./wg-easy/app.yml
+  - ./termix/app.yml

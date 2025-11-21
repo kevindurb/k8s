@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: termix
+    url: http://termix-web-service.networking
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
