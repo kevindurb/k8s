@@ -8,4 +8,4 @@ spec:
   storageClassName: openebs-zfspv
   resources:
     requests:
-      storage: 30G
+      storage: 40G
