@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: wg
-    url: http://wg-web-service.networking
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

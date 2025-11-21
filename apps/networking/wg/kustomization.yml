@@ -7,14 +7,6 @@ namePrefix: wg-
 resources:
   - ./resources/wg.yml
 
-configMapGenerator:
-  - files:
-      - wg.yml=gatus.yml
-    name: gatus
-    options:
-      labels:
-        gatus.io/enabled: 'true'
-
 labels:
   - includeSelectors: true
     includeTemplates: true
