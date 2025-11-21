@@ -23,6 +23,8 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: etc-nginx
+          emptyDir: {}
       containers:
         - name: termix
           image: ghcr.io/lukegus/termix:release-1.9.0
@@ -43,6 +45,8 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /app/data
+            - name: etc-nginx
+              mountPath: /etc/nginx
           env:
             - name: TZ
               value: America/Denver
