@@ -17,14 +17,14 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
+      # securityContext:
+      #   fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        - name: etc-nginx
-          emptyDir: {}
+        # - name: etc-nginx
+        #   emptyDir: {}
       containers:
         - name: termix
           image: ghcr.io/lukegus/termix:release-1.9.0
@@ -33,20 +33,20 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
+          # securityContext:
+          #   privileged: false
+          #   allowPrivilegeEscalation: false
+          #   runAsNonRoot: true
+          #   runAsUser: 1000
+          #   runAsGroup: 1000
+          #   readOnlyRootFilesystem: true
+          #   capabilities:
+          #     drop: [ALL]
           volumeMounts:
             - name: volume
               mountPath: /app/data
-            - name: etc-nginx
-              mountPath: /etc/nginx
+            # - name: etc-nginx
+            #   mountPath: /etc/nginx
           env:
             - name: TZ
               value: America/Denver
