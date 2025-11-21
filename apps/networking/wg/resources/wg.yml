@@ -29,7 +29,7 @@ spec:
                 path: wg0.key
       containers:
         - name: wg
-          image: ghcr.io/kevindurb/wireguard
+          image: ghcr.io/kevindurb/wireguard:2025.11.21
           resources:
             requests:
               memory: 100M
