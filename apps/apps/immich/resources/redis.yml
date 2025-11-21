@@ -26,7 +26,7 @@ spec:
           emptyDir: {}
       containers:
         - name: redis
-          image: docker.io/valkey/valkey:8
+          image: docker.io/valkey/valkey:9@sha256:4503e204c900a00ad393bec83c8c7c4c76b0529cd629e23b34b52011aefd1d27
           volumeMounts:
             - mountPath: /run
               name: run
