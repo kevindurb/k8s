@@ -41,7 +41,7 @@ spec:
             - name: WG_HOST
               value: wg.beaver-cloud.xyz
             - name: WG_PORT
-              value: '30000'
+              value: '51820'
           ports:
             - name: http
               containerPort: 51821
@@ -96,6 +96,33 @@ spec:
       targetPort: http
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wg-service
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.42.42
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: wg
+      port: 51820
+      protocol: UDP
+      targetPort: wg
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: wg-endpoint
+spec:
+  endpoints:
+    - dnsName: wg.beaver-cloud.xyz
+      recordType: A
+      targets: [192.168.42.42]
+
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -105,7 +132,7 @@ metadata:
 spec:
   ingressClassName: internal
   rules:
-    - host: &host wg.beaver-cloud.xyz
+    - host: &host wg-easy.beaver-cloud.xyz
       http:
         paths:
           - pathType: Prefix
