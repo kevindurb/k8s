@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ ENV.COMP }}-deployment
+  name: web-deployment
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
-    app.kubernetes.io/component: {{ ENV.COMP }}
+    app.kubernetes.io/component: web
 spec:
   replicas: 1
   strategy:
@@ -17,38 +17,58 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
       containers:
-        - name: {{ ENV.APP }}
-          image: {{ ENV.IMG }}
+        - name: wg-easy
+          image: ghcr.io/wg-easy/wg-easy
           resources:
             requests:
               memory: 100M
             limits:
               memory: 1G
           securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
             capabilities:
-              drop: [ALL]
+              add: [NET_ADMIN, SYS_MODULE]
           volumeMounts:
             - name: volume
-              mountPath: /config
+              mountPath: /etc/wireguard
           env:
             - name: TZ
               value: America/Denver
+            - name: WG_HOST
+              value: wg.beaver-cloud.xyz
+            - name: WG_PORT
+              value: '30000'
           ports:
             - name: http
-              containerPort: {{ ENV.PORT }}
+              containerPort: 51821
+            - name: wg
+              containerPort: 51820
+              protocol: UDP
+          livenessProbe:
+            failureThreshold: 3
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: http
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: http
+            timeoutSeconds: 1
+          startupProbe:
+            failureThreshold: 30
+            periodSeconds: 5
+            successThreshold: 1
+            tcpSocket:
+              port: http
+            timeoutSeconds: 1
 
 ---
 apiVersion: v1
@@ -60,20 +80,20 @@ spec:
   storageClassName: openebs-zfspv
   resources:
     requests:
-      storage: {{ ENV.SIZE }}
+      storage: 1G
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ ENV.COMP }}-service
+  name: web-service
 spec:
   selector:
-    app.kubernetes.io/component: {{ ENV.COMP }}
+    app.kubernetes.io/component: web
   ports:
-    - name: {{ ENV.PROTO }}
+    - name: http
       port: 80
-      targetPort: {{ ENV.PROTO }}
+      targetPort: http
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -85,16 +105,16 @@ metadata:
 spec:
   ingressClassName: internal
   rules:
-    - host: &host {{ ENV.SUBDOMAIN }}.beaver-cloud.xyz
+    - host: &host wg.beaver-cloud.xyz
       http:
         paths:
           - pathType: Prefix
             path: '/'
             backend:
               service:
-                name: {{ ENV.COMP }}-service
+                name: web-service
                 port:
-                  name: {{ ENV.PROTO }}
+                  name: http
   tls:
     - hosts: [*host]
       secretName: *host

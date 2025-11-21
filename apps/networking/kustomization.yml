@@ -8,3 +8,4 @@ resources:
   - ./pihole/app.yml
   - ./external-dns/app.yml
   - ./omada/app.yml
+  - ./wg-easy/app.yml

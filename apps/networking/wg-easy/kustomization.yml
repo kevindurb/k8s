@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: networking
+namePrefix: wg-easy-
+
+resources:
+  - ./resources/wg-easy.yml
+
+configMapGenerator:
+  - files:
+      - wg-easy.yml=gatus.yml
+    name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: wg-easy
