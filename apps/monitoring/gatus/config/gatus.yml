@@ -8,14 +8,19 @@ storage:
 endpoints:
   - name: gatus
     url: http://gatus-service
-    conditions:
-      - '[STATUS] == 200'
+    conditions: ['[STATUS] == 200']
     alerts: [{ type: ntfy }]
 
   - name: google
     url: https://google.com
-    conditions:
-      - '[STATUS] == 200'
+    conditions: ['[STATUS] == 200']
+    alerts: [{ type: ntfy }]
+
+  - name: router
+    url: https://192.168.1.1
+    group: networking
+    client: { insecure: true }
+    conditions: ['[STATUS] == 200']
     alerts: [{ type: ntfy }]
 
 alerting:

@@ -23,7 +23,7 @@ spec:
             claimName: volume
       containers:
         - name: termix
-          image: ghcr.io/lukegus/termix:release-1.9.0
+          image: ghcr.io/lukegus/termix:release-1.9.0@sha256:42649d815da4ee2cb71560b04a22641e54d993e05279908711d9056504487feb
           resources:
             requests:
               memory: 100M
