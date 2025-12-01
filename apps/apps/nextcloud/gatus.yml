@@ -1,0 +1,8 @@
+---
+endpoints:
+  - name: nextcloud
+    url: http://nextcloud-web-service.apps
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
+
