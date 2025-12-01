@@ -29,7 +29,7 @@ spec:
                 path: wg0.key
       containers:
         - name: wg
-          image: ghcr.io/kevindurb/wireguard:sha-cf393c4@sha256:6a4f44630c3fa4fccb820b2325e08a15a4b8251fafeb4195a337a9d89e9e9848
+          image: ghcr.io/kevindurb/wireguard:sha-cf393c4@sha256:35c639a3838ed1612393ebfb71578cf1d95db4bff472a78d70362f20232d64fd
           resources:
             requests:
               memory: 100M
