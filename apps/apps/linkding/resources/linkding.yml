@@ -23,6 +23,8 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: linkding
           image: ghcr.io/sissbruecker/linkding:1.44.1-plus-alpine
@@ -43,6 +45,8 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /etc/linkding/data
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
