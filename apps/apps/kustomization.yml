@@ -12,3 +12,4 @@ resources:
 - ./rsshub/app.yml
 - ./frigate/app.yml
 - ./immich/app.yml
+- ./linkding/app.yml
