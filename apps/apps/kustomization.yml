@@ -12,4 +12,3 @@ resources:
 - ./rsshub/app.yml
 - ./frigate/app.yml
 - ./immich/app.yml
-- ./karakeep/app.yml

@@ -1,8 +1,0 @@
----
-endpoints:
-  - name: karakeep
-    url: http://karakeep-web-service.apps
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
-
