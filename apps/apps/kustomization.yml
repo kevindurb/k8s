@@ -13,3 +13,4 @@ resources:
 - ./frigate/app.yml
 - ./immich/app.yml
 - ./linkding/app.yml
+- ./nextcloud/app.yml
