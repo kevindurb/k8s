@@ -83,7 +83,7 @@ spec:
   storageClassName: openebs-zfspv
   resources:
     requests:
-      storage: 1G
+      storage: 100G
 
 ---
 apiVersion: v1
