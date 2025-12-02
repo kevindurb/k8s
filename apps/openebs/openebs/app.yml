@@ -16,6 +16,16 @@ spec:
     - repoURL: https://openebs.github.io/openebs
       targetRevision: 4.4.0
       chart: openebs
+      helm:
+        valuesObject:
+          preUpgradeHook:
+            enabled: false
+          engines:
+            replicated:
+              mayastor:
+                enabled: false
+          loki:
+            enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: openebs
