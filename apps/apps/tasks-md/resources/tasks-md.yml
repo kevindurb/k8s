@@ -28,6 +28,8 @@ spec:
             claimName: tasks-volume
         - name: app-dist
           emptyDir: {}
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: tasks-md
           image: docker.io/baldissaramatheus/tasks.md:3.2.0
@@ -52,6 +54,8 @@ spec:
               mountPath: /tasks
             - name: app-dist
               mountPath: /app/dist
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
