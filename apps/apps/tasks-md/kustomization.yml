@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: apps
+namePrefix: tasks-md-
+
+resources:
+  - ./resources/tasks-md.yml
+
+configMapGenerator:
+  - files:
+      - tasks-md.yml=gatus.yml
+    name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: tasks-md

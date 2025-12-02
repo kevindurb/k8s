@@ -2,15 +2,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- common.yml
-- ./whoami/app.yml
-- ./miniflux/app.yml
-- ./filebrowser/app.yml
-- ./home-assistant/app.yml
-- ./glance/app.yml
-- ./tiny11/app.yml
-- ./rsshub/app.yml
-- ./frigate/app.yml
-- ./immich/app.yml
-- ./linkding/app.yml
-- ./nextcloud/app.yml
+  - common.yml
+  - ./whoami/app.yml
+  - ./miniflux/app.yml
+  - ./filebrowser/app.yml
+  - ./home-assistant/app.yml
+  - ./glance/app.yml
+  - ./tiny11/app.yml
+  - ./rsshub/app.yml
+  - ./frigate/app.yml
+  - ./immich/app.yml
+  - ./linkding/app.yml
+  - ./nextcloud/app.yml
+  - ./tasks-md/app.yml
