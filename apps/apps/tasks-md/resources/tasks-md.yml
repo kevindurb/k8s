@@ -34,10 +34,6 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: config-volume
               mountPath: /config
