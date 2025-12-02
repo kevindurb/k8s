@@ -26,10 +26,6 @@ spec:
         - name: tasks-volume
           persistentVolumeClaim:
             claimName: tasks-volume
-        - name: app-dist
-          emptyDir: {}
-        - name: tmp
-          emptyDir: {}
       containers:
         - name: tasks-md
           image: docker.io/baldissaramatheus/tasks.md:3.2.0
@@ -44,7 +40,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
           volumeMounts:
@@ -52,10 +47,6 @@ spec:
               mountPath: /config
             - name: tasks-volume
               mountPath: /tasks
-            - name: app-dist
-              mountPath: /app/dist
-            - name: tmp
-              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
