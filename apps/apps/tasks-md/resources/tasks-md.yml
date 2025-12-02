@@ -26,6 +26,8 @@ spec:
         - name: tasks-volume
           persistentVolumeClaim:
             claimName: tasks-volume
+        - name: app-dist
+          emptyDir: {}
       containers:
         - name: tasks-md
           image: docker.io/baldissaramatheus/tasks.md:3.2.0
@@ -48,6 +50,8 @@ spec:
               mountPath: /config
             - name: tasks-volume
               mountPath: /tasks
+            - name: app-dist
+              mountPath: /app/dist
           env:
             - name: TZ
               value: America/Denver
