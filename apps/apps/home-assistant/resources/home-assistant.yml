@@ -82,7 +82,7 @@ spec:
             - name: http
               containerPort: 8123
         - name: matter
-          image: ghcr.io/matter-js/python-matter-server:stable
+          image: ghcr.io/matter-js/python-matter-server:stable@sha256:44d47c9ec91bf06fcb72a8df2dd2f36e90934c7b0d1d85f1ecb46fc695164746
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
