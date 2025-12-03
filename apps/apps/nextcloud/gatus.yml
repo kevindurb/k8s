@@ -1,8 +1,7 @@
 ---
 endpoints:
   - name: nextcloud
-    url: http://nextcloud-web-service.apps
+    url: http://nextcloud-web-service.apps/heartbeat
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
-
