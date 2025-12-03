@@ -24,6 +24,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: matter-data
+          persistentVolumeClaim:
+            claimName: matter-data
         - name: config
           configMap:
             name: config
@@ -78,6 +81,25 @@ spec:
           ports:
             - name: http
               containerPort: 8123
+        - name: matter
+          image: ghcr.io/matter-js/python-matter-server:stable
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: matter-data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+          env:
+            - name: TZ
+              value: America/Denver
 
 ---
 apiVersion: v1

@@ -9,3 +9,15 @@ spec:
   resources:
     requests:
       storage: 40G
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: matter-data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: openebs-zfspv
+  resources:
+    requests:
+      storage: 1G
