@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: rsshub
-          image: ghcr.io/diygod/rsshub:chromium-bundled@sha256:7f249a8b3e59249ff6bee606145f4728b6aafa44e6b908ac20bb626097da9f8f
+          image: ghcr.io/diygod/rsshub:chromium-bundled@sha256:67cc471b356ec8262cdcdd6311d039fd490e4f7caf084d4c15fe423d11a6769f
           resources:
             requests:
               memory: 100M
