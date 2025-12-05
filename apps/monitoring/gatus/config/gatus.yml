@@ -23,6 +23,27 @@ endpoints:
     conditions: ['[STATUS] == 200']
     alerts: [{ type: ntfy }]
 
+  - name: Garage AP
+    url: https://192.168.1.2
+    group: networking
+    client: { insecure: true }
+    conditions: ['[STATUS] == 200']
+    alerts: [{ type: ntfy }]
+
+  - name: Basement AP
+    url: https://192.168.1.3
+    group: networking
+    client: { insecure: true }
+    conditions: ['[STATUS] == 200']
+    alerts: [{ type: ntfy }]
+
+  - name: Backyard AP
+    url: https://192.168.1.4
+    group: networking
+    client: { insecure: true }
+    conditions: ['[STATUS] == 200']
+    alerts: [{ type: ntfy }]
+
 alerting:
   ntfy:
     topic: gatus
