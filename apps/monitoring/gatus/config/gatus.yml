@@ -29,8 +29,9 @@ endpoints:
     client:
       insecure: true
       tls:
-        min-version: '1.0'
-        cipher-suites: [TLS_RSA_WITH_AES_256_CBC_SHA]
+        min-version: '1.2'
+        max-version: '1.2'
+        cipher-suites: [0x009d]
     conditions: ['[STATUS] == 200']
     alerts: [{ type: ntfy }]
 
@@ -40,8 +41,9 @@ endpoints:
     client:
       insecure: true
       tls:
-        min-version: '1.0'
-        cipher-suites: [TLS_RSA_WITH_AES_256_CBC_SHA]
+        min-version: '1.2'
+        max-version: '1.2'
+        cipher-suites: [0x009d]
     conditions: ['[STATUS] == 200']
     alerts: [{ type: ntfy }]
 
@@ -51,8 +53,9 @@ endpoints:
     client:
       insecure: true
       tls:
-        min-version: '1.0'
-        cipher-suites: [TLS_RSA_WITH_AES_256_CBC_SHA]
+        min-version: '1.2'
+        max-version: '1.2'
+        cipher-suites: [0x009d]
     conditions: ['[STATUS] == 200']
     alerts: [{ type: ntfy }]
 
