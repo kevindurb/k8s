@@ -44,6 +44,9 @@ spec:
             - name: nfs-media
               mountPath: /data
               subPath: immich
+            - name: nfs-media
+              mountPath: /mnt/camera_uploads
+              subPath: Dropbox/Camera Uploads
           env:
             - name: TZ
               value: America/Denver
