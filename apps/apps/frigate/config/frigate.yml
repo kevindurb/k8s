@@ -15,6 +15,20 @@ detectors:
   onnx:
     type: onnx
 
+record:
+  enabled: true
+  retain:
+    days: 1
+    mode: all
+  alerts:
+    retain:
+      days: 7
+      mode: motion
+  detections:
+    retain:
+      days: 7
+      mode: motion
+
 model:
   path: /config/yolo_nas_s.onnx
   labelmap_path: /labelmap/coco-80.txt
