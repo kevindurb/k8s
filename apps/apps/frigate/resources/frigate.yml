@@ -62,6 +62,8 @@ spec:
           env:
             - name: TZ
               value: America/Denver
+            - name: USE_FP16
+              value: 'False'
             - name: YOLO_MODELS
               value: yolov7-320
             - name: FRIGATE_REOLINK_PASSWORD

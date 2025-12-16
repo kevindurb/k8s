@@ -3,29 +3,37 @@ mqtt:
   enabled: false
 
 detect:
-  enabled: false
+  enabled: true
 
 auth:
   enabled: false
+
+ffmpeg:
+  hwaccel_args: preset-nvidia-h264
+
+detectors:
+  tensorrt:
+    type: tensorrt
+    device: 0
+    model:
+      path: /config/model_cache/tensorrt/yolov7-320.trt
+      input_tensor: nchw
+      input_pixel_format: rgb
+      width: 320
+      height: 320
 
 cameras:
   doorbell:
     ffmpeg:
       inputs:
         - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_main
-          roles:
-            - record
-        # - path: rtsp://127.0.0.1:8554/doorbell_ext
-        #   input_args: preset-rtsp-restream
-        #   roles:
-        #     - detect
+          roles: [record]
+        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_sub
+          roles: [detect]
   garage:
     ffmpeg:
       inputs:
         - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_main
-          roles:
-            - record
-        # - path: rtsp://127.0.0.1:8554/garage_ext
-        #   input_args: preset-rtsp-restream
-        #   roles:
-        #     - detect
+          roles: [record]
+        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_sub
+          roles: [detect]
