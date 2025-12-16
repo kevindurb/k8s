@@ -35,31 +35,6 @@ spec:
         - name: config
           configMap:
             name: config
-      initContainers:
-        - name: download-model
-          image: busybox:1.36
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              MODEL_PATH="/config/yolo_nas_s_int8.onnx"
-              MODEL_URL="https://github.com/Deci-AI/super-gradients/releases/download/v3.1.1/yolo_nas_s_int8.onnx"
-
-              if [ -f "$MODEL_PATH" ]; then
-                echo "Model found at $MODEL_PATH. Skipping download."
-              else
-                echo "Model not found. Downloading from $MODEL_URL..."
-                wget -O "$MODEL_PATH" "$MODEL_URL"
-                if [ $? -eq 0 ]; then
-                  echo "Download complete."
-                  chmod 666 "$MODEL_PATH"
-                else
-                  echo "Download failed!"
-                  exit 1
-                fi
-              fi
-          volumeMounts:
-            - name: config
-              mountPath: /config
       containers:
         - name: frigate
           image: ghcr.io/blakeblackshear/frigate:0.16.3-tensorrt@sha256:5f3150afac88b13b6a39e19ab18c68f7b84a0d3b8675e58aace0c55c69d98909

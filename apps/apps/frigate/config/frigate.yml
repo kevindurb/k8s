@@ -16,7 +16,7 @@ detectors:
     type: onnx
     device: '0'
     model:
-      path: /config/yolo_nas_s_int8.onnx
+      path: /config/yolo_nas_s.onnx
       labelmap_path: /labelmap/coco-80.txt
       width: 320
       height: 320
