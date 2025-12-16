@@ -8,18 +8,6 @@ spec:
   storageClassName: openebs-zfspv
   resources:
     requests:
-      storage: 1G
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: model-cache
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: openebs-zfspv
-  resources:
-    requests:
       storage: 10G
 
 ---
