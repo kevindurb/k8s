@@ -28,9 +28,6 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: media
-        - name: model-cache
-          persistentVolumeClaim:
-            claimName: model-cache
         - name: dev-shm
           emptyDir:
             medium: Memory
