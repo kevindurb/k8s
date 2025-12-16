@@ -1,0 +1,54 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  schedule: '15 3 * * *'
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: drone-04
+          containers:
+            - name: rclone
+              image: rclone/rclone:1.66
+              env:
+                - name: RCLONE_CONFIG_WASABI_TYPE
+                  value: s3
+                - name: RCLONE_CONFIG_WASABI_PROVIDER
+                  value: wasabi
+                - name: RCLONE_CONFIG_WASABI_ENDPOINT
+                  value: s3.wasabisys.com
+                - name: RCLONE_CONFIG_WASABI_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: wasabi-backup-secret
+                      key: access-key
+                - name: RCLONE_CONFIG_WASABI_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: wasabi-backup-secret
+                      key: secret-key
+                - name: RCLONE_CONFIG_WASABI_REGION
+                  value: us-east-1
+              command:
+                - rclone
+                - sync
+                - /backups
+                - wasabi:beaver-cloud-rust-backups
+                - --fast-list
+                - --s3-chunk-size=64M
+                - --s3-upload-concurrency=4
+                - -v
+              volumeMounts:
+                - name: rust-backups
+                  mountPath: /backups
+                  readOnly: true
+          volumes:
+            - name: rust-backups
+              hostPath:
+                path: /var/mnt/rust/backups

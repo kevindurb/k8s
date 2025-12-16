@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: wasabi-backup
+    url: http://wasabi-backup-web-service.storage
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

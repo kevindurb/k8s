@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - ./common.yml
   - ./nfs/app.yml
-  - ./dropbox/app.yml
+  - ./wasabi-backup/app.yml

@@ -7,4 +7,3 @@ resources:
   - ./external-dns/app.yml
   - ./omada/app.yml
   - ./termix/app.yml
-  - ./wg/app.yml
