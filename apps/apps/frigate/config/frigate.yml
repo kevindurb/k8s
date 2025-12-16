@@ -12,17 +12,17 @@ ffmpeg:
   hwaccel_args: preset-nvidia-h264
 
 detectors:
-  tensorrt:
+  onnx:
     type: onnx
-    device: '0'
-    model:
-      path: /config/yolo_nas_s.onnx
-      labelmap_path: /labelmap/coco-80.txt
-      width: 320
-      height: 320
-      input_tensor: nchw
-      input_pixel_format: bgr
-      model_type: yolonas
+
+model:
+  path: /config/yolo_nas_s.onnx
+  labelmap_path: /labelmap/coco-80.txt
+  width: 320
+  height: 320
+  input_tensor: nchw
+  input_pixel_format: bgr
+  model_type: yolonas
 
 cameras:
   doorbell:
