@@ -7,14 +7,6 @@ namePrefix: wasabi-backup-
 resources:
   - ./resources/wasabi-backup.yml
 
-configMapGenerator:
-  - files:
-      - wasabi-backup.yml=gatus.yml
-    name: gatus
-    options:
-      labels:
-        gatus.io/enabled: 'true'
-
 labels:
   - includeSelectors: true
     includeTemplates: true
