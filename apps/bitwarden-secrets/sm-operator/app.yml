@@ -14,10 +14,6 @@ spec:
       chart: sm-operator
       helm:
         valuesObject:
-          containers:
-            manager:
-              image:
-                tag: '0.1.0'
           metrics:
             enabled: true
             serviceMonitor:
