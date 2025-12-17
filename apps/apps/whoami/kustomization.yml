@@ -9,7 +9,7 @@ resources:
   - ../../../bases/web
 
 components:
-  - ../../../components/security
+  - ../../../components/pod-hardening
 
 images:
   - name: image
