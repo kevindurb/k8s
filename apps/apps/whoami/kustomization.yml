@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -5,7 +6,25 @@ namespace: apps
 namePrefix: whoami-
 
 resources:
-  - ./resources/resources.yml
+  - ../../../bases/web
+
+components:
+  - ../../../components/security
+
+images:
+  - name: image
+    newName: docker.io/traefik/whoami
+    newTag: v1.11.0@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
+
+replacements:
+  - sourceValue: whoami.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName
 
 configMapGenerator:
   - name: gatus
