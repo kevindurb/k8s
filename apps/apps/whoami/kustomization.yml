@@ -25,6 +25,11 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+  - sourceValue: 3
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths: [spec.replicas]
 
 configMapGenerator:
   - name: gatus
