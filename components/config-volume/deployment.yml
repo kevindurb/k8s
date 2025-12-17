@@ -1,0 +1,17 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+      containers:
+        - name: container
+          volumeMounts:
+            - name: volume
+              mountPath: /config

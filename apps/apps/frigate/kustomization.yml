@@ -12,6 +12,8 @@ resources:
 
 components:
   - ../../../components/https-ingress-backend
+  - ../../../components/config-volume
+  - ../../../components/drone-04-gpu
 
 images:
   - name: image
@@ -31,6 +33,13 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+  - sourceValue: 10G
+    targets:
+      - select:
+          kind: PersistentVolumeClaim
+          name: volume
+        fieldPaths:
+          - spec.resources.requests.storage
 
 configMapGenerator:
   - files:

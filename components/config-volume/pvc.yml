@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: media
+  name: volume
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: openebs-zfspv
   resources:
     requests:
-      storage: 100G
+      storage: 1G
