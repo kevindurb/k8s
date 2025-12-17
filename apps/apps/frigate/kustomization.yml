@@ -7,13 +7,13 @@ namePrefix: frigate-
 
 resources:
   - ../../../bases/web
-  - ../../../bases/secret
   - pvc.yml
 
 components:
   - ../../../components/https-ingress-backend
   - ../../../components/config-volume
   - ../../../components/drone-04-gpu
+  - ../../../components/env-secret
 
 images:
   - name: image

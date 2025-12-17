@@ -33,12 +33,6 @@ spec:
               mountPath: /config/config.yaml
               subPath: frigate.yml
               readOnly: true
-          env:
-            - name: FRIGATE_REOLINK_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: frigate-secret
-                  key: FRIGATE_REOLINK_PASSWORD
           ports:
             - name: https
               containerPort: 8971
