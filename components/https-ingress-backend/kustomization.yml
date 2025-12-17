@@ -4,3 +4,12 @@ kind: Component
 
 patches:
   - path: ingress.yml
+  - target:
+      kind: Service
+    patch: |-
+      - op: replace
+        path: /spec/ports/0
+        value:
+          name: https
+          port: 443
+          targetPort: https
