@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  template:
+    spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        kubernetes.io/hostname: drone-04
+        nvidia.com/gpu.present: 'true'
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+        - name: dev-shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1G
+        - name: config
+          configMap:
+            name: config
+      containers:
+        - name: container
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 4G
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+            - name: media
+              mountPath: /media
+            - name: dev-shm
+              mountPath: /dev/shm
+            - name: config
+              mountPath: /config/config.yaml
+              subPath: frigate.yml
+              readOnly: true
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: compute,video,utility
+            - name: FRIGATE_REOLINK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: frigate-secret
+                  key: FRIGATE_REOLINK_PASSWORD
+          ports:
+            - name: https
+              containerPort: 8971

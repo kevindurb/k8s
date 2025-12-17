@@ -16,6 +16,10 @@ images:
     newName: docker.io/traefik/whoami
     newTag: v1.11.0@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
 
+replicas:
+  - name: deployment
+    count: 3
+
 replacements:
   - sourceValue: whoami.beaver-cloud.xyz
     targets:
@@ -25,11 +29,6 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
-  - sourceValue: '3'
-    targets:
-      - select:
-          kind: Deployment
-        fieldPaths: [spec.replicas]
 
 configMapGenerator:
   - name: gatus

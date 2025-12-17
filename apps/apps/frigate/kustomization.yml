@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -5,8 +6,37 @@ namespace: apps
 namePrefix: frigate-
 
 resources:
-  - ./resources/frigate.yml
-  - ./resources/pvc.yml
+  - ../../../bases/web
+  - ../../../bases/secret
+  - pvc.yml
+
+components:
+  - ../../../components/https-ingress-backend
+
+images:
+  - name: image
+    newName: ghcr.io/blakeblackshear/frigate
+    newTag: 0.16.3-tensorrt@sha256:5f3150afac88b13b6a39e19ab18c68f7b84a0d3b8675e58aace0c55c69d98909
+
+patches:
+  - path: secret.yml
+  - path: deployment.yml
+
+replacements:
+  - sourceValue: frigate.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName
+  - sourceValue: https
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.http.paths.0.backend.service.port.name
 
 configMapGenerator:
   - files:
