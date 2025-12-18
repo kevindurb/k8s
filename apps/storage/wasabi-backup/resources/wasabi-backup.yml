@@ -40,12 +40,13 @@ spec:
                   value: 'true'
               command:
                 - rclone
-                - sync
+                - copy
                 - /backup
                 - 'encrypted:'
                 - --fast-list
                 - --s3-chunk-size=64M
                 - --s3-upload-concurrency=4
+                - --bwlimit 2M
                 - -v
               securityContext:
                 privileged: true
