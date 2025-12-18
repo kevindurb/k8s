@@ -22,7 +22,7 @@ spec:
       volumes:
         - name: media
           persistentVolumeClaim:
-            claimName: apps-nfs-media
+            claimName: nfs-media
         - name: volume
           persistentVolumeClaim:
             claimName: volume
