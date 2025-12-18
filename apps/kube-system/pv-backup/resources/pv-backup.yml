@@ -14,7 +14,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: pv-backup
-              image: bitnami/kubectl:latest@sha256:3bcc3efefff77a4dd3ec1886e612c249dc6a313fada8348e42ec2ebe9168126f
+              image: bitnami/kubectl:latest@sha256:554ab88b1858e8424c55de37ad417b16f2a0e65d1607aa0f3fe3ce9b9f10b131
               command:
                 - /bin/sh
                 - -c
