@@ -34,7 +34,7 @@ spec:
           emptyDir: {}
       initContainers:
         - name: init-config
-          image: busybox:1.37@sha256:e3652a00a2fabd16ce889f0aa32c38eec347b997e73bd09e69c962ec7f8732ee
+          image: busybox:1.37@sha256:d80cd694d3e9467884fcb94b8ca1e20437d8a501096cdf367a5a1918a34fc2fd
           command:
             - sh
             - -c
@@ -82,7 +82,7 @@ spec:
             - name: http
               containerPort: 8123
         - name: matter
-          image: ghcr.io/matter-js/python-matter-server:stable@sha256:44d47c9ec91bf06fcb72a8df2dd2f36e90934c7b0d1d85f1ecb46fc695164746
+          image: ghcr.io/matter-js/python-matter-server:stable@sha256:6827e352011e2d8c2bde771e446fcf72acc49150ef66bad978816bac1762aad3
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
