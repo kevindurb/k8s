@@ -22,11 +22,11 @@ record:
     mode: all
   alerts:
     retain:
-      days: 7
+      days: 2
       mode: motion
   detections:
     retain:
-      days: 7
+      days: 2
       mode: motion
 
 model:
