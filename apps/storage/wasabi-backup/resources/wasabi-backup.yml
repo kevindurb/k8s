@@ -47,6 +47,7 @@ spec:
                 - --s3-chunk-size=64M
                 - --s3-upload-concurrency=4
                 - --bwlimit=2M:off
+                - --copy-links
                 - -v
               securityContext:
                 privileged: true
