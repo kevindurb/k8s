@@ -37,6 +37,8 @@ spec:
                 - --s3-chunk-size=64M
                 - --s3-upload-concurrency=4
                 - -v
+              securityContext:
+                privileged: true
               volumeMounts:
                 - name: rust-backups
                   mountPath: /backup
