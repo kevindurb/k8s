@@ -47,6 +47,9 @@ spec:
             - name: nfs-media
               mountPath: /mnt/camera_uploads
               subPath: Dropbox/Camera Uploads
+            - name: nfs-media
+              mountPath: /mnt/dropbox_pictures
+              subPath: Dropbox/Pictures
           env:
             - name: TZ
               value: America/Denver
