@@ -28,11 +28,20 @@ spec:
                   value: s3.wasabisys.com
                 - name: RCLONE_CONFIG_WASABI_REGION
                   value: us-east-1
+
+                - name: RCLONE_CONFIG_ENCRYPTED_TYPE
+                  value: crypt
+                - name: RCLONE_CONFIG_ENCRYPTED_REMOTE
+                  value: wasabi:beaver-cloud-rust-backups
+                - name: RCLONE_CONFIG_ENCRYPTED_FILENAME_ENCRYPTION
+                  value: standard
+                - name: RCLONE_CONFIG_ENCRYPTED_DIRECTORY_NAME_ENCRYPTION
+                  value: 'true'
               command:
                 - rclone
                 - sync
                 - /backup
-                - wasabi:beaver-cloud-rust-backups
+                - 'encrypted:'
                 - --fast-list
                 - --s3-chunk-size=64M
                 - --s3-upload-concurrency=4
@@ -63,6 +72,8 @@ spec:
       bwSecretId: d195fd5e-4219-4066-9867-b3b7010e63d5
     - secretKeyName: RCLONE_CONFIG_WASABI_SECRET_ACCESS_KEY
       bwSecretId: 068aec9d-693c-459e-ac6c-b3b7010e750e
+    - secretKeyName: RCLONE_CONFIG_ENCRYPTED_PASSWORD
+      bwSecretId: dbf14621-b507-4cf8-b032-b3b70115dc55
   authToken:
     secretName: bw-auth-token
     secretKey: token
