@@ -31,7 +31,7 @@ spec:
               command:
                 - rclone
                 - sync
-                - /backups
+                - /backup
                 - wasabi:beaver-cloud-rust-backups
                 - --fast-list
                 - --s3-chunk-size=64M
@@ -39,12 +39,12 @@ spec:
                 - -v
               volumeMounts:
                 - name: rust-backups
-                  mountPath: /backups
+                  mountPath: /backup
                   readOnly: true
           volumes:
             - name: rust-backups
               hostPath:
-                path: /var/mnt/rust/backups
+                path: /var/mnt/rust/backup
 
 ---
 apiVersion: k8s.bitwarden.com/v1
