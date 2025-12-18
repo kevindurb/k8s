@@ -16,6 +16,9 @@ spec:
           containers:
             - name: rclone
               image: rclone/rclone:1.66
+              envFrom:
+                secretRef:
+                  name: wasabi-backup-secret
               env:
                 - name: RCLONE_CONFIG_WASABI_TYPE
                   value: s3
@@ -23,16 +26,6 @@ spec:
                   value: wasabi
                 - name: RCLONE_CONFIG_WASABI_ENDPOINT
                   value: s3.wasabisys.com
-                - name: RCLONE_CONFIG_WASABI_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: wasabi-backup-secret
-                      key: access-key
-                - name: RCLONE_CONFIG_WASABI_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: wasabi-backup-secret
-                      key: secret-key
                 - name: RCLONE_CONFIG_WASABI_REGION
                   value: us-east-1
               command:
@@ -52,3 +45,22 @@ spec:
             - name: rust-backups
               hostPath:
                 path: /var/mnt/rust/backups
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: wasabi-backup-secret
+  map:
+    - secretKeyName: RCLONE_CONFIG_WASABI_ACCESS_KEY_ID
+      bwSecretId: d195fd5e-4219-4066-9867-b3b7010e63d5
+    - secretKeyName: RCLONE_CONFIG_WASABI_SECRET_ACCESS_KEY
+      bwSecretId: 068aec9d-693c-459e-ac6c-b3b7010e750e
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

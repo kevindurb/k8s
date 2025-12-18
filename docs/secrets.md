@@ -32,4 +32,8 @@ env:
       secretKeyRef:
         name: { NAME }
         key: { KEY }
+
+envFrom:
+  secretRef:
+    name: { NAME }
 ```
