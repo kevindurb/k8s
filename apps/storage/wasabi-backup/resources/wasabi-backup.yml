@@ -17,8 +17,8 @@ spec:
             - name: rclone
               image: rclone/rclone:1.66@sha256:a693c46a6b8b7585f77ffb439b5727cb192f0b865f3da66efbc049e6ef1c5c4c
               envFrom:
-                secretRef:
-                  name: wasabi-backup-secret
+                - secretRef:
+                    name: wasabi-backup-secret
               env:
                 - name: RCLONE_CONFIG_WASABI_TYPE
                   value: s3
