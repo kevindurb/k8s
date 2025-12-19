@@ -47,6 +47,12 @@ tasks:
       vars:
         CMD: sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer
 
+  disable-sanoid:
+    cmd:
+      task: on:agents
+      vars:
+        CMD: sudo systemctl disable sanoid-prune.service && sudo systemctl disable sanoid.timer
+
   setup-scrub:
     - task: on:agents
       vars:
