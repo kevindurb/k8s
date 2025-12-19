@@ -21,5 +21,5 @@ spec:
     matchLabels:
       schedule/daily: enabled
   retention:
-    expires: 7d
+    expires: 168h
   schedule: '@daily'
