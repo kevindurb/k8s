@@ -50,7 +50,7 @@ spec:
       volumes:
         - name: media
           persistentVolumeClaim:
-            claimName: media-pvc
+            claimName: nfs-media
         - name: config-map
           configMap:
             name: config
@@ -67,34 +67,6 @@ spec:
     - name: http
       port: 80
       targetPort: http
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: media-pvc
-spec:
-  accessModes: [ReadWriteMany]
-  volumeName: media-nfs-pv
-  storageClassName: ''
-  resources:
-    requests:
-      storage: 12Ti
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: media-nfs-pv
-spec:
-  capacity:
-    storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 192.168.42.24
-    path: /
-  mountOptions: [nfsvers=4.2]
 
 ---
 apiVersion: networking.k8s.io/v1

@@ -3,4 +3,3 @@ kind: Kustomization
 
 resources:
   - ./common.yml
-  - ./garage/app.yml
