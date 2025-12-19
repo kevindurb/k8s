@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: snapscheduler
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://backube.github.io/helm-charts/
+      targetRevision: 3.5.0
+      chart: snapscheduler
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/snapscheduler/snapscheduler
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: snapscheduler
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
