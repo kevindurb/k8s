@@ -6,4 +6,3 @@ resources:
   - ./pihole/app.yml
   - ./external-dns/app.yml
   - ./omada/app.yml
-  - ./termix/app.yml
