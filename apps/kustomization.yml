@@ -16,7 +16,6 @@ resources:
   - ./ingress-nginx
   - ./cert-manager
   - ./openebs
-  - ./garage
   - ./external-secrets
   - ./storage
   - ./tailscale
