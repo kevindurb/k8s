@@ -33,3 +33,31 @@ spec:
     - ReadWriteMany
   storageClassName: ''
   volumeName: ai-nfs-media
+
+---
+apiVersion: snapscheduler.backube/v1
+kind: SnapshotSchedule
+metadata:
+  name: hourly
+  namespace: ai
+spec:
+  claimSelector:
+    matchLabels:
+      schedule/hourly: enabled
+  retention:
+    expires: 24h
+  schedule: '@hourly'
+
+---
+apiVersion: snapscheduler.backube/v1
+kind: SnapshotSchedule
+metadata:
+  name: daily
+  namespace: ai
+spec:
+  claimSelector:
+    matchLabels:
+      schedule/daily: enabled
+  retention:
+    expires: 168h
+  schedule: '@daily'
