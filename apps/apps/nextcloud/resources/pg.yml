@@ -70,6 +70,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: db-volume
+  labels:
+    schedule/hourly: enabled
+    schedule/daily: enabled
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: openebs-zfspv
