@@ -20,7 +20,7 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: drone-04
       containers:
-        - image: jlesage/makemkv:v25.12.1@sha256:3e793372fc1122c23b834eb840158e25cccb2739b85fd0bdfb0bd3c87922bf82
+        - image: jlesage/makemkv:v25.12.2@sha256:8f673595c7e30087b61f581ca12689841535489e96d980427de518da7ee78850
           name: makemkv
           env:
             - name: MAKEMKV_KEY
