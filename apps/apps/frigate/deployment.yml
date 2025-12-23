@@ -9,7 +9,7 @@ spec:
       volumes:
         - name: media
           persistentVolumeClaim:
-            claimName: media
+            claimName: nfs-media
         - name: dev-shm
           emptyDir:
             medium: Memory
@@ -27,6 +27,7 @@ spec:
           volumeMounts:
             - name: media
               mountPath: /media
+              subPath: frigate
             - name: dev-shm
               mountPath: /dev/shm
             - name: config
