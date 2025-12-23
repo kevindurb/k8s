@@ -7,7 +7,6 @@ namePrefix: frigate-
 
 resources:
   - ../../../bases/web
-  - pvc.yml
 
 components:
   - ../../../components/https-ingress-backend
