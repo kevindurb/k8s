@@ -22,11 +22,11 @@ record:
     mode: all
   alerts:
     retain:
-      days: 2
+      days: 1
       mode: motion
   detections:
     retain:
-      days: 2
+      days: 1
       mode: motion
 
 model:
@@ -58,8 +58,12 @@ cameras:
       inputs:
         - path: rtsp://thingino:thingino@192.168.50.11/ch0
           roles: [record]
+        - path: rtsp://thingino:thingino@192.168.50.11/ch1
+          roles: [detect]
   wyze-02:
     ffmpeg:
       inputs:
         - path: rtsp://thingino:thingino@192.168.50.12/ch0
           roles: [record]
+        - path: rtsp://thingino:thingino@192.168.50.12/ch1
+          roles: [detect]
