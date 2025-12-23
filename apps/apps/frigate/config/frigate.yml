@@ -53,3 +53,13 @@ cameras:
           roles: [record]
         - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_sub
           roles: [detect]
+  wyze-01:
+    ffmpeg:
+      inputs:
+        - path: rtsp://thingino:thingino@192.168.50.11/ch0
+          roles: [record]
+  wyze-02:
+    ffmpeg:
+      inputs:
+        - path: rtsp://thingino:thingino@192.168.50.12/ch0
+          roles: [record]
