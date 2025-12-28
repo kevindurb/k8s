@@ -23,9 +23,6 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        - name: media
-          persistentVolumeClaim:
-            claimName: nfs-media
         - name: cache
           emptyDir: {}
         - name: tmp
