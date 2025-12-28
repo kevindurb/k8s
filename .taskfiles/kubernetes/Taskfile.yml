@@ -30,14 +30,13 @@ tasks:
       kubeconformArgs: >-
         -summary
         -output pretty
+        -ignore-filename-pattern gatus.yml
+        -ignore-filename-pattern config/*
+        -ignore-filename-pattern .rules.yml
         -ignore-missing-schemas
-        -skip CustomResourceDefinition,Cluster,Password
         -schema-location default
-        -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{`{{ .NormalizedKubernetesVersion }}`}}/{{`{{ .ResourceKind }}`}}{{`{{ .KindSuffix }}`}}.json'
-        -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{`{{.Group}}`}}/{{`{{.ResourceKind}}`}}_{{`{{.ResourceAPIVersion}}`}}.json'
-    cmds:
-      - task: build-all
-      - kubeconform {{ .kubeconformArgs }} ./dist
+        -schema-location './schemas/{{`{{ .Group }}`}}/{{`{{ .ResourceKind }}`}}_{{`{{ .ResourceAPIVersion }}`}}.json'
+    cmd: kubeconform {{ .kubeconformArgs }} ./apps
 
   get-dashboard-token:
     cmd: kubectl get secret dashboard-admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
