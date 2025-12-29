@@ -6,7 +6,6 @@ namePrefix: gatus-
 
 resources:
   - ./resources/gatus.yml
-  - ./resources/pvc.yml
 
 configMapGenerator:
   - name: config

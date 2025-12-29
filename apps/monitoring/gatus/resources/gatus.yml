@@ -38,8 +38,6 @@ spec:
             - name: web
               containerPort: 8080
           volumeMounts:
-            - name: data-volume
-              mountPath: /data
             - name: config
               mountPath: /config
             - name: config-map
@@ -79,9 +77,6 @@ spec:
             - name: tmp
               mountPath: /tmp
       volumes:
-        - name: data-volume
-          persistentVolumeClaim:
-            claimName: data-volume
         - name: config-map
           configMap:
             name: config

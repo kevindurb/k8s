@@ -1,10 +1,6 @@
 ---
 metrics: true
 
-storage:
-  type: sqlite
-  path: /data/data.db
-
 endpoints:
   - name: gatus
     url: http://gatus-service
