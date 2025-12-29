@@ -1,6 +1,6 @@
 ---
 endpoints:
-  - name: n8n
+  - name: grafana
     url: http://grafana-web-service.monitoring
     conditions:
       - '[STATUS] == 200'
