@@ -13,6 +13,7 @@ rule_files:
   - ./kubernetes.rules.yml
   - ./argocd.rules.yml
   - ./nginx-ingress.rules.yml
+  - ./zfs.rules.yml
 
 alerting:
   alertmanagers:
