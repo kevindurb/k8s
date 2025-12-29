@@ -9,7 +9,7 @@ spec:
     type: Recreate
   template:
     spec:
-      serviceAccount: service-account
+      serviceAccountName: service-account
       securityContext:
         runAsUser: 1000
         fsGroup: 2000
@@ -28,7 +28,7 @@ spec:
         - name: prometheus
           image: docker.io/prom/prometheus:v3.8.1@sha256:2b6f734e372c1b4717008f7d0a0152316aedd4d13ae17ef1e3268dbfaf68041b
           args:
-            - --storage.tsdb.retention.size=18GB
+            - --storage.tsdb.retention.size=25GB
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
             - --web.console.libraries=/usr/share/prometheus/console_libraries
