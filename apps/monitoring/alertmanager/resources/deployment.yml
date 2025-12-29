@@ -20,9 +20,6 @@ spec:
         - name: config-volume
           configMap:
             name: config
-        - name: pushover-secret
-          secret:
-            secretName: alertmanager-pushover-credentials
       containers:
         - name: alertmanager
           image: docker.io/prom/alertmanager@sha256:abb750ac7b63116761c16dd481ae92496fbe04721686c0920f0fa4d0728cd4a6
@@ -34,14 +31,12 @@ spec:
           args:
             - --config.file=/etc/alertmanager/alertmanager.yml
             - --storage.path=/alertmanager
-            - --web.external-url=https://alertmanager.durbin.casa
+            - --web.external-url=https://alertmanager.beaver-cloud.xyz
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
             - name: data-volume
               mountPath: /alertmanager
-            - name: pushover-secret
-              mountPath: /run/secrets/pushover
           ports:
             - name: web
               containerPort: 9093

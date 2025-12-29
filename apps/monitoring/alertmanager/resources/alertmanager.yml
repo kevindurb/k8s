@@ -6,12 +6,10 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: pushover
+  receiver: ntfy
 
 receivers:
   - name: 'null'
-  - name: pushover
-    pushover_configs:
-      - user_key_file: /run/secrets/pushover/user_key
-        token_file: /run/secrets/pushover/application_key
-        priority: 0
+  - name: ntfy
+    webhook_configs:
+      - url: http://127.0.0.1:8000/hook
