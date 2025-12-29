@@ -12,6 +12,14 @@ spec:
     - repoURL: https://kubernetes-sigs.github.io/node-feature-discovery/charts
       targetRevision: 0.18.3
       chart: node-feature-discovery
+      helm:
+        valuesObject:
+          worker:
+            config:
+              sources:
+                pci:
+                  deviceLabelFields:
+                    - 'vendor' # gpu-operator expects only vendor
   destination:
     server: https://kubernetes.default.svc
     namespace: node-feature-discovery
