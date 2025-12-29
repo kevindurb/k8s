@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: n8n
+    url: http://grafana-web-service.monitoring
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

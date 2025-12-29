@@ -16,7 +16,7 @@ spec:
             kubernetes.io/hostname: drone-04
           containers:
             - name: rclone
-              image: rclone/rclone:1.66@sha256:a693c46a6b8b7585f77ffb439b5727cb192f0b865f3da66efbc049e6ef1c5c4c
+              image: rclone/rclone:1.72@sha256:0eb18825ac9732c21c11d654007170572bbd495352bb6dbb624f18e4f462c496
               envFrom:
                 - secretRef:
                     name: wasabi-backup-secret
