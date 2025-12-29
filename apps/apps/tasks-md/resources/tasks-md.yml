@@ -28,7 +28,7 @@ spec:
             claimName: tasks-volume
       containers:
         - name: tasks-md
-          image: docker.io/baldissaramatheus/tasks.md:3.2.1@sha256:48c51831a8ba39f8a3b16d85684d588b4af10dfd2e54d8cd61a08b6d7426ee2c
+          image: docker.io/baldissaramatheus/tasks.md:3.2.2@sha256:c2867c42d6b2aaa3debf6f09616e03d587e33be2db5a789e58ce8c5b840b4923
           resources:
             requests:
               memory: 100M
