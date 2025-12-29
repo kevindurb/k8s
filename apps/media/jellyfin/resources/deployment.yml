@@ -21,7 +21,7 @@ spec:
       securityContext:
         fsGroup: 1000
       nodeSelector:
-        kubernetes.io/hostname: drone-04
+        kubernetes.io/hostname: drone-01
         nvidia.com/gpu.present: 'true'
       volumes:
         - name: config
