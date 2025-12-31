@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: cronjob
+  name: rust-backup-cronjob
 spec:
   suspend: true
   schedule: '15 3 * * *'
@@ -29,7 +29,6 @@ spec:
                   value: s3.wasabisys.com
                 - name: RCLONE_CONFIG_WASABI_REGION
                   value: us-east-1
-
                 - name: RCLONE_CONFIG_ENCRYPTED_TYPE
                   value: crypt
                 - name: RCLONE_CONFIG_ENCRYPTED_REMOTE
@@ -59,6 +58,67 @@ spec:
             - name: rust-backups
               hostPath:
                 path: /var/mnt/rust/backup
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: immich-cronjob
+spec:
+  suspend: true
+  schedule: '16 1 * * *'
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: drone-04
+          containers:
+            - name: rclone
+              image: rclone/rclone:1.72@sha256:0eb18825ac9732c21c11d654007170572bbd495352bb6dbb624f18e4f462c496
+              envFrom:
+                - secretRef:
+                    name: wasabi-backup-secret
+              env:
+                - name: RCLONE_CONFIG_WASABI_TYPE
+                  value: s3
+                - name: RCLONE_CONFIG_WASABI_PROVIDER
+                  value: Wasabi
+                - name: RCLONE_CONFIG_WASABI_ENDPOINT
+                  value: s3.wasabisys.com
+                - name: RCLONE_CONFIG_WASABI_REGION
+                  value: us-east-1
+                - name: RCLONE_CONFIG_ENCRYPTED_TYPE
+                  value: crypt
+                - name: RCLONE_CONFIG_ENCRYPTED_REMOTE
+                  value: wasabi:beaver-cloud-immich-backups
+                - name: RCLONE_CONFIG_ENCRYPTED_FILENAME_ENCRYPTION
+                  value: standard
+                - name: RCLONE_CONFIG_ENCRYPTED_DIRECTORY_NAME_ENCRYPTION
+                  value: 'true'
+              command:
+                - rclone
+                - copy
+                - /backup
+                - 'encrypted:'
+                - --fast-list
+                - --s3-chunk-size=64M
+                - --s3-upload-concurrency=4
+                - --bwlimit=2M:off
+                - --copy-links
+                - -v
+              securityContext:
+                privileged: true
+              volumeMounts:
+                - name: immich
+                  mountPath: /backup
+                  readOnly: true
+          volumes:
+            - name: immich
+              hostPath:
+                path: /var/mnt/rust/media/immich
 
 ---
 apiVersion: k8s.bitwarden.com/v1
