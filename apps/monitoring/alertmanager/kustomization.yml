@@ -7,7 +7,6 @@ namePrefix: alertmanager-
 
 resources:
   - ./resources/deployment.yml
-  - ./resources/pushover-secret.yml
   - ./resources/ingress.yml
 
 configMapGenerator:
