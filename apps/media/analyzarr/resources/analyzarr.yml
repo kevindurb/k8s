@@ -28,7 +28,7 @@ spec:
             claimName: nfs-media
       initContainers:
         - name: migrate
-          image: &image ghcr.io/kevindurb/analyzarr:sha-cdbe295
+          image: &image ghcr.io/kevindurb/analyzarr:sha-1bf3ed0
           command: [bunx, prisma, migrate, deploy]
           env:
             - name: DATABASE_URL
@@ -43,11 +43,11 @@ spec:
       containers:
         - name: analyzarr
           image: *image
-          # resources:
-          # requests:
-          #   memory: 100M
-          # limits:
-          #   memory: 4G
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 4G
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
