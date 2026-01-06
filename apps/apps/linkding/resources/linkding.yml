@@ -27,7 +27,7 @@ spec:
           emptyDir: {}
       containers:
         - name: linkding
-          image: ghcr.io/sissbruecker/linkding:1.44.2-plus-alpine@sha256:6d4fcc50bee8ee054ad2dfebbc41217f325398b907aff7ec011996c6a5ec17c9
+          image: ghcr.io/sissbruecker/linkding:1.45.0-plus-alpine@sha256:0f75a89fceff820960cec7a1e5fe46519530e356b0de6b21ca38e8881b9f72e3
           resources:
             requests:
               memory: 100M
