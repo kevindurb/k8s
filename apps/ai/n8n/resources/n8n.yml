@@ -34,7 +34,7 @@ spec:
           emptyDir: {}
       containers:
         - name: n8n
-          image: docker.n8n.io/n8nio/n8n:latest@sha256:85214df20cd7bc020f8e4b0f60f87ea87f0a754ca7ba3d1ccdfc503ccd6e7f9c
+          image: docker.n8n.io/n8nio/n8n:latest@sha256:1ecc41c012acc5a425e43ff4b87193d8c08d00832876df367656eb7e5ee7fc5b
           resources:
             requests:
               memory: 100M
