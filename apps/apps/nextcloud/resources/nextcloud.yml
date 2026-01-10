@@ -29,7 +29,7 @@ spec:
           emptyDir: {}
       containers:
         - name: nextcloud
-          image: docker.io/library/nextcloud:32-apache@sha256:a283ac77493c810ea3153ae5de71feec6f5abe30fc9e110888ae937e3cf28965
+          image: docker.io/library/nextcloud:32-apache@sha256:271a9c9fe81f38e92df5bdfbb518977322de8cbf3d749ff41de213f26bd7cba5
           resources:
             requests:
               memory: 100M
