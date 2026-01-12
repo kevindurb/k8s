@@ -22,7 +22,7 @@ spec:
             name: config
       containers:
         - name: alertmanager
-          image: docker.io/prom/alertmanager@sha256:abb750ac7b63116761c16dd481ae92496fbe04721686c0920f0fa4d0728cd4a6
+          image: docker.io/prom/alertmanager@sha256:286ad8838533a5a01d89bd09643f43d2b68b65203123b5700e54a8f80ff9c1f4
           resources:
             requests:
               memory: 50M
