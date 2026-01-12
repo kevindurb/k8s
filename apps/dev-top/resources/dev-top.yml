@@ -33,7 +33,7 @@ spec:
             sizeLimit: 1G
       containers:
         - name: dev-top
-          image: ghcr.io/linuxserver/webtop:fedora-mate
+          image: ghcr.io/linuxserver/webtop:latest
           resources:
             requests:
               memory: 100M
