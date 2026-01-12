@@ -31,6 +31,8 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 1G
+        - name: run
+          emptyDir: {}
       containers:
         - name: dev-top
           image: ghcr.io/linuxserver/webtop:alpine-kde
@@ -53,6 +55,8 @@ spec:
               mountPath: /config
             - name: dev-shm
               mountPath: /dev/shm
+            - name: run
+              mountPath: /run
           env:
             - name: TZ
               value: America/Denver
