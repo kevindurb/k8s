@@ -31,8 +31,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 1G
-        - name: run
-          emptyDir: {}
       containers:
         - name: dev-top
           image: ghcr.io/linuxserver/webtop:alpine-kde
@@ -42,21 +40,13 @@ spec:
             limits:
               memory: 4G
           securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: home-volume
               mountPath: /config
             - name: dev-shm
               mountPath: /dev/shm
-            - name: run
-              mountPath: /run
           env:
             - name: TZ
               value: America/Denver
