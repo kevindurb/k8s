@@ -1,0 +1,111 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: home-volume
+          persistentVolumeClaim:
+            claimName: home-volume
+        - name: dev-shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1G
+      containers:
+        - name: dev-top
+          image: ghcr.io/linuxserver/webtop:alpine-kde
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 4G
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: home-volume
+              mountPath: /config
+            - name: dev-shm
+              mountPath: /dev/shm
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: PIXELFLUX_WAYLAND
+              value: '1'
+          ports:
+            - name: http
+              containerPort: 3000
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-volume
+  labels:
+    schedule/hourly: enabled
+    schedule/daily: enabled
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: openebs-zfspv
+  resources:
+    requests:
+      storage: 40G
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  ingressClassName: internal
+  tls:
+    - hosts: [&host dev-top.beaver-cloud.xyz]
+      secretName: *host
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: web-service
+                port:
+                  name: http

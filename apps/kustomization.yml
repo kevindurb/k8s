@@ -21,3 +21,4 @@ resources:
   - ./tailscale
   - ./cdi
   - ./snapscheduler
+  - ./dev-top/app.yml

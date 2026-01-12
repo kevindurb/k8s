@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: gatus
+    url: http://gatus.apps
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]
