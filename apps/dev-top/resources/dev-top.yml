@@ -17,6 +17,10 @@ spec:
     metadata:
       labels: *labels
     spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        kubernetes.io/hostname: drone-01
+        nvidia.com/gpu.present: 'true'
       securityContext:
         fsGroup: 1000
       volumes:
