@@ -23,8 +23,6 @@ spec:
         - image: jlesage/makemkv:v26.01.1@sha256:12ce7fc0e398c240bc06b27459241ddae524e066c476525b9b36a16c3e478518
           name: makemkv
           env:
-            - name: MAKEMKV_KEY
-              value: T-PuNYycrTTHW4QEOfhDrMuJMpojNqmY5CGuESAKXzHvwBvBcXhtsJLj4g6OAXd1zfzk
             - name: USER_ID
               value: '1000'
             - name: GROUP_ID
