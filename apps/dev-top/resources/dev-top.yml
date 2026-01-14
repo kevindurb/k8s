@@ -33,7 +33,7 @@ spec:
             sizeLimit: 1G
       containers:
         - name: dev-top
-          image: ghcr.io/linuxserver/webtop:latest
+          image: ghcr.io/linuxserver/webtop:fedora-kde
           resources:
             requests:
               memory: 100M
@@ -53,6 +53,10 @@ spec:
               value: '1000'
             - name: PGID
               value: '1000'
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
           ports:
             - name: http
               containerPort: 3000
