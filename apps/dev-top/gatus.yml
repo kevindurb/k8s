@@ -1,7 +1,7 @@
 ---
 endpoints:
-  - name: gatus
-    url: http://gatus.apps
+  - name: dev-top
+    url: http://dev-top-web-service.apps
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
