@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: handbrake-web
-    url: http://handbrake-web-web-service.apps
+    url: http://handbrake-web-web-service.handbrake-web
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
