@@ -115,7 +115,7 @@ spec:
             - name: TZ
               value: America/Denver
             - name: SERVER_URL
-              value: http://handbrake-web-service
+              value: http://handbrake-web-web-service
             - name: SERVER_PORT
               value: '80'
             - name: WORKER_ID
