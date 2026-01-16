@@ -183,7 +183,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: handbrake-web-nfs-media
+  name: nfs-media
 spec:
   capacity:
     storage: 12Ti
@@ -206,4 +206,4 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: ''
-  volumeName: handbrake-web-nfs-media
+  volumeName: nfs-media
