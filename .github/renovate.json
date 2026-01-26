@@ -3,7 +3,6 @@
   "extends": [
     "config:recommended",
     "docker:pinDigests",
-    ":automergePatch",
     ":disableRateLimiting"
   ],
   "ignoreTests": true,
