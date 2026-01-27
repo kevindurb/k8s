@@ -9,6 +9,7 @@ spec:
     type: Recreate
   template:
     spec:
+      runtimeClassName: nvidia
       volumes:
         - name: volume
           persistentVolumeClaim:
