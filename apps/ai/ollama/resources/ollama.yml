@@ -13,6 +13,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+      nodeSelector:
+        kubernetes.io/hostname: drone-04
+        nvidia.com/gpu.present: 'true'
       containers:
         - name: ollama
           image: docker.io/ollama/ollama:0.14.3@sha256:a7471e7e503643d06767053fa4c825eaa7cafb1586f7256ce29080bcbf57bf5c
@@ -21,35 +24,12 @@ spec:
               memory: 6G
             requests:
               memory: 4G
-          env:
-            - name: OLLAMA_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: ollama-secret
-                  key: OLLAMA_API_KEY
           volumeMounts:
             - name: volume
               mountPath: /root/.ollama
           ports:
             - name: http
               containerPort: 11434
-
----
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
-metadata:
-  name: secret
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
-spec:
-  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: ollama-secret
-  map:
-    - secretKeyName: OLLAMA_API_KEY
-      bwSecretId: 783fbffc-3565-428d-9090-b387011abcc1
-  authToken:
-    secretName: bw-auth-token
-    secretKey: token
 
 ---
 apiVersion: v1
