@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: radarr
+    url: http://radarr-web-service.radarr
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

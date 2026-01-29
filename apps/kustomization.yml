@@ -24,3 +24,5 @@ resources:
   - ./snapscheduler
   - ./dev-top/app.yml
   - ./handbrake-web/app.yml
+  - ./radarr/app.yml
+  - ./sonarr/app.yml
