@@ -46,7 +46,7 @@ spec:
               value: America/Denver
           ports:
             - name: http
-              containerPort: 7878
+              containerPort: 8989
 
 ---
 apiVersion: v1
