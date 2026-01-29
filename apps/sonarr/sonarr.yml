@@ -20,13 +20,9 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
-        - name: home-volume
+        - name: volume
           persistentVolumeClaim:
-            claimName: home-volume
-        - name: dev-shm
-          emptyDir:
-            medium: Memory
-            sizeLimit: 1G
+            claimName: volume
       containers:
         - name: sonarr
           image: ghcr.io/home-operations/sonarr
