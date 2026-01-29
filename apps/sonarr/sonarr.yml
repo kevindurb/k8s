@@ -26,6 +26,8 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: sonarr
           image: ghcr.io/home-operations/sonarr:4.0.16
@@ -46,6 +48,8 @@ spec:
               mountPath: /config
             - name: nfs-media
               mountPath: /media
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
