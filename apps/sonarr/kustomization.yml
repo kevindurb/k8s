@@ -6,7 +6,7 @@ namespace: apps
 namePrefix: sonarr-
 
 resources:
-  - ./resources/sonarr.yml
+  - ./sonarr.yml
 
 configMapGenerator:
   - name: gatus

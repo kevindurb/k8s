@@ -6,7 +6,7 @@ namespace: apps
 namePrefix: radarr-
 
 resources:
-  - ./resources/radarr.yml
+  - ./radarr.yml
 
 configMapGenerator:
   - name: gatus
