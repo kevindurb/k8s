@@ -20,6 +20,9 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
+        - name: nfs-media
+          persistentVolumeClaim:
+            claimName: nfs-media
         - name: volume
           persistentVolumeClaim:
             claimName: volume
@@ -41,6 +44,8 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /config
+            - name: nfs-media
+              mountPath: /media
           env:
             - name: TZ
               value: America/Denver
@@ -96,3 +101,32 @@ spec:
                 name: web-service
                 port:
                   name: http
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-media
+spec:
+  capacity:
+    storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.42.24
+    path: /
+  mountOptions: [nfsvers=4.2]
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-media
+spec:
+  resources:
+    requests:
+      storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ''
+  volumeName: nfs-media
