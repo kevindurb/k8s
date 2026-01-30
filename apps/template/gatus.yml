@@ -1,7 +1,7 @@
 ---
 endpoints:
-  - name: whoami
-    url: http://whoami-web-service.apps
+  - name: template
+    url: http://template-web-service.apps
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
