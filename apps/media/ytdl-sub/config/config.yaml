@@ -12,14 +12,12 @@ presets:
       only_recent_date_range: 2month
       only_recent_max_files: 30
       episode_title: '{title}'
-      enable_throttle_protection: false
   TV Show Collection:
     preset:
       - Jellyfin TV Show Collection
     overrides:
       tv_show_directory: /media/YouTube
       episode_title: '{title}'
-      enable_throttle_protection: false
   Music:
     preset:
       - YouTube Releases
