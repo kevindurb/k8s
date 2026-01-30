@@ -28,7 +28,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: ytdl-sub
-              image: ghcr.io/jmbannon/ytdl-sub:2026.01.23
+              image: ghcr.io/jmbannon/ytdl-sub:2026.01.27
               command:
                 - ytdl-sub
                 - --config
