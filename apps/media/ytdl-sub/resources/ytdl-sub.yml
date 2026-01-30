@@ -12,6 +12,7 @@ spec:
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 3600
       template:
         spec:
           volumes:
@@ -25,7 +26,7 @@ spec:
             - name: config
               configMap:
                 name: config
-          restartPolicy: OnFailure
+          restartPolicy: Never
           containers:
             - name: ytdl-sub
               image: ghcr.io/jmbannon/ytdl-sub:2026.01.23
