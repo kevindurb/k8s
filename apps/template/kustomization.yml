@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: apps
+namePrefix: template-
+
+resources:
+  - ./template.yml
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - template.yml=gatus.yml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: template

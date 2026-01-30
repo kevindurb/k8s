@@ -26,3 +26,4 @@ resources:
   - ./handbrake-web/app.yml
   - ./radarr/app.yml
   - ./sonarr/app.yml
+  - ./template/app.yml
