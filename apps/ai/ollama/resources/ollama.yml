@@ -19,7 +19,7 @@ spec:
         nvidia.com/gpu.present: 'true'
       containers:
         - name: ollama
-          image: docker.io/ollama/ollama:0.14.3@sha256:a7471e7e503643d06767053fa4c825eaa7cafb1586f7256ce29080bcbf57bf5c
+          image: docker.io/ollama/ollama:0.15.3@sha256:3970c9b21fc1286d2958dd33f9a4774d70a9b63d596c61ad0ed5b5dd28291dbe
           resources:
             limits:
               memory: 6G
