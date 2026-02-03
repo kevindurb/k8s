@@ -5,7 +5,5 @@ resources:
   - common.yml
   - ./makemkv/app.yml
   - ./ytdl-sub/app.yml
-  - ./importarr/app.yml
-  - ./analyzarr/app.yml
   - ./jellyfin/app.yml
   - ./qbittorrent/app.yml
