@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: sonarr
-    url: http://sonarr-web-service.sonarr
+    url: http://sonarr-web-service.apps
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
