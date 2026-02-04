@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: paperless-ngx
+    url: http://paperless-ngx-web-service.paperless-ngx
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

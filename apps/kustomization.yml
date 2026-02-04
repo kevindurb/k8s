@@ -27,3 +27,4 @@ resources:
   - ./radarr/app.yml
   - ./sonarr/app.yml
   - ./template/app.yml
+  - ./paperless-ngx/app.yml
