@@ -28,6 +28,8 @@ spec:
             claimName: volume
         - name: tmp
           emptyDir: {}
+        - name: run
+          emptyDir: {}
       containers:
         - name: paperless-ngx
           image: ghcr.io/paperless-ngx/paperless-ngx:latest
@@ -57,6 +59,8 @@ spec:
               subPath: paperless/consume
             - name: tmp
               mountPath: /tmp
+            - name: run
+              mountPath: /run
           env:
             - name: TZ
               value: America/Denver
