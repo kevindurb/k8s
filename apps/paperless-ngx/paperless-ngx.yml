@@ -59,6 +59,8 @@ spec:
               value: '1000'
             - name: PAPERLESS_REDIS
               value: redis://paperless-ngx-valkey-service.paperless-ngx:6379
+            - name: PAPERLESS_URL
+              value: https://paperless.beaver-cloud.xyz
           ports:
             - name: http
               containerPort: 8000
