@@ -7,6 +7,7 @@ namePrefix: paperless-ngx-
 
 resources:
   - ./paperless-ngx.yml
+  - ./valkey.yml
 
 configMapGenerator:
   - name: gatus

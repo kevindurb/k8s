@@ -57,6 +57,8 @@ spec:
               value: '1000'
             - name: USERMAP_GID
               value: '1000'
+            - name: PAPERLESS_REDIS
+              value: redis://paperless-ngx-valkey-service.paperless-ngx:6379
           ports:
             - name: http
               containerPort: 8000
