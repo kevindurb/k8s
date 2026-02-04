@@ -26,20 +26,13 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        - name: tmp
-          emptyDir: {}
-        - name: run
-          emptyDir: {}
       containers:
         - name: paperless-ngx
           image: ghcr.io/paperless-ngx/paperless-ngx:latest
           securityContext:
             privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            readOnlyRootFilesystem: true
           resources:
             requests:
               memory: 100M
@@ -57,10 +50,6 @@ spec:
             - name: nfs-media
               mountPath: /usr/src/paperless/consume
               subPath: paperless/consume
-            - name: tmp
-              mountPath: /tmp
-            - name: run
-              mountPath: /run
           env:
             - name: TZ
               value: America/Denver
