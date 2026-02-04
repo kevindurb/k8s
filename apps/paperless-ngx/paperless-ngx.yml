@@ -48,13 +48,13 @@ spec:
               mountPath: /usr/src/paperless/data
             - name: nfs-media
               mountPath: /usr/src/paperless/media
-              subPath: /paperless/media
+              subPath: paperless/media
             - name: nfs-media
               mountPath: /usr/src/paperless/export
-              subPath: /paperless/export
+              subPath: paperless/export
             - name: nfs-media
               mountPath: /usr/src/paperless/consume
-              subPath: /paperless/consume
+              subPath: paperless/consume
             - name: tmp
               mountPath: /tmp
           env:
