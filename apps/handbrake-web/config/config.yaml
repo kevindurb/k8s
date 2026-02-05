@@ -1,6 +1,6 @@
 ---
 config:
-  auto-fix: false
+  version: 2
 paths:
   media-path: /media
   input-path: /media
@@ -8,5 +8,6 @@ paths:
 presets:
   show-default-presets: false
   allow-preset-creator: false
-version:
-  check-interval: 0
+application:
+  update-check-interval: 0
+  queue-startup-behavior: Previous
