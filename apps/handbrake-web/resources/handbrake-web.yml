@@ -53,7 +53,7 @@ spec:
             - name: tmp
               mountPath: /tmp
             - name: nfs-media
-              mountPath: /media
+              mountPath: /video
           env:
             - name: TZ
               value: America/Denver
@@ -110,7 +110,7 @@ spec:
             - name: data
               mountPath: /data
             - name: nfs-media
-              mountPath: /media
+              mountPath: /video
           env:
             - name: TZ
               value: America/Denver
