@@ -97,6 +97,8 @@ spec:
           emptyDir: {}
         - name: data
           emptyDir: {}
+        - name: video
+          emptyDir: {}
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -124,6 +126,8 @@ spec:
               mountPath: /data
             - name: nfs-media
               mountPath: /media
+            - name: video
+              mountPath: /video
           env:
             - name: TZ
               value: America/Denver
