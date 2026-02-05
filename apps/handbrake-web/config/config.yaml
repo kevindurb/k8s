@@ -1,0 +1,12 @@
+---
+config:
+  auto-fix: false
+paths:
+  media-path: /media
+  input-path: /media
+  output-path: /media/transcoded
+presets:
+  show-default-presets: false
+  allow-preset-creator: false
+version:
+  check-interval: 0

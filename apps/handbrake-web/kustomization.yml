@@ -9,6 +9,10 @@ resources:
   - ./resources/handbrake-web.yml
 
 configMapGenerator:
+  - name: config
+    files:
+      - ./config/config.yaml
+      - ./config/presets/super_hq_h265_mkv.json
   - name: gatus
     options:
       labels:

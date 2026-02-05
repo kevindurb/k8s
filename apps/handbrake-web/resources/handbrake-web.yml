@@ -27,6 +27,9 @@ spec:
             name: config-map
         - name: tmp
           emptyDir: {}
+        - name: config
+          configMap:
+            name: config
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -53,7 +56,13 @@ spec:
             - name: tmp
               mountPath: /tmp
             - name: nfs-media
-              mountPath: /video
+              mountPath: /media
+            - name: config
+              mountPath: /data/config.yaml
+              subPath: config.yaml
+            - name: config
+              mountPath: /data/presets/super_hq_h265_mkv.json
+              subPath: super_hq_h265_mkv.json
           env:
             - name: TZ
               value: America/Denver
@@ -110,7 +119,7 @@ spec:
             - name: data
               mountPath: /data
             - name: nfs-media
-              mountPath: /video
+              mountPath: /media
           env:
             - name: TZ
               value: America/Denver
