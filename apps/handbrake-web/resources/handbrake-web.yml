@@ -27,6 +27,8 @@ spec:
             name: config-map
         - name: tmp
           emptyDir: {}
+        - name: video
+          emptyDir: {}
         - name: config
           configMap:
             name: config
@@ -56,6 +58,8 @@ spec:
             - name: tmp
               mountPath: /tmp
             - name: nfs-media
+              mountPath: /media
+            - name: video
               mountPath: /video
             - name: config
               mountPath: /data/config.yaml
@@ -119,7 +123,7 @@ spec:
             - name: data
               mountPath: /data
             - name: nfs-media
-              mountPath: /video
+              mountPath: /media
           env:
             - name: TZ
               value: America/Denver
