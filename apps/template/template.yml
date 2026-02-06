@@ -84,6 +84,7 @@ spec:
   csi:
     driver: zfs.csi.openebs.io
     fsType: zfs
+    volumeHandle: template-volume
 
 ---
 apiVersion: v1
