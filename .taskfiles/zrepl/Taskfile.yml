@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: '3'
+
+vars:
+  SOURCE_CONF: |
+    jobs:
+      - name: pvc-source
+        type: source
+        filesystems: {
+          "tank/storage<": true
+        }
+        serve:
+          type: stdinserver
+  TARGET_CONF: |
+    jobs:
+      - name: pvc-pull
+        type: pull
+        root_fs: rust/backup
+        interval: 10m
+        connect:
+          type: ssh+stdinserver
+
+tasks:
+  setup-nodes: ''
