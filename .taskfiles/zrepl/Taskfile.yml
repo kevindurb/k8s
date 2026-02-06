@@ -14,12 +14,14 @@ vars:
           type: stdinserver
   TARGET_CONF: |
     jobs:
-      - name: pvc-pull
+      - name: pvc-drone-01
         type: pull
         root_fs: rust/backup
         interval: 10m
         connect:
           type: ssh+stdinserver
+          host: drone-01.beaver-cloud.ts.net
+          user: kevindurb
 
 tasks:
   setup-nodes: ''
