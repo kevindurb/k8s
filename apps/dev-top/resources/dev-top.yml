@@ -33,7 +33,7 @@ spec:
             sizeLimit: 1G
       containers:
         - name: dev-top
-          image: ghcr.io/linuxserver/webtop:fedora-kde@sha256:4e30f547b60045cfb6b8565aa860ef8ad726f5b0fd30c8aded0f2741d4d8a076
+          image: ghcr.io/linuxserver/webtop:fedora-kde@sha256:340385b30b362fab054b5f9797c01453b2c713d0f216fa00a9d143db561f1628
           resources:
             requests:
               memory: 100M
