@@ -81,6 +81,9 @@ spec:
     storage: 10G
   storageClassName: openebs-zfspv
   persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: zfs.csi.openebs.io
+    fsType: zfs
 
 ---
 apiVersion: v1
