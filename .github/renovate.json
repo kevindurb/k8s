@@ -3,6 +3,10 @@
   "extends": [
     "config:recommended",
     "docker:pinDigests",
+    ":automergeDigest",
+    ":automergeLinters",
+    ":automergePatch",
+    ":automergeMinor",
     ":disableRateLimiting"
   ],
   "ignoreTests": true,
