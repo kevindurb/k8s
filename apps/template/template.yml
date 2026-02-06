@@ -63,30 +63,24 @@ kind: PersistentVolumeClaim
 metadata:
   name: volume
 spec:
-  volumeName: template-volume
+  volumeName: volume
   accessModes: [ReadWriteOnce]
   storageClassName: openebs-zfspv
   resources:
     requests:
       storage: 10G
 
-# ---
-# apiVersion: v1
-# kind: PersistentVolume
-# metadata:
-#   name: volume
-# spec:
-#   accessModes: [ReadWriteOnce]
-#   capacity:
-#     storage: 10G
-#   claimRef:
-#     apiVersion: v1
-#     kind: PersistentVolumeClaim
-#     namespace: ai
-#     name: volume
-#   storageClassName: openebs-zfspv
-#   persistentVolumeReclaimPolicy: Retain
-#   volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: volume
+spec:
+  accessModes: [ReadWriteOnce]
+  capacity:
+    storage: 10G
+  storageClassName: openebs-zfspv
+  persistentVolumeReclaimPolicy: Retain
 
 ---
 apiVersion: v1
