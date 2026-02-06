@@ -6,11 +6,11 @@ tasks:
   on:node:
     requires:
       vars: [NODE, CMD]
-    cmd: ssh core@{{.NODE}} '{{.CMD}}'
+    cmd: ssh core@{{.NODE}} {{.CMD | q}}
 
   on:*:
     requires:
       vars: [CMD]
     vars:
       HOSTS_FILE: '{{index .MATCH 0}}'
-    cmd: pssh -i -h '../../hosts/{{.HOSTS_FILE}}' '{{.CMD}}'
+    cmd: pssh -i -h '../../hosts/{{.HOSTS_FILE}}' {{.CMD | q}}
