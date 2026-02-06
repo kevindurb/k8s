@@ -94,6 +94,22 @@ vars:
           type: local
           listener_name: localsink
           client_identity: drone-04
+      - name: media-snapshots
+        type: snap
+        pruning:
+          keep:
+            - type: grid
+              grid: 1x1h(keep=all) | 24x1h | 35x1d | 6x30d
+              regex: "^zrepl_.*"
+            - type: regex
+              regex: "^manual_.*"
+        snapshotting:
+          type: periodic
+          prefix: zrepl_
+          interval: 1h
+        filesystems: {
+          "rust/media": true
+        }
 
 tasks:
   setup-nodes:
