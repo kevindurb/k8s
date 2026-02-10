@@ -4,3 +4,8 @@
     src: templates/{{ k3s_role }}.yaml.j2
     dest: '{{ k3s_config_path }}'
     mode: '0644'
+
+- name: Ensure correct k3s service is running
+  ansible.builtin.systemd_service:
+    name: '{{ (k3s_role == "agent") | ternary("k3s-agent.service", "k3s.service") }}'
+    state: started
