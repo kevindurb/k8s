@@ -1,0 +1,4 @@
+---
+k3s_role: agent
+k3s_hostname: drone-01
+k3s_server: 192.168.42.1

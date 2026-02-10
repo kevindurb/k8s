@@ -1,0 +1,6 @@
+---
+- name: Update k3s config
+  ansible.builtin.template:
+    src: templates/{{ k3s_role }}.yaml.j2
+    dest: '{{ k3s_config_path }}'
+    mode: '0644'

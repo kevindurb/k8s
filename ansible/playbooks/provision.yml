@@ -1,6 +1,6 @@
 ---
 # vim: set ft=yaml.ansible
-- name: Base Provision
+- name: Base provision
   hosts: all
   strategy: free
   become: true
@@ -14,3 +14,9 @@
         user: core
         state: present
         key: https://github.com/kevindurb.keys
+
+- name: Setup k3s
+  hosts: all
+  become: true
+  vars_files: [../vars/k3s-token.yml]
+  roles: [roles/k3s]

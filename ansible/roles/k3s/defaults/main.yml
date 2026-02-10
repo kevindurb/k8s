@@ -1,0 +1,7 @@
+---
+k3s_role: 'server' # init|server|agent
+k3s_hostname: ''
+k3s_token: ''
+k3s_server: ''
+k3s_config_dir: '/etc/rancher/k3s'
+k3s_config_path: '{{ k3s_config_dir }}/config.yaml'

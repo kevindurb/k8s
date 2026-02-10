@@ -6,11 +6,6 @@ manager_join_token
 cert.crt
 cert.key
 .env
-bootc/gateway-files/config/pangolin.env
-.terraform
-*.tfvars
-*.tfstate
-*.tfstate.backup
 secrets.yaml
 *.secret
 dist/*
