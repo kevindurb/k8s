@@ -1,37 +1,41 @@
 ---
 servers:
-  unimatrix-01:
-    ansible_host: unimatrix-01
-    static_ip: 192.168.42.11
-    static_iface: enp1s0f0
-  unimatrix-02:
-    ansible_host: unimatrix-02
-    static_ip: 192.168.42.12
-    static_iface: enp1s0f0
-  unimatrix-03:
-    ansible_host: unimatrix-03
-    static_ip: 192.168.42.13
-    static_iface: enp1s0f0
+  hosts:
+    unimatrix-01:
+      ansible_host: unimatrix-01
+      static_ip: 192.168.42.11
+      static_iface: enp1s0f0
+    unimatrix-02:
+      ansible_host: unimatrix-02
+      static_ip: 192.168.42.12
+      static_iface: enp1s0f0
+    unimatrix-03:
+      ansible_host: unimatrix-03
+      static_ip: 192.168.42.13
+      static_iface: enp1s0f0
 
 agents:
-  drone-01:
-    ansible_host: drone-01
-    static_ip: 192.168.42.21
-    static_iface: enp0s25
-  drone-02:
-    ansible_host: drone-02
-    static_ip: 192.168.42.22
-    static_iface: enp0s25
-  drone-03:
-    ansible_host: drone-03
-    static_ip: 192.168.42.23
-    static_iface: enp0s25
-  drone-04:
-    ansible_host: drone-04
-    static_ip: 192.168.42.24
-    static_iface: enp5s0
+  hosts:
+    drone-01:
+      ansible_host: drone-01
+      static_ip: 192.168.42.21
+      static_iface: enp0s25
+    drone-02:
+      ansible_host: drone-02
+      static_ip: 192.168.42.22
+      static_iface: enp0s25
+    drone-03:
+      ansible_host: drone-03
+      static_ip: 192.168.42.23
+      static_iface: enp0s25
+    drone-04:
+      ansible_host: drone-04
+      static_ip: 192.168.42.24
+      static_iface: enp5s0
 
 all:
+  vars:
+    ansible_ssh_common_args: '-o "SetEnv TERM=dumb" -o ControlMaster=auto -o ControlPersist=60s'
   children:
     servers:
     agents:

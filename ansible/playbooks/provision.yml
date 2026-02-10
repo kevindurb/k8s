@@ -1,0 +1,16 @@
+---
+# vim: set ft=yaml.ansible
+- name: Base Provision
+  hosts: all
+  strategy: free
+  become: true
+  tasks:
+    - name: Set timezone to UTC
+      community.general.timezone:
+        name: UTC
+
+    - name: Set ssh keys from github
+      ansible.posix.authorized_key:
+        user: core
+        state: present
+        key: https://github.com/kevindurb.keys
