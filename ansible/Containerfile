@@ -1,1 +1,14 @@
 FROM quay.io/fedora/fedora-minimal
+
+RUN dnf install -y \
+  ansible \
+  && dnf clean all
+
+RUN mkdir /ansible
+
+COPY ./playbooks /ansible/playbooks
+COPY ./inventory /ansible/inventory
+COPY ./roles /ansible/roles
+COPY ./ansible.cfg /ansible/ansible.cfg
+
+ENTRYPOINT [ "/usr/bin/ansible-playbook" ]
