@@ -17,3 +17,4 @@ dist/*
 !dist/.gitkeep
 .task
 kubeconfig
+*.key
