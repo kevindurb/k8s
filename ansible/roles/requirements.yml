@@ -1,0 +1,12 @@
+---
+roles:
+  - src: geerlingguy.github-users
+  - src: geerlingguy.ntp
+  - src: geerlingguy.security
+  - src: geerlingguy.ansible
+  - src: geerlingguy.pip
+  - src: MichaelRigart.interfaces
+
+collections:
+  - community.general
+  - ansible.posix
