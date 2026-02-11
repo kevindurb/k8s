@@ -51,9 +51,6 @@ includes:
     taskfile: .taskfiles/zrepl
   nodes:
     taskfile: .taskfiles/nodes
-  tailscale:
-    aliases: [ts]
-    taskfile: .taskfiles/tailscale
 
 tasks:
   default: task --list-all

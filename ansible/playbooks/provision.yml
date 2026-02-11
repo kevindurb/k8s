@@ -70,4 +70,5 @@
   tags: tailscale
   hosts: all
   become: true
+  vars_files: [../vars/tailscale-auth-token.yml]
   roles: [roles/tailscale]

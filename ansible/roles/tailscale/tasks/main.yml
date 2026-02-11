@@ -22,3 +22,11 @@
 - name: Tailscale version and online status
   ansible.builtin.debug:
     msg: 'Ver: {{ tailscale_version }} Online: {{ tailscale_is_online }}'
+
+- name: Up tailscale
+  command: tailscale up --advertise-exit-node --ssh
+  when: '{{ tailscale_is_online }}'
+
+- name: Up tailscale
+  command: tailscale up --advertise-exit-node --ssh --auth-key="{{tailscale_auth_key}}"
+  when: '{{ tailscale_is_online == false }}'
