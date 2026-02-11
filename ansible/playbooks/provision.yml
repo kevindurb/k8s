@@ -27,16 +27,7 @@
   tags: zfs
   hosts: agents
   become: true
-  tasks:
-    - name: Create tank zpool
-      community.general.zpool:
-        name: tank
-        vdevs: [{ disks: [/dev/nvme0n1] }]
-
-    - name: Create storage dataset
-      community.general.zfs:
-        name: tank/storage
-        state: present
+  roles: [roles/pvc-zfs]
 
 - name: Setup drone-04 as NAS
   tags: zfs

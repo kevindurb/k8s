@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Create tank zpool
+  community.general.zpool:
+    name: tank
+    vdevs: [{ disks: [/dev/nvme0n1] }]
+
+- name: Create storage dataset
+  community.general.zfs:
+    name: tank/storage
+    state: present
