@@ -14,54 +14,6 @@ tasks:
   zpool-status-all: pssh -i -h ./hosts/agents 'zpool status'
   zfs-list-all: pssh -i -h ./hosts/agents 'zfs list'
 
-  backup-tank-storage:
-    - task: on:node
-      vars:
-        NODE: drone-04
-        CMD: syncoid --recursive --skip-parent --no-privilege-elevation drone-01:tank/storage rust/backup
-    - task: on:node
-      vars:
-        NODE: drone-04
-        CMD: syncoid --recursive --skip-parent --no-privilege-elevation drone-02:tank/storage rust/backup
-    - task: on:node
-      vars:
-        NODE: drone-04
-        CMD: syncoid --recursive --skip-parent --no-privilege-elevation drone-03:tank/storage rust/backup
-    - task: on:node
-      vars:
-        NODE: drone-04
-        CMD: syncoid --recursive --skip-parent --no-privilege-elevation tank/storage rust/backup
-
-  setup-backup-permissions:
-    - task: on:agents
-      vars:
-        CMD: sudo zfs allow -u core send,hold,mount,snapshot,destroy tank
-    - task: on:node
-      vars:
-        NODE: drone-04
-        CMD: sudo zfs allow -u core compression,mountpoint,create,mount,receive,rollback,destroy rust/backup
-
-  enable-sanoid:
-    cmd:
-      task: on:agents
-      vars:
-        CMD: sudo systemctl enable sanoid-prune.service && sudo systemctl enable --now sanoid.timer
-
-  disable-sanoid:
-    cmd:
-      task: on:agents
-      vars:
-        CMD: sudo systemctl disable sanoid-prune.service && sudo systemctl disable sanoid.timer
-
-  setup-scrub:
-    - task: on:agents
-      vars:
-        CMD: sudo systemctl enable --now zfs-scrub-weekly@tank.timer
-    - task: on:node
-      vars:
-        NODE: drone-04
-        CMD: sudo systemctl enable --now zfs-scrub-monthly@rust.timer
-
   wipefs:
     prompt: About to WIPE /dev/nvme0n1 on {{.HOST}}! Are you sure you want to continue?
     cmd:
@@ -69,18 +21,3 @@ tasks:
       vars:
         NODE: '{{.HOST}}'
         CMD: sudo wipefs -a /dev/nvme0n1
-
-  zpool-create: ssh core@{{.HOST}} 'sudo zpool create tank -m /var/mnt/tank /dev/nvme0n1'
-  zfs-create: ssh core@{{.HOST}} 'sudo zfs create -o compression=lz4 tank/storage'
-
-  build-all:
-    cmds:
-      - for: { var: agents }
-        task: wipefs
-        vars: { HOST: '{{.ITEM.hostname}}' }
-      - for: { var: agents }
-        task: zpool-create
-        vars: { HOST: '{{.ITEM.hostname}}' }
-      - for: { var: agents }
-        task: zfs-create
-        vars: { HOST: '{{.ITEM.hostname}}' }

@@ -70,37 +70,3 @@ tasks:
         task: build-iso
         vars:
           hostname: '{{.ITEM.hostname}}'
-
-  upgrade-host:
-    requires:
-      vars: [hostname]
-    cmd: |
-      echo "Upgrading {{.hostname}}..."
-      ssh core@{{.hostname}} 'sudo rpm-ostree upgrade && sudo systemctl reboot' || true
-
-  upgrade-all-agents:
-    deps:
-      - for: { var: agents }
-        task: upgrade-host
-        vars:
-          hostname: '{{.ITEM.ip}}'
-
-  upgrade-all-servers:
-    deps:
-      - for: { var: servers }
-        task: upgrade-host
-        vars:
-          hostname: '{{.ITEM.ip}}'
-
-  upgrade-all-hosts:
-    deps:
-      - task: upgrade-all-servers
-      - task: upgrade-all-agents
-
-  shutdown:
-    desc: Shutdown all bootc hosts
-    cmd: pssh -i -h ./hosts/all 'sudo systemctl poweroff'
-
-  reboot:
-    desc: Reboot all bootc hosts
-    cmd: pssh -i -h ./hosts/all 'sudo systemctl reboot'

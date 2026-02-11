@@ -3,6 +3,7 @@
 - name: Create rust zpool
   community.general.zpool:
     name: rust
+    mountpoint: /var/mnt/rust
     vdevs:
       - type: mirror
         disks: [/dev/sdb, /dev/sdc]
@@ -29,5 +30,11 @@
 - name: Start NFS
   ansible.builtin.systemd_service:
     name: nfs-server
+    state: started
+    enabled: true
+
+- name: Setup monthly scrub
+  ansible.builtin.systemd_service:
+    name: zfs-scrub-monthly@rust.timer
     state: started
     enabled: true

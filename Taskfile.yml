@@ -39,13 +39,9 @@ includes:
     taskfile: .taskfiles/bootc
   cloudflare:
     taskfile: .taskfiles/cloudflare
-  k3s:
-    taskfile: .taskfiles/k3s
   kubernetes:
     taskfile: .taskfiles/kubernetes
     aliases: [k, k8s]
-  restic:
-    taskfile: .taskfiles/restic
   bitwarden:
     aliases: [bws]
     taskfile: .taskfiles/bitwarden
@@ -61,5 +57,5 @@ includes:
 
 tasks:
   default: task --list-all
-
   lint: npx prettier -w .
+  get-kubeconfig: ssh core@192.168.42.1 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig

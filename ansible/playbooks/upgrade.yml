@@ -1,0 +1,27 @@
+---
+# vim: set ft=yaml.ansible
+- name: Upgrade agents
+  hosts: agents
+  tags: agents
+  serial: 1
+  become: true
+  tasks:
+    - name: Upgrate to latest
+      community.general.bootc_manage:
+        state: latest
+
+    - name: Reboot
+      ansible.builtin.reboot:
+
+- name: Upgrade servers
+  hosts: servers
+  tags: servers
+  serial: 1
+  become: true
+  tasks:
+    - name: Upgrate to latest
+      community.general.bootc_manage:
+        state: latest
+
+    - name: Reboot
+      ansible.builtin.reboot:
