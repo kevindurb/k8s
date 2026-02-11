@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT-0
 ---
 k3s_role: 'server' # init|server|agent
 k3s_hostname: ''

@@ -1,3 +1,7 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
-# handlers file for k3s
+- name: Restart k3s
+  ansible.builtin.systemd_service:
+    name: '{{ (k3s_role == "agent") | ternary("k3s-agent.service", "k3s.service") }}'
+    daemon_reload: true
+    state: restarted
