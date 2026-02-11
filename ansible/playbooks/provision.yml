@@ -1,6 +1,7 @@
 ---
 # vim: set ft=yaml.ansible
 - name: Base provision
+  tags: base
   hosts: all
   strategy: free
   become: true
@@ -16,7 +17,47 @@
         key: https://github.com/kevindurb.keys
 
 - name: Setup k3s
+  tags: k3s
   hosts: all
   become: true
   vars_files: [../vars/k3s-token.yml]
   roles: [roles/k3s]
+
+- name: Setup zfs pvc storage
+  tags: zfs
+  hosts: agents
+  become: true
+  tasks:
+    - name: Create tank zpool
+      community.general.zpool:
+        name: tank
+        vdevs: [{ disks: [/dev/nvme0n1] }]
+
+    - name: Create storage dataset
+      community.general.zfs:
+        name: tank/storage
+        state: present
+
+- name: Setup zfs rust storage
+  tags: zfs
+  hosts: drone-04
+  become: true
+  tasks:
+    - name: Create rust zpool
+      community.general.zpool:
+        name: rust
+        vdevs:
+          - type: mirror
+            disks: [/dev/sdb, /dev/sdc]
+
+    - name: Create datasets
+      with_items:
+        - rust/media
+        - rust/backup
+        - rust/backup/drone-01
+        - rust/backup/drone-02
+        - rust/backup/drone-03
+        - rust/backup/drone-04
+      community.general.zfs:
+        name: '{{ item }}'
+        state: present
