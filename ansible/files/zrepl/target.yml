@@ -11,19 +11,19 @@ jobs:
       keep_sender:
         - type: not_replicated
         - type: regex
-          regex: '^manual_.*'
+          regex: ^manual_.*
         - type: grid
           grid: 1x1h(keep=all) | 24x1h | 14x1d
-          regex: '^zrepl_.*'
-      keep_receiver:
+          regex: ^zrepl_.*
+      keep_receiver: &keep_receiver
         - type: grid
           grid: 1x1h(keep=all) | 24x1h | 35x1d | 6x30d
-          regex: '^zrepl_.*'
+          regex: ^zrepl_.*
         - type: regex
-          regex: '^manual_.*'
+          regex: ^manual_.*
     connect:
       type: tcp
-      address: '192.168.42.21:8889'
+      address: 192.168.42.21:8889
   - name: pvc-drone-02
     type: pull
     root_fs: rust/backup/drone-02
@@ -32,7 +32,7 @@ jobs:
     pruning: *pruning
     connect:
       type: tcp
-      address: '192.168.42.22:8889'
+      address: 192.168.42.22:8889
   - name: pvc-drone-03
     type: pull
     root_fs: rust/backup/drone-03
@@ -41,7 +41,7 @@ jobs:
     pruning: *pruning
     connect:
       type: tcp
-      address: '192.168.42.23:8889'
+      address: 192.168.42.23:8889
   - name: pvc-drone-04
     type: sink
     root_fs: rust/backup/drone-04
@@ -51,7 +51,7 @@ jobs:
       listener_name: localsink
   - name: pvc-source
     type: push
-    filesystems: { 'tank/storage<': true }
+    filesystems: { tank/storage<: true }
     pruning: *pruning
     snapshotting:
       type: periodic
@@ -64,14 +64,9 @@ jobs:
   - name: media-snapshots
     type: snap
     pruning:
-      keep:
-        - type: grid
-          grid: 1x1h(keep=all) | 24x1h | 35x1d | 6x30d
-          regex: '^zrepl_.*'
-        - type: regex
-          regex: '^manual_.*'
+      keep: *keep_receiver
     snapshotting:
       type: periodic
       prefix: zrepl_
       interval: 1h
-    filesystems: { 'rust/media': true }
+    filesystems: { rust/media: true }

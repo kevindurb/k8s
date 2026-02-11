@@ -2,13 +2,13 @@
 jobs:
   - name: pvc-source
     type: source
-    filesystems: { 'tank/storage<': true }
+    filesystems: { tank/storage<: true }
     snapshotting:
       type: periodic
       prefix: zrepl_
       interval: 10m
     serve:
       type: tcp
-      listen: ':8889'
+      listen: :8889
       listen_freebind: true
-      clients: { '192.168.42.0/24': 'cluster-*' }
+      clients: { 192.168.42.0/24: cluster-* }
