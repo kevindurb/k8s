@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Create rust zpool
+  community.general.zpool:
+    name: rust
+    vdevs:
+      - type: mirror
+        disks: [/dev/sdb, /dev/sdc]
+
+- name: Create backup datasets
+  with_items:
+    - rust/backup
+    - rust/backup/drone-01
+    - rust/backup/drone-02
+    - rust/backup/drone-03
+    - rust/backup/drone-04
+  community.general.zfs:
+    name: '{{ item }}'
+    state: present
+
+- name: Create media dataset
+  community.general.zfs:
+    name: rust/media
+    state: present
+    extra_zfs_properties:
+      sharenfs: fsid=0,rw,sync,no_subtree_check,nohide,insecure,no_root_squash
+  notify: [Restart NFS]
+
+- name: Start NFS
+  ansible.builtin.systemd_service:
+    name: nfs-server
+    state: started
+    enabled: true

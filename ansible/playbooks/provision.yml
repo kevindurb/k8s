@@ -38,26 +38,8 @@
         name: tank/storage
         state: present
 
-- name: Setup zfs rust storage
+- name: Setup drone-04 as NAS
   tags: zfs
   hosts: drone-04
   become: true
-  tasks:
-    - name: Create rust zpool
-      community.general.zpool:
-        name: rust
-        vdevs:
-          - type: mirror
-            disks: [/dev/sdb, /dev/sdc]
-
-    - name: Create datasets
-      with_items:
-        - rust/media
-        - rust/backup
-        - rust/backup/drone-01
-        - rust/backup/drone-02
-        - rust/backup/drone-03
-        - rust/backup/drone-04
-      community.general.zfs:
-        name: '{{ item }}'
-        state: present
+  roles: [roles/nas-zfs]
