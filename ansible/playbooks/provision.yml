@@ -16,6 +16,37 @@
         state: present
         key: https://github.com/kevindurb.keys
 
+    - name: Set rpm_ostreed update policy
+      ansible.builtin.copy:
+        content: |
+          [Daemon]
+          AutomaticUpdatePolicy=stage
+        dest: /etc/rpm-ostreed.conf
+
+    - name: Enable rpm ostreed automatic
+      ansible.builtin.service:
+        name: rpm-ostreed-automatic.timer
+        state: started
+        enabled: true
+
+    - name: Disable zincati
+      ansible.builtin.service:
+        name: zincati
+        state: stopped
+        enabled: false
+
+    - name: Disable firewall
+      ansible.builtin.service:
+        name: firewalld
+        state: stopped
+        enabled: false
+
+    - name: Enable cockpit
+      ansible.builtin.service:
+        name: cockpit
+        state: started
+        enabled: true
+
 - name: Setup k3s
   tags: k3s
   hosts: all
@@ -34,3 +65,9 @@
   hosts: drone-04
   become: true
   roles: [roles/nas-zfs]
+
+- name: Setup tailscale
+  tags: tailscale
+  hosts: all
+  become: true
+  roles: [roles/tailscale]
