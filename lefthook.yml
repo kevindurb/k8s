@@ -5,3 +5,6 @@ pre-commit:
     - run: npx prettier --write {staged_files}
       glob: '*.{yaml,yml}'
       stage_fixed: true
+    - run: ansible-lint --fix {staged_files}
+      glob: './ansible/**/*.{yaml,yml}'
+      stage_fixed: true
