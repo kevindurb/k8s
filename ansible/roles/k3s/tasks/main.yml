@@ -1,5 +1,16 @@
 # SPDX-License-Identifier: MIT-0
 ---
+- name: Read k3s token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_token_encoded
+  delegate_to: core@192.168.42.1
+  when: k3s_role != 'init'
+
+- name: Decode k3s token
+  ansible.builtin.set_fact: k3s_token="{{ k3s_token_encoded.content | b64decode | trim }}"
+  when: k3s_role != 'init'
+
 - name: Update k3s config
   ansible.builtin.template:
     src: templates/{{ k3s_role }}.yaml.j2

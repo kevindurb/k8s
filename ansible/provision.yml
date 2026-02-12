@@ -51,27 +51,25 @@
   tags: k3s
   hosts: all
   become: true
-  vars_files: [vars/k3s-token.yml]
-  roles: [k3s]
+  roles: [roles/k3s]
 
 - name: Setup zfs pvc storage
   tags: zfs
   hosts: agents
   become: true
-  roles: [pvc-zfs]
+  roles: [roles/pvc-zfs]
 
 - name: Setup drone-04 as NAS
   tags: zfs
   hosts: drone-04
   become: true
-  roles: [nas-zfs]
+  roles: [roles/nas-zfs]
 
 - name: Setup tailscale
   tags: tailscale
   hosts: all
   become: true
-  vars_files: [vars/tailscale-auth-token.yml]
-  roles: [tailscale]
+  roles: [roles/tailscale]
 
 - name: Setup zrepl sources
   tags: zfs,zrepl

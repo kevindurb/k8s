@@ -6,27 +6,5 @@
     state: started
     enabled: true
 
-- name: Fetch tailscale status
-  ansible.builtin.command: tailscale status --json
-  check_mode: false
-  changed_when: false
-  register: tailscale_status
-
-- name: Parse status JSON
-  vars:
-    tailscale_status_parsed: '{{ tailscale_status.stdout | from_json }}'
-  ansible.builtin.set_fact:
-    tailscale_is_online: '{{ tailscale_status_parsed.Self.Online }}'
-    tailscale_version: '{{ tailscale_status_parsed.Version }}'
-
-- name: Tailscale version and online status
-  ansible.builtin.debug:
-    msg: 'Ver: {{ tailscale_version }} Online: {{ tailscale_is_online }}'
-
 - name: Up tailscale
-  command: tailscale up --advertise-exit-node --ssh
-  when: '{{ tailscale_is_online }}'
-
-- name: Up tailscale
-  command: tailscale up --advertise-exit-node --ssh --auth-key="{{tailscale_auth_key}}"
-  when: '{{ tailscale_is_online == false }}'
+  ansible.builtin.command: tailscale up --advertise-exit-node --ssh
