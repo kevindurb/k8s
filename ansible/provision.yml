@@ -51,7 +51,7 @@
   tags: k3s
   hosts: all
   become: true
-  vars_files: [../vars/k3s-token.yml]
+  vars_files: [vars/k3s-token.yml]
   roles: [roles/k3s]
 
 - name: Setup zfs pvc storage
@@ -70,7 +70,7 @@
   tags: tailscale
   hosts: all
   become: true
-  vars_files: [../vars/tailscale-auth-token.yml]
+  vars_files: [vars/tailscale-auth-token.yml]
   roles: [roles/tailscale]
 
 - name: Setup zrepl sources
@@ -80,7 +80,7 @@
   tasks:
     - name: Create zrepl config
       ansible.builtin.copy:
-        src: ../files/zrepl/source.yml
+        src: files/zrepl/source.yml
         dest: /etc/zrepl/zrepl.yml
 
     - name: Enable zrepl service
@@ -96,7 +96,7 @@
   tasks:
     - name: Create zrepl config
       ansible.builtin.copy:
-        src: ../files/zrepl/target.yml
+        src: files/zrepl/target.yml
         dest: /etc/zrepl/zrepl.yml
 
     - name: Enable zrepl service
