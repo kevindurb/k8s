@@ -6,7 +6,7 @@ RUN dnf install -y \
 
 RUN mkdir /ansible
 
-COPY ./playbooks /ansible/playbooks
+COPY ./*.yml /ansible/
 COPY ./inventory /ansible/inventory
 COPY ./roles /ansible/roles
 COPY ./ansible.cfg /ansible/ansible.cfg
