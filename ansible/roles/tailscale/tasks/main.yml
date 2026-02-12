@@ -8,3 +8,4 @@
 
 - name: Up tailscale
   ansible.builtin.command: tailscale up --advertise-exit-node --ssh
+  changed_when: false

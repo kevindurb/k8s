@@ -3,7 +3,6 @@
 - name: Base provision
   tags: base
   hosts: all
-  strategy: free
   become: true
   tasks:
     - name: Set timezone to UTC
@@ -22,6 +21,7 @@
           [Daemon]
           AutomaticUpdatePolicy=stage
         dest: /etc/rpm-ostreed.conf
+        mode: '644'
 
     - name: Enable rpm ostreed automatic
       ansible.builtin.service:
@@ -51,25 +51,25 @@
   tags: k3s
   hosts: all
   become: true
-  roles: [roles/k3s]
+  roles: [k3s]
 
 - name: Setup zfs pvc storage
   tags: zfs
   hosts: agents
   become: true
-  roles: [roles/pvc-zfs]
+  roles: [pvc_zfs]
 
 - name: Setup drone-04 as NAS
   tags: zfs
   hosts: drone-04
   become: true
-  roles: [roles/nas-zfs]
+  roles: [nas_zfs]
 
 - name: Setup tailscale
   tags: tailscale
   hosts: all
   become: true
-  roles: [roles/tailscale]
+  roles: [tailscale]
 
 - name: Setup zrepl sources
   tags: zfs,zrepl
@@ -80,6 +80,7 @@
       ansible.builtin.copy:
         src: files/zrepl/source.yml
         dest: /etc/zrepl/zrepl.yml
+        mode: '644'
 
     - name: Enable zrepl service
       ansible.builtin.service:
@@ -96,6 +97,7 @@
       ansible.builtin.copy:
         src: files/zrepl/target.yml
         dest: /etc/zrepl/zrepl.yml
+        mode: '644'
 
     - name: Enable zrepl service
       ansible.builtin.service:

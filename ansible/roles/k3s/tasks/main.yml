@@ -8,7 +8,8 @@
   when: k3s_role != 'init'
 
 - name: Decode k3s token
-  ansible.builtin.set_fact: k3s_token="{{ k3s_token_encoded.content | b64decode | trim }}"
+  ansible.builtin.set_fact:
+    k3s_token: '{{ k3s_token_encoded.content | b64decode | trim }}'
   when: k3s_role != 'init'
 
 - name: Update k3s config

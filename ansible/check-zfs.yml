@@ -4,7 +4,6 @@
   hosts: agents
   tags: storage
   become: true
-  strategy: free
   tasks:
     - name: Get zpool facts
       community.general.zpool_facts:
@@ -14,20 +13,19 @@
     - name: Fail if pool not healthy
       loop: '{{ zpool_facts.ansible_facts.ansible_zfs_pools }}'
       ansible.builtin.fail:
-        msg: zpool `{{item.name}}` unhealthy
+        msg: zpool `{{ item.name }}` unhealthy
       when: item.health != "ONLINE"
 
     - name: Fail if pool not have enough space
       loop: '{{ zpool_facts.ansible_facts.ansible_zfs_pools }}'
       ansible.builtin.fail:
-        msg: zpool `{{item.name}}` @ `{{item.capacity}}`
+        msg: zpool `{{ item.name }}` @ `{{ item.capacity }}`
       when: item.capacity > "90%"
 
 - name: Check zfs dataset health
   hosts: agents
   tags: storage
   become: true
-  strategy: free
   tasks:
     - name: Get zfs facts
       community.general.zfs_facts:
@@ -39,5 +37,5 @@
     - name: Fail if dataset not have enough space
       loop: '{{ zfs_facts.ansible_facts.ansible_zfs_datasets }}'
       ansible.builtin.fail:
-        msg: dataset `{{item.name}}` @ `{{item.available}}`
+        msg: dataset `{{ item.name }}` @ `{{ item.available }}`
       when: (item.available | human_to_bytes) < ("100M" | human_to_bytes)
