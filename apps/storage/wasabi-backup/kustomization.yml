@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: storage
 namePrefix: wasabi-backup-
 
-resources:
-  - ./resources/wasabi-backup.yml
+resources: []
+  # - ./resources/wasabi-backup.yml
 
 labels:
   - includeSelectors: true
