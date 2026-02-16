@@ -1,8 +1,0 @@
----
-endpoints:
-  - name: dev-top
-    enabled: false
-    url: http://dev-top-web-service.apps
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
