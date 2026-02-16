@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: searxng
-    url: http://searxng-web-service.ai
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

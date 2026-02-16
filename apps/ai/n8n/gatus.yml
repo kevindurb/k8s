@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: n8n
-    url: http://n8n-web-service.ai
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

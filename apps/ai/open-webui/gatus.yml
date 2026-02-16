@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: open-webui
-    url: http://open-webui-web-service.ai
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
