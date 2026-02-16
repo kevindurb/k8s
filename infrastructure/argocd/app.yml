@@ -17,6 +17,7 @@ spec:
     namespace: argocd
   syncPolicy:
     syncOptions:
+      - CreateNamespace=true
       - ServerSideApply=true
     automated:
       prune: true
