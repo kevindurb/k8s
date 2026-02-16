@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: audiobookshelf
-    url: http://audiobookshelf-web-service.apps
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

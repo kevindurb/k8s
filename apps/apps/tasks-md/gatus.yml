@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: tasks-md
-    url: http://tasks-md-web-service.apps
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
