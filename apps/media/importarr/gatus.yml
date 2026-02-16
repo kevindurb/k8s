@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: importarr
-    url: http://importarr-web-service.media
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

@@ -1,8 +1,0 @@
----
-endpoints:
-  - name: qbittorrent
-    enabled: false
-    url: http://qbittorrent-web-service.media
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

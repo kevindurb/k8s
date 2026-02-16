@@ -6,4 +6,3 @@ resources:
   - ./makemkv/app.yml
   - ./ytdl-sub/app.yml
   - ./jellyfin/app.yml
-  - ./qbittorrent/app.yml
