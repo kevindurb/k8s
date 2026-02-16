@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
-    path: apps/argocd/argocd
+    path: infrastructure/argocd
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
