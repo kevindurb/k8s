@@ -53,12 +53,6 @@
   become: true
   roles: [k3s]
 
-- name: Setup zfs pvc storage
-  tags: zfs
-  hosts: agents
-  become: true
-  roles: [pvc_zfs]
-
 - name: Setup drone-04 as NAS
   tags: zfs
   hosts: drone-04
