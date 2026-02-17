@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - grafana/app.yml
   - argocd/app.yml
+  - openebs/app.yml
