@@ -64,37 +64,3 @@
   hosts: all
   become: true
   roles: [tailscale]
-
-- name: Setup zrepl sources
-  tags: zfs,zrepl
-  hosts: [drone-01, drone-02, drone-03]
-  become: true
-  tasks:
-    - name: Create zrepl config
-      ansible.builtin.copy:
-        src: files/zrepl/source.yml
-        dest: /etc/zrepl/zrepl.yml
-        mode: '644'
-
-    - name: Enable zrepl service
-      ansible.builtin.service:
-        name: zrepl
-        state: stopped
-        enabled: false
-
-- name: Setup zrepl target
-  tags: zfs,zrepl
-  hosts: drone-04
-  become: true
-  tasks:
-    - name: Create zrepl config
-      ansible.builtin.copy:
-        src: files/zrepl/target.yml
-        dest: /etc/zrepl/zrepl.yml
-        mode: '644'
-
-    - name: Enable zrepl service
-      ansible.builtin.service:
-        name: zrepl
-        state: stopped
-        enabled: false
