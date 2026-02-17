@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: deployment
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   template:
@@ -49,7 +49,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: openebs-zfspv
+  storageClassName: openebs-single-replica
   resources:
     requests:
       storage: 2Gi
