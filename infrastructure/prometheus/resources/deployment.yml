@@ -58,10 +58,10 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: openebs-zfspv
+  storageClassName: openebs-single-replica
   resources:
     requests:
-      storage: 40Gi
+      storage: 30Gi
 
 ---
 apiVersion: v1
