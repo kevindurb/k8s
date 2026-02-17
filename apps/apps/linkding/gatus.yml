@@ -1,8 +1,0 @@
----
-endpoints:
-  - name: linkding
-    url: http://linkding-web-service.apps
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
-

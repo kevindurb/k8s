@@ -2,19 +2,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grafana
+  name: kube-vip
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/kevindurb/k8s.git
-    targetRevision: HEAD
-    path: infrastructure/grafana
+  sources:
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: infrastructure/kube-vip
   destination:
     server: https://kubernetes.default.svc
-    namespace: grafana
+    namespace: kube-vip
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

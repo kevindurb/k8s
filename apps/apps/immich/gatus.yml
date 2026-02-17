@@ -1,8 +1,0 @@
----
-endpoints:
-  - name: immich
-    enabled: false
-    url: http://immich-web-service.apps
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

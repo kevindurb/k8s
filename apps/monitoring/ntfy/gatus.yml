@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: ntfy
-    url: http://ntfy-web-service.monitoring/v1/health
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

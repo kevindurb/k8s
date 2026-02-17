@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: pihole
+    url: http://pihole-web-service.pihole/admin/login
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

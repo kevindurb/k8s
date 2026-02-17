@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grafana
+  name: alertmanager
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -11,10 +11,10 @@ spec:
   source:
     repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
-    path: infrastructure/grafana
+    path: infrastructure/alertmanager
   destination:
     server: https://kubernetes.default.svc
-    namespace: grafana
+    namespace: alertmanager
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: prometheus
+    url: http://prometheus-service.prometheus/-/healthy
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

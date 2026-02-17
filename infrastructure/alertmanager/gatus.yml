@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: alertmanager
+    url: http://alertmanager-service.alertmanager/-/healthy
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

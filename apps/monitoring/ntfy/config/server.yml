@@ -1,5 +1,0 @@
----
-base-url: https://ntfy.beaver-cloud.xyz
-upstream-base-url: https://ntfy.sh
-log-level: debug
-behind-proxy: true

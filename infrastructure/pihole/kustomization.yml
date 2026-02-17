@@ -1,11 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: grafana
-namePrefix: grafana-
+namespace: pihole
+namePrefix: pihole-
 
 resources:
-  - ./resources/grafana.yml
+  - ./resources/pihole.yml
 
 configMapGenerator:
   - name: gatus
@@ -13,10 +13,10 @@ configMapGenerator:
       labels:
         gatus.io/enabled: 'true'
     files:
-      - grafana.yml=gatus.yml
+      - pihole.yml=gatus.yml
 
 labels:
   - includeSelectors: true
     includeTemplates: true
     pairs:
-      app.kubernetes.io/name: n8n
+      app.kubernetes.io/name: pihole

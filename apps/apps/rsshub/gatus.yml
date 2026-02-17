@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: rsshub
-    url: http://rsshub-web-service.apps/healthz
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
