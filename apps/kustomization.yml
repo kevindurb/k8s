@@ -2,10 +2,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-resources:
-  - ./ingress-nginx
-  - ./handbrake-web/app.yml
-  - ./radarr/app.yml
-  - ./sonarr/app.yml
-  - ./template/app.yml
-  - ./paperless-ngx/app.yml
+resources: []
+  # - ./handbrake-web/app.yml
+  # - ./radarr/app.yml
+  # - ./sonarr/app.yml
+  # - ./template/app.yml
+  # - ./paperless-ngx/app.yml

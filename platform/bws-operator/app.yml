@@ -20,7 +20,7 @@ spec:
               enabled: true
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
-      path: apps/bitwarden-secrets/sm-operator
+      path: platform/bws-operator
   destination:
     server: https://kubernetes.default.svc
     namespace: bitwarden-secrets
