@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/ucore:stable-nvidia-lts
+FROM ghcr.io/ublue-os/ucore:lts-nvidia-lts
 
 COPY ./files/zrepl.repo /etc/yum.repos.d/
 
