@@ -7,6 +7,7 @@ RUN dnf install -y \
   https://rpm.rancher.io/k3s/latest/common/centos/9/noarch/k3s-selinux-${K3S_SELINUX_VERSION}.el9.noarch.rpm \
   wireguard-tools \
   zrepl \
+  nvme-cli \
   && dnf clean all
 
 # renovate: datasource=github-tags depName=k3s packageName=k3s-io/k3s
