@@ -22,8 +22,8 @@ spec:
             csi:
               node:
                 nvme:
-                  io_timeout: '30'
-                  core_io_timeout: '30'
+                  io_timeout: '30sec'
+                  core_io_timeout: '30sec'
           preUpgradeHook:
             enabled: false
           engines:
