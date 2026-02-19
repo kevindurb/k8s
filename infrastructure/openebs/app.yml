@@ -18,6 +18,12 @@ spec:
       chart: openebs
       helm:
         valuesObject:
+          mayastor:
+            csi:
+              node:
+                extraEnv:
+                  - name: TMPDIR
+                    value: /var/lib/kubelet/plugins/io.openebs.csi-mayastor/tmp
           preUpgradeHook:
             enabled: false
           engines:
