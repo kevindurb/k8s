@@ -21,9 +21,9 @@ spec:
           mayastor:
             csi:
               node:
-                extraEnv:
-                  - name: TMPDIR
-                    value: /var/lib/kubelet/plugins/io.openebs.csi-mayastor/tmp
+                nvme:
+                  io_timeout: '30'
+                  core_io_timeout: '30'
           preUpgradeHook:
             enabled: false
           engines:
