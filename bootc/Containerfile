@@ -1,13 +1,15 @@
 FROM ghcr.io/ublue-os/ucore:lts-nvidia-lts
 
-COPY ./files/zrepl.repo /etc/yum.repos.d/
-
 ARG K3S_SELINUX_VERSION=1.6-1
 RUN dnf install -y \
   https://rpm.rancher.io/k3s/latest/common/centos/9/noarch/k3s-selinux-${K3S_SELINUX_VERSION}.el9.noarch.rpm \
   wireguard-tools \
-  zrepl \
   nvme-cli \
+  e2fsprogs \
+  xfsprogs \
+  sg3_utils \
+  device-mapper-multipath \
+  lsscsi \
   && dnf clean all
 
 # renovate: datasource=github-tags depName=k3s packageName=k3s-io/k3s
@@ -15,13 +17,11 @@ ARG K3S_VERSION=v1.35.0+k3s3
 ADD https://github.com/k3s-io/k3s/releases/download/${K3S_VERSION}/k3s /usr/bin/k3s
 RUN chmod +x /usr/bin/k3s
 
-COPY ./files/modules.conf /etc/modules-load.d/k8s.conf
-COPY ./files/sysctl.conf /etc/sysctl.d/k8s.conf
-COPY ./files/rpm-ostreed.conf /etc/
-COPY ./files/system/* /etc/systemd/system/
+COPY overlay/ /
+
+RUN mkdir -p /var/openebs/local
 
 RUN systemctl disable firewalld \
-  && systemctl enable cockpit \
-  && systemctl enable tailscaled
+  && systemctl enable cockpit tailscaled iscsid
 
 RUN bootc container lint

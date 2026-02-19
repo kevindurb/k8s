@@ -1,5 +1,0 @@
-[zrepl]
-name = zrepl
-baseurl = https://zrepl.cschwarz.com/rpm/repo
-gpgkey = https://zrepl.cschwarz.com/rpm/rpm-key.asc
-repo_gpgcheck = 1
