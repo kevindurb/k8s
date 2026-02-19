@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: grafana
 namePrefix: grafana-
 
-resources:
-  - ./resources/grafana.yml
+resources: []
+  # - ./resources/grafana.yml
 
 configMapGenerator:
   - name: gatus
