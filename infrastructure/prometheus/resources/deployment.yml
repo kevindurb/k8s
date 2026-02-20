@@ -58,7 +58,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: openebs-single-replica
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 30Gi
