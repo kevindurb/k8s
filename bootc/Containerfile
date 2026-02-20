@@ -22,8 +22,6 @@ RUN chmod +x /usr/bin/k3s
 
 COPY overlay/ /
 
-RUN mkdir -p /var/openebs/local
-
 RUN systemctl disable firewalld \
   && systemctl enable cockpit tailscaled iscsid
 
