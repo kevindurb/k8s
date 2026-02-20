@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: home-assistant
-    url: http://home-assistant-web-service.apps
+    url: http://home-assistant-web-service.home-assistant
     conditions:
       - '[STATUS] == 200'
     alerts: [{ type: ntfy }]
