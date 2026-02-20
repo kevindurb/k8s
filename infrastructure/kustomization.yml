@@ -12,7 +12,7 @@ resources:
   - grafana/app.yml
   - healthchecks/app.yml
   - kube-vip/app.yml
-  # - longhorn/app.yml
+  - longhorn/app.yml
   - node-exporter/app.yml
   - node-feature-discovery/app.yml
   - pihole/app.yml
