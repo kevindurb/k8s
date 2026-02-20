@@ -1,8 +1,7 @@
 ---
 # vim: set ft=yaml.ansible
-- name: Upgrade agents
-  hosts: agents
-  tags: agents
+- name: Pull latest on all nodes
+  hosts: all
   become: true
   tasks:
     - name: Upgrade to latest
@@ -10,23 +9,20 @@
         state: latest
       register: bootc
 
-    - name: Reboot
-      throttle: 2
-      ansible.builtin.reboot:
-      when: bootc.changed
-
-- name: Upgrade servers
-  hosts: servers
-  tags: servers
+- name: Reboot agents
+  hosts: agents
   serial: 2
   become: true
   tasks:
-    - name: Upgrade to latest
-      community.general.bootc_manage:
-        state: latest
-      register: bootc
-
     - name: Reboot
-      throttle: 1
+      ansible.builtin.reboot:
+      when: bootc.changed
+
+- name: Reboot servers
+  hosts: servers
+  serial: 2
+  become: true
+  tasks:
+    - name: Reboot
       ansible.builtin.reboot:
       when: bootc.changed
