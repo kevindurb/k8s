@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/ucore:lts-nvidia-lts
+FROM ghcr.io/ublue-os/ucore:stable-nvidia-lts
 
 ARG K3S_SELINUX_VERSION=1.6-1
 RUN dnf install -y \

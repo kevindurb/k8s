@@ -3,7 +3,6 @@
 - name: Upgrade agents
   hosts: agents
   tags: agents
-  serial: 2
   become: true
   tasks:
     - name: Upgrade to latest
@@ -12,6 +11,7 @@
       register: bootc
 
     - name: Reboot
+      throttle: 2
       ansible.builtin.reboot:
       when: bootc.changed
 
@@ -27,5 +27,6 @@
       register: bootc
 
     - name: Reboot
+      throttle: 1
       ansible.builtin.reboot:
       when: bootc.changed
