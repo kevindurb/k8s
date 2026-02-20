@@ -12,6 +12,16 @@ spec:
     - repoURL: https://charts.longhorn.io
       targetRevision: v1.11.0
       chart: longhorn
+      helm:
+        valuesObject:
+          ingress:
+            enabled: true
+            host: &host longhorn.beaver-cloud.xyz
+            ingressClassName: internal
+            annotations:
+              'cert-manager.io/cluster-issuer': cloudflare-issuer
+            tls: true
+            tlsSecret: *host
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/longhorn
