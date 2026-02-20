@@ -72,7 +72,7 @@ metadata:
   name: volume
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: openebs-zfspv
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 10G

@@ -8,7 +8,7 @@ metadata:
     schedule/daily: enabled
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: openebs-zfspv
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 10G

@@ -6,7 +6,7 @@ namespace: alertmanager
 namePrefix: alertmanager-
 
 resources:
-  # - ./resources/deployment.yml
+  - ./resources/deployment.yml
   - ./resources/ingress.yml
 
 configMapGenerator:

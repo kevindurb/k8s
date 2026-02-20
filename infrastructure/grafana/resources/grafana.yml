@@ -68,7 +68,7 @@ metadata:
     schedule/daily: enabled
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: openebs-single-replica
+  storageClassName: longhorn-replicated
   resources:
     requests:
       storage: 1G
