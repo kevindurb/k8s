@@ -6,3 +6,4 @@ resources:
   - ./template/app.yml
   - ./jellyfin/app.yml
   - ./home-assistant/app.yml
+  - ./ytdl-sub/app.yml
