@@ -47,6 +47,23 @@
         state: started
         enabled: true
 
+- name: Setup storage
+  tags: storage
+  hosts: agents
+  become: true
+  tasks:
+    - name: Format nvme
+      community.general.filesystem:
+        fstype: xfs
+        dev: /dev/nvme0n1
+
+    - name: Mount for longhorn
+      ansible.posix.mount:
+        path: /var/lib/longhorn
+        src: /dev/nvme0n1
+        fstype: xfs
+        state: present
+
 - name: Setup k3s
   tags: k3s
   hosts: all
