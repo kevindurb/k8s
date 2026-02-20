@@ -4,7 +4,5 @@ kind: Kustomization
 
 resources:
   - ./template/app.yml
-  # - ./handbrake-web/app.yml
-  # - ./radarr/app.yml
-  # - ./sonarr/app.yml
-  # - ./paperless-ngx/app.yml
+  - ./jellyfin/app.yml
+  - ./home-assistant/app.yml
