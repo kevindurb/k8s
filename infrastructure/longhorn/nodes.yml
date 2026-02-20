@@ -12,9 +12,10 @@ spec:
     nvme:
       allowScheduling: true
       evictionRequested: false
-      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010204187
       storageReserved: 0
-      diskType: block
+      diskDriver: ''
+      path: /var/lib/longhorn
+      diskType: filesystem
       tags: [nvme]
 
 ---
@@ -31,9 +32,10 @@ spec:
     nvme:
       allowScheduling: true
       evictionRequested: false
-      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2411210020400514
       storageReserved: 0
-      diskType: block
+      diskDriver: ''
+      path: /var/lib/longhorn
+      diskType: filesystem
       tags: [nvme]
 
 ---
@@ -50,9 +52,10 @@ spec:
     nvme:
       allowScheduling: true
       evictionRequested: false
-      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010201718
       storageReserved: 0
-      diskType: block
+      diskDriver: ''
+      path: /var/lib/longhorn
+      diskType: filesystem
       tags: [nvme]
 
 ---
@@ -69,7 +72,8 @@ spec:
     nvme:
       allowScheduling: true
       evictionRequested: false
-      path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2503310020407159
       storageReserved: 0
-      diskType: block
+      diskDriver: ''
+      path: /var/lib/longhorn
+      diskType: filesystem
       tags: [nvme]
