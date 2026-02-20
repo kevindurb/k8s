@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: longhorn-system
 
+resources:
+  - ./nodes.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true
