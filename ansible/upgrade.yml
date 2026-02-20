@@ -3,25 +3,29 @@
 - name: Upgrade agents
   hosts: agents
   tags: agents
-  serial: 1
+  serial: 2
   become: true
   tasks:
-    - name: Upgrate to latest
+    - name: Upgrade to latest
       community.general.bootc_manage:
         state: latest
+      register: bootc
 
     - name: Reboot
       ansible.builtin.reboot:
+      when: bootc.changed
 
 - name: Upgrade servers
   hosts: servers
   tags: servers
-  serial: 1
+  serial: 2
   become: true
   tasks:
-    - name: Upgrate to latest
+    - name: Upgrade to latest
       community.general.bootc_manage:
         state: latest
+      register: bootc
 
     - name: Reboot
       ansible.builtin.reboot:
+      when: bootc.changed
