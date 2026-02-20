@@ -7,8 +7,7 @@ metadata:
 spec:
   allowScheduling: true
   evictionRequested: false
-  tags:
-    - storage
+  tags: [storage]
   disks:
     nvme:
       allowScheduling: true
@@ -16,8 +15,7 @@ spec:
       path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010204187
       storageReserved: 0
       diskType: block
-      tags:
-        - nvme
+      tags: [nvme]
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -28,8 +26,7 @@ metadata:
 spec:
   allowScheduling: true
   evictionRequested: false
-  tags:
-    - storage
+  tags: [storage]
   disks:
     nvme:
       allowScheduling: true
@@ -37,8 +34,7 @@ spec:
       path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2411210020400514
       storageReserved: 0
       diskType: block
-      tags:
-        - nvme
+      tags: [nvme]
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -49,8 +45,7 @@ metadata:
 spec:
   allowScheduling: true
   evictionRequested: false
-  tags:
-    - storage
+  tags: [storage]
   disks:
     nvme:
       allowScheduling: true
@@ -58,8 +53,7 @@ spec:
       path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2408290010201718
       storageReserved: 0
       diskType: block
-      tags:
-        - nvme
+      tags: [nvme]
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -70,8 +64,7 @@ metadata:
 spec:
   allowScheduling: true
   evictionRequested: false
-  tags:
-    - storage
+  tags: [storage]
   disks:
     nvme:
       allowScheduling: true
@@ -79,5 +72,4 @@ spec:
       path: /dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2503310020407159
       storageReserved: 0
       diskType: block
-      tags:
-        - nvme
+      tags: [nvme]

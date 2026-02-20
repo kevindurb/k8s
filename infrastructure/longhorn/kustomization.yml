@@ -6,6 +6,7 @@ namespace: longhorn-system
 
 resources:
   - ./nodes.yml
+  - ./storage-class.yml
 
 labels:
   - includeSelectors: true
