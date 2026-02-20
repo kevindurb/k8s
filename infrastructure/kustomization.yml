@@ -14,6 +14,5 @@ resources:
   - kube-vip/app.yml
   - node-exporter/app.yml
   - node-feature-discovery/app.yml
-  - openebs/app.yml
   - pihole/app.yml
   - prometheus/app.yml
