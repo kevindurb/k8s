@@ -10,7 +10,7 @@ RUN dnf install -y \
   sg3_utils \
   device-mapper-multipath \
   lsscsi \
-  nfs-utils \
+  nfs-utils-coreos \
   device-mapper \
   cryptsetup \
   && dnf clean all

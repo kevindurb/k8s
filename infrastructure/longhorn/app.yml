@@ -14,9 +14,12 @@ spec:
       chart: longhorn
       helm:
         valuesObject:
+          defaultSettings:
+            createDefaultDiskLabeledNodes: true
+            upgradeChecker: false
           persistence:
             defaultClass: false
-            dataEngine: v2
+            dataEngine: v1
           ingress:
             enabled: true
             host: &host longhorn.beaver-cloud.xyz
