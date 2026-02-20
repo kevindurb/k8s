@@ -15,9 +15,10 @@ spec:
       helm:
         valuesObject:
           defaultSettings:
+            createDefaultDiskLabeledNodes: true
             upgradeChecker: false
           persistence:
-            defaultClass: true
+            defaultClass: false
             dataEngine: v1
           ingress:
             enabled: true
