@@ -16,6 +16,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: ytdl-sub
   syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
     automated:
       prune: true
       selfHeal: true
