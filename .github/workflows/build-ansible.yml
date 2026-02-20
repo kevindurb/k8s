@@ -6,8 +6,8 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '**/README.md'
+    paths:
+      - ansible/**
   workflow_dispatch:
   workflow_call:
 
