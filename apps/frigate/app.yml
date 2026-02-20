@@ -11,11 +11,13 @@ spec:
   sources:
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
-      path: apps/apps/frigate
+      path: apps/frigate
   destination:
     server: https://kubernetes.default.svc
-    namespace: apps
+    namespace: frigate
   syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
     automated:
       prune: true
       selfHeal: true

@@ -11,10 +11,10 @@ spec:
   sources:
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
-      path: apps/networking/omada
+      path: apps/omada
   destination:
     server: https://kubernetes.default.svc
-    namespace: networking
+    namespace: omada
   syncPolicy:
     automated:
       prune: true

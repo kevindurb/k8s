@@ -9,11 +9,11 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/kevindurb/k8s.git'
-    path: apps/media/jellyfin
+    path: apps/jellyfin
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: media
+    namespace: jellyfin
   syncPolicy:
     automated:
       prune: true

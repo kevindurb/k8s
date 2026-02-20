@@ -11,10 +11,10 @@ spec:
   source:
     repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
-    path: apps/media/makemkv
+    path: apps/makemkv
   destination:
     server: https://kubernetes.default.svc
-    namespace: media
+    namespace: makemkv
   syncPolicy:
     automated:
       prune: true

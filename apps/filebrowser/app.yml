@@ -11,11 +11,13 @@ spec:
   source:
     repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
-    path: apps/apps/filebrowser
+    path: apps/filebrowser
   destination:
     server: https://kubernetes.default.svc
-    namespace: apps
+    namespace: filebrowser
   syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
     automated:
       prune: true
       selfHeal: true

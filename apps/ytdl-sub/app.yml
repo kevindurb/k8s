@@ -11,10 +11,10 @@ spec:
   source:
     repoURL: https://github.com/kevindurb/k8s.git
     targetRevision: HEAD
-    path: apps/media/ytdl-sub
+    path: apps/ytdl-sub
   destination:
     server: https://kubernetes.default.svc
-    namespace: media
+    namespace: ytdl-sub
   syncPolicy:
     automated:
       prune: true
