@@ -96,7 +96,7 @@ metadata:
 spec:
   ingressClassName: internal
   tls:
-    - hosts: [&host template.beaver-cloud.xyz]
+    - hosts: [&host frigate.beaver-cloud.xyz]
       secretName: *host
   rules:
     - host: *host
