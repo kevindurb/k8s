@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: frigate
-    url: https://frigate-web-service.apps
+    url: https://frigate-web-service.frigate
     client:
       insecure: true
     conditions:
