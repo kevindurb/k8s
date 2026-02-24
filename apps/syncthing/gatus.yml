@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: syncthing
+    url: http://syncthing-web-service.syncthing
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

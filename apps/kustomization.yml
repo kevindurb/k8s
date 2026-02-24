@@ -6,5 +6,6 @@ resources:
   - ./frigate/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
+  - ./syncthing/app.yml
   - ./template/app.yml
   - ./ytdl-sub/app.yml
