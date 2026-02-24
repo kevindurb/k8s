@@ -16,6 +16,9 @@ spec:
       template:
         spec:
           volumes:
+            - name: nas
+              persistentVolumeClaim:
+                claimName: nas
             - name: tmp
               emptyDir: {}
             - name: config-tmp
@@ -48,6 +51,8 @@ spec:
                 capabilities:
                   drop: [ALL]
               volumeMounts:
+                - name: nas
+                  mountPath: /media
                 - name: tmp
                   mountPath: /tmp
                 - name: config-tmp
