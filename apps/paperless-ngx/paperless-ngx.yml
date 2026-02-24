@@ -38,13 +38,13 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /usr/src/paperless/data
-            - name: nas
+            - name: nas-media
               mountPath: /usr/src/paperless/media
               subPath: paperless/media
-            - name: nas
+            - name: nas-media
               mountPath: /usr/src/paperless/export
               subPath: paperless/export
-            - name: nas
+            - name: nas-media
               mountPath: /usr/src/paperless/consume
               subPath: paperless/consume
           env:

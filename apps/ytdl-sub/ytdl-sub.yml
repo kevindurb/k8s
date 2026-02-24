@@ -16,9 +16,9 @@ spec:
       template:
         spec:
           volumes:
-            - name: nas
+            - name: nas-media
               persistentVolumeClaim:
-                claimName: nas
+                claimName: nas-media
             - name: tmp
               emptyDir: {}
             - name: config-tmp
@@ -42,7 +42,7 @@ spec:
                 limits:
                   memory: 4G
               volumeMounts:
-                - name: nas
+                - name: nas-media
                   mountPath: /media
                 - name: tmp
                   mountPath: /tmp

@@ -6,8 +6,8 @@ namespace: paperless-ngx
 namePrefix: paperless-ngx-
 
 resources:
+  - ../../bases/valkey
   - ./paperless-ngx.yml
-  - ./valkey.yml
 
 components:
   - ../../components/nas-media

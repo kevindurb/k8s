@@ -2,21 +2,22 @@
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
-components:
-  - ../nas
+resources:
+  - ./nas-media.yml
 
 patches:
   - patch: |-
       - op: add
         path: /spec/template/spec/volumes/0
         value:
-          name: nas
+          name: nas-media
           persistentVolumeClaim:
-            claimName: nas
+            claimName: nas-media
       - op: add
         path: /spec/template/spec/containers/0/volumeMounts/0
         value:
-          name: nas
+          name: nas-media
           mountPath: /media
     target:
+      # TODO: setup label for only attaching to desired deployments
       kind: Deployment
