@@ -25,4 +25,4 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: ''
-  volumeName: nas
+  volumeName: nas-media
