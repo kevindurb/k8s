@@ -3,11 +3,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deployment
+  labels: &labels
+    app.kubernetes.io/component: web
 spec:
   replicas: 1
   strategy:
     type: Recreate
+  selector:
+    matchLabels: *labels
   template:
+    metadata:
+      labels: *labels
     spec:
       runtimeClassName: nvidia
       nodeSelector:
