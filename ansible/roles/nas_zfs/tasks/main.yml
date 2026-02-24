@@ -8,20 +8,12 @@
       - type: mirror
         disks: [/dev/sdb, /dev/sdc]
 
-- name: Export rust dataset over NFS
-  community.general.zfs:
-    name: rust
-    state: present
-    extra_zfs_properties:
-      sharenfs: fsid=0,rw,sync,no_subtree_check,crossmnt,all_squash,anonuid=1000,anongid=1000 192.168.0.0/16 100.0.0.0/8
-  notify: [Restart NFS]
-
 - name: Create media dataset
   community.general.zfs:
     name: rust/media
     state: present
     extra_zfs_properties:
-      sharenfs: 'off'
+      sharenfs: fsid=0,rw,sync,no_subtree_check,nohide,insecure,no_root_squash
   notify: [Restart NFS]
 
 - name: Start NFS
