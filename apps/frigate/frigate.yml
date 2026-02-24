@@ -30,6 +30,9 @@ spec:
         - name: config
           configMap:
             name: config
+        - name: config-volume
+          persistentVolumeClaim:
+            claimName: volume
       containers:
         - name: container
           image: ghcr.io/blakeblackshear/frigate:0.16.4-tensorrt@sha256:2dde176109e74921edad06b43429b2c52a1f494d2c64d091dc3ccd38c1961eaf
@@ -54,6 +57,8 @@ spec:
               subPath: frigate
             - name: dev-shm
               mountPath: /dev/shm
+            - name: config-volume
+              mountPath: /config
             - name: config
               mountPath: /config/config.yaml
               subPath: frigate.yml
