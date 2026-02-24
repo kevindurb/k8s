@@ -8,6 +8,9 @@ namePrefix: sonarr-
 resources:
   - ./sonarr.yml
 
+components:
+  - ../../components/nas-media
+
 configMapGenerator:
   - name: gatus
     options:

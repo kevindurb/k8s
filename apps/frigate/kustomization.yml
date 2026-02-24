@@ -9,6 +9,9 @@ resources:
   - ./frigate.yml
   - ./secret.yml
 
+components:
+  - ../../components/nas-frigate
+
 configMapGenerator:
   - files:
       - frigate.yml=gatus.yml

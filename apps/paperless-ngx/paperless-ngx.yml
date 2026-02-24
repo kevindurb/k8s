@@ -20,9 +20,6 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
-        - name: nfs-media
-          persistentVolumeClaim:
-            claimName: nfs-media
         - name: volume
           persistentVolumeClaim:
             claimName: volume
@@ -41,13 +38,13 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /usr/src/paperless/data
-            - name: nfs-media
+            - name: nas
               mountPath: /usr/src/paperless/media
               subPath: paperless/media
-            - name: nfs-media
+            - name: nas
               mountPath: /usr/src/paperless/export
               subPath: paperless/export
-            - name: nfs-media
+            - name: nas
               mountPath: /usr/src/paperless/consume
               subPath: paperless/consume
           env:
@@ -116,32 +113,3 @@ spec:
                 name: web-service
                 port:
                   name: http
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: nfs-media
-spec:
-  capacity:
-    storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 192.168.42.24
-    path: /
-  mountOptions: [nfsvers=4.2]
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nfs-media
-spec:
-  resources:
-    requests:
-      storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  storageClassName: ''
-  volumeName: nfs-media

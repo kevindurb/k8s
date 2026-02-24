@@ -18,5 +18,6 @@ patches:
         value:
           name: nas
           mountPath: /media
+          subPath: frigate
     target:
       kind: Deployment

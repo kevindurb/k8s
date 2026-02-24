@@ -9,6 +9,9 @@ resources:
   - ./paperless-ngx.yml
   - ./valkey.yml
 
+components:
+  - ../../components/nas-media
+
 configMapGenerator:
   - name: gatus
     options:

@@ -8,6 +8,9 @@ namePrefix: handbrake-web-
 resources:
   - ./resources/handbrake-web.yml
 
+components:
+  - ../../components/nas-media
+
 configMapGenerator:
   - name: config
     files:

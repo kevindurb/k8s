@@ -8,6 +8,9 @@ namePrefix: radarr-
 resources:
   - ./radarr.yml
 
+components:
+  - ../../components/nas-media
+
 configMapGenerator:
   - name: gatus
     options:

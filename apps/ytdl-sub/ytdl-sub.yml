@@ -20,9 +20,6 @@ spec:
               emptyDir: {}
             - name: config-tmp
               emptyDir: {}
-            - name: media
-              persistentVolumeClaim:
-                claimName: nfs-media
             - name: config
               configMap:
                 name: config
@@ -53,8 +50,6 @@ spec:
               volumeMounts:
                 - name: tmp
                   mountPath: /tmp
-                - name: media
-                  mountPath: /media
                 - name: config-tmp
                   mountPath: /config
                 - name: config
@@ -68,32 +63,3 @@ spec:
               env:
                 - name: TZ
                   value: America/Denver
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: nfs-media
-spec:
-  capacity:
-    storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 192.168.42.24
-    path: /
-  mountOptions: [nfsvers=4.2]
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nfs-media
-spec:
-  resources:
-    requests:
-      storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  storageClassName: ''
-  volumeName: nfs-media

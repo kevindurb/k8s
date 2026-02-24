@@ -16,9 +16,6 @@ spec:
       labels: *labels
     spec:
       volumes:
-        - name: nfs-media
-          persistentVolumeClaim:
-            claimName: nfs-media
         - name: volume
           persistentVolumeClaim:
             claimName: volume
@@ -57,8 +54,6 @@ spec:
               mountPath: /data
             - name: tmp
               mountPath: /tmp
-            - name: nfs-media
-              mountPath: /media
             - name: video
               mountPath: /video
             - name: config
@@ -90,9 +85,6 @@ spec:
       labels: *labels
     spec:
       volumes:
-        - name: nfs-media
-          persistentVolumeClaim:
-            claimName: nfs-media
         - name: tmp
           emptyDir: {}
         - name: data
@@ -124,8 +116,6 @@ spec:
               mountPath: /tmp
             - name: data
               mountPath: /data
-            - name: nfs-media
-              mountPath: /media
             - name: video
               mountPath: /video
           env:
@@ -191,32 +181,3 @@ spec:
                 name: web-service
                 port:
                   name: http
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: nfs-media
-spec:
-  capacity:
-    storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 192.168.42.24
-    path: /
-  mountOptions: [nfsvers=4.2]
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nfs-media
-spec:
-  resources:
-    requests:
-      storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  storageClassName: ''
-  volumeName: nfs-media

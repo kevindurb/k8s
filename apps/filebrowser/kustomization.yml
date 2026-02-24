@@ -7,6 +7,9 @@ namePrefix: filebrowser-
 resources:
   - ./resources/filebrowser.yml
 
+components:
+  - ../../components/nas-media
+
 configMapGenerator:
   - name: config
     files:

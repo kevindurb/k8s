@@ -42,15 +42,10 @@ spec:
             - name: http
               containerPort: 80
           volumeMounts:
-            - name: media
-              mountPath: /media
             - name: config-map
               mountPath: /home/filebrowser/config.yaml
               subPath: config.yaml
       volumes:
-        - name: media
-          persistentVolumeClaim:
-            claimName: nfs-media
         - name: config-map
           configMap:
             name: config

@@ -8,6 +8,9 @@ namePrefix: template-
 resources:
   - ./template.yml
 
+components:
+  - ../../components/nas-media
+
 configMapGenerator:
   - name: gatus
     options:
