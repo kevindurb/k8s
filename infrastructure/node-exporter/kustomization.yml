@@ -6,7 +6,7 @@ namePrefix: node-exporter-
 namespace: node-exporter
 
 resources:
-  - ./resources/daemon-set.yml
+  - ./node-exporter.yml
 
 commonLabels:
   app.kubernetes.io/name: node-exporter

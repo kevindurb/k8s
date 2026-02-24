@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -37,15 +35,6 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: volume
               mountPath: /var/lib/grafana

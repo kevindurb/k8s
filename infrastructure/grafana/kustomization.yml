@@ -7,6 +7,9 @@ namePrefix: grafana-
 resources:
   - ./resources/grafana.yml
 
+components:
+  - ../../components/pod-hardening
+
 configMapGenerator:
   - name: gatus
     options:

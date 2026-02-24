@@ -6,8 +6,10 @@ namespace: alertmanager
 namePrefix: alertmanager-
 
 resources:
-  - ./resources/deployment.yml
-  - ./resources/ingress.yml
+  - ./alertmanager.yml
+
+components:
+  - ../../components/pod-hardening
 
 configMapGenerator:
   - name: config

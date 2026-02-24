@@ -10,6 +10,9 @@ resources:
   - ./resources/rbac.yml
   - ./resources/ingress.yml
 
+components:
+  - ../../components/pod-hardening
+
 configMapGenerator:
   - name: config
     files:
