@@ -16,8 +16,6 @@ spec:
       labels: *labels
     spec:
       hostNetwork: true
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -27,13 +25,6 @@ spec:
       containers:
         - name: syncthing
           image: docker.io/syncthing/syncthing
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
           resources:
             requests:
               memory: 100M

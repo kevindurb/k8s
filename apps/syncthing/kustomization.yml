@@ -8,6 +8,9 @@ namePrefix: syncthing-
 resources:
   - ./syncthing.yml
 
+components:
+  - ../../components/pod-hardening
+
 configMapGenerator:
   - name: gatus
     options:

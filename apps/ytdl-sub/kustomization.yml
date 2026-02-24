@@ -10,6 +10,7 @@ resources:
 
 components:
   - ../../components/nas-media
+  - ../../components/pod-hardening
 
 configMapGenerator:
   - name: config

@@ -29,11 +29,6 @@ spec:
         - name: config
           configMap:
             name: config
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
       containers:
         - name: handbrake-web-server
           image: ghcr.io/thenickoftime/handbrake-web-server@sha256:6aa18122e08299cf05edf0aa6135d9c97d92839933f5377f8fde59978430e543
@@ -42,13 +37,6 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
           volumeMounts:
             - name: volume
               mountPath: /data
@@ -91,11 +79,6 @@ spec:
           emptyDir: {}
         - name: video
           emptyDir: {}
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
       containers:
         - name: handbrake-web-worker
           image: ghcr.io/thenickoftime/handbrake-web-worker@sha256:4676054730c16fb7081d7c4f7b546272a022010e8adbb893df9d274885dfbc5e
@@ -104,13 +87,6 @@ spec:
               memory: 1G
             limits:
               memory: 8G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
           volumeMounts:
             - name: tmp
               mountPath: /tmp

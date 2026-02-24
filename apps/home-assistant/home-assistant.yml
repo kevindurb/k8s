@@ -18,8 +18,6 @@ spec:
       labels: *labels
     spec:
       hostNetwork: true
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -42,9 +40,6 @@ spec:
               if [ ! -f /config/automations.yaml ]; then
                 echo "# Empty automations file" > /config/automations.yaml
               fi
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
           volumeMounts:
             - name: volume
               mountPath: /config
@@ -57,15 +52,6 @@ spec:
               memory: 100M
             limits:
               memory: 4G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: volume
               mountPath: /config
@@ -83,15 +69,6 @@ spec:
               containerPort: 8123
         - name: matter
           image: ghcr.io/matter-js/python-matter-server:stable@sha256:6827e352011e2d8c2bde771e446fcf72acc49150ef66bad978816bac1762aad3
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: matter-data
               mountPath: /data
@@ -100,6 +77,36 @@ spec:
           env:
             - name: TZ
               value: America/Denver
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume
+  labels:
+    schedule/hourly: enabled
+    schedule/daily: enabled
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 40G
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: matter-data
+  labels:
+    schedule/hourly: enabled
+    schedule/daily: enabled
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1G
 
 ---
 apiVersion: v1

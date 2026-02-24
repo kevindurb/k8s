@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       containers:
         - name: filebrowser
           image: ghcr.io/gtsteffaniak/filebrowser:1.2.3-beta@sha256:9a9d931b154e366970add32786a1108568308f8fe1e69d3ca1e36fcae9a1744b
@@ -27,14 +25,6 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            capabilities:
-              drop: [ALL]
           env:
             - name: TZ
               value: America/Denver

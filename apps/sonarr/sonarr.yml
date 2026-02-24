@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -28,13 +26,6 @@ spec:
       containers:
         - name: sonarr
           image: ghcr.io/home-operations/sonarr:4.0.16@sha256:22651c750eedb091f6d76ade95dbecae0eeafe2b55432c3b8d8b042e8745f344
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
           resources:
             requests:
               memory: 100M

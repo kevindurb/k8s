@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -28,13 +26,6 @@ spec:
       containers:
         - name: template
           image: docker.io/traefik/whoami:v1.11.0@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
           resources:
             requests:
               memory: 100M

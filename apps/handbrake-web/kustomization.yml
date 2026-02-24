@@ -6,10 +6,11 @@ namespace: handbrake-web
 namePrefix: handbrake-web-
 
 resources:
-  - ./resources/handbrake-web.yml
+  - ./handbrake-web.yml
 
 components:
   - ../../components/nas-media
+  - ../../components/pod-hardening
 
 configMapGenerator:
   - name: config
