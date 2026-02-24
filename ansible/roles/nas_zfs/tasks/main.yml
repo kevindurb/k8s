@@ -21,7 +21,7 @@
 
 - name: Create media dataset
   community.general.zfs:
-    name: rust/media
+    name: rust
     state: present
     extra_zfs_properties:
       sharenfs: fsid=0,rw,sync,no_subtree_check,nohide,insecure,no_root_squash
