@@ -9,6 +9,7 @@ resources:
 
 components:
   - ../../components/pod-hardening
+  - ../../components/tmpdirs
 
 labels:
   - includeSelectors: true

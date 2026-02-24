@@ -22,8 +22,6 @@ spec:
         - name: config-map
           configMap:
             name: config-map
-        - name: tmp
-          emptyDir: {}
         - name: video
           emptyDir: {}
         - name: config
@@ -40,8 +38,6 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /data
-            - name: tmp
-              mountPath: /tmp
             - name: video
               mountPath: /video
             - name: config
@@ -73,8 +69,6 @@ spec:
       labels: *labels
     spec:
       volumes:
-        - name: tmp
-          emptyDir: {}
         - name: data
           emptyDir: {}
         - name: video
@@ -88,8 +82,6 @@ spec:
             limits:
               memory: 8G
           volumeMounts:
-            - name: tmp
-              mountPath: /tmp
             - name: data
               mountPath: /data
             - name: video

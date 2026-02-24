@@ -19,8 +19,6 @@ spec:
             - name: nas-media
               persistentVolumeClaim:
                 claimName: nas-media
-            - name: tmp
-              emptyDir: {}
             - name: config-tmp
               emptyDir: {}
             - name: config
@@ -44,8 +42,6 @@ spec:
               volumeMounts:
                 - name: nas-media
                   mountPath: /media
-                - name: tmp
-                  mountPath: /tmp
                 - name: config-tmp
                   mountPath: /config
                 - name: config

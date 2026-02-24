@@ -9,6 +9,7 @@ resources:
 
 components:
   - ../../components/pod-hardening
+  - ../../components/tmpdirs
 
 configMapGenerator:
   - name: gatus

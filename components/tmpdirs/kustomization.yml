@@ -1,0 +1,58 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: tmp
+          emptyDir: {}
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: var-tmp
+          emptyDir: {}
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: var-run
+          emptyDir: {}
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: var-cache
+          emptyDir: {}
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: var-log
+          emptyDir: {}
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: tmp
+          mountPath: /tmp
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: var-tmp
+          mountPath: /var/tmp
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: var-run
+          mountPath: /var/run
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: var-cache
+          mountPath: /var/cache
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: var-log
+          mountPath: /var/log

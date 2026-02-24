@@ -11,6 +11,7 @@ resources:
 components:
   - ../../components/nas-media
   - ../../components/pod-hardening
+  - ../../components/tmpdirs
 
 configMapGenerator:
   - name: config

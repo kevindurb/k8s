@@ -21,12 +21,6 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        - name: cache
-          emptyDir: {}
-        - name: tmp
-          emptyDir: {}
-        - name: npm
-          emptyDir: {}
       containers:
         - name: grafana
           image: docker.io/grafana/grafana
@@ -38,8 +32,6 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /var/lib/grafana
-            - name: tmp
-              mountPath: /tmp
           env:
             - name: TZ
               value: America/Denver
