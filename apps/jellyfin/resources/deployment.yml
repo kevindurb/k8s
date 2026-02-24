@@ -27,9 +27,6 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: config-pvc
-        - name: media
-          persistentVolumeClaim:
-            claimName: nfs-media
       containers:
         - name: jellyfin
           image: jellyfin/jellyfin:latest@sha256:333b647716631443a43c7fabac4b0c46b4e2f036bad19547e00958f10f721b85
@@ -46,40 +43,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-            - name: media
-              mountPath: /media
           env:
             - name: TZ
               value: America/Denver
           ports:
             - name: http
               containerPort: 8096
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: nfs-media
-spec:
-  capacity:
-    storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 192.168.42.24
-    path: /
-  mountOptions: [nfsvers=4.2]
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nfs-media
-spec:
-  resources:
-    requests:
-      storage: 12Ti
-  accessModes:
-    - ReadWriteMany
-  storageClassName: ''
-  volumeName: nfs-media
