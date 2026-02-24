@@ -10,7 +10,7 @@ spec:
     - ReadWriteMany
   nfs:
     server: 192.168.42.24
-    path: /
+    path: /media
   mountOptions: [nfsvers=4.2]
 
 ---
