@@ -17,15 +17,7 @@ configMapGenerator:
       - ./config/prometheus.yml
   - name: rules
     files:
-      # - ./config/rules/argocd.rules.yml
-      - ./config/rules/gatus.rules.yml
-      # - ./config/rules/kubernetes.rules.yml
-      # - ./config/rules/longhorn.rules.yml
-      # - ./config/rules/nginx-ingress.rules.yml
-      # - ./config/rules/node-exporter.rules.yml
-      # - ./config/rules/prometheus.rules.yml
-      # - ./config/rules/smartctl-exporter.rules.yml
-      # - ./config/rules/zfs.rules.yml
+      - ./config/rules/rules.yml
   - name: gatus
     options:
       labels:
