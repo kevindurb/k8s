@@ -20,6 +20,9 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - smtp-relay.yml=gatus.yml
+  - name: config
+    files:
+      - ./maddy.conf
 
 labels:
   - includeSelectors: true
