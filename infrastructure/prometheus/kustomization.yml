@@ -14,16 +14,18 @@ components:
 configMapGenerator:
   - name: config
     files:
-      - prometheus.yml=./config/prometheus.yml
-      - rules/argocd.rules.yml=./config/rules/argocd.rules.yml
-      - rules/gatus.rules.yml=./config/rules/gatus.rules.yml
-      - rules/kubernetes.rules.yml=./config/rules/kubernetes.rules.yml
-      - rules/longhorn.rules.yml=./config/rules/longhorn.rules.yml
-      - rules/nginx-ingress.rules.yml=./config/rules/nginx-ingress.rules.yml
-      - rules/node-exporter.rules.yml=./config/rules/node-exporter.rules.yml
-      - rules/prometheus.rules.yml=./config/rules/prometheus.rules.yml
-      - rules/smartctl-exporter.rules.yml=./config/rules/smartctl-exporter.rules.yml
-      - rules/zfs.rules.yml=./config/rules/zfs.rules.yml
+      - ./config/prometheus.yml
+  - name: rules
+    files:
+      - ./config/rules/argocd.rules.yml
+      - ./config/rules/gatus.rules.yml
+      - ./config/rules/kubernetes.rules.yml
+      - ./config/rules/longhorn.rules.yml
+      - ./config/rules/nginx-ingress.rules.yml
+      - ./config/rules/node-exporter.rules.yml
+      - ./config/rules/prometheus.rules.yml
+      - ./config/rules/smartctl-exporter.rules.yml
+      - ./config/rules/zfs.rules.yml
   - name: gatus
     options:
       labels:
