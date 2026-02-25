@@ -11,6 +11,7 @@ resources:
   - gpu-operator/app.yml
   - grafana/app.yml
   - healthchecks/app.yml
+  - kube-state-metrics/app.yml
   - kube-vip/app.yml
   - longhorn/app.yml
   - node-exporter/app.yml
