@@ -19,7 +19,7 @@ alerting:
   alertmanagers:
     - scheme: http
       static_configs:
-        - targets: [alertmanager-service]
+        - targets: [alertmanager-service.alertmanager]
 
 scrape_configs:
   - job_name: speedtest
