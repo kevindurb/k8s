@@ -4,12 +4,15 @@ groups:
     rules:
       - alert: ArgocdServiceNotSynced
         expr: argocd_app_info{sync_status!="Synced"} != 0
-        for: 15m
+        for: 30m
         labels:
           severity: warning
         annotations:
           summary: ArgoCD service not synced (instance {{ $labels.instance }})
-          description: "Service {{ $labels.name }} run by argo is currently not in sync.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Service {{ $labels.name }} run by argo is currently not in sync.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: ArgocdServiceUnhealthy
         expr: argocd_app_info{health_status!="Healthy"} != 0
@@ -18,7 +21,10 @@ groups:
           severity: warning
         annotations:
           summary: ArgoCD service unhealthy (instance {{ $labels.instance }})
-          description: "Service {{ $labels.name }} run by argo is currently not healthy.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Service {{ $labels.name }} run by argo is currently not healthy.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
   - name: Gatus
     rules:
@@ -29,27 +35,62 @@ groups:
           severity: critical
         annotations:
           summary: Gatus target unsuccessful (name {{ $labels.name }})
-          description: "A gatus target is unsuccessful for at least 2m. A service may have crashed.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            A gatus target is unsuccessful for at least 2m. A service may have crashed.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
   - name: NodeExporter
     rules:
       - alert: HostOutOfMemory
-        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < .10)
-        for: 2m
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < .05)
+        for: 10m
         labels:
           severity: warning
         annotations:
           summary: Host out of memory (instance {{ $labels.instance }})
-          description: "Node memory is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Node memory is filling up (< 5% left)
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: HostHighCpuUsage
+        expr: 100 - (avg without (cpu) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host high CPU usage (instance {{ $labels.instance }})
+          description: |-
+            CPU usage is above 90% for an extended period.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: HostCpuHighIowait
         expr: avg without (cpu) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > .10
-        for: 0m
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Host CPU high iowait (instance {{ $labels.instance }})
-          description: "CPU iowait > 10%. Your CPU is idling waiting for storage to respond.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            CPU iowait > 10%. Your CPU is idling waiting for storage to respond.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: HostDiskSpaceLow
+        expr: >
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}
+          / node_filesystem_size_bytes) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host disk space low (instance {{ $labels.instance }})
+          description: |-
+            Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} <15% space remaining.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: HostPhysicalComponentTooHot
         expr: node_hwmon_temp_celsius > node_hwmon_temp_max_celsius
@@ -58,154 +99,207 @@ groups:
           severity: warning
         annotations:
           summary: Host physical component too hot (instance {{ $labels.instance }})
-          description: "Physical hardware component too hot\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Physical hardware component too hot
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: HostOomKillDetected
         expr: (increase(node_vmstat_oom_kill[30m]) > 0)
-        for: 0m
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Host OOM kill detected (instance {{ $labels.instance }})
-          description: "OOM kill detected\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            OOM kill detected
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
-  - name: longhorn
+  - name: Longhorn
     rules:
-      - alert: LonghornVolumeActualSpaceUsedWarning
+      - alert: LonghornNodeDown
+        expr: longhorn_node_status{condition="ready"} == 0
+        for: 5m
+        labels:
+          severity: critical
         annotations:
-          description:
-            The actual space used by Longhorn volume {{$labels.volume}} on {{$labels.node}} is at {{$value}}% capacity for
-            more than 5 minutes.
-          summary: The actual used space of Longhorn volume is over 90% of the capacity.
+          summary: Longhorn node {{ $labels.node }} is down.
+          description: |-
+            Longhorn node {{ $labels.node }} has been down for more than 5 minutes.
+
+      - alert: LonghornVolumeActualSpaceUsedWarning
         expr: (longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) * 100 > 90
         for: 5m
         labels:
-          issue: The actual used space of Longhorn volume {{$labels.volume}} on {{$labels.node}} is high.
           severity: warning
+        annotations:
+          summary: The actual used space of Longhorn volume is over 90% of the capacity.
+          description: |-
+            The actual space used by Longhorn volume {{ $labels.volume }} on {{ $labels.node }}
+            is at {{ $value }}% capacity for more than 5 minutes.
 
       - alert: LonghornVolumeStatusCritical
-        annotations:
-          description:
-            Longhorn volume {{$labels.volume}} on {{$labels.node}} is Fault for
-            more than 2 minutes.
-          summary: Longhorn volume {{$labels.volume}} is Fault
         expr: longhorn_volume_robustness == 3
         for: 5m
         labels:
-          issue: Longhorn volume {{$labels.volume}} is Fault.
           severity: critical
+        annotations:
+          summary: Longhorn volume {{ $labels.volume }} is Fault
+          description: |-
+            Longhorn volume {{ $labels.volume }} on {{ $labels.node }} is Fault for
+            more than 5 minutes.
 
       - alert: LonghornVolumeStatusWarning
-        annotations:
-          description:
-            Longhorn volume {{$labels.volume}} on {{$labels.node}} is Degraded for
-            more than 5 minutes.
-          summary: Longhorn volume {{$labels.volume}} is Degraded
         expr: longhorn_volume_robustness == 2
         for: 5m
         labels:
-          issue: Longhorn volume {{$labels.volume}} is Degraded.
           severity: warning
+        annotations:
+          summary: Longhorn volume {{ $labels.volume }} is Degraded
+          description: |-
+            Longhorn volume {{ $labels.volume }} on {{ $labels.node }} is Degraded for
+            more than 5 minutes.
 
       - alert: LonghornDiskStorageWarning
-        annotations:
-          description:
-            The used storage of disk {{$labels.disk}} on node {{$labels.node}} is at {{$value}}% capacity for
-            more than 5 minutes.
-          summary: The used storage of disk is over 70% of the capacity.
-        expr: (longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes) * 100 > 70
+        expr: (longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes) * 100 > 80
         for: 5m
         labels:
-          issue: The used storage of disk {{$labels.disk}} on node {{$labels.node}} is high.
           severity: warning
+        annotations:
+          summary: The used storage of disk is over 80% of the capacity.
+          description: |-
+            The used storage of disk {{ $labels.disk }} on node {{ $labels.node }}
+            is at {{ $value }}% capacity for more than 5 minutes.
 
   - name: ZFS
     rules:
       - alert: ZfsOfflinePool
         expr: node_zfs_zpool_state{state!="online"} > 0
-        for: 1m
+        for: 2m
         labels:
           severity: critical
         annotations:
           summary: ZFS offline pool (instance {{ $labels.instance }})
-          description: "A ZFS zpool is in a unexpected state: {{ $labels.state }}.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            A ZFS zpool is in a unexpected state: {{ $labels.state }}.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
   - name: SmartctlExporter
     rules:
       - alert: SmartDeviceTemperatureWarning
-        expr: (avg_over_time(smartctl_device_temperature{temperature_type="current"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}) > 60
-        for: 0m
+        expr: >
+          (
+            avg_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
+            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}
+          ) > 60
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: SMART device temperature warning (instance {{ $labels.instance }})
-          description: "Device temperature warning on {{ $labels.instance }} drive {{ $labels.device }} over 60°C\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Device temperature {{ $labels.instance }} drive {{ $labels.device }} > 60°C
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartDeviceTemperatureCritical
-        expr: (max_over_time(smartctl_device_temperature{temperature_type="current"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}) > 70
-        for: 0m
+        expr: >
+          (
+            max_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
+            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}
+          ) > 70
+        for: 2m
         labels:
           severity: critical
         annotations:
           summary: SMART device temperature critical (instance {{ $labels.instance }})
-          description: "Device temperature critical on {{ $labels.instance }} drive {{ $labels.device }} over 70°C\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Device temperature {{ $labels.instance }} drive {{ $labels.device }} > 70°C
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartDeviceTemperatureOverTripValue
-        expr: max_over_time(smartctl_device_temperature{temperature_type="current"} [10m]) >= on(device, instance) smartctl_device_temperature{temperature_type="drive_trip"}
-        for: 0m
+        expr: >
+          max_over_time(
+            smartctl_device_temperature{temperature_type="current"} [10m]
+          ) >= on(device, instance) smartctl_device_temperature{temperature_type="drive_trip"}
+        for: 2m
         labels:
           severity: critical
         annotations:
           summary: SMART device temperature over trip value (instance {{ $labels.instance }})
-          description: "Device temperature over trip value on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Device temperature over trip value on {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartDeviceTemperatureNearingTripValue
-        expr: max_over_time(smartctl_device_temperature{temperature_type="current"} [10m]) >= on(device, instance) (smartctl_device_temperature{temperature_type="drive_trip"} * .80)
-        for: 0m
+        expr: >
+          max_over_time(
+            smartctl_device_temperature{temperature_type="current"} [10m]
+          ) >= on(device, instance)
+          (smartctl_device_temperature{temperature_type="drive_trip"} * .80)
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: SMART device temperature nearing trip value (instance {{ $labels.instance }})
-          description: "Device temperature at 80% of trip value on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Device temperature trip value {{ $labels.instance }} drive {{ $labels.device }} > 80%
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartStatus
         expr: smartctl_device_smart_status != 1
-        for: 0m
+        for: 2m
         labels:
           severity: critical
         annotations:
           summary: SMART status (instance {{ $labels.instance }})
-          description: "Device has a SMART status failure on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Device has a SMART status failure on {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartCriticalWarning
         expr: smartctl_device_critical_warning > 0
-        for: 0m
+        for: 2m
         labels:
           severity: critical
         annotations:
           summary: SMART critical warning (instance {{ $labels.instance }})
-          description: "Disk controller has critical warning on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Disk controller critical warning {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartMediaErrors
         expr: smartctl_device_media_errors > 0
-        for: 0m
+        for: 2m
         labels:
           severity: critical
         annotations:
           summary: SMART media errors (instance {{ $labels.instance }})
-          description: "Disk controller detected media errors on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Disk controller detected errors {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: SmartWearoutIndicator
         expr: smartctl_device_available_spare < smartctl_device_available_spare_threshold
-        for: 0m
+        for: 5m
         labels:
           severity: critical
         annotations:
           summary: SMART Wearout Indicator (instance {{ $labels.instance }})
-          description: "Device is wearing out on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Device is wearing out on {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
   - name: Kubernetes
-
     rules:
       - alert: KubernetesNodeNotReady
         expr: kube_node_status_condition{condition="Ready",status="true"} == 0
@@ -214,43 +308,67 @@ groups:
           severity: critical
         annotations:
           summary: Kubernetes Node not ready (instance {{ $labels.instance }})
-          description: "Node {{ $labels.node }} has been unready for a long time\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Node {{ $labels.node }} has been unready for a long time
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: KubernetesContainerOomKiller
-        expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m >= 1) and ignoring (reason) min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]) == 1
-        for: 0m
+        expr: >
+          (
+            kube_pod_container_status_restarts_total
+            - kube_pod_container_status_restarts_total offset 10m >= 1
+          )
+          and ignoring (reason)
+          min_over_time(
+            kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]
+          ) == 1
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Kubernetes Container oom killer (instance {{ $labels.instance }})
-          description: "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has been OOMKilled {{ $value }} times in the last 10 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }}
+            has been OOMKilled {{ $value }} times in the last 10 minutes.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: KubernetesJobFailed
-        expr: kube_job_status_failed > 0
-        for: 0m
+        expr: increase(kube_job_status_failed[1h]) > 0
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Kubernetes Job failed (instance {{ $labels.instance }})
-          description: "Job {{ $labels.namespace }}/{{ $labels.job_name }} failed to complete\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Job {{ $labels.namespace }}/{{ $labels.job_name }} failed to complete
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: KubernetesPersistentvolumeclaimPending
         expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
-        for: 2m
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Kubernetes PersistentVolumeClaim pending (instance {{ $labels.instance }})
-          description: "PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is pending\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is pending
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: KubernetesVolumeOutOfDiskSpace
         expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
-        for: 2m
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Kubernetes Volume out of disk space (instance {{ $labels.instance }})
-          description: "Volume is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Volume is almost full (< 10% left)
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: KubernetesPodNotHealthy
         expr: sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
@@ -259,51 +377,59 @@ groups:
           severity: critical
         annotations:
           summary: Kubernetes Pod not healthy (instance {{ $labels.instance }})
-          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-running state for longer than 15 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-running state
+            for longer than 15 minutes.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: KubernetesPodCrashLooping
-        expr: increase(kube_pod_container_status_restarts_total[1m]) > 3
-        for: 2m
+        expr: increase(kube_pod_container_status_restarts_total[10m]) > 3
+        for: 5m
         labels:
           severity: warning
         annotations:
           summary: Kubernetes pod crash looping (instance {{ $labels.instance }})
-          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
   - name: Prometheus
     rules:
       - alert: PrometheusTargetMissing
-        expr: 'up == 0 unless on(job) (sum by (job) (up) == 0)'
-        for: 0m
+        expr: up == 0 unless on(job) (sum by (job) (up) == 0)
+        for: 5m
         labels:
           severity: critical
         annotations:
           summary: Prometheus target missing (instance {{ $labels.instance }})
-          description: "A Prometheus target has disappeared. An exporter might be crashed.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            A Prometheus target has disappeared. An exporter might be crashed.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: PrometheusAllTargetsMissing
-        expr: 'sum by (job) (up) == 0'
-        for: 0m
+        expr: sum by (job) (up) == 0
+        for: 5m
         labels:
           severity: critical
         annotations:
           summary: Prometheus all targets missing (instance {{ $labels.instance }})
-          description: "A Prometheus job does not have living target anymore.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            A Prometheus job does not have living target anymore.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
 
       - alert: PrometheusRuleEvaluationSlow
-        expr: 'prometheus_rule_group_last_duration_seconds > prometheus_rule_group_interval_seconds'
-        for: 5m
+        expr: prometheus_rule_group_last_duration_seconds > prometheus_rule_group_interval_seconds
+        for: 10m
         labels:
           severity: warning
         annotations:
           summary: Prometheus rule evaluation slow (instance {{ $labels.instance }})
-          description: "Prometheus rule evaluation took more time than the scheduled interval. It indicates a slower storage backend access or too complex query.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-      - alert: PrometheusTargetScrapingSlow
-        expr: 'prometheus_target_interval_length_seconds{quantile="0.9"} / on (interval, instance, job) prometheus_target_interval_length_seconds{quantile="0.5"} > 1.05'
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: Prometheus target scraping slow (instance {{ $labels.instance }})
-          description: "Prometheus is scraping exporters slowly since it exceeded the requested interval time. Your Prometheus server is under-provisioned.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          description: |-
+            Prometheus rule evaluation took more time than the scheduled interval.
+            It indicates a slower storage backend access or too complex query.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
