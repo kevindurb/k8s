@@ -1,7 +1,8 @@
 ---
 endpoints:
   - name: smtp-relay
-    url: http://smtp-relay-service.smtp-relay
+    url: tcp://smtp-relay-service.smtp-relay:25
     conditions:
-      - '[STATUS] == 200'
+      - '[CONNECTED] == true'
+      - '[RESPONSE_TIME] < 500'
     alerts: [{ type: ntfy }]
