@@ -2,14 +2,14 @@
 groups:
   - name: EmbeddedExporter
     rules:
-      - alert: PrometheusJobMissing
-        expr: 'absent(up{job="prometheus"})'
-        for: 0m
-        labels:
-          severity: warning
-        annotations:
-          summary: Prometheus job missing (instance {{ $labels.instance }})
-          description: "A Prometheus job has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+      # - alert: PrometheusJobMissing
+      #   expr: 'absent(up{job="prometheus"})'
+      #   for: 0m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: Prometheus job missing (instance {{ $labels.instance }})
+      #     description: "A Prometheus job has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
       # Only fire if at least one target in the job is still up.
       # If all targets are down, PrometheusJobMissing or PrometheusAllTargetsMissing will fire instead.
@@ -58,14 +58,14 @@ groups:
           summary: Prometheus too many restarts (instance {{ $labels.instance }})
           description: "Prometheus has restarted more than twice in the last 15 minutes. It might be crashlooping.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-      - alert: PrometheusAlertmanagerJobMissing
-        expr: 'absent(up{job="alertmanager"})'
-        for: 0m
-        labels:
-          severity: warning
-        annotations:
-          summary: Prometheus AlertManager job missing (instance {{ $labels.instance }})
-          description: "A Prometheus AlertManager job has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+      # - alert: PrometheusAlertmanagerJobMissing
+      #   expr: 'absent(up{job="alertmanager"})'
+      #   for: 0m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: Prometheus AlertManager job missing (instance {{ $labels.instance }})
+      #     description: "A Prometheus AlertManager job has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
       - alert: PrometheusAlertmanagerConfigurationReloadFailure
         expr: 'alertmanager_config_last_reload_successful != 1'
