@@ -1,0 +1,79 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: smtp
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: config-map
+          configMap:
+            name: config
+      containers:
+        - name: smtp-relay
+          image: ghcr.io/foxcpp/maddy:0.7.1@sha256:6ab538e2f28baf2324f7cb418c7f9476fd9c7e9fa9b14bc3aecf51a9f6962064
+          resources:
+            requests:
+              memory: 50M
+            limits:
+              memory: 100M
+          volumeMounts:
+            - name: config-map
+              mountPath: /data/maddy.conf
+              subPath: maddy.conf
+              readOnly: true
+          envFrom:
+            - secretRef:
+                name: smtp-relay-secret
+          env:
+            - name: SMTP_RELAY_SMTP_PORT
+              value: '25'
+            - name: SMTP_RELAY_METRICS_PORT
+              value: '8080'
+          ports:
+            - name: smtp
+              containerPort: 25
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+spec:
+  selector:
+    app.kubernetes.io/component: smtp
+  ports:
+    - name: smtp
+      port: 25
+      targetPort: smtp
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: smtp-relay-secret
+  map:
+    - secretKeyName: SMTP_RELAY_SERVER
+      bwSecretId: 8a55bbb3-aa52-4751-a2fb-b1af01667293
+    - secretKeyName: SMTP_RELAY_USERNAME
+      bwSecretId: 0620c8f0-5281-4159-85d7-b1af01499e7a
+    - secretKeyName: SMTP_RELAY_PASSWORD
+      bwSecretId: 51f782d4-a1a2-4b08-bb3d-b1af013a69cb
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

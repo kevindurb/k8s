@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: smtp-relay
+    url: http://smtp-relay-service.smtp-relay
+    conditions:
+      - '[STATUS] == 200'
+    alerts: [{ type: ntfy }]

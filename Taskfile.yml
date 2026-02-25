@@ -30,9 +30,6 @@ vars:
       interface: enp5s0
 
 includes:
-  templates:
-    taskfile: .taskfiles/templates
-    aliases: [t, tmp, gen]
   argo:
     taskfile: .taskfiles/argo
   bootc:

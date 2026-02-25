@@ -6,3 +6,4 @@ resources:
   - ./ingress-nginx/app.yml
   - ./cert-manager/app.yml
   - ./bws-operator/app.yml
+  - ./smtp-relay/app.yml

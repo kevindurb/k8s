@@ -1,0 +1,28 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: smtp-relay
+namePrefix: smtp-relay-
+
+resources:
+  - ./smtp-relay.yml
+
+components:
+  - ../../components/nas-media
+  - ../../components/pod-hardening
+  - ../../components/tmpdirs
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - smtp-relay.yml=gatus.yml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: smtp-relay
