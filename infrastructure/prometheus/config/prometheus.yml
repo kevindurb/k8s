@@ -5,15 +5,7 @@ global:
   scrape_timeout: 10s
 
 rule_files:
-  - ./rules.yml
-  - ./node-exporter.rules.yml
-  - ./gatus.rules.yml
-  - ./smartctl-exporter.rules.yml
-  - ./prometheus.rules.yml
-  - ./kubernetes.rules.yml
-  - ./argocd.rules.yml
-  - ./nginx-ingress.rules.yml
-  - ./zfs.rules.yml
+  - ./rules/*.yml
 
 alerting:
   alertmanagers:
