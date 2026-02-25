@@ -22,7 +22,7 @@ configMapGenerator:
       - smtp-relay.yml=gatus.yml
   - name: config
     files:
-      - ./maddy.conf
+      - ./config/maddy.conf
 
 labels:
   - includeSelectors: true
