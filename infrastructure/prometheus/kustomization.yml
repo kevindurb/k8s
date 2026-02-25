@@ -6,9 +6,7 @@ namespace: prometheus
 namePrefix: prometheus-
 
 resources:
-  - ./resources/deployment.yml
-  - ./resources/rbac.yml
-  - ./resources/ingress.yml
+  - ./prometheus.yml
 
 components:
   - ../../components/pod-hardening
@@ -16,19 +14,16 @@ components:
 configMapGenerator:
   - name: config
     files:
-      - ./resources/prometheus.yml
-      - ./resources/rules/rules.yml
-      - ./resources/rules/node-exporter.rules.yml
-      - ./resources/rules/gatus.rules.yml
-      - ./resources/rules/smartctl-exporter.rules.yml
-      - ./resources/rules/prometheus.rules.yml
-      - ./resources/rules/kubernetes.rules.yml
-      - ./resources/rules/argocd.rules.yml
-      - ./resources/rules/nginx-ingress.rules.yml
-      - ./resources/rules/zfs.rules.yml
-  - name: consoles
-    files:
-      - ./resources/consoles/synapse.html
+      - ./config/prometheus.yml
+      - ./config/rules/rules.yml
+      - ./config/rules/node-exporter.rules.yml
+      - ./config/rules/gatus.rules.yml
+      - ./config/rules/smartctl-exporter.rules.yml
+      - ./config/rules/prometheus.rules.yml
+      - ./config/rules/kubernetes.rules.yml
+      - ./config/rules/argocd.rules.yml
+      - ./config/rules/nginx-ingress.rules.yml
+      - ./config/rules/zfs.rules.yml
   - name: gatus
     options:
       labels:
