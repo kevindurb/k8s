@@ -21,6 +21,8 @@ spec:
         - name: config-map
           configMap:
             name: config
+        - name: cache
+          emptyDir: {}
       containers:
         - name: smtp-relay
           image: ghcr.io/foxcpp/maddy:0.7.1@sha256:6ab538e2f28baf2324f7cb418c7f9476fd9c7e9fa9b14bc3aecf51a9f6962064
@@ -34,6 +36,8 @@ spec:
               mountPath: /data/maddy.conf
               subPath: maddy.conf
               readOnly: true
+            - name: cache
+              mountPath: /cache
           envFrom:
             - secretRef:
                 name: smtp-relay-secret
