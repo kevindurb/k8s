@@ -28,6 +28,11 @@ spec:
               'cert-manager.io/cluster-issuer': cloudflare-issuer
             tls: true
             tlsSecret: *host
+          service:
+            manager:
+              annotations:
+                prometheus.io/scrape: 'true'
+                prometheus.io/port: '9500'
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/longhorn
