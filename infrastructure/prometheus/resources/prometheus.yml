@@ -22,12 +22,6 @@ alerting:
         - targets: [alertmanager-service.alertmanager]
 
 scrape_configs:
-  - job_name: speedtest
-    scrape_interval: 12h
-    scrape_timeout: 60s
-    static_configs:
-      - targets: [speedtest-exporter-service.default]
-
   - job_name: kubelet
     kubernetes_sd_configs:
       - role: node
