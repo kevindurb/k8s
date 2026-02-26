@@ -8,11 +8,14 @@ global:
   smtp_auth_identity: ''
 
 route:
-  group_by: [job, alertname, severity]
-  group_wait: 30s
-  group_interval: 5m
-  repeat_interval: 12h
-  receiver: email-alerts
+  routes:
+    - group_by: [job, alertname, severity]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: email-alerts
+      matchers:
+        - alertname != DeadMansSwitch
 
 receivers:
   - name: 'null'
