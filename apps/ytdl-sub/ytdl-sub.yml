@@ -28,7 +28,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: ytdl-sub
-              image: ghcr.io/jmbannon/ytdl-sub:2026.02.04@sha256:a30d3877b919a2ebcc91bbc5ef3e0af3721063a24593da735fe16891e4efdb7c
+              image: ghcr.io/jmbannon/ytdl-sub:2026.02.23
               command:
                 - ytdl-sub
                 - --config

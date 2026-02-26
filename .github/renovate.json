@@ -19,5 +19,11 @@
   },
   "argocd": {
     "managerFilePatterns": ["/apps/.+app\\.yml$/", "/apps/.+app\\.yaml$/"]
-  }
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["ghcr.io/jmbannon/ytdl-sub"],
+      "enabled": false
+    }
+  ]
 }
