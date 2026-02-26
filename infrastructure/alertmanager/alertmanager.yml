@@ -39,7 +39,7 @@ spec:
               mountPath: /alertmanager
             - name: alertmanager-secret
               mountPath: /run/secrets/webhook_url
-              subPath: deadmans-switch
+              subPath: watchdog-url
               readOnly: true
           ports:
             - name: web
@@ -106,7 +106,7 @@ spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
   secretName: alertmanager-secret
   map:
-    - secretKeyName: deadmans-switch
+    - secretKeyName: watchdog-url
       bwSecretId: 9eb00cb7-2014-4c70-9f76-b3fd00eda2f0
   authToken:
     secretName: bw-auth-token
