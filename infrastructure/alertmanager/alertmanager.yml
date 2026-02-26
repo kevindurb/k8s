@@ -17,6 +17,9 @@ spec:
         - name: config-volume
           configMap:
             name: config
+        - name: alertmanager-secret
+          secret:
+            secretName: alertmanager-secret
       containers:
         - name: alertmanager
           image: docker.io/prom/alertmanager@sha256:cc54cc450174ada901b32eb2538de5fc70ee259a1ac551ed38023f2ca2ad00e3
@@ -34,6 +37,10 @@ spec:
               mountPath: /etc/alertmanager
             - name: data-volume
               mountPath: /alertmanager
+            - name: alertmanager-secret
+              mountPath: /run/secrets/webhook_url
+              subPath: deadmans-switch
+              readOnly: true
           ports:
             - name: web
               containerPort: 9093
@@ -87,3 +94,20 @@ spec:
                 name: service
                 port:
                   name: web
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: alertmanager-secret
+  map:
+    - secretKeyName: deadmans-switch
+      bwSecretId: 9eb00cb7-2014-4c70-9f76-b3fd00eda2f0
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

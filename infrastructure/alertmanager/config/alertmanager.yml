@@ -8,6 +8,7 @@ global:
   smtp_auth_identity: ''
 
 route:
+  receiver: 'null'
   routes:
     - group_by: [job, alertname, severity]
       group_wait: 30s
@@ -16,9 +17,19 @@ route:
       receiver: email-alerts
       matchers:
         - alertname != DeadMansSwitch
+    - receiver: deadmans-switch
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 1m
+      matchers:
+        - alertname = DeadMansSwitch
 
 receivers:
   - name: 'null'
   - name: email-alerts
     email_configs:
       - to: beavercloud@fastmail.com
+  - name: deadmans-switch
+    webhook_configs:
+      - url_file: /run/secrets/webhook_url
+        send_resolved: false
