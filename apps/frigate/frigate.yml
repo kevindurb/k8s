@@ -63,6 +63,11 @@ spec:
           ports:
             - name: https
               containerPort: 8971
+            - name: webrtc-udp
+              protocol: UDP
+              containerPort: 8555
+            - name: webrtc-tcp
+              containerPort: 8555
 
 ---
 apiVersion: v1
@@ -75,6 +80,26 @@ spec:
   resources:
     requests:
       storage: 10G
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webrtc-service
+spec:
+  loadBalancerIP: 192.168.42.50
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/component: web
+  ports:
+    - name: webrtc-tcp
+      port: 8555
+      targetPort: webrtc-tcp
+      protocol: TCP
+    - name: webrtc-udp
+      port: 8555
+      targetPort: webrtc-udp
+      protocol: UDP
 
 ---
 apiVersion: v1

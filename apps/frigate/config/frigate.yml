@@ -39,6 +39,9 @@ model:
   model_type: yolonas
 
 go2rtc:
+  webrtc:
+    candidates:
+      - 192.168.42.50:8555
   streams:
     doorbell:
       - rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_main
