@@ -53,3 +53,10 @@ cameras:
           roles: [record]
         - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_sub
           roles: [detect]
+  livingroom:
+    ffmpeg:
+      inputs:
+        - path: rtsp://thingio:thingio@192.168.50.11:554/ch0
+          roles: [record]
+        - path: rtsp://thingio:thingio@192.168.50.11:554/ch1
+          roles: [detect]
