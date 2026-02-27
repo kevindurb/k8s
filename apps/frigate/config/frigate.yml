@@ -38,25 +38,46 @@ model:
   input_pixel_format: bgr
   model_type: yolonas
 
+go2rtc:
+  streams:
+    doorbell:
+      - rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_main
+    doorbell_sub:
+      - rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_sub
+    garage:
+      - rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_main
+    garage_sub:
+      - rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_sub
+    livingroom:
+      - rtsp://thingino:thingino@192.168.50.11:554/ch0
+    livingroom_sub:
+      - rtsp://thingino:thingino@192.168.50.11:554/ch1
+
 cameras:
   doorbell:
     ffmpeg:
       inputs:
-        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_main
+        - path: rtsp://127.0.0.1:8554/doorbell
+          input_args: preset-rtsp-restream
           roles: [record]
-        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.1/Preview_01_sub
+        - path: rtsp://127.0.0.1:8554/doorbell_sub
+          input_args: preset-rtsp-restream
           roles: [detect]
   garage:
     ffmpeg:
       inputs:
-        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_main
+        - path: rtsp://127.0.0.1:8554/garage
+          input_args: preset-rtsp-restream
           roles: [record]
-        - path: rtsp://admin:{FRIGATE_REOLINK_PASSWORD}@192.168.50.2/Preview_01_sub
+        - path: rtsp://127.0.0.1:8554/garage_sub
+          input_args: preset-rtsp-restream
           roles: [detect]
   livingroom:
     ffmpeg:
       inputs:
-        - path: rtsp://thingino:thingino@192.168.50.11:554/ch0
+        - path: rtsp://127.0.0.1:8554/livingroom
+          input_args: preset-rtsp-restream
           roles: [record]
-        - path: rtsp://thingino:thingino@192.168.50.11:554/ch1
+        - path: rtsp://127.0.0.1:8554/livingroom_sub
+          input_args: preset-rtsp-restream
           roles: [detect]
