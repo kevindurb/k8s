@@ -1,0 +1,33 @@
+dist := "./dist"
+
+gen-ignition hostname interface ip:
+  minijinja-cli \
+    -D hostname={{hostname}} \
+    -D interface={{interface}} \
+    -D ip={{ip}} \
+    ./butane/node.bu.j2 | \
+  butane \
+    --strict \
+    --pretty \
+    -o {{dist}}/{{hostname}}.ign \
+    --
+
+download-iso:
+  podman run --privileged --rm -v {{dist}}:/data \
+  quay.io/coreos/coreos-installer:release \
+  download -s stable -p metal -f iso -a x86_64 -C /data
+
+build-iso hostname:
+  #! /usr/bin/env bash
+  set -euxo pipefail
+  ISO=$(ls {{dist}}/fedora-coreos-*.iso | tail -1 | xargs basename)
+  rm -f {{dist}}/{{hostname}}.iso
+
+  podman run --rm --privileged
+  -v {{dist}}:/data
+  quay.io/coreos/coreos-installer:release
+  iso customize
+  --dest-device /dev/sda
+  --dest-ignition /data/{{hostname}}.ign
+  --output /data/{{hostname}}.iso
+  "/data/$ISO"
