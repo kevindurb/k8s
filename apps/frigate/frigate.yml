@@ -63,6 +63,8 @@ spec:
           ports:
             - name: https
               containerPort: 8971
+            - name: rtsp
+              containerPort: 8554
             - name: webrtc-udp
               protocol: UDP
               containerPort: 8555
@@ -113,6 +115,9 @@ spec:
     - name: https
       port: 443
       targetPort: https
+    - name: rtsp
+      port: 8554
+      targetPort: rtsp
 
 ---
 apiVersion: networking.k8s.io/v1
