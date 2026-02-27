@@ -32,19 +32,6 @@ spec:
             serviceAnnotations:
               prometheus.io/scrape: 'true'
               prometheus.io/port: '9500'
-            resources:
-              requests:
-                cpu: 100m
-                memory: 256Mi
-              limits:
-                memory: 512Mi
-          longhornDriver:
-            resources:
-              requests:
-                cpu: 50m
-                memory: 128Mi
-              limits:
-                memory: 256Mi
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/longhorn

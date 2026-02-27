@@ -7,6 +7,7 @@ namespace: longhorn-system
 resources:
   - ./nodes.yml
   - ./storage-class.yml
+  - ./limit-range.yml
 
 labels:
   - includeSelectors: true
