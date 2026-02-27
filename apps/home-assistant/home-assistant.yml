@@ -49,7 +49,7 @@ spec:
             requests:
               memory: 100M
             limits:
-              memory: 4G
+              memory: 2G
           volumeMounts:
             - name: volume
               mountPath: /config
