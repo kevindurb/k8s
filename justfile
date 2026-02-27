@@ -24,7 +24,11 @@ kubectl-create-bw-auth-token ns token:
   kubectl create secret generic bw-auth-token \
     -n {{ns}} --from-literal=token="{{token}}"
 
-kubectl-copy-bw-auth-token ns:
-  #! /usr/bin/env bash
-  BW_AUTH_TOKEN=$(kubectl get secret bw-auth-token -o json | jq -r .data.token | base64 --decode)
-  just kubectl-create-bw-auth-token {{ns}} "$BW_AUTH_TOKEN"
+kubectl-copy-bw-auth-token to from="default":
+  just kubectl-copy-secret {{from}} bw-auth-token {{to}}
+
+kubectl-copy-secret from name to:
+   kubectl -n {{from}} get secret {{name}} -o yaml \
+     | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' \
+     | kubectl apply --namespace {{to}} -f -
+
