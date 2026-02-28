@@ -9,7 +9,7 @@ auth:
   enabled: false
 
 ffmpeg:
-  hwaccel_args: preset-nvidia-h264
+  hwaccel_args: preset-nvidia
 
 detectors:
   onnx:
