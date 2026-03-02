@@ -1,5 +1,6 @@
 FROM ghcr.io/ublue-os/ucore:stable-nvidia-lts
 
+# renovate: datasource=github-releases depName=k3s-selinux packageName=k3s-io/k3s-selinux
 ARG K3S_SELINUX_VERSION=1.6-1
 RUN dnf install -y \
   https://rpm.rancher.io/k3s/latest/common/centos/9/noarch/k3s-selinux-${K3S_SELINUX_VERSION}.el9.noarch.rpm \
