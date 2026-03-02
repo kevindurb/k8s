@@ -8,10 +8,7 @@ namePrefix: scrypted-
 resources:
   - ./scrypted.yml
 
-components:
-  - ../../components/nas-media
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
+components: []
 
 configMapGenerator:
   - files:
