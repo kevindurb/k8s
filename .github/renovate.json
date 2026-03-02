@@ -22,7 +22,7 @@
   },
   "packageRules": [
     {
-      "matchPackageNames": ["ghcr.io/jmbannon/ytdl-sub"],
+      "matchPackageNames": ["ghcr.io/ublue-os/ucore"],
       "enabled": false
     }
   ]
