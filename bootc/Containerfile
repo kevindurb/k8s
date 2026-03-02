@@ -17,7 +17,7 @@ RUN dnf install -y \
   && dnf clean all
 
 # renovate: datasource=github-tags depName=k3s packageName=k3s-io/k3s
-ARG K3S_VERSION=v1.35.0+k3s3
+ARG K3S_VERSION=v1.35.1+k3s1
 ADD https://github.com/k3s-io/k3s/releases/download/${K3S_VERSION}/k3s /usr/bin/k3s
 RUN chmod +x /usr/bin/k3s
 
