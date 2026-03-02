@@ -9,3 +9,9 @@ patches:
         value: true
     target:
       kind: Deployment
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/hostNetwork
+        value: true
+    target:
+      kind: DaemonSet
