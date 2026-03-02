@@ -32,3 +32,22 @@ kubectl-copy-secret from name to:
      | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' \
      | kubectl apply --namespace {{to}} -f -
 
+tmpl type name:
+  #! /usr/bin/env bash
+  cp -r apps/template {{type}}/{{name}}
+  mv {{type}}/{{name}}/template.yml {{type}}/{{name}}/{{name}}.yml
+
+  cd {{type}}/{{name}}
+  kustomize edit add resource ./{{name}}.yml
+  kustomize edit remove resource ./template.yml
+  kustomize edit set namespace {{name}}
+  kustomize edit set nameprefix {{name}}-
+  echo "./{{type}}/{{name}}/ Created!
+
+  TODO:
+    - [ ] Update app.yml
+    - [ ] Update labels in kustomization.yml
+    - [ ] Update configMapGenerator for gatus config
+    - [ ] Update gatus.yml
+    - [ ] Update {{name}}.yml deployment, service, etc
+  "
