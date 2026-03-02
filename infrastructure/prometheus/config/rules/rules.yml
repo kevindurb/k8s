@@ -91,7 +91,7 @@ groups:
 
       - alert: HostDiskSpaceLow
         expr: >
-          (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay", mountpoint!="/boot"}
           / node_filesystem_size_bytes) * 100 < 15
         for: 5m
         labels:
