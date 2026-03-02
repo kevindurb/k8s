@@ -42,6 +42,10 @@ tmpl type name:
   kustomize edit remove resource ./template.yml
   kustomize edit set namespace {{name}}
   kustomize edit set nameprefix {{name}}-
+
+  cd ..
+  kustomize edit add resource ./{{name}}/app.yml
+
   echo "./{{type}}/{{name}}/ Created!
 
   TODO:
