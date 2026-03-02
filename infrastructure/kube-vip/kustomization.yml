@@ -9,6 +9,9 @@ resources:
   - https://kube-vip.io/manifests/rbac.yaml
   - ./kube-vip.yml
 
+components:
+  - ../../components/host-networking
+
 labels:
   - includeSelectors: true
     includeTemplates: true

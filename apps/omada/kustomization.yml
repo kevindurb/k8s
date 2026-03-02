@@ -9,6 +9,9 @@ resources:
   - ./resources/omada.yml
   - ./resources/pvc.yml
 
+components:
+  - ../../components/host-networking
+
 configMapGenerator:
   - name: gatus
     options:

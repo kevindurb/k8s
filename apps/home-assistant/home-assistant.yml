@@ -17,7 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      hostNetwork: true
       volumes:
         - name: volume
           persistentVolumeClaim:

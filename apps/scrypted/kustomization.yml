@@ -8,7 +8,8 @@ namePrefix: scrypted-
 resources:
   - ./scrypted.yml
 
-components: []
+components:
+  - ../../components/host-networking
 
 configMapGenerator:
   - files:

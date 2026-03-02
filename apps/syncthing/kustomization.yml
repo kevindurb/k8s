@@ -11,6 +11,7 @@ resources:
 components:
   - ../../components/pod-hardening
   - ../../components/tmpdirs
+  - ../../components/host-networking
 
 configMapGenerator:
   - name: gatus

@@ -78,7 +78,6 @@ spec:
                 - NET_RAW
               drop:
                 - ALL
-      hostNetwork: true
       serviceAccountName: kube-vip
       tolerations:
         - effect: NoSchedule
