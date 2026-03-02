@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Drain node
+  kubernetes.core.k8s_drain:
+    state: drain
+    name: '{{ansible_hostname}}'
+    delete_options:
+      delete_emptydir_data: true
+      ignore_daemonsets: true
+
+- name: Stop k3s service
+  ansible.builtin.systemd_service:
+    name: '{{ (k3s_role == "agent") | ternary("k3s-agent.service", "k3s.service") }}'
+    state: stopped
+
+- name: Reboot node
+  ansible.builtin.reboot:
+
+- name: Ensure k3s is running
+  ansible.builtin.systemd_service:
+    name: '{{ (k3s_role == "agent") | ternary("k3s-agent.service", "k3s.service") }}'
+    state: started
+  register: k3s_service
+  until: k3s_service.status.ActiveState == "active"
+  retries: 15
+  delay: 20
+
+- name: Uncordon node
+  kubernetes.core.k8s_drain:
+    state: uncordon
+    name: '{{ansible_hostname}}'

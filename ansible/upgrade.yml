@@ -13,16 +13,10 @@
   hosts: agents
   serial: 2
   become: true
-  tasks:
-    - name: Reboot
-      ansible.builtin.reboot:
-      when: bootc.changed
+  roles: [node_reboot]
 
 - name: Reboot servers
   hosts: servers
   serial: 2
   become: true
-  tasks:
-    - name: Reboot
-      ansible.builtin.reboot:
-      when: bootc.changed
+  roles: [node_reboot]

@@ -2,7 +2,7 @@ default:
   just --list
 
 get-kubeconfig:
-  ssh core@192.168.42.1 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig
+  ssh core@192.168.42.1 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config
 
 argocd-refresh app:
   kubectl annotate -n argocd application {{app}} argocd.argoproj.io/refresh='normal'
