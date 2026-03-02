@@ -4,5 +4,7 @@
   "useTabs": false,
   "semi": true,
   "singleQuote": true,
-  "arrowParens": "always"
+  "arrowParens": "always",
+  "printWidth": 100,
+  "bracketSpacing": true
 }

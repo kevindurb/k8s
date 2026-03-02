@@ -28,19 +28,6 @@ spec:
         - name: config
           configMap:
             name: config
-      initContainers:
-        - name: init-config
-          image: busybox:1.37@sha256:b3255e7dfbcd10cb367af0d409747d511aeb66dfac98cf30e97e87e4207dd76f
-          command:
-            - sh
-            - -c
-            - |
-              if [ ! -f /config/automations.yaml ]; then
-                echo "# Empty automations file" > /config/automations.yaml
-              fi
-          volumeMounts:
-            - name: volume
-              mountPath: /config
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2026.2.0@sha256:043ab74ba0ad529734d7d77ca3e893f286410864619329d5e8ca0524c3d260c1
@@ -53,10 +40,6 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /config
-            # - name: config
-            #   mountPath: /config/configuration.yaml
-            #   subPath: configuration.yaml
-            #   readOnly: true
           env:
             - name: TZ
               value: America/Denver

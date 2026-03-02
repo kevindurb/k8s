@@ -103,15 +103,7 @@ rules:
     resources: ['nodes', 'nodes/status']
     verbs: ['get', 'list']
   - nonResourceURLs:
-      [
-        '/healthz',
-        '/healthz/*',
-        '/livez',
-        '/livez/*',
-        '/readyz',
-        '/readyz/*',
-        '/version',
-      ]
+      ['/healthz', '/healthz/*', '/livez', '/livez/*', '/readyz', '/readyz/*', '/version']
     verbs: ['get']
 
 ---
