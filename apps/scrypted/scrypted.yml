@@ -23,7 +23,7 @@ spec:
             claimName: volume
       containers:
         - name: scrypted
-          image: ghcr.io/koush/scrypted
+          image: ghcr.io/koush/scrypted:v0.143.0-noble-full
           resources:
             requests:
               memory: 100M
