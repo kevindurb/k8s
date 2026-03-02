@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-minimal@sha256:791075c4569d28947bf9ef182352024d288ccc02f014873ad308ab035a6ba2dc
+FROM quay.io/fedora/fedora-minimal@sha256:8e80d06df5060f39796fbe84d2aa4b75ead1ccd759d86228e3498505da4f7aa1
 
 RUN dnf install -y \
   ansible \
