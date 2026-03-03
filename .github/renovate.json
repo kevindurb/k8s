@@ -14,18 +14,15 @@
   "automergeStrategy": "merge-commit",
   "platform": "github",
   "repositories": ["kevindurb/k8s"],
+  "dockerfile": {
+    "enabled": false
+  },
   "kubernetes": {
     "managerFilePatterns": ["/apps/.+\\.yaml$/", "/apps/.+\\.yml$/"]
   },
   "argocd": {
     "managerFilePatterns": ["/apps/.+app\\.yml$/", "/apps/.+app\\.yaml$/"]
   },
-  "packageRules": [
-    {
-      "matchPackageNames": ["ghcr.io/ublue-os/ucore", "quay.io/fedora/fedora-minimal"],
-      "enabled": false
-    }
-  ],
   "customManagers": [
     {
       "customType": "regex",
