@@ -24,7 +24,7 @@ spec:
             - name: POSTGRES_USER
               value: postgres
             - name: POSTGRES_HOST
-              value: nextcloud-postgres-service.apps
+              value: nextcloud-postgres-service.nextcloud
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
