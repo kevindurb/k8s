@@ -8,6 +8,11 @@ namePrefix: template-
 resources:
   - ../../bases/app
 
+images:
+  - name: app-image
+    newName: docker.io/traefik/whoami
+    newTag: v1.11
+
 configMapGenerator:
   - name: gatus
     options:
