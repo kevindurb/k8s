@@ -11,12 +11,10 @@
 
 - name: Reboot agents
   hosts: agents
-  serial: 2
-  become: true
+  serial: 1
   roles: [node_reboot]
 
 - name: Reboot servers
   hosts: servers
-  serial: 2
-  become: true
+  serial: 1
   roles: [node_reboot]
