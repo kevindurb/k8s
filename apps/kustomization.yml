@@ -8,3 +8,4 @@ resources:
   - ./syncthing/app.yml
   - ./template/app.yml
   - ./scrypted/app.yml
+  - ./nextcloud/app.yml
