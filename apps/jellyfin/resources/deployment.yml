@@ -21,8 +21,7 @@ spec:
       securityContext:
         fsGroup: 1000
       nodeSelector:
-        kubernetes.io/hostname: drone-01
-        nvidia.com/gpu.present: 'true'
+        nvidia.com/gpu.product: Quadro-P620-SHARED
       volumes:
         - name: config
           persistentVolumeClaim:
