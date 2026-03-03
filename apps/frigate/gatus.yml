@@ -1,9 +1,0 @@
----
-endpoints:
-  - name: frigate
-    url: https://frigate-web-service.frigate
-    client:
-      insecure: true
-    conditions:
-      - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]
