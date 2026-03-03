@@ -4,4 +4,3 @@ endpoints:
     url: http://grafana-web-service.grafana
     conditions:
       - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

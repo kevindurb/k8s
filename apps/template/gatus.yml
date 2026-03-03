@@ -4,4 +4,3 @@ endpoints:
     url: http://template-web-service.template
     conditions:
       - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

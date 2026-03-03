@@ -5,43 +5,28 @@ endpoints:
   - name: gatus
     url: http://gatus-service
     conditions: ['[STATUS] == 200']
-    alerts: [{ type: ntfy }]
 
   - name: google
     url: https://google.com
     conditions: ['[STATUS] == 200']
-    alerts: [{ type: ntfy }]
 
   - name: router
     url: https://192.168.1.1
     group: networking
     client: { insecure: true }
     conditions: ['[STATUS] == 200']
-    alerts: [{ type: ntfy }]
 
   - name: Garage AP
     url: http://192.168.1.2
     group: networking
     conditions: ['[STATUS] == 200']
-    alerts: [{ type: ntfy }]
 
   - name: Basement AP
     url: http://192.168.1.3
     group: networking
     conditions: ['[STATUS] == 200']
-    alerts: [{ type: ntfy }]
 
   - name: Backyard AP
     url: http://192.168.1.4
     group: networking
     conditions: ['[STATUS] == 200']
-    alerts: [{ type: ntfy }]
-
-alerting:
-  ntfy:
-    topic: gatus
-    url: https://ntfy.beaver-cloud.xyz
-    default-alert:
-      failure-threshold: 3
-      success-threshold: 3
-      send-on-resolved: true

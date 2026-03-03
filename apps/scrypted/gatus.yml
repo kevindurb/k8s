@@ -4,4 +4,3 @@ endpoints:
     url: http://scrypted-web-service.scrypted
     conditions:
       - '[STATUS] == 200'
-    alerts: [{ type: ntfy }]

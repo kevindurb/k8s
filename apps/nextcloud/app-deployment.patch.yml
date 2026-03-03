@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: docker.io/library/nextcloud:32-apache@sha256:aa9bb9bbde6e6afc756f7f101d65fbd57526165184737a85e31cc98dfbaaa2e2
+          volumeMounts:
+            - name: volume
+              mountPath: /var/www/html
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: NEXTCLOUD_TRUSTED_DOMAINS
+              value: nextcloud.beaver-cloud.xyz nextcloud-web-service.apps
+            - name: TRUSTED_PROXIES
+              value: 127.0.0.1 10.0.0.0/8
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_HOST
+              value: nextcloud-postgres-service.apps
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
