@@ -16,7 +16,7 @@ spec:
             - name: TZ
               value: America/Denver
             - name: NEXTCLOUD_TRUSTED_DOMAINS
-              value: nextcloud.beaver-cloud.xyz nextcloud-web-service.apps
+              value: nextcloud.beaver-cloud.xyz nextcloud-app-service.nextcloud
             - name: TRUSTED_PROXIES
               value: 127.0.0.1 10.0.0.0/8
             - name: POSTGRES_DB
