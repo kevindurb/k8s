@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/library/nextcloud:32-apache@sha256:aa9bb9bbde6e6afc756f7f101d65fbd57526165184737a85e31cc98dfbaaa2e2
+          image: docker.io/library/nextcloud:33-apache@sha256:aa9bb9bbde6e6afc756f7f101d65fbd57526165184737a85e31cc98dfbaaa2e2
           volumeMounts:
             - name: volume
               mountPath: /var/www/html
