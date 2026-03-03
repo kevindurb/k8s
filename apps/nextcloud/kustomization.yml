@@ -24,6 +24,13 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+  - sourceValue: 10G
+    targets:
+      - select:
+          kind: PersistentVolumeClaim
+          name: app-volume
+        fieldPaths:
+          - spec.resources.requests.storage
 
 configMapGenerator:
   - files:
