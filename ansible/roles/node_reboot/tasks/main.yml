@@ -2,13 +2,13 @@
 ---
 - name: Drain node
   delegate_to: localhost
-  kubernetes.core.k8s_drain:
-    state: drain
-    name: '{{ansible_hostname}}'
-    delete_options:
-      delete_emptydir_data: true
-      ignore_daemonsets: true
-      wait_timeout: 0
+  ansible.builtin.command:
+    cmd: >
+      kubectl drain
+      --delete-emptydir-data
+      --ignore-daemonsets
+      {{ansible_hostname}}
+  changed_when: false
 
 - name: Stop k3s service
   become: true
@@ -25,10 +25,6 @@
   ansible.builtin.systemd_service:
     name: '{{ (k3s_role == "agent") | ternary("k3s-agent.service", "k3s.service") }}'
     state: started
-  register: k3s_service
-  until: k3s_service.status.ActiveState == "active"
-  retries: 15
-  delay: 20
 
 - name: Uncordon node
   delegate_to: localhost
