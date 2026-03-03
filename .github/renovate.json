@@ -22,7 +22,7 @@
   },
   "packageRules": [
     {
-      "matchPackageNames": ["ghcr.io/ublue-os/ucore"],
+      "matchPackageNames": ["ghcr.io/ublue-os/ucore", "quay.io/fedora/fedora-minimal"],
       "enabled": false
     }
   ],
