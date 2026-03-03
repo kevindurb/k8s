@@ -31,6 +31,13 @@ replacements:
           name: app-volume
         fieldPaths:
           - spec.resources.requests.storage
+  - sourceValue: /var/www/html
+    targets:
+      - select:
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.0.volumeMounts.0.mountPath
 
 configMapGenerator:
   - files:

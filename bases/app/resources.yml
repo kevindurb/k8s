@@ -21,7 +21,9 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          volumeMounts: []
+          volumeMounts:
+            - name: volume
+              mountPath: /config
           env:
             - name: TZ
               value: America/Denver

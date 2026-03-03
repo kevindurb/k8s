@@ -38,8 +38,6 @@ tmpl type name:
   mv {{type}}/{{name}}/template.yml {{type}}/{{name}}/{{name}}.yml
 
   cd {{type}}/{{name}}
-  kustomize edit add resource ./{{name}}.yml
-  kustomize edit remove resource ./template.yml
   kustomize edit set namespace {{name}}
   kustomize edit set nameprefix {{name}}-
 
@@ -53,5 +51,4 @@ tmpl type name:
     - [ ] Update labels in kustomization.yml
     - [ ] Update configMapGenerator for gatus config
     - [ ] Update gatus.yml
-    - [ ] Update {{name}}.yml deployment, service, etc
   "

@@ -6,12 +6,7 @@ namespace: template
 namePrefix: template-
 
 resources:
-  - ./template.yml
-
-components:
-  - ../../components/nas-media
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
+  - ../../bases/app
 
 configMapGenerator:
   - name: gatus
@@ -20,6 +15,16 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - template.yml=gatus.yml
+
+replacements:
+  - sourceValue: template.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName
 
 labels:
   - includeSelectors: true
