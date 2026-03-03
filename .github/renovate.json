@@ -18,10 +18,10 @@
     "enabled": false
   },
   "kubernetes": {
-    "managerFilePatterns": ["/apps/.+\\.yaml$/", "/apps/.+\\.yml$/"]
+    "managerFilePatterns": ["/(apps|infrastructure|platform)/.+\\.ya?ml$/"]
   },
   "argocd": {
-    "managerFilePatterns": ["/apps/.+app\\.yml$/", "/apps/.+app\\.yaml$/"]
+    "managerFilePatterns": ["/(apps|infrastructure|platform)/.+app\\.ya?ml$/"]
   },
   "customManagers": [
     {
