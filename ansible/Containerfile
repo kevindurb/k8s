@@ -5,10 +5,11 @@ RUN dnf install -y \
   && dnf clean all
 
 RUN mkdir /ansible
+WORKDIR /ansible
 
-COPY ./*.yml /ansible/
-COPY ./inventory /ansible/inventory
-COPY ./roles /ansible/roles
-COPY ./ansible.cfg /ansible/ansible.cfg
+COPY ./*.yml ./
+COPY ./inventory ./inventory
+COPY ./roles ./roles
+COPY ./ansible.cfg ./
 
 ENTRYPOINT [ "/usr/bin/ansible-playbook" ]
