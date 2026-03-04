@@ -1,6 +1,6 @@
 ---
 endpoints:
   - name: nextcloud
-    url: http://nextcloud-web-service.nextcloud
+    url: http://nextcloud-app-service.nextcloud
     conditions:
       - '[STATUS] == 200'
