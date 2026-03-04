@@ -29,6 +29,7 @@ receivers:
   - name: email-alerts
     email_configs:
       - to: beavercloud@fastmail.com
+        send_resolved: true
   - name: watchdog
     webhook_configs:
       - url_file: /run/secrets/webhook_url
