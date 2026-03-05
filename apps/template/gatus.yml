@@ -1,6 +1,6 @@
 ---
 endpoints:
   - name: template
-    url: http://template-web-service.template
+    url: http://template-app-service.template
     conditions:
       - '[STATUS] == 200'
