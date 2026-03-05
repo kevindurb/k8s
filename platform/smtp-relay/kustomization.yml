@@ -9,7 +9,6 @@ resources:
   - ./smtp-relay.yml
 
 components:
-  - ../../components/nas-media
   - ../../components/pod-hardening
   - ../../components/tmpdirs
 
