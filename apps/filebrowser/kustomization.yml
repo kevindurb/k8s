@@ -8,6 +8,9 @@ namePrefix: filebrowser-
 resources:
   - ../../bases/app-with-storage
 
+components:
+  - ../../components/app-nas-media
+
 images:
   - name: app-image
     newName: ghcr.io/gtsteffaniak/filebrowser

@@ -6,6 +6,7 @@ metadata:
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
+    beaver-cloud.xyz/nas-media: 'true'
     app.kubernetes.io/component: jellyfin
 spec:
   replicas: 1
