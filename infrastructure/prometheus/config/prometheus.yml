@@ -4,6 +4,13 @@ global:
   evaluation_interval: 5m
   scrape_timeout: 10s
 
+storage:
+  tsdb:
+    path: /prometheus
+    retention:
+      time: 15d
+      size: 25GB
+
 rule_files:
   - ./rules/*.yml
 

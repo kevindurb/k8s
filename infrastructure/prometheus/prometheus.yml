@@ -25,10 +25,7 @@ spec:
         - name: prometheus
           image: docker.io/prom/prometheus:v3.9.1@sha256:1f0f50f06acaceb0f5670d2c8a658a599affe7b0d8e78b898c1035653849a702
           args:
-            - --storage.tsdb.retention.size=25GB
             - --config.file=/etc/prometheus/prometheus.yml
-            - --storage.tsdb.path=/prometheus
-            - --web.console.libraries=/usr/share/prometheus/console_libraries
             - --web.external-url=https://prometheus.beaver-cloud.xyz
           resources:
             limits:
