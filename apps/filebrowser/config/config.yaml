@@ -3,6 +3,9 @@ userDefaults:
   singleClick: true
   stickySidebar: false
 server:
+  port: 80
+  database: /config/database.db
+  cacheDir: /tmp
   sources:
     - path: /media
       name: media

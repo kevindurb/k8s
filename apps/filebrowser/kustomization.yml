@@ -33,13 +33,6 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
-  - sourceValue: /home/filebrowser
-    targets:
-      - select:
-          kind: Deployment
-          name: app-deployment
-        fieldPaths:
-          - spec.template.spec.containers.0.volumeMounts.[name=volume].mountPath
 
 patches:
   - patch: |-
