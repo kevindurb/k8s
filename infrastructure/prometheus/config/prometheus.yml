@@ -6,7 +6,6 @@ global:
 
 storage:
   tsdb:
-    path: /prometheus
     retention:
       time: 15d
       size: 25GB
