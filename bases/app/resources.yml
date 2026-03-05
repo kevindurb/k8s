@@ -9,10 +9,7 @@ spec:
     type: Recreate
   template:
     spec:
-      volumes:
-        - name: volume
-          persistentVolumeClaim:
-            claimName: volume
+      volumes: []
       containers:
         - name: app
           image: app-image
@@ -21,27 +18,13 @@ spec:
               memory: 100M
             limits:
               memory: 1G
-          volumeMounts:
-            - name: volume
-              mountPath: /config
+          volumeMounts: []
           env:
             - name: TZ
               value: America/Denver
           ports:
             - name: http
               containerPort: 80
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: volume
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
-  resources:
-    requests:
-      storage: 1G
 
 ---
 apiVersion: v1

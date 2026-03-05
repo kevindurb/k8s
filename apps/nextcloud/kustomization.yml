@@ -7,7 +7,7 @@ namePrefix: nextcloud-
 
 resources:
   - ../../bases/postgres
-  - ../../bases/app
+  - ../../bases/app-with-storage
 
 patches:
   - path: ./app-deployment.patch.yml

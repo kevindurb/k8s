@@ -6,7 +6,7 @@ namespace: template
 namePrefix: template-
 
 resources:
-  - ../../bases/app
+  - ../../bases/app-with-storage
 
 images:
   - name: app-image

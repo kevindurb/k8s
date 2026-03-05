@@ -6,11 +6,12 @@ namespace: filebrowser
 namePrefix: filebrowser-
 
 resources:
-  - ./filebrowser.yml
+  - ../../bases/app
 
-components:
-  - ../../components/nas-media
-  - ../../components/pod-hardening
+images:
+  - name: app-image
+    newName: ghcr.io/gtsteffaniak/filebrowser
+    newTag: 1.3.0-beta
 
 configMapGenerator:
   - name: config
@@ -22,6 +23,34 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - filebrowser.yml=gatus.yml
+
+replacements:
+  - sourceValue: filebrowser.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName
+
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/volumes
+        value:
+          name: config-map
+          configMap:
+            name: config
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts
+        value:
+          name: config-map
+          mountPath: /home/filebrowser/config.yaml
+          subPath: config.yaml
+    target:
+      kind: Deployment
+      name: app-deployment
 
 labels:
   - includeSelectors: true
