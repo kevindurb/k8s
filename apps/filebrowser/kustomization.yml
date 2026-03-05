@@ -6,7 +6,7 @@ namespace: filebrowser
 namePrefix: filebrowser-
 
 resources:
-  - ../../bases/app
+  - ../../bases/app-with-storage
 
 images:
   - name: app-image
