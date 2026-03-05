@@ -52,3 +52,6 @@ tmpl type name:
     - [ ] Update configMapGenerator for gatus config
     - [ ] Update gatus.yml
   "
+
+drain node:
+  kubectl drain --delete-emptydir-data --ignore-daemonsets {{node}}
