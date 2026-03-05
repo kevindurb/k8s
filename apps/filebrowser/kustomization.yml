@@ -46,7 +46,7 @@ patches:
         path: /spec/template/spec/containers/0/volumeMounts/-
         value:
           name: config-map
-          mountPath: /home/filebrowser/config.yaml
+          mountPath: /home/filebrowser/data/config.yaml
           subPath: config.yaml
     target:
       kind: Deployment
