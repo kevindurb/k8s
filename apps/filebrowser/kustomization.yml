@@ -37,13 +37,13 @@ replacements:
 patches:
   - patch: |-
       - op: add
-        path: /spec/template/spec/volumes
+        path: /spec/template/spec/volumes/0
         value:
           name: config-map
           configMap:
             name: config
       - op: add
-        path: /spec/template/spec/containers/0/volumeMounts
+        path: /spec/template/spec/containers/0/volumeMounts/0
         value:
           name: config-map
           mountPath: /home/filebrowser/config.yaml
