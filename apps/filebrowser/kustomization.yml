@@ -48,6 +48,16 @@ patches:
           name: config-map
           mountPath: /home/filebrowser/config.yaml
           subPath: config.yaml
+      - op: add
+        path: /spec/template/spec/volumes/0
+        value:
+          name: cache
+          emptyDir: {}
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/0
+        value:
+          name: cache
+          mountPath: /home/filebrowser/cache
     target:
       kind: Deployment
       name: app-deployment
