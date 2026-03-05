@@ -6,7 +6,7 @@ namespace: filebrowser
 namePrefix: filebrowser-
 
 resources:
-  - ../../bases/app
+  - ../../bases/app-with-storage
 
 images:
   - name: app-image
@@ -33,31 +33,28 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+  - sourceValue: /home/filebrowser
+    targets:
+      - select:
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.0.volumeMounts.[name=volume].mountPath
 
 patches:
   - patch: |-
       - op: add
-        path: /spec/template/spec/volumes/0
+        path: /spec/template/spec/volumes/-
         value:
           name: config-map
           configMap:
             name: config
       - op: add
-        path: /spec/template/spec/containers/0/volumeMounts/0
+        path: /spec/template/spec/containers/0/volumeMounts/-
         value:
           name: config-map
           mountPath: /home/filebrowser/config.yaml
           subPath: config.yaml
-      - op: add
-        path: /spec/template/spec/volumes/0
-        value:
-          name: cache
-          emptyDir: {}
-      - op: add
-        path: /spec/template/spec/containers/0/volumeMounts/0
-        value:
-          name: cache
-          mountPath: /home/filebrowser/cache
     target:
       kind: Deployment
       name: app-deployment
