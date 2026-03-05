@@ -27,6 +27,8 @@ spec:
           args:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=5d
+            - --storage.tsdb.retention.size=20GB
             - --web.external-url=https://prometheus.beaver-cloud.xyz
           resources:
             limits:
