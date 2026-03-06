@@ -38,7 +38,7 @@ patches:
           configMap:
             name: config
       - op: add
-        path: /spec/template/spec/containers/0/volumeMounts/-
+        path: /spec/template/spec/containers/0/volumeMounts/0
         value:
           name: config-map
           mountPath: /config/config.yaml
