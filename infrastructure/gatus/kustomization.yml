@@ -32,6 +32,18 @@ replacements:
 patches:
   - patch: |-
       - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: config-map
+          configMap:
+            name: config
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: config-map
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+      - op: add
         path: /spec/template/spec/containers/0/env
         value:
           - name: GATUS_LOG_LEVEL
