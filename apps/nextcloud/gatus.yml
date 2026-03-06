@@ -2,6 +2,6 @@
 endpoints:
   - name: nextcloud
     group: apps
-    url: http://nextcloud-app-service.nextcloud/heartbeat
+    url: http://nextcloud-app-service.nextcloud/status.php
     conditions:
       - '[STATUS] == 200'
