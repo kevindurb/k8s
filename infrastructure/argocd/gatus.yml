@@ -2,6 +2,7 @@
 endpoints:
   - name: argocd
     url: https://argocd-server.argocd
+    group: infrastructure
     client:
       insecure: true
     conditions:

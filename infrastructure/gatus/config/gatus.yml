@@ -4,10 +4,12 @@ metrics: true
 endpoints:
   - name: gatus
     url: http://gatus-app-service
+    group: infrastructure
     conditions: ['[STATUS] == 200']
 
   - name: google
     url: https://google.com
+    group: external
     conditions: ['[STATUS] == 200']
 
   - name: router

@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: radarr
+    group: apps
     url: http://radarr-web-service.apps
     conditions:
       - '[STATUS] == 200'

@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: nextcloud
+    group: apps
     url: http://nextcloud-app-service.nextcloud/heartbeat
     conditions:
       - '[STATUS] == 200'

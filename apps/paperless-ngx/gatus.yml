@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: paperless-ngx
+    group: apps
     url: http://paperless-ngx-web-service.paperless-ngx
     conditions:
       - '[STATUS] == 200'

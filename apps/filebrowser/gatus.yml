@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: filebrowser
+    group: apps
     url: http://filebrowser-app-service.filebrowser
     conditions:
       - '[STATUS] == 200'

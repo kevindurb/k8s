@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: jellyfin
+    group: apps
     url: http://jellyfin-service.jellyfin
     conditions:
       - '[STATUS] == 200'

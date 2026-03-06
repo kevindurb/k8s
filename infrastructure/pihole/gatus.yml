@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: pihole
+    group: infrastructure
     url: http://pihole-web-service.pihole/admin/login
     conditions:
       - '[STATUS] == 200'

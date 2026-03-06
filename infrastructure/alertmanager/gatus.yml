@@ -2,5 +2,6 @@
 endpoints:
   - name: alertmanager
     url: http://alertmanager-service.alertmanager/-/healthy
+    group: infrastructure
     conditions:
       - '[STATUS] == 200'
