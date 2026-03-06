@@ -3,7 +3,7 @@ metrics: true
 
 endpoints:
   - name: gatus
-    url: http://gatus-service
+    url: http://gatus-app-service
     conditions: ['[STATUS] == 200']
 
   - name: google
