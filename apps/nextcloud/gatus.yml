@@ -2,6 +2,6 @@
 endpoints:
   - name: nextcloud
     group: apps
-    url: http://nextcloud-app-service.nextcloud/status.php
+    url: http://nextcloud-app-service.nextcloud/cron.php
     conditions:
       - '[STATUS] == 200'
