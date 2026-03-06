@@ -20,6 +20,8 @@ spec:
               value: ALL
             - name: RESOURCE
               value: both
+            - name: HEALTH_PORT
+              value: '0'
           volumeMounts:
             - name: volume
               mountPath: /config
