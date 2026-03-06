@@ -14,7 +14,7 @@ components:
 images:
   - name: app-image
     newName: ghcr.io/gtsteffaniak/filebrowser
-    newTag: 1.3.0-beta
+    newTag: 1.3.0-beta@sha256:9f46fc0bc2aa15cbd8158c877d50f87ff617bab4301e599df38c82613fcf04ff
 
 configMapGenerator:
   - name: config
