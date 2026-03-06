@@ -6,16 +6,58 @@ namespace: gatus
 namePrefix: gatus-
 
 resources:
-  - ./gatus.yml
+  - ../../bases/app-with-storage
+  - ./rbac.yml
 
-components:
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
+images:
+  - name: app-image
+    newName: ghcr.io/twin/gatus
+    newTag: v5.34.0
 
 configMapGenerator:
   - name: config
     files:
       - ./config/gatus.yml
+
+replacements:
+  - sourceValue: gatus.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName
+
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: GATUS_LOG_LEVEL
+            value: DEBUG
+          - name: GATUS_CONFIG_PATH
+            value: /config
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            memory: 100M
+          limits:
+            memory: 500M
+      - op: add
+        path: /spec/template/spec/containers/0/ports/0/containerPort
+        value: 8080
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: service-account
+    target:
+      kind: Deployment
+      name: app-deployment
+  - path: ./k8s-sidecar.patch.yml
+    target:
+      kind: Deployment
+      name: app-deployment
 
 labels:
   - includeSelectors: true

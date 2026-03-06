@@ -30,3 +30,18 @@ endpoints:
     url: http://192.168.1.4
     group: networking
     conditions: ['[STATUS] == 200']
+
+  - name: Doorbell Camera
+    url: http://192.168.50.1
+    group: cameras
+    conditions: ['[STATUS] == 200']
+
+  - name: Garage Camera
+    url: http://192.168.50.2
+    group: cameras
+    conditions: ['[STATUS] == 200']
+
+  - name: Living Room Camera
+    url: http://192.168.50.11
+    group: cameras
+    conditions: ['[STATUS] == 200']

@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  template:
+    spec:
+      containers:
+        - image: ghcr.io/kiwigrid/k8s-sidecar:2.5.0@sha256:a6b3f707f883108376514489a94d6629109a327b2978e1d826cd104c4ca436df
+          name: config-sync
+          env:
+            - name: FOLDER
+              value: /config
+            - name: LABEL
+              value: gatus.io/enabled
+            - name: LABEL_VALUE
+              value: 'true'
+            - name: NAMESPACE
+              value: ALL
+            - name: RESOURCE
+              value: both
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+            - name: tmp
+              mountPath: /tmp
