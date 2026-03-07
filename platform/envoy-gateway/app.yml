@@ -8,10 +8,13 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: oci://docker.io/envoyproxy/gateway-helm
-    targetRevision: v1.7.0
-    path: .
+  sources:
+    - repoURL: oci://docker.io/envoyproxy/gateway-helm
+      targetRevision: v1.7.0
+      path: .
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: platform/envoy-gateway
   destination:
     server: https://kubernetes.default.svc
     namespace: envoy-gateway-system
