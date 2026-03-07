@@ -6,6 +6,7 @@ namespace: metallb-system
 
 resources:
   - https://raw.githubusercontent.com/metallb/metallb/v0.15.3/config/manifests/metallb-native.yaml
+  - ./address-pool.yml
 
 labels:
   - includeSelectors: true
