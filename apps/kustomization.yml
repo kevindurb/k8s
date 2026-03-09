@@ -6,6 +6,7 @@ resources:
   - ./filebrowser/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
+  - ./makemkv/app.yml
   - ./nextcloud/app.yml
   - ./scrypted/app.yml
   - ./syncthing/app.yml

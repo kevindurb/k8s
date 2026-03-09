@@ -6,22 +6,86 @@ namespace: makemkv
 namePrefix: makemkv-
 
 resources:
-  - ./makemkv.yml
+  - ../../bases/app
 
 components:
-  - ../../components/nas-media
+  - ../../components/app-nas-media
+
+images:
+  - name: app-image
+    newName: jlesage/makemkv
+    newTag: v26.01.2@sha256:4c114cfbd0ba7feef85c72d1721b8ea13a44ebc010b4996b644e618906e61717
 
 configMapGenerator:
-  - name: hooks
-    files:
-      - ./config/disk_rip_started.sh
-      - ./config/disk_rip_terminated.sh
   - name: gatus
     options:
       labels:
         gatus.io/enabled: 'true'
     files:
       - makemkv.yml=gatus.yml
+
+replacements:
+  - sourceValue: '5800'
+    targets:
+      - select: &app-deployment
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
+
+  - sourceValue: makemkv.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName
+
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: MAKEMKV_KEY
+            value: T-USSm3IxiXEKzraO1BIr0HAlRVzySlsOvlJMknCoq2G1NuNBvDv4xbSgUpueTH5nUdl
+          - name: USER_ID
+            value: '1000'
+          - name: GROUP_ID
+            value: '1000'
+          - name: SUP_GROUP_IDS
+            value: '11'
+          - name: TZ
+            value: America/Denver
+          - name: DARK_MODE
+            value: '1'
+          - name: AUTO_DISC_RIPPER
+            value: '1'
+          - name: AUTO_DISC_RIPPER_EJECT
+            value: '1'
+          - name: AUTO_DISC_RIPPER_MIN_TITLE_LENGTH
+            value: '600' # 10 minutes
+          - name: AUTO_DISC_RIPPER_FORCE_UNIQUE_OUTPUT_DIR
+            value: '1'
+      - op: replace
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          privileged: true
+      - op: replace
+        path: /spec/template/spec/securityContext
+        value:
+          fsGroup: 1000
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          kubernetes.io/hostname: drone-04
+      - op: replace
+        path: /spec/template/spec/containers/0/volumeMounts/0
+        value:
+          name: nas-media
+          mountPath: /output
+          subPath: Downloads
+    target: *app-deployment
 
 labels:
   - includeSelectors: true
