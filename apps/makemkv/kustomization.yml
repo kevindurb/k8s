@@ -48,7 +48,7 @@ patches:
         path: /spec/template/spec/containers/0/env
         value:
           - name: MAKEMKV_KEY
-            value: T-USSm3IxiXEKzraO1BIr0HAlRVzySlsOvlJMknCoq2G1NuNBvDv4xbSgUpueTH5nUdl
+            value: T-URt6MHxNy3HmfVojU8pE05WQ6HfgVI8S@HiIeNcWFim9rBgNlOdLFROSATCsWikcKW
           - name: USER_ID
             value: '1000'
           - name: GROUP_ID
