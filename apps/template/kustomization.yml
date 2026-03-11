@@ -8,6 +8,9 @@ namePrefix: template-
 resources:
   - ../../bases/app-with-storage
 
+components:
+  - ../../components/http-route
+
 images:
   - name: app-image
     newName: docker.io/traefik/whoami
@@ -30,6 +33,10 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 labels:
   - includeSelectors: true
