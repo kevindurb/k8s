@@ -36,15 +36,15 @@ spec:
     - type: IPAddress
       value: 192.168.42.4
   listeners:
-    - name: http
-      protocol: HTTP
-      port: 80
-      allowedRoutes:
-        kinds:
-          - kind: HTTPRoute
-            group: gateway.networking.k8s.io
-        namespaces:
-          from: Same
+    # - name: http
+    #   protocol: HTTP
+    #   port: 80
+    #   allowedRoutes:
+    #     kinds:
+    #       - kind: HTTPRoute
+    #         group: gateway.networking.k8s.io
+    #     namespaces:
+    #       from: Same
     - name: https
       protocol: HTTPS
       port: 443
