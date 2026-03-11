@@ -6,6 +6,7 @@ metadata:
 spec:
   parentRefs:
     - name: internal-beaver-cloud
+      namespace: envoy-gateway-system
   hostnames:
     - host
   rules:
