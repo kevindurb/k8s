@@ -79,7 +79,7 @@ groups:
 
       - alert: HostCpuHighIowait
         expr: avg without (cpu) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > .10
-        for: 5m
+        for: 15m
         labels:
           severity: warning
         annotations:
