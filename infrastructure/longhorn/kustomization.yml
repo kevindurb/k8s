@@ -8,6 +8,8 @@ resources:
   - ./nodes.yml
   - ./storage-class.yml
   - ./limit-range.yml
+  - ./jobs.yml
+  - ./backup-target.yml
 
 labels:
   - includeSelectors: true
