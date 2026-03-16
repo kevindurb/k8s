@@ -6,7 +6,6 @@ namespace: argocd
 
 resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-  - ./resources/ingress.yml
 
 components:
   - ../../components/https-route

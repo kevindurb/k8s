@@ -37,12 +37,6 @@ replacements:
   - sourceValue: makemkv.beaver-cloud.xyz
     targets:
       - select:
-          kind: Ingress
-        fieldPaths:
-          - spec.rules.0.host
-          - spec.tls.0.hosts.0
-          - spec.tls.0.secretName
-      - select:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
