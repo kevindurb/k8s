@@ -9,6 +9,9 @@ resources:
   - ../../bases/postgres
   - ../../bases/app-with-storage
 
+components:
+  - ../../components/http-route
+
 patches:
   - path: ./app-deployment.patch.yml
     target:
@@ -24,6 +27,10 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
   - sourceValue: 10G
     targets:
       - select:

@@ -9,6 +9,9 @@ resources:
   - ../../bases/app-with-storage
   - ./rbac.yml
 
+components:
+  - ../../components/http-route
+
 images:
   - name: app-image
     newName: ghcr.io/twin/gatus
@@ -28,6 +31,10 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 patches:
   - patch: |-

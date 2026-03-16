@@ -10,6 +10,7 @@ resources:
 
 components:
   - ../../components/app-nas-media
+  - ../../components/http-route
 
 images:
   - name: app-image
@@ -36,6 +37,10 @@ replacements:
           - spec.rules.0.host
           - spec.tls.0.hosts.0
           - spec.tls.0.secretName
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 patches:
   - patch: |-
