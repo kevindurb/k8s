@@ -5,7 +5,9 @@ metadata:
   name: route
 spec:
   parentRefs:
-    - name: internal-beaver-cloud
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
       namespace: envoy-gateway-system
   hostnames:
     - host
@@ -15,5 +17,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: app-service
+        - group: ''
+          kind: Service
+          name: app-service
           port: 443
+          weight: 1
