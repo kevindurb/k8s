@@ -2,6 +2,6 @@
 endpoints:
   - name: handbrake-web
     group: apps
-    url: http://handbrake-web-web-service.handbrake-web
+    url: http://handbrake-web-app-service.handbrake-web
     conditions:
       - '[STATUS] == 200'

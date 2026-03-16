@@ -2,6 +2,6 @@
 endpoints:
   - name: syncthing
     group: apps
-    url: http://syncthing-web-service.syncthing
+    url: http://syncthing-app-service.syncthing
     conditions:
       - '[STATUS] == 200'

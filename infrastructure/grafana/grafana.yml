@@ -55,7 +55,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-service
+  name: app-service
 spec:
   selector:
     app.kubernetes.io/component: web
@@ -84,6 +84,6 @@ spec:
             path: '/'
             backend:
               service:
-                name: web-service
+                name: app-service
                 port:
                   name: http

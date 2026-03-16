@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: omada
-    url: https://omada-web-service.networking/login
+    url: https://omada-app-service.omada/login
     group: apps
     client:
       insecure: true

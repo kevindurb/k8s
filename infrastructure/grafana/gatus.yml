@@ -2,6 +2,6 @@
 endpoints:
   - name: grafana
     group: infrastructure
-    url: http://grafana-web-service.grafana
+    url: http://grafana-app-service.grafana
     conditions:
       - '[STATUS] == 200'

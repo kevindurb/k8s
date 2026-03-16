@@ -2,6 +2,6 @@
 endpoints:
   - name: sonarr
     group: apps
-    url: http://sonarr-web-service.apps
+    url: http://sonarr-app-service.sonarr
     conditions:
       - '[STATUS] == 200'

@@ -2,6 +2,6 @@
 endpoints:
   - name: home-assistant
     group: apps
-    url: http://home-assistant-web-service.home-assistant
+    url: http://home-assistant-app-service.home-assistant
     conditions:
       - '[STATUS] == 200'

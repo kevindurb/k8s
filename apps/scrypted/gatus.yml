@@ -2,6 +2,6 @@
 endpoints:
   - name: scrypted
     group: apps
-    url: http://scrypted-web-service.scrypted
+    url: http://scrypted-app-service.scrypted
     conditions:
       - '[STATUS] == 200'

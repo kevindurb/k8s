@@ -2,6 +2,6 @@
 endpoints:
   - name: makemkv
     group: apps
-    url: http://makemkv-web-service.media
+    url: http://makemkv-app-service.makemkv
     conditions:
       - '[STATUS] == 200'
