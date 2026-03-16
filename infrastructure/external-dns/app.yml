@@ -18,10 +18,19 @@ spec:
           provider:
             name: cloudflare
           txtOwnerId: kevindurb
-          sources: [ingress]
+          sources:
+            [
+              ingress,
+              gateway-grpcroute,
+              gateway-httproute,
+              gateway-tcproute,
+              gateway-tlsroute,
+              gateway-udproute,
+            ]
           extraArgs:
             publish-internal-services: null
             ingress-class: external
+            gateway-name: external-beaver-cloud
             domain-filter: beaver-cloud.xyz
           env:
             - name: CF_API_TOKEN
@@ -59,10 +68,20 @@ spec:
           provider:
             name: pihole
           registry: noop
-          sources: [ingress, crd]
+          sources:
+            [
+              crd,
+              ingress,
+              gateway-grpcroute,
+              gateway-httproute,
+              gateway-tcproute,
+              gateway-tlsroute,
+              gateway-udproute,
+            ]
           extraArgs:
             pihole-server: http://pihole-app-service.pihole.svc.cluster.local
             ingress-class: internal
+            gateway-name: internal-beaver-cloud
             crd-source-apiversion: externaldns.k8s.io/v1alpha1
             crd-source-kind: DNSEndpoint
             pihole-api-version: '6'

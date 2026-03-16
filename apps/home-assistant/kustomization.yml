@@ -12,6 +12,15 @@ components:
   - ../../components/pod-hardening
   - ../../components/tmpdirs
   - ../../components/host-networking
+  - ../../components/http-route
+
+replacements:
+  - sourceValue: home-assistant.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 configMapGenerator:
   - name: config

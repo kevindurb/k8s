@@ -12,6 +12,15 @@ components:
   - ../../components/nas-media
   - ../../components/pod-hardening
   - ../../components/tmpdirs
+  - ../../components/http-route
+
+replacements:
+  - sourceValue: radarr.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 configMapGenerator:
   - name: gatus

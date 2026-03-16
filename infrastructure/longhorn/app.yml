@@ -28,6 +28,13 @@ spec:
               'cert-manager.io/cluster-issuer': cloudflare-issuer
             tls: true
             tlsSecret: *host
+          httproute:
+            enabled: true
+            parentRefs:
+              - name: internal-beaver-cloud
+                namespace: envoy-gateway-system
+            hostnames:
+              - *host
           longhornManager:
             serviceAnnotations:
               prometheus.io/scrape: 'true'

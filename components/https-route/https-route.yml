@@ -1,0 +1,19 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: route
+spec:
+  parentRefs:
+    - name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - host
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: app-service
+          port: 443

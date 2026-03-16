@@ -10,6 +10,15 @@ resources:
 
 components:
   - ../../components/pod-hardening
+  - ../../components/http-route
+
+replacements:
+  - sourceValue: alertmanager.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 configMapGenerator:
   - name: config

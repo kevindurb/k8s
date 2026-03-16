@@ -13,14 +13,6 @@ components:
   - ../../components/nas-media
   - ../../components/http-route
 
-configMapGenerator:
-  - name: gatus
-    options:
-      labels:
-        gatus.io/enabled: 'true'
-    files:
-      - paperless-ngx.yml=gatus.yml
-
 replacements:
   - sourceValue: paperless.beaver-cloud.xyz
     targets:
@@ -28,6 +20,14 @@ replacements:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - paperless-ngx.yml=gatus.yml
 
 labels:
   - includeSelectors: true

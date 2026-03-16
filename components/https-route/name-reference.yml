@@ -1,0 +1,10 @@
+---
+nameReference:
+  - kind: Service
+    fieldSpecs:
+      - kind: HTTPRoute
+        path: spec/rules/backendRefs/name
+  - kind: Gateway
+    fieldSpecs:
+      - kind: HTTPRoute
+        path: spec/parentRefs/name

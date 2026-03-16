@@ -8,6 +8,17 @@ namePrefix: pihole-
 resources:
   - ./pihole.yml
 
+components:
+  - ../../components/http-route
+
+replacements:
+  - sourceValue: pihole.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
+
 configMapGenerator:
   - name: gatus
     options:

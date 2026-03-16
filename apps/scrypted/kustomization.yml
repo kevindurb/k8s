@@ -10,6 +10,15 @@ resources:
 
 components:
   - ../../components/host-networking
+  - ../../components/http-route
+
+replacements:
+  - sourceValue: scrypted.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 configMapGenerator:
   - files:

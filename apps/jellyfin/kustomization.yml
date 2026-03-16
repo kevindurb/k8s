@@ -12,6 +12,15 @@ resources:
 
 components:
   - ../../components/nas-media
+  - ../../components/http-route
+
+replacements:
+  - sourceValue: jellyfin.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
 
 configMapGenerator:
   - name: gatus

@@ -8,6 +8,23 @@ resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   - ./resources/ingress.yml
 
+components:
+  - ../../components/https-route
+
+replacements:
+  - sourceValue: argocd.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
+  - sourceValue: argocd-server
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.rules.0.backendRefs.0.name
+
 patches:
   - path: ./resources/config.patch.yml
   - path: ./resources/metrics-service.patch.yml
