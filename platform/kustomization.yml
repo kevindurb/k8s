@@ -6,5 +6,4 @@ resources:
   - ./bws-operator/app.yml
   - ./cert-manager/app.yml
   - ./envoy-gateway/app.yml
-  - ./ingress-nginx/app.yml
   - ./smtp-relay/app.yml
