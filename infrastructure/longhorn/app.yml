@@ -25,7 +25,8 @@ spec:
             host: &host longhorn.beaver-cloud.xyz
             ingressClassName: internal
             annotations:
-              'cert-manager.io/cluster-issuer': cloudflare-issuer
+              external-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+              cert-manager.io/cluster-issuer: cloudflare-issuer
             tls: true
             tlsSecret: *host
           httproute:

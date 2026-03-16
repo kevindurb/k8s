@@ -105,6 +105,7 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
+    external-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
     cert-manager.io/cluster-issuer: cloudflare-issuer
     nginx.ingress.kubernetes.io/backend-protocol: 'HTTPS'
     nginx.ingress.kubernetes.io/proxy-ssl-verify: 'off'

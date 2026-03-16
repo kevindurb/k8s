@@ -78,6 +78,7 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
+    external-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
     cert-manager.io/cluster-issuer: cloudflare-issuer
 spec:
   ingressClassName: internal
