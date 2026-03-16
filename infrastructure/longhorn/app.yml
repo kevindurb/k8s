@@ -26,6 +26,8 @@ spec:
               - name: internal-beaver-cloud
                 namespace: envoy-gateway-system
             hostnames: [longhorn.beaver-cloud.xyz]
+            annotations:
+              internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
           longhornManager:
             serviceAnnotations:
               prometheus.io/scrape: 'true'
