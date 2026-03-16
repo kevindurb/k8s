@@ -8,7 +8,6 @@ resources:
   - ./resources/config-pvc.yml
   - ./resources/deployment.yml
   - ./resources/service.yml
-  - ./resources/ingress.yml
 
 components:
   - ../../components/nas-media
