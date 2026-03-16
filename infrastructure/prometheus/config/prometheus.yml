@@ -11,7 +11,7 @@ alerting:
   alertmanagers:
     - scheme: http
       static_configs:
-        - targets: [alertmanager-service.alertmanager.svc.cluster.local]
+        - targets: [alertmanager-app-service.alertmanager.svc.cluster.local]
 
 scrape_configs:
   - job_name: 'kube-state-metrics'
