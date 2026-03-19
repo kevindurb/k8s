@@ -36,15 +36,6 @@ configMapGenerator:
       - LOG_CONFS=true
       - SERVERURL=home.beaver-cloud.xyz
 
-replacements:
-  - sourceValue: '51820'
-    targets:
-      - select: &app-deployment
-          kind: Deployment
-          name: app-deployment
-        fieldPaths:
-          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
-
 patches:
   - patch: |-
       - op: replace
@@ -57,7 +48,15 @@ patches:
           readOnlyRootFilesystem: true
           capabilities:
             add: [NET_ADMIN]
-    target: *app-deployment
+      - op: replace
+        path: /spec/template/spec/containers/0/ports/0
+        value:
+          name: wg
+          protocol: UDP
+          containerPort: 51820
+    target:
+      kind: Deployment
+      name: app-deployment
   - patch: |-
       - op: add
         path: /spec/type
@@ -65,6 +64,13 @@ patches:
       - op: add
         path: /spec/loadBalancerIP
         value: 192.168.42.7
+      - op: replace
+        path: /spec/ports/0
+        value:
+          name: wg
+          protocol: UDP
+          port: 51820
+          targetPort: wg
     target:
       kind: Service
       name: app-service
