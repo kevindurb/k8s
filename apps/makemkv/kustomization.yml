@@ -11,6 +11,8 @@ resources:
 components:
   - ../../components/app-nas-media
   - ../../components/http-route
+  - ../../components/app-env
+  - ../../components/privileged-app
 
 images:
   - name: app-image
@@ -24,6 +26,18 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - makemkv.yml=gatus.yml
+  - name: app-env
+    literals:
+      - MAKEMKV_KEY=T-URt6MHxNy3HmfVojU8pE05WQ6HfgVI8S@HiIeNcWFim9rBgNlOdLFROSATCsWikcKW
+      - USER_ID=1000
+      - GROUP_ID=1000
+      - SUP_GROUP_IDS=11
+      - TZ=America/Denver
+      - DARK_MODE=1
+      - AUTO_DISC_RIPPER=1
+      - AUTO_DISC_RIPPER_EJECT=1
+      - AUTO_DISC_RIPPER_MIN_TITLE_LENGTH=600 # 10 minutes
+      - AUTO_DISC_RIPPER_FORCE_UNIQUE_OUTPUT_DIR=1
 
 replacements:
   - sourceValue: '5800'
@@ -43,37 +57,6 @@ replacements:
 
 patches:
   - patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/env
-        value:
-          - name: MAKEMKV_KEY
-            value: T-URt6MHxNy3HmfVojU8pE05WQ6HfgVI8S@HiIeNcWFim9rBgNlOdLFROSATCsWikcKW
-          - name: USER_ID
-            value: '1000'
-          - name: GROUP_ID
-            value: '1000'
-          - name: SUP_GROUP_IDS
-            value: '11'
-          - name: TZ
-            value: America/Denver
-          - name: DARK_MODE
-            value: '1'
-          - name: AUTO_DISC_RIPPER
-            value: '1'
-          - name: AUTO_DISC_RIPPER_EJECT
-            value: '1'
-          - name: AUTO_DISC_RIPPER_MIN_TITLE_LENGTH
-            value: '600' # 10 minutes
-          - name: AUTO_DISC_RIPPER_FORCE_UNIQUE_OUTPUT_DIR
-            value: '1'
-      - op: replace
-        path: /spec/template/spec/containers/0/securityContext
-        value:
-          privileged: true
-      - op: replace
-        path: /spec/template/spec/securityContext
-        value:
-          fsGroup: 1000
       - op: add
         path: /spec/template/spec/nodeSelector
         value:

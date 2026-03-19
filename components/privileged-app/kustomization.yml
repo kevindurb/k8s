@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          privileged: true
+      - op: replace
+        path: /spec/template/spec/securityContext
+        value:
+          fsGroup: 1000
+    target:
+      kind: Deployment
+      name: app-deployment

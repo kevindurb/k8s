@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: template
+    group: apps
+    url: http://template-app-service.template
+    conditions:
+      - '[STATUS] == 200'

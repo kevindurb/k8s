@@ -7,3 +7,4 @@ resources:
   - ./cert-manager/app.yml
   - ./envoy-gateway/app.yml
   - ./smtp-relay/app.yml
+  - ./wireguard/app.yml
