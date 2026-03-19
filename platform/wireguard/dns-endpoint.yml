@@ -1,0 +1,12 @@
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: home.beaver-cloud.xyz
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  endpoints:
+    - dnsName: home.beaver-cloud.xyz
+      recordType: A
+      targets: [76.120.35.232]
