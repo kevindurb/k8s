@@ -40,7 +40,6 @@ patches:
         value:
           readOnlyRootFilesystem: true
           capabilities:
-            drop: [ALL]
             add: [NET_ADMIN]
     target:
       kind: Deployment
