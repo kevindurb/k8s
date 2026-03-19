@@ -28,6 +28,21 @@ configMapGenerator:
       - PEERS=workmac,corella
       - PUID=1000
       - PGID=1000
+      - PEERDNS=192.168.42.53
+      - INTERNAL_SUBNET=10.100.100.0
+      - ALLOWEDIPS=10.100.100.0/24,192.168.0.0/16
+      - PERSISTENTKEEPALIVE_PEERS=all
+      - LOG_CONFS=true
+      - SERVERURL=home.beaver-cloud.xyz
+
+replacements:
+  - sourceValue: '51820'
+    targets:
+      - select: &app-deployment
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
 
 patches:
   - patch: |-
@@ -41,9 +56,7 @@ patches:
           readOnlyRootFilesystem: true
           capabilities:
             add: [NET_ADMIN]
-    target:
-      kind: Deployment
-      name: app-deployment
+    target: *app-deployment
 
 labels:
   - includeSelectors: true
