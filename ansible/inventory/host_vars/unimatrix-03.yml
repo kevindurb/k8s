@@ -2,3 +2,5 @@
 k3s_role: server
 k3s_hostname: unimatrix-03
 k3s_server: 192.168.42.1
+
+tuned_profile: balanced

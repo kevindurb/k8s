@@ -1,0 +1,10 @@
+---
+# vim: set ft=yaml.ansible
+- name: Pull latest on all nodes
+  hosts: all
+  become: true
+  tasks:
+    - name: Upgrade to latest
+      community.general.bootc_manage:
+        state: latest
+      register: bootc
