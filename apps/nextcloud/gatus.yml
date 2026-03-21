@@ -4,4 +4,4 @@ endpoints:
     group: apps
     url: http://nextcloud-app-service.nextcloud/cron.php
     conditions:
-      - '[STATUS] == 200'
+      - '[STATUS] == 400'
