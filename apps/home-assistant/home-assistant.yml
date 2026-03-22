@@ -17,6 +17,8 @@ spec:
     metadata:
       labels: *labels
     spec:
+      nodeSelector:
+        feature.node.kubernetes.io/usb-ff_10c4_ea60.present: 'true'
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -27,6 +29,9 @@ spec:
         - name: config
           configMap:
             name: config
+        - name: zigbee-dongle
+          hostPath:
+            path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_dadea32ebf12ec11b8b720c7bd930c07-if00-port0
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2026.2.3@sha256:96fa92d83fa8dae987fbbbcf58b1fea1140985ff6a8517b37f7b65c76ef20133
@@ -39,6 +44,8 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /config
+            - name: zigbee-dongle
+              mountPath: /dev/ttyACM0
           env:
             - name: TZ
               value: America/Denver
