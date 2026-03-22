@@ -45,13 +45,13 @@ metadata:
   name: drone-03
   namespace: longhorn-system
 spec:
-  allowScheduling: true
-  evictionRequested: false
+  allowScheduling: false
+  evictionRequested: true
   tags: [storage]
   disks:
     nvme:
-      allowScheduling: true
-      evictionRequested: false
+      allowScheduling: false
+      evictionRequested: true
       storageReserved: 0
       diskDriver: ''
       path: /var/lib/longhorn
