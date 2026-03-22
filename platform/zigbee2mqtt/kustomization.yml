@@ -47,6 +47,13 @@ replacements:
           name: app-deployment
         fieldPaths:
           - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
+  - sourceValue: /app/data
+    targets:
+      - select:
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.[name=app].volumeMounts.[name=volume].mountPath
 
 patches:
   - target:
