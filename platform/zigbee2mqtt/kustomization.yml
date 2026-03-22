@@ -1,0 +1,88 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: zigbee2mqtt
+namePrefix: zigbee2mqtt-
+
+resources:
+  - ../../bases/app-with-storage
+
+components:
+  - ../../components/http-route
+  - ../../components/privileged-app
+  - ../../components/app-env
+
+images:
+  - name: app-image
+    newName: ghcr.io/koenkk/zigbee2mqtt
+    newTag: latest
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - zigbee2mqtt.yml=gatus.yml
+  - name: app-env
+    literals:
+      - ZIGBEE2MQTT_CONFIG_PERMIT_JOIN=true
+      - ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC=zigbee2mqtt
+      - ZIGBEE2MQTT_CONFIG_MQTT_SERVER=mqtt://mosquitto-service
+      - ZIGBEE2MQTT_CONFIG_SERIAL_PORT=/dev/ttyACM0
+      - ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER=zstack
+
+replacements:
+  - sourceValue: zigbee2mqtt.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
+  - sourceValue: '8080'
+    targets:
+      - select:
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
+
+patches:
+  - target:
+      kind: Deployment
+      name: app-deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          feature.node.kubernetes.io/usb-ff_10c4_ea60.present: "true"
+      - op: add
+        path: /spec/template/spec/volumes/0
+        value:
+          name: zigbee-dongle
+          hostPath:
+            path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_dadea32ebf12ec11b8b720c7bd930c07-if00-port0
+      - op: add
+        path: /spec/template/spec/volumes/0
+        value:
+          name: run-udev
+          hostPath:
+            path: /run/udev
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts
+        value:
+          name: udev
+          mountPath: /run/udev
+          readOnly: true
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts
+        value:
+          name: dongle
+          mountPath: /dev/ttyACM0
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: zigbee2mqtt
