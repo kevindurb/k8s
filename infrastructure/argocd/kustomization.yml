@@ -8,7 +8,7 @@ resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 components:
-  - ../../components/https-route
+  - ../../components/http-route
 
 replacements:
   - sourceValue: argocd.beaver-cloud.xyz
@@ -27,6 +27,7 @@ replacements:
 patches:
   - path: ./resources/config.patch.yml
   - path: ./resources/metrics-service.patch.yml
+  - path: ./resources/argocd-server.yml
 
 configMapGenerator:
   - name: gatus
