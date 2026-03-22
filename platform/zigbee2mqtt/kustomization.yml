@@ -70,13 +70,13 @@ patches:
           hostPath:
             path: /run/udev
       - op: add
-        path: /spec/template/spec/containers/0/volumeMounts
+        path: /spec/template/spec/containers/0/volumeMounts/0
         value:
           name: udev
           mountPath: /run/udev
           readOnly: true
       - op: add
-        path: /spec/template/spec/containers/0/volumeMounts
+        path: /spec/template/spec/containers/0/volumeMounts/0
         value:
           name: dongle
           mountPath: /dev/ttyACM0
