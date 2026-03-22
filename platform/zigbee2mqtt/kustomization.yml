@@ -72,13 +72,13 @@ patches:
       - op: add
         path: /spec/template/spec/containers/0/volumeMounts/0
         value:
-          name: udev
+          name: run-udev
           mountPath: /run/udev
           readOnly: true
       - op: add
         path: /spec/template/spec/containers/0/volumeMounts/0
         value:
-          name: dongle
+          name: zigbee-dongle
           mountPath: /dev/ttyACM0
 
 labels:
