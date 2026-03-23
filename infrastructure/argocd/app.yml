@@ -22,7 +22,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-  ignoreDifferences:
-    - kind: HTTPRoute
-      jsonPointers:
-        - /spec/parentRefs/
