@@ -11,9 +11,9 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: oci://docker.io/envoyproxy/gateway-helm
+    - repoURL: https://github.com/envoyproxy/gateway.git
       targetRevision: v1.7.1
-      path: .
+      path: charts/gateway-helm
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: platform/envoy-gateway
