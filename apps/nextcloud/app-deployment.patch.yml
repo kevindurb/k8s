@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/library/nextcloud:33-apache@sha256:cc99c50156b0fd1ae1930fbd97d6a9286b8e1d563c140220a841035b66c15500
+          image: docker.io/library/nextcloud:33-apache@sha256:666fd3f31c0865991d75e73369e4c074d304b782c937112f7614cd7ddc5ae089
           env:
             - name: TZ
               value: America/Denver
