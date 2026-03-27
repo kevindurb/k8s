@@ -47,8 +47,8 @@ spec:
               memory: 1G
           volumeMounts:
             - name: config
-              mountPath: /etc/cloudflared/config/config.json
-              subPath: config.json
+              mountPath: /etc/cloudflared/config/config.yml
+              subPath: config.yml
               readOnly: true
             - name: creds
               mountPath: /etc/cloudflared/creds/credentials.json
