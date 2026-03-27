@@ -31,7 +31,7 @@ spec:
             gateway-name: external-beaver-cloud
             domain-filter: beaver-cloud.xyz
             annotation-filter: external-dns.alpha.kubernetes.io/target
-            cloudflare-proxied: ''
+            cloudflare-proxied: null
           env:
             - name: CF_API_TOKEN
               valueFrom:
