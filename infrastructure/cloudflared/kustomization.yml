@@ -11,6 +11,11 @@ resources:
 components:
   - ../../components/pod-hardening
 
+configMapGenerator:
+  - name: config
+    files:
+      - ./config/config.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

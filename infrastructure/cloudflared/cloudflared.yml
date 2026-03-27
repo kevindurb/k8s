@@ -17,14 +17,60 @@ spec:
     metadata:
       labels: *labels
     spec:
+      volumes:
+        # https://developers.cloudflare.com/cloudflare-one/tutorials/many-cfd-one-tunnel
+        - name: creds
+          secret:
+            secretName: cloudflared-secret
+        - name: config
+          configMap:
+            name: config
       containers:
         - name: cloudflared
           image: docker.io/cloudflare/cloudflared:2026.2.0@sha256:404528c1cd63c3eb882c257ae524919e4376115e6fe57befca8d603656a91a4c
+          args:
+            - tunnel
+            - --config
+            - /etc/cloudflared/config/config.yml
+            - run
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
           resources:
             requests:
               memory: 100M
             limits:
               memory: 1G
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudflared/config/config.json
+              subPath: config.json
+              readOnly: true
+            - name: creds
+              mountPath: /etc/cloudflared/creds/credentials.json
+              subPath: credentials.json
+              readOnly: true
           env:
             - name: TZ
               value: America/Denver
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: cloudflared-secret
+  map:
+    - secretKeyName: credentials.json
+      bwSecretId: ade06d14-dd7b-4957-8b0d-b1da00f0b2aa
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
