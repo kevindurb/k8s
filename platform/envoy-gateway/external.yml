@@ -30,6 +30,7 @@ metadata:
   name: external-beaver-cloud
   annotations:
     cert-manager.io/cluster-issuer: cloudflare-issuer
+    external-dns.alpha.kubernetes.io/target: external.beaver-cloud.xyz
 spec:
   gatewayClassName: external-envoy-gateway
   addresses:
