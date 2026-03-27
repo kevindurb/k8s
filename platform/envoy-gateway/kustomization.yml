@@ -5,7 +5,8 @@ kind: Kustomization
 namespace: envoy-gateway-system
 
 resources:
-  - ./gateway.yml
+  - ./internal.yml
+  - ./external.yml
 
 labels:
   - includeSelectors: true

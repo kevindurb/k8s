@@ -1,0 +1,51 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: external-proxy-config
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        externalTrafficPolicy: Cluster
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: external-envoy-gateway
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: external-proxy-config
+    namespace: envoy-gateway-system
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: external-beaver-cloud
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+spec:
+  gatewayClassName: external-envoy-gateway
+  addresses:
+    - type: IPAddress
+      value: 192.168.42.3
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: '*.beaver-cloud.xyz'
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ''
+            kind: Secret
+            name: wildcard.beaver-cloud.xyz
