@@ -11,7 +11,7 @@ resources:
 
 components:
   - ../../components/nas-media
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: paperless.beaver-cloud.xyz

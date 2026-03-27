@@ -10,7 +10,7 @@ resources:
 
 components:
   - ../../components/host-networking
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: scrypted.beaver-cloud.xyz

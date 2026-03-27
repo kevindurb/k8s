@@ -11,7 +11,7 @@ resources:
 components:
   - ../../components/pod-hardening
   - ../../components/tmpdirs
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: grafana.beaver-cloud.xyz

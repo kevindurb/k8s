@@ -8,7 +8,7 @@ resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 components:
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: argocd.beaver-cloud.xyz

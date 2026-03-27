@@ -9,7 +9,7 @@ resources:
   - ../../bases/app-with-storage
 
 components:
-  - ../../components/http-route
+  - ../../components/internal-http-route
   - ../../components/privileged-app
   - ../../components/app-env
 

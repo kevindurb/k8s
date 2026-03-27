@@ -10,7 +10,7 @@ resources:
   - ../../bases/app-with-storage
 
 components:
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 patches:
   - path: ./app-deployment.patch.yml

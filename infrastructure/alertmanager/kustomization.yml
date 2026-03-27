@@ -10,7 +10,7 @@ resources:
 
 components:
   - ../../components/pod-hardening
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: alertmanager.beaver-cloud.xyz

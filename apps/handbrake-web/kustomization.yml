@@ -12,7 +12,7 @@ components:
   - ../../components/nas-media
   - ../../components/pod-hardening
   - ../../components/tmpdirs
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: handbrake-web.beaver-cloud.xyz

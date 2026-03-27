@@ -9,7 +9,7 @@ resources:
   - ./pihole.yml
 
 components:
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: pihole.beaver-cloud.xyz

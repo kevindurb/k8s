@@ -12,7 +12,7 @@ components:
   - ../../components/pod-hardening
   - ../../components/tmpdirs
   - ../../components/host-networking
-  - ../../components/http-route
+  - ../../components/internal-http-route
 
 replacements:
   - sourceValue: syncthing.beaver-cloud.xyz
