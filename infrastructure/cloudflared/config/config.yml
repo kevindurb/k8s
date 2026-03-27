@@ -7,7 +7,7 @@ originRequest:
   noTLSVerify: true
 ingress:
   - hostname: beaver-cloud.xyz
-    service: &envoy-gateway https://envoy-envoy-gateway-system-external-beaver-cloud-d9fc02f8.envoy-gateway.svc.cluster.local:443
+    service: &envoy-gateway https://envoy-envoy-gateway-system-external-beaver-cloud-d9fc02f8.envoy-gateway-system.svc.cluster.local:443
 
   - hostname: '*.beaver-cloud.xyz'
     service: *envoy-gateway
