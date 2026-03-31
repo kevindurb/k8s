@@ -1,18 +1,18 @@
 default:
-  just --list
+  @just --list
 
 get-kubeconfig:
   ssh core@192.168.42.1 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config
 
 argocd-refresh app:
-  kubectl annotate -n argocd application {{app}} argocd.argoproj.io/refresh='normal'
+  just kubectl annotate -n argocd application {{app}} argocd.argoproj.io/refresh='normal'
 
 argocd-refresh-all:
-  kubectl get applications -n argocd --no-headers -o custom-columns=":metadata.name" \
+  just kubectl get applications -n argocd --no-headers -o custom-columns=":metadata.name" \
     | xargs -I % just argocd-refresh %
 
 argocd-get-initial-admin-password:
-  kubectl get secret -o json -n argocd \
+  just kubectl get secret -o json -n argocd \
   argocd-initial-admin-secret \
   | jq -r .data.password \
   | base64 --decode
@@ -21,16 +21,16 @@ cloudflare-add-route host:
   cloudflared tunnel route dns kube "{{host}}"
 
 kubectl-create-bw-auth-token ns token:
-  kubectl create secret generic bw-auth-token \
+  just kubectl create secret generic bw-auth-token \
     -n {{ns}} --from-literal=token="{{token}}"
 
 kubectl-copy-bw-auth-token to from="default":
   just kubectl-copy-secret {{from}} bw-auth-token {{to}}
 
 kubectl-copy-secret from name to:
-   kubectl -n {{from}} get secret {{name}} -o yaml \
+   just kubectl -n {{from}} get secret {{name}} -o yaml \
      | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' \
-     | kubectl apply --namespace {{to}} -f -
+     | just kubectl apply --namespace {{to}} -f -
 
 tmpl type name:
   #! /usr/bin/env bash
@@ -54,4 +54,10 @@ tmpl type name:
   "
 
 drain node:
-  kubectl drain --delete-emptydir-data --ignore-daemonsets {{node}}
+  just kubectl drain --delete-emptydir-data --ignore-daemonsets {{node}}
+
+brew-exec *args:
+  @brew bundle exec "{{args}}"
+
+kubectl *args:
+  @just brew-exec kubectl {{args}}
