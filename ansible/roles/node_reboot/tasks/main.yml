@@ -7,7 +7,7 @@
       kubectl drain
       --delete-emptydir-data
       --ignore-daemonsets
-      {{ansible_hostname}}
+      {{ ansible_hostname }}
   changed_when: false
 
 - name: Stop k3s service
@@ -30,4 +30,4 @@
   delegate_to: localhost
   kubernetes.core.k8s_drain:
     state: uncordon
-    name: '{{ansible_hostname}}'
+    name: '{{ ansible_hostname }}'

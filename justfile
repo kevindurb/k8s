@@ -61,3 +61,6 @@ brew-exec *args:
 
 kubectl *args:
   @just brew-exec kubectl {{args}}
+
+pre-commit-install:
+  pre-commit install

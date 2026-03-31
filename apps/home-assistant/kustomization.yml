@@ -23,9 +23,6 @@ replacements:
           - spec.hostnames.0
 
 configMapGenerator:
-  - name: config
-    files:
-      - ./config/configuration.yaml
   - name: gatus
     options:
       labels:

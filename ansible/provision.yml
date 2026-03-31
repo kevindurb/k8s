@@ -49,7 +49,7 @@
 
     - name: Setup tuned profile
       ansible.builtin.command:
-        cmd: tuned-adm profile {{tuned_profile}}
+        cmd: tuned-adm profile {{ tuned_profile }}
       changed_when: false
 
 - name: Setup storage
