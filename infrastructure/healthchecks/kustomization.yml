@@ -9,7 +9,7 @@ resources:
   - ./resources/secret.yml
   - ./resources/drone-01.yml
   - ./resources/drone-02.yml
-  #  - ./resources/drone-03.yml
+  - ./resources/drone-03.yml
   - ./resources/drone-04.yml
   - ./resources/unimatrix-01.yml
   - ./resources/unimatrix-02.yml
