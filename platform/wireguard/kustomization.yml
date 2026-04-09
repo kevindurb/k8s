@@ -15,7 +15,7 @@ components:
 images:
   - name: app-image
     newName: lscr.io/linuxserver/wireguard
-    newTag: latest
+    newTag: latest@sha256:b199fa09846365caec217ebf9cbf839a22b7bf836acfd367a59ed52b6984f174
 
 configMapGenerator:
   - name: gatus

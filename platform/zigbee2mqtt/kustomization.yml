@@ -16,7 +16,7 @@ components:
 images:
   - name: app-image
     newName: ghcr.io/koenkk/zigbee2mqtt
-    newTag: latest
+    newTag: latest@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0
 
 configMapGenerator:
   - name: gatus
