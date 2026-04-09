@@ -1,9 +1,7 @@
 ---
 endpoints:
   - name: argocd
-    url: https://argocd-server.argocd
+    url: http://argocd-server.argocd
     group: infrastructure
-    client:
-      insecure: true
     conditions:
       - '[STATUS] == 200'
