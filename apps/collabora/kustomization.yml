@@ -1,0 +1,46 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: collabora
+namePrefix: collabora-
+
+resources:
+  - ../../bases/app-with-storage
+
+components:
+  - ../../components/internal-http-route
+
+images:
+  - name: app-image
+    newName: docker.io/collabora/code
+    newTag: 25.04.9.4.1
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - collabora.yml=gatus.yml
+
+replacements:
+  - sourceValue: collabora.beaver-cloud.xyz
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0
+  - sourceValue: '9980'
+    targets:
+      - select:
+          kind: Deployment
+          name: app-deployment
+        fieldPaths:
+          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: collabora
