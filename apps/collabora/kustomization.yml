@@ -11,6 +11,7 @@ resources:
 components:
   - ../../components/internal-http-route
   - ../../components/rw-root-app
+  - ../../components/app-env
 
 images:
   - name: app-image
@@ -24,6 +25,9 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - collabora.yml=gatus.yml
+  - name: app-env
+    literals:
+      - aliasgroup1=https://collabora.beaver-cloud.xyz:443
 
 replacements:
   - sourceValue: collabora.beaver-cloud.xyz
