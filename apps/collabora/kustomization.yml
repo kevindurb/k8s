@@ -10,7 +10,7 @@ resources:
 
 components:
   - ../../components/internal-http-route
-  - ../../components/rw-root-app
+  - ../../components/root-user-app
   - ../../components/app-env
 
 images:
