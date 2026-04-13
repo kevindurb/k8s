@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: collabora
-    group: apps
-    url: http://collabora-app-service.collabora
-    conditions:
-      - '[STATUS] == 200'
