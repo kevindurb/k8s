@@ -27,7 +27,7 @@ configMapGenerator:
       - collabora.yml=gatus.yml
   - name: app-env
     literals:
-      - aliasgroup1=https://collabora.beaver-cloud.xyz:443
+      - extra_params=--o:ssl.enable=false
 
 replacements:
   - sourceValue: collabora.beaver-cloud.xyz
