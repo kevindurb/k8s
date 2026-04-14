@@ -28,7 +28,7 @@ configMapGenerator:
       - makemkv.yml=gatus.yml
   - name: app-env
     literals:
-      - MAKEMKV_KEY=T-URt6MHxNy3HmfVojU8pE05WQ6HfgVI8S@HiIeNcWFim9rBgNlOdLFROSATCsWikcKW
+      - MAKEMKV_KEY=T-sJ5R5BKxhD671U9s0teXbyP19MhCkkkB7rmnNbb1aEHaqveiVqyI3RXGMHDXhoyNUC
       - USER_ID=1000
       - GROUP_ID=1000
       - SUP_GROUP_IDS=11
