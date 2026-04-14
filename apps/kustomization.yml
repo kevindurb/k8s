@@ -8,6 +8,7 @@ resources:
   - ./jellyfin/app.yml
   - ./makemkv/app.yml
   - ./nextcloud/app.yml
+  - ./radarr/app.yml
   - ./scrypted/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
