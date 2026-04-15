@@ -10,5 +10,6 @@ resources:
   - ./nextcloud/app.yml
   - ./radarr/app.yml
   - ./scrypted/app.yml
+  - ./sonarr/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
