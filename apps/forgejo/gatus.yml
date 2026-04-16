@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: forgejo
+    group: apps
+    url: http://forgejo-app-service.forgejo
+    conditions:
+      - '[STATUS] == 200'

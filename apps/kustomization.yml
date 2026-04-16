@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
   - ./filebrowser/app.yml
+  - ./forgejo/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
   - ./makemkv/app.yml
