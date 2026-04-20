@@ -27,3 +27,15 @@
     name: zfs-scrub-monthly@rust.timer
     state: started
     enabled: true
+
+- name: Setup sanoid config
+  ansible.builtin.copy:
+    src: files/sanoid.conf
+    dest: /etc/sanoid/sanoid.conf
+    mode: '644'
+
+- name: Setup sanoid timer
+  ansible.builtin.systemd_service:
+    name: sanoid.timer
+    state: started
+    enabled: true
