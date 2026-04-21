@@ -16,7 +16,17 @@ repos:
     rev: v1.38.0
     hooks:
       - id: yamllint
+
   - repo: https://github.com/ansible/ansible-lint.git
     rev: v26.3.0
     hooks:
       - id: ansible-lint
+
+  - repo: local
+    hooks:
+      - id: snapshot-test
+        name: kustomize snapshot test
+        entry: just test/test-all
+        language: system
+        pass_filenames: false
+        always_run: true
