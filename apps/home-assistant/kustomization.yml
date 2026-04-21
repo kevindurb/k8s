@@ -6,13 +6,27 @@ namespace: home-assistant
 namePrefix: home-assistant-
 
 resources:
-  - ./home-assistant.yml
+  - ../../bases/app-v2-with-storage
+  - ./matter-pvc.yml
 
 components:
   - ../../components/pod-hardening
   - ../../components/tmpdirs
   - ../../components/host-networking
   - ../../components/internal-http-route
+
+patches:
+  - path: deployment.patch.yml
+  - patch: |-
+      - op: add
+        path: /spec/ports/-
+        value:
+          name: mqtt
+          port: 1883
+          targetPort: mqtt
+    target:
+      kind: Service
+      name: app-service
 
 replacements:
   - sourceValue: home-assistant.beaver-cloud.xyz
@@ -21,6 +35,13 @@ replacements:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
+  - sourceValue: 40G
+    targets:
+      - select:
+          kind: PersistentVolumeClaim
+          name: volume
+        fieldPaths:
+          - spec.resources.requests.storage
 
 configMapGenerator:
   - name: gatus

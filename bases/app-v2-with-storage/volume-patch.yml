@@ -1,0 +1,12 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: volume
