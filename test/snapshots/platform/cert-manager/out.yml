@@ -1,0 +1,38 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager
+  name: cloudflare-issuer
+  namespace: cert-manager
+spec:
+  acme:
+    email: kevindurb@fastmail.com
+    privateKeySecretRef:
+      name: acme-private-key-secret
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            key: CF_API_TOKEN
+            name: cert-manager-cloudflare-secret
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/name: cert-manager
+  name: cloudflare-secret
+  namespace: cert-manager
+spec:
+  authToken:
+    secretKey: token
+    secretName: bw-auth-token
+  map:
+  - bwSecretId: 121f3f68-db40-4c6b-8b99-b34f00e9ed28
+    secretKeyName: CF_API_TOKEN
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: cert-manager-cloudflare-secret

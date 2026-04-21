@@ -1,0 +1,116 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  labels:
+    app.kubernetes.io/name: envoy-gateway
+  name: external-proxy-config
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    kubernetes:
+      envoyService:
+        externalTrafficPolicy: Cluster
+    type: Kubernetes
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  labels:
+    app.kubernetes.io/name: envoy-gateway
+  name: internal-proxy-config
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    kubernetes:
+      envoyService:
+        externalTrafficPolicy: Cluster
+    type: Kubernetes
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+    external-dns.alpha.kubernetes.io/target: external.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: envoy-gateway
+  name: external-beaver-cloud
+  namespace: envoy-gateway-system
+spec:
+  addresses:
+  - type: IPAddress
+    value: 192.168.42.3
+  gatewayClassName: external-envoy-gateway
+  listeners:
+  - allowedRoutes:
+      namespaces:
+        from: All
+    hostname: '*.beaver-cloud.xyz'
+    name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: wildcard.beaver-cloud.xyz
+      mode: Terminate
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare-issuer
+  labels:
+    app.kubernetes.io/name: envoy-gateway
+  name: internal-beaver-cloud
+  namespace: envoy-gateway-system
+spec:
+  addresses:
+  - type: IPAddress
+    value: 192.168.42.4
+  gatewayClassName: internal-envoy-gateway
+  listeners:
+  - allowedRoutes:
+      namespaces:
+        from: All
+    hostname: '*.beaver-cloud.xyz'
+    name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: wildcard.beaver-cloud.xyz
+      mode: Terminate
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  labels:
+    app.kubernetes.io/name: envoy-gateway
+  name: external-envoy-gateway
+  namespace: envoy-gateway-system
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: external-proxy-config
+    namespace: envoy-gateway-system
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  labels:
+    app.kubernetes.io/name: envoy-gateway
+  name: internal-envoy-gateway
+  namespace: envoy-gateway-system
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: internal-proxy-config
+    namespace: envoy-gateway-system

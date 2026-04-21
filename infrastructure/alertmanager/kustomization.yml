@@ -31,5 +31,8 @@ configMapGenerator:
     files:
       - alertmanager.yml=gatus.yml
 
-commonLabels:
-  app.kubernetes.io/name: alertmanager
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: alertmanager

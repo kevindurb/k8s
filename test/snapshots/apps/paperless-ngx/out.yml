@@ -1,0 +1,273 @@
+apiVersion: v1
+data:
+  paperless-ngx.yml: |
+    ---
+    endpoints:
+      - name: paperless-ngx
+        group: apps
+        url: http://paperless-ngx-app-service.paperless-ngx
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+    gatus.io/enabled: "true"
+  name: paperless-ngx-gatus-575tgtd474
+  namespace: paperless-ngx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-app-service
+  namespace: paperless-ngx
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: paperless-ngx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: valkey
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-valkey-service
+  namespace: paperless-ngx
+spec:
+  ports:
+  - name: valkey
+    port: 6379
+    targetPort: valkey
+  selector:
+    app.kubernetes.io/component: valkey
+    app.kubernetes.io/name: paperless-ngx
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-nas-media
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 12Ti
+  mountOptions:
+  - nfsvers=4.2
+  nfs:
+    path: /
+    server: 192.168.42.24
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-nas-media
+  namespace: paperless-ngx
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 12Ti
+  storageClassName: ""
+  volumeName: paperless-ngx-nas-media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-volume
+  namespace: paperless-ngx
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: valkey
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-valkey-deployment
+  namespace: paperless-ngx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: valkey
+      app.kubernetes.io/name: paperless-ngx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: valkey
+        app.kubernetes.io/name: paperless-ngx
+    spec:
+      containers:
+      - image: docker.io/valkey/valkey:9@sha256:930b41430fb727f533c5982fe509b6f04233e26d0f7354e04de4b0d5c706e44e
+        name: valkey
+        ports:
+        - containerPort: 6379
+          name: valkey
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - emptyDir: {}
+        name: data
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-web-deployment
+  namespace: paperless-ngx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/name: paperless-ngx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/name: paperless-ngx
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        - name: USERMAP_UID
+          value: "1000"
+        - name: USERMAP_GID
+          value: "1000"
+        - name: PAPERLESS_REDIS
+          value: redis://paperless-ngx-valkey-service.paperless-ngx:6379
+        - name: PAPERLESS_URL
+          value: https://paperless.beaver-cloud.xyz
+        image: ghcr.io/paperless-ngx/paperless-ngx:latest@sha256:4b05bcd28e6923768000b5d247cbf2c66fd49bdc3f3b05955bd4f6790a638b01
+        name: paperless-ngx
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          privileged: false
+          runAsGroup: 1000
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /usr/src/paperless/data
+          name: volume
+        - mountPath: /usr/src/paperless/media
+          name: nas-media
+          subPath: paperless/media
+        - mountPath: /usr/src/paperless/export
+          name: nas-media
+          subPath: paperless/export
+        - mountPath: /usr/src/paperless/consume
+          name: nas-media
+          subPath: paperless/consume
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: paperless-ngx-volume
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-internal-route
+  namespace: paperless-ngx
+spec:
+  hostnames:
+  - paperless.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: paperless-ngx-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

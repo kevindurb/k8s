@@ -1,2 +1,4 @@
 ---
 profile: null
+exclude_paths:
+  - test/snapshots/

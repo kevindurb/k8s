@@ -1,0 +1,209 @@
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: longhorn-replicated
+parameters:
+  diskSelector: nvme
+  fromBackup: ""
+  fsType: xfs
+  nodeSelector: storage
+  numberOfReplicas: "3"
+  staleReplicaTimeout: "2880"
+provisioner: driver.longhorn.io
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: longhorn-single
+parameters:
+  diskSelector: nvme
+  fromBackup: ""
+  fsType: xfs
+  nodeSelector: storage
+  numberOfReplicas: "1"
+  staleReplicaTimeout: "2880"
+provisioner: driver.longhorn.io
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: longhorn-default-resources
+  namespace: longhorn-system
+spec:
+  limits:
+  - defaultRequest:
+      cpu: 50m
+      memory: 128Mi
+    type: Container
+---
+apiVersion: longhorn.io/v1beta2
+kind: BackupTarget
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: default
+  namespace: longhorn-system
+spec:
+  backupTargetURL: nfs://192.168.42.24:/longhorn/backup
+  credentialSecret: ""
+  pollInterval: 5m0s
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: drone-01
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  disks:
+    nvme:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags:
+      - nvme
+  evictionRequested: false
+  tags:
+  - storage
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: drone-02
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  disks:
+    nvme:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags:
+      - nvme
+  evictionRequested: false
+  tags:
+  - storage
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: drone-03
+  namespace: longhorn-system
+spec:
+  allowScheduling: false
+  disks:
+    nvme:
+      allowScheduling: false
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: true
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags:
+      - nvme
+  evictionRequested: true
+  tags:
+  - storage
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: drone-04
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  disks:
+    nvme:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn
+      storageReserved: 0
+      tags:
+      - nvme
+  evictionRequested: false
+  tags:
+  - storage
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: daily-backup
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: 0 0 * * *
+  groups:
+  - default
+  labels: {}
+  name: daily-backup
+  parameters: {}
+  retain: 7
+  task: backup
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: daily-snapshot-cleanup
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: 0 0 * * *
+  groups:
+  - default
+  labels: {}
+  name: daily-snapshot-cleanup
+  parameters: {}
+  retain: 0
+  task: snapshot-cleanup
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  labels:
+    app.kubernetes.io/name: longhorn-system
+  name: delete-old-snapshots
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: 0 0 * * *
+  groups:
+  - default
+  labels: {}
+  name: delete-old-snapshots
+  parameters: {}
+  retain: 7
+  task: snapshot-delete

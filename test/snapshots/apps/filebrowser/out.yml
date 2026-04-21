@@ -1,0 +1,234 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    ---
+    userDefaults:
+      singleClick: true
+      stickySidebar: false
+    server:
+      port: 80
+      database: /config/database.db
+      cacheDir: /tmp
+      sources:
+        - path: /media
+          name: media
+          config:
+            defaultEnabled: true
+    auth:
+      methods:
+        noauth: true
+        password:
+          enabled: false
+        proxy:
+          enabled: false
+          header: Remote-User
+          createUser: true
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-config-cttthfcfkd
+  namespace: filebrowser
+---
+apiVersion: v1
+data:
+  filebrowser.yml: |
+    ---
+    endpoints:
+      - name: filebrowser
+        group: apps
+        url: http://filebrowser-app-service.filebrowser
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: filebrowser
+    gatus.io/enabled: "true"
+  name: filebrowser-gatus-dt24thcbcg
+  namespace: filebrowser
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-app-service
+  namespace: filebrowser
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: filebrowser
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-nas-media
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 12Ti
+  mountOptions:
+  - nfsvers=4.2
+  nfs:
+    path: /
+    server: 192.168.42.24
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-app-volume
+  namespace: filebrowser
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1G
+  storageClassName: longhorn-replicated
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-nas-media
+  namespace: filebrowser
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 12Ti
+  storageClassName: ""
+  volumeName: filebrowser-nas-media
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-app-deployment
+  namespace: filebrowser
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: filebrowser
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: filebrowser
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        envFrom: []
+        image: ghcr.io/gtsteffaniak/filebrowser:1.3.0-beta@sha256:9f46fc0bc2aa15cbd8158c877d50f87ff617bab4301e599df38c82613fcf04ff
+        name: app
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /media
+          name: nas-media
+        - mountPath: /config
+          name: volume
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+        - mountPath: /home/filebrowser/data/config.yaml
+          name: config-map
+          subPath: config.yaml
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: nas-media
+        persistentVolumeClaim:
+          claimName: filebrowser-nas-media
+      - name: volume
+        persistentVolumeClaim:
+          claimName: filebrowser-app-volume
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+      - configMap:
+          name: filebrowser-config-cttthfcfkd
+        name: config-map
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: filebrowser
+  name: filebrowser-internal-route
+  namespace: filebrowser
+spec:
+  hostnames:
+  - filebrowser.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: filebrowser-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

@@ -1,0 +1,312 @@
+apiVersion: v1
+data:
+  nextcloud.yml: |
+    ---
+    endpoints:
+      - name: nextcloud
+        group: apps
+        url: http://nextcloud-app-service.nextcloud/cron.php
+        conditions:
+          - '[STATUS] == 400'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: nextcloud
+    gatus.io/enabled: "true"
+  name: nextcloud-gatus-c8775547b9
+  namespace: nextcloud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-app-service
+  namespace: nextcloud
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: nextcloud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-postgres-service
+  namespace: nextcloud
+spec:
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: postgres
+  selector:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: nextcloud
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-app-volume
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+  storageClassName: longhorn-replicated
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-postgres-volume
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1G
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-app-deployment
+  namespace: nextcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: nextcloud
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: nextcloud
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        - name: NEXTCLOUD_TRUSTED_DOMAINS
+          value: nextcloud.beaver-cloud.xyz nextcloud-app-service.nextcloud
+        - name: TRUSTED_PROXIES
+          value: 127.0.0.1 10.0.0.0/8
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_HOST
+          value: nextcloud-postgres-service.nextcloud
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: nextcloud-postgres-secret
+        envFrom: []
+        image: docker.io/library/nextcloud:33-apache@sha256:3e676af625884f4e228ac6655f51a4ea65f3a1e68f320ad23d17fccfa00d5b54
+        name: app
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /var/www/html
+          name: volume
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: nextcloud-app-volume
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-postgres-deployment
+  namespace: nextcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: postgres
+      app.kubernetes.io/name: nextcloud
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: postgres
+        app.kubernetes.io/name: nextcloud
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: nextcloud-postgres-secret
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_DB
+          value: postgres
+        image: docker.io/library/postgres:18.1-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
+        name: postgres
+        ports:
+        - containerPort: 5432
+          name: postgres
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /var/lib/postgresql
+          name: data
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: nextcloud-postgres-volume
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-internal-route
+  namespace: nextcloud
+spec:
+  hostnames:
+  - nextcloud.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: nextcloud-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-postgres-secret
+  namespace: nextcloud
+spec:
+  authToken:
+    secretKey: token
+    secretName: bw-auth-token
+  map:
+  - bwSecretId: d863a8d1-37a7-453a-8418-b3a60061332b
+    secretKeyName: POSTGRES_PASSWORD
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: nextcloud-postgres-secret

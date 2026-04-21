@@ -1,0 +1,171 @@
+apiVersion: v1
+data:
+  USER_GID: "1000"
+  USER_UID: "1000"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: forgejo
+  name: forgejo-app-env-9kcc5mdb29
+  namespace: forgejo
+---
+apiVersion: v1
+data:
+  forgejo.yml: |
+    ---
+    endpoints:
+      - name: forgejo
+        group: apps
+        url: http://forgejo-app-service.forgejo
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: forgejo
+    gatus.io/enabled: "true"
+  name: forgejo-gatus-286g9cm5ft
+  namespace: forgejo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: forgejo
+  name: forgejo-app-service
+  namespace: forgejo
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: forgejo
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: forgejo
+  name: forgejo-app-volume
+  namespace: forgejo
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: forgejo
+  name: forgejo-app-deployment
+  namespace: forgejo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: forgejo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: forgejo
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        envFrom:
+        - configMapRef:
+            name: forgejo-app-env-9kcc5mdb29
+        image: codeberg.org/forgejo/forgejo:15-rootless
+        name: app
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /var/lib/gitea
+          name: volume
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: forgejo-app-volume
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: forgejo
+  name: forgejo-internal-route
+  namespace: forgejo
+spec:
+  hostnames:
+  - forgejo.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: forgejo-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

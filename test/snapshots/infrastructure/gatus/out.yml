@@ -1,0 +1,298 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-service-account
+  namespace: gatus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-cluster-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - list
+- nonResourceURLs:
+  - /healthz
+  - /healthz/*
+  - /livez
+  - /livez/*
+  - /readyz
+  - /readyz/*
+  - /version
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gatus-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: gatus-service-account
+  namespace: gatus
+---
+apiVersion: v1
+data:
+  gatus.yml: |
+    ---
+    metrics: true
+
+    endpoints:
+      - name: gatus
+        url: http://gatus-app-service
+        group: infrastructure
+        conditions: ['[STATUS] == 200']
+
+      - name: google
+        url: https://google.com
+        group: external
+        conditions: ['[STATUS] == 200']
+
+      - name: router
+        url: https://192.168.1.1
+        group: networking
+        client: { insecure: true }
+        conditions: ['[STATUS] == 200']
+
+      - name: Garage AP
+        url: http://192.168.1.2
+        group: networking
+        conditions: ['[STATUS] == 200']
+
+      - name: Basement AP
+        url: http://192.168.1.3
+        group: networking
+        conditions: ['[STATUS] == 200']
+
+      - name: Backyard AP
+        url: http://192.168.1.4
+        group: networking
+        conditions: ['[STATUS] == 200']
+
+      - name: Doorbell Camera
+        url: http://192.168.50.1
+        group: cameras
+        conditions: ['[STATUS] == 200']
+
+      - name: Garage Camera
+        url: http://192.168.50.2
+        group: cameras
+        conditions: ['[STATUS] == 200']
+
+      - name: Living Room Camera
+        url: http://192.168.50.11
+        group: cameras
+        conditions: ['[STATUS] == 200']
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-config-b9fg79cm7k
+  namespace: gatus
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kubernetes.io/service-account.name: gatus-service-account
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-service-account-token
+  namespace: gatus
+type: kubernetes.io/service-account-token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: gatus
+  name: gatus-app-service
+  namespace: gatus
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: gatus
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-app-volume
+  namespace: gatus
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1G
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: gatus
+  name: gatus-app-deployment
+  namespace: gatus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: gatus
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: gatus
+    spec:
+      containers:
+      - env:
+        - name: FOLDER
+          value: /config
+        - name: LABEL
+          value: gatus.io/enabled
+        - name: LABEL_VALUE
+          value: "true"
+        - name: NAMESPACE
+          value: ALL
+        - name: RESOURCE
+          value: both
+        - name: HEALTH_PORT
+          value: "0"
+        image: ghcr.io/kiwigrid/k8s-sidecar:2.5.0@sha256:a6b3f707f883108376514489a94d6629109a327b2978e1d826cd104c4ca436df
+        name: config-sync
+        volumeMounts:
+        - mountPath: /config
+          name: volume
+        - mountPath: /tmp
+          name: tmp
+      - env:
+        - name: GATUS_LOG_LEVEL
+          value: DEBUG
+        - name: GATUS_CONFIG_PATH
+          value: /config
+        envFrom: []
+        image: ghcr.io/twin/gatus:v5.34.0@sha256:3fff895e77d35ee62e898860f4613755bc2344127d93e3f326429d40270e2115
+        name: app
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          limits:
+            memory: 500M
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /config
+          name: volume
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+        - mountPath: /config/config.yaml
+          name: config-map
+          subPath: gatus.yml
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      serviceAccountName: gatus-service-account
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: gatus-app-volume
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+      - configMap:
+          name: gatus-config-b9fg79cm7k
+        name: config-map
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-internal-route
+  namespace: gatus
+spec:
+  hostnames:
+  - gatus.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: gatus-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

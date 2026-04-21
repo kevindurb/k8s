@@ -1,0 +1,123 @@
+apiVersion: v1
+data:
+  config.yml: |
+    ---
+    tunnel: kube
+    credentials-file: /etc/cloudflared/creds/credentials.json
+    metrics: 0.0.0.0:2000
+    no-autoupdate: true
+    originRequest:
+      noTLSVerify: true
+      originServerName: external.beaver-cloud.xyz
+    ingress:
+      - hostname: beaver-cloud.xyz
+        service: &envoy-gateway https://envoy-envoy-gateway-system-external-beaver-cloud-d9fc02f8.envoy-gateway-system.svc.cluster.local:443
+
+      - hostname: '*.beaver-cloud.xyz'
+        service: *envoy-gateway
+
+      - service: http_status:404
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: cloudflared
+  name: cloudflared-config-9cmgbf7224
+  namespace: cloudflared
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: cloudflared
+  name: cloudflared-web-deployment
+  namespace: cloudflared
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/name: cloudflared
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/name: cloudflared
+    spec:
+      containers:
+      - args:
+        - tunnel
+        - --config
+        - /etc/cloudflared/config/config.yml
+        - run
+        env:
+        - name: TZ
+          value: America/Denver
+        image: docker.io/cloudflare/cloudflared:2026.2.0@sha256:404528c1cd63c3eb882c257ae524919e4376115e6fe57befca8d603656a91a4c
+        livenessProbe:
+          failureThreshold: 1
+          httpGet:
+            path: /ready
+            port: 2000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        name: cloudflared
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /etc/cloudflared/config/config.yml
+          name: config
+          readOnly: true
+          subPath: config.yml
+        - mountPath: /etc/cloudflared/creds/credentials.json
+          name: creds
+          readOnly: true
+          subPath: credentials.json
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: creds
+        secret:
+          secretName: cloudflared-secret
+      - configMap:
+          name: cloudflared-config-9cmgbf7224
+        name: config
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/name: cloudflared
+  name: cloudflared-secret
+  namespace: cloudflared
+spec:
+  authToken:
+    secretKey: token
+    secretName: bw-auth-token
+  map:
+  - bwSecretId: ade06d14-dd7b-4957-8b0d-b1da00f0b2aa
+    secretKeyName: credentials.json
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: cloudflared-secret

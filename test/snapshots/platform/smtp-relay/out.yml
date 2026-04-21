@@ -1,0 +1,181 @@
+apiVersion: v1
+data:
+  maddy.conf: |
+    state_dir /cache/state
+    runtime_dir /cache/run
+
+    openmetrics tcp://0.0.0.0:{env:SMTP_RELAY_METRICS_PORT} { }
+
+    tls off
+    hostname mail.beaver-cloud.xyz
+
+    smtp tcp://0.0.0.0:{env:SMTP_RELAY_SMTP_PORT} {
+        default_source {
+            deliver_to &remote_queue
+        }
+    }
+
+    target.queue remote_queue {
+        target &remote_smtp
+    }
+
+    target.smtp remote_smtp {
+        attempt_starttls yes
+        require_tls yes
+        auth plain {env:SMTP_RELAY_USERNAME} {env:SMTP_RELAY_PASSWORD}
+        targets tls://{env:SMTP_RELAY_SERVER}
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: smtp-relay
+  name: smtp-relay-config-4cc8f9kf9h
+  namespace: smtp-relay
+---
+apiVersion: v1
+data:
+  smtp-relay.yml: |
+    ---
+    endpoints:
+      - name: smtp-relay
+        url: tcp://smtp-relay-service.smtp-relay:25
+        group: platform
+        conditions:
+          - '[CONNECTED] == true'
+          - '[RESPONSE_TIME] < 500'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: smtp-relay
+    gatus.io/enabled: "true"
+  name: smtp-relay-gatus-2t78bgcm4f
+  namespace: smtp-relay
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: smtp-relay
+  name: smtp-relay-service
+  namespace: smtp-relay
+spec:
+  ports:
+  - name: smtp
+    port: 25
+    targetPort: smtp
+  selector:
+    app.kubernetes.io/component: smtp
+    app.kubernetes.io/name: smtp-relay
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: smtp
+    app.kubernetes.io/name: smtp-relay
+  name: smtp-relay-deployment
+  namespace: smtp-relay
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: smtp
+      app.kubernetes.io/name: smtp-relay
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: smtp
+        app.kubernetes.io/name: smtp-relay
+    spec:
+      containers:
+      - env:
+        - name: SMTP_RELAY_SMTP_PORT
+          value: "25"
+        - name: SMTP_RELAY_METRICS_PORT
+          value: "8080"
+        envFrom:
+        - secretRef:
+            name: smtp-relay-secret
+        image: ghcr.io/foxcpp/maddy:0.7.1@sha256:6ab538e2f28baf2324f7cb418c7f9476fd9c7e9fa9b14bc3aecf51a9f6962064
+        name: smtp-relay
+        ports:
+        - containerPort: 25
+          name: smtp
+        resources:
+          limits:
+            memory: 100M
+          requests:
+            memory: 50M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /data/maddy.conf
+          name: config-map
+          readOnly: true
+          subPath: maddy.conf
+        - mountPath: /cache
+          name: cache
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - configMap:
+          name: smtp-relay-config-4cc8f9kf9h
+        name: config-map
+      - emptyDir: {}
+        name: cache
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  labels:
+    app.kubernetes.io/name: smtp-relay
+  name: smtp-relay-secret
+  namespace: smtp-relay
+spec:
+  authToken:
+    secretKey: token
+    secretName: bw-auth-token
+  map:
+  - bwSecretId: 8a55bbb3-aa52-4751-a2fb-b1af01667293
+    secretKeyName: SMTP_RELAY_SERVER
+  - bwSecretId: 0620c8f0-5281-4159-85d7-b1af01499e7a
+    secretKeyName: SMTP_RELAY_USERNAME
+  - bwSecretId: 51f782d4-a1a2-4b08-bb3d-b1af013a69cb
+    secretKeyName: SMTP_RELAY_PASSWORD
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: smtp-relay-secret

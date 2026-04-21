@@ -1,0 +1,159 @@
+apiVersion: v1
+data:
+  jellyfin.yml: |
+    ---
+    endpoints:
+      - name: jellyfin
+        group: apps
+        url: http://jellyfin-app-service.jellyfin
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    gatus.io/enabled: "true"
+  name: jellyfin-gatus-kc6b754bgg
+  namespace: jellyfin
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-app-service
+  namespace: jellyfin
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8096
+  selector:
+    app.kubernetes.io/component: jellyfin
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jellyfin-nas-media
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 12Ti
+  mountOptions:
+  - nfsvers=4.2
+  nfs:
+    path: /
+    server: 192.168.42.24
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-config-pvc
+  namespace: jellyfin
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: longhorn-replicated
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-nas-media
+  namespace: jellyfin
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 12Ti
+  storageClassName: ""
+  volumeName: jellyfin-nas-media
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: jellyfin
+    beaver-cloud.xyz/nas-media: "true"
+  name: jellyfin-deployment
+  namespace: jellyfin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: jellyfin
+      beaver-cloud.xyz/nas-media: "true"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: jellyfin
+        beaver-cloud.xyz/nas-media: "true"
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        image: jellyfin/jellyfin:latest@sha256:333b647716631443a43c7fabac4b0c46b4e2f036bad19547e00958f10f721b85
+        name: jellyfin
+        ports:
+        - containerPort: 8096
+          name: http
+        resources:
+          limits:
+            memory: 4G
+            nvidia.com/gpu: "1"
+          requests:
+            memory: 1G
+        securityContext:
+          privileged: true
+          runAsGroup: 1000
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /media
+          name: nas-media
+        - mountPath: /config
+          name: config
+      nodeSelector:
+        nvidia.com/gpu.product: Quadro-P620-SHARED
+      runtimeClassName: nvidia
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: nas-media
+        persistentVolumeClaim:
+          claimName: jellyfin-nas-media
+      - name: config
+        persistentVolumeClaim:
+          claimName: jellyfin-config-pvc
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  name: jellyfin-internal-route
+  namespace: jellyfin
+spec:
+  hostnames:
+  - jellyfin.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: jellyfin-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

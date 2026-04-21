@@ -1,0 +1,338 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-drone-01
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: drone-01
+          restartPolicy: Never
+  schedule: 6 * * * *
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-drone-02
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: drone-02
+          restartPolicy: Never
+  schedule: 8 * * * *
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-drone-03
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: drone-03
+          restartPolicy: Never
+  schedule: 10 * * * *
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-drone-04
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: drone-04
+          restartPolicy: Never
+  schedule: 12 * * * *
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-unimatrix-01
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: unimatrix-01
+          restartPolicy: Never
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+            operator: Exists
+  schedule: 0 * * * *
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-unimatrix-02
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: unimatrix-02
+          restartPolicy: Never
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+            operator: Exists
+  schedule: 2 * * * *
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-cronjob-unimatrix-03
+  namespace: healthchecks
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: healthchecks
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[$(date -Iseconds)] Pinging Healthchecks.io for node ${NODE_NAME}"
+              curl -fsS --max-time 10 --retry 3 --retry-delay 5 \
+                "https://hc-ping.com/${PING_KEY}/${NODE_NAME}" \
+                || echo "Ping failed"
+            env:
+            - name: PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PING_KEY
+                  name: healthchecks-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+            name: pinger
+          nodeSelector:
+            kubernetes.io/hostname: unimatrix-03
+          restartPolicy: Never
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+            operator: Exists
+  schedule: 4 * * * *
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/name: healthchecks
+  name: healthchecks-secret
+  namespace: healthchecks
+spec:
+  authToken:
+    secretKey: token
+    secretName: bw-auth-token
+  map:
+  - bwSecretId: c2de218d-7420-44e9-8b46-b386011fe820
+    secretKeyName: PING_KEY
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: healthchecks-secret

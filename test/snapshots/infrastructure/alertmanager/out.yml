@@ -1,0 +1,213 @@
+apiVersion: v1
+data:
+  alertmanager.yml: |
+    ---
+    global:
+      smtp_smarthost: smtp-relay-service.smtp-relay:25
+      smtp_from: beavercloud@fastmail.com
+      smtp_require_tls: false
+      smtp_auth_username: ''
+      smtp_auth_password: ''
+      smtp_auth_identity: ''
+
+    route:
+      receiver: 'null'
+      routes:
+        - group_by: [job, alertname, severity]
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          receiver: email-alerts
+          matchers:
+            - alertname != Watchdog
+        - receiver: watchdog
+          group_wait: 0s
+          group_interval: 5m
+          repeat_interval: 5m
+          matchers:
+            - alertname = Watchdog
+
+    receivers:
+      - name: 'null'
+      - name: email-alerts
+        email_configs:
+          - to: beavercloud@fastmail.com
+            send_resolved: true
+      - name: watchdog
+        webhook_configs:
+          - url_file: /run/secrets/webhook_url
+            send_resolved: false
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: alertmanager
+  name: alertmanager-config-dfc927m6k4
+  namespace: alertmanager
+---
+apiVersion: v1
+data:
+  alertmanager.yml: |
+    ---
+    endpoints:
+      - name: alertmanager
+        url: http://alertmanager-app-service.alertmanager/-/healthy
+        group: infrastructure
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: alertmanager
+    gatus.io/enabled: "true"
+  name: alertmanager-gatus-t26549b7d8
+  namespace: alertmanager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    app.kubernetes.io/name: alertmanager
+  name: alertmanager-app-service
+  namespace: alertmanager
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: web
+  selector:
+    app.kubernetes.io/name: alertmanager
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: alertmanager
+  name: alertmanager-data-volume
+  namespace: alertmanager
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: alertmanager
+  name: alertmanager-deployment
+  namespace: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alertmanager
+    spec:
+      containers:
+      - args:
+        - --config.file=/etc/alertmanager/alertmanager.yml
+        - --storage.path=/alertmanager
+        - --web.external-url=https://alertmanager.beaver-cloud.xyz
+        image: docker.io/prom/alertmanager@sha256:58e117eabccebbff04e6643a3432d6315a2cc3a8c24ab5849bc628886bf08857
+        name: alertmanager
+        ports:
+        - containerPort: 9093
+          name: web
+        resources:
+          limits:
+            memory: 500M
+          requests:
+            memory: 50M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /etc/alertmanager
+          name: config-volume
+        - mountPath: /alertmanager
+          name: data-volume
+        - mountPath: /run/secrets/webhook_url
+          name: alertmanager-secret
+          readOnly: true
+          subPath: watchdog-url
+      hostname: alertmanager
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: alertmanager-data-volume
+      - configMap:
+          name: alertmanager-config-dfc927m6k4
+        name: config-volume
+      - name: alertmanager-secret
+        secret:
+          secretName: alertmanager-secret
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: alertmanager
+  name: alertmanager-internal-route
+  namespace: alertmanager
+spec:
+  hostnames:
+  - alertmanager.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: alertmanager-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/name: alertmanager
+  name: alertmanager-secret
+  namespace: alertmanager
+spec:
+  authToken:
+    secretKey: token
+    secretName: bw-auth-token
+  map:
+  - bwSecretId: 9eb00cb7-2014-4c70-9f76-b3fd00eda2f0
+    secretKeyName: watchdog-url
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: alertmanager-secret

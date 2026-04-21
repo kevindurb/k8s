@@ -1,0 +1,199 @@
+apiVersion: v1
+data:
+  home-assistant.yml: |
+    ---
+    endpoints:
+      - name: home-assistant
+        group: apps
+        url: http://home-assistant-app-service.home-assistant
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: home-assistant
+    gatus.io/enabled: "true"
+  name: home-assistant-gatus-t9c5fdfgc6
+  namespace: home-assistant
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: home-assistant
+  name: home-assistant-app-service
+  namespace: home-assistant
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  - name: mqtt
+    port: 1883
+    targetPort: mqtt
+  selector:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: home-assistant
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: home-assistant
+  name: home-assistant-matter-data
+  namespace: home-assistant
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1G
+  storageClassName: longhorn-replicated
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: home-assistant
+  name: home-assistant-volume
+  namespace: home-assistant
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40G
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: home-assistant
+  name: home-assistant-web-deployment
+  namespace: home-assistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/name: home-assistant
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/name: home-assistant
+    spec:
+      containers:
+      - command:
+        - python
+        - -m
+        - homeassistant
+        - --config
+        - /config
+        env:
+        - name: TZ
+          value: America/Denver
+        image: ghcr.io/home-assistant/home-assistant:2026.2.3@sha256:96fa92d83fa8dae987fbbbcf58b1fea1140985ff6a8517b37f7b65c76ef20133
+        name: home-assistant
+        ports:
+        - containerPort: 8123
+          name: http
+        resources:
+          limits:
+            memory: 2G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /config
+          name: volume
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      - env:
+        - name: TZ
+          value: America/Denver
+        image: ghcr.io/matter-js/python-matter-server:stable@sha256:6827e352011e2d8c2bde771e446fcf72acc49150ef66bad978816bac1762aad3
+        name: matter
+        volumeMounts:
+        - mountPath: /data
+          name: matter-data
+      - image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
+        name: mosquitto
+        ports:
+        - containerPort: 1883
+          name: mqtt
+      hostNetwork: true
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: home-assistant-volume
+      - name: matter-data
+        persistentVolumeClaim:
+          claimName: home-assistant-matter-data
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: home-assistant
+  name: home-assistant-internal-route
+  namespace: home-assistant
+spec:
+  hostnames:
+  - home-assistant.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: home-assistant-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

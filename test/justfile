@@ -1,0 +1,40 @@
+set working-directory := '..'
+set shell := ["bash", "-c"]
+snapshot_dir := 'test/snapshots'
+
+test-all:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  failed=0
+  for path in infrastructure/*/ platform/*/ apps/*/; do
+    [ -d "$path" ] || continue
+    path="${path%/}"
+    if [ ! -f "$path/kustomization.yaml" ] && [ ! -f "$path/kustomization.yml" ] && [ ! -f "$path/Kustomization" ]; then
+      continue
+    fi
+    echo "━━━ Testing $path ━━━"
+    if ! just test/test "$path"; then
+      failed=1
+    fi
+  done
+  exit $failed
+
+test path:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [ ! -f "{{snapshot_dir}}/{{path}}/out.yml" ]; then
+    echo "No snapshot for {{path}}, creating..."
+    just test/update "{{path}}"
+  fi
+  just test/compare "{{path}}"
+
+_render path:
+  @kustomize build {{path}}
+
+compare path:
+  @diff -u "{{snapshot_dir}}/{{path}}/out.yml" <(just test/_render "{{path}}")
+
+
+update path:
+  @mkdir -p {{snapshot_dir}}/{{path}}
+  @just test/_render {{path}} > {{snapshot_dir}}/{{path}}/out.yml

@@ -1,0 +1,427 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    ---
+    config:
+      version: 2
+    paths:
+      media-path: /media
+      input-path: /media
+      output-path: /media/transcoded
+    presets:
+      show-default-presets: false
+      allow-preset-creator: false
+    application:
+      update-check-interval: 0
+      queue-startup-behavior: Previous
+  super_hq_h265_mkv.json: |
+    {
+      "PresetList" : [
+        {
+          "AlignAVStart" : true,
+          "AudioAutomaticNamingBehavior" : "unnamed",
+          "AudioCopyMask" : [
+            "copy:aac",
+            "copy:ac3"
+          ],
+          "AudioEncoderFallback" : "ca_aac",
+          "AudioLanguageList" : [
+
+          ],
+          "AudioList" : [
+            {
+              "AudioBitrate" : 160,
+              "AudioCompressionLevel" : -1,
+              "AudioDitherMethod" : "auto",
+              "AudioEncoder" : "ca_aac",
+              "AudioMixdown" : "stereo",
+              "AudioNormalizeMixLevel" : false,
+              "AudioSamplerate" : "auto",
+              "AudioTrackDRCSlider" : 0,
+              "AudioTrackGainSlider" : 0,
+              "AudioTrackQuality" : -1,
+              "AudioTrackQualityEnable" : false
+            },
+            {
+              "AudioBitrate" : 640,
+              "AudioCompressionLevel" : -1,
+              "AudioDitherMethod" : "auto",
+              "AudioEncoder" : "copy:ac3",
+              "AudioMixdown" : "5point1",
+              "AudioNormalizeMixLevel" : false,
+              "AudioSamplerate" : "auto",
+              "AudioTrackDRCSlider" : 0,
+              "AudioTrackGainSlider" : 0,
+              "AudioTrackQuality" : -1,
+              "AudioTrackQualityEnable" : false
+            }
+          ],
+          "AudioSecondaryEncoderMode" : true,
+          "AudioTrackNamePassthru" : true,
+          "AudioTrackSelectionBehavior" : "first",
+          "ChapterMarkers" : true,
+          "ChildrenArray" : [
+
+          ],
+          "Default" : false,
+          "FileFormat" : "av_mkv",
+          "Folder" : false,
+          "FolderOpen" : false,
+          "InlineParameterSets" : false,
+          "MetadataPassthru" : true,
+          "Mp4iPodCompatible" : false,
+          "Optimize" : false,
+          "PictureAllowUpscaling" : false,
+          "PictureAutoCrop" : true,
+          "PictureBottomCrop" : 0,
+          "PictureChromaSmoothCustom" : "",
+          "PictureChromaSmoothPreset" : "off",
+          "PictureChromaSmoothTune" : "none",
+          "PictureColorspaceCustom" : "",
+          "PictureColorspacePreset" : "off",
+          "PictureCombDetectCustom" : "",
+          "PictureCombDetectPreset" : "default",
+          "PictureCropMode" : 0,
+          "PictureDARWidth" : 1920,
+          "PictureDeblockCustom" : "strength=strong:thresh=20:blocksize=8",
+          "PictureDeblockPreset" : "off",
+          "PictureDeblockTune" : "medium",
+          "PictureDeinterlaceCustom" : "",
+          "PictureDeinterlaceFilter" : "decomb",
+          "PictureDeinterlacePreset" : "default",
+          "PictureDenoiseCustom" : "",
+          "PictureDenoiseFilter" : "off",
+          "PictureDenoisePreset" : "light",
+          "PictureDenoiseTune" : "none",
+          "PictureDetelecine" : "off",
+          "PictureDetelecineCustom" : "",
+          "PictureForceHeight" : 0,
+          "PictureForceWidth" : 0,
+          "PictureHeight" : 2160,
+          "PictureItuPAR" : false,
+          "PictureKeepRatio" : true,
+          "PictureLeftCrop" : 0,
+          "PictureModulus" : 2,
+          "PicturePadBottom" : 0,
+          "PicturePadColor" : "black",
+          "PicturePadLeft" : 0,
+          "PicturePadMode" : "none",
+          "PicturePadRight" : 0,
+          "PicturePadTop" : 0,
+          "PicturePAR" : "auto",
+          "PicturePARHeight" : 1,
+          "PicturePARWidth" : 1,
+          "PictureRightCrop" : 0,
+          "PictureRotate" : "angle=0:hflip=0",
+          "PictureSharpenCustom" : "",
+          "PictureSharpenFilter" : "off",
+          "PictureSharpenPreset" : "medium",
+          "PictureSharpenTune" : "none",
+          "PictureTopCrop" : 0,
+          "PictureUseMaximumSize" : true,
+          "PictureWidth" : 3840,
+          "PresetDescription" : "",
+          "PresetDisabled" : false,
+          "PresetName" : "Super HQ h.265 mkv",
+          "SubtitleAddCC" : false,
+          "SubtitleAddForeignAudioSearch" : true,
+          "SubtitleAddForeignAudioSubtitle" : false,
+          "SubtitleBurnBDSub" : true,
+          "SubtitleBurnBehavior" : "foreign",
+          "SubtitleBurnDVDSub" : true,
+          "SubtitleLanguageList" : [
+
+          ],
+          "SubtitleTrackNamePassthru" : true,
+          "SubtitleTrackSelectionBehavior" : "none",
+          "Type" : 1,
+          "UsesPictureFilters" : true,
+          "VideoAvgBitrate" : 32000,
+          "VideoColorMatrixCodeOverride" : 0,
+          "VideoColorRange" : "limited",
+          "VideoEncoder" : "x265_10bit",
+          "VideoFramerate" : "60",
+          "VideoFramerateMode" : "pfr",
+          "VideoGrayScale" : false,
+          "VideoHWDecode" : 0,
+          "VideoLevel" : "auto",
+          "VideoMultiPass" : true,
+          "VideoOptionExtra" : "strong-intra-smoothing=0:rect=0:aq-mode=1:rd=4:psy-rd=0.75:psy-rdoq=4.0:rdoq-level=1:rskip=2",
+          "VideoPasshtruHDRDynamicMetadata" : "all",
+          "VideoPreset" : "slow",
+          "VideoProfile" : "main10",
+          "VideoQualitySlider" : 20,
+          "VideoQualityType" : 2,
+          "VideoScaler" : "swscale",
+          "VideoTune" : "",
+          "VideoTurboMultiPass" : false,
+          "x264Option" : "",
+          "x264UseAdvancedOptions" : false
+        }
+      ],
+      "VersionMajor" : 67,
+      "VersionMicro" : 0,
+      "VersionMinor" : 0
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-config-d4kgmk896g
+  namespace: handbrake-web
+---
+apiVersion: v1
+data:
+  handbrake-web.yml: |
+    ---
+    endpoints:
+      - name: handbrake-web
+        group: apps
+        url: http://handbrake-web-app-service.handbrake-web
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: handbrake-web
+    gatus.io/enabled: "true"
+  name: handbrake-web-gatus-k8f48292k5
+  namespace: handbrake-web
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-app-service
+  namespace: handbrake-web
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: handbrake-web
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-nas-media
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 12Ti
+  mountOptions:
+  - nfsvers=4.2
+  nfs:
+    path: /
+    server: 192.168.42.24
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-nas-media
+  namespace: handbrake-web
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 12Ti
+  storageClassName: ""
+  volumeName: handbrake-web-nas-media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-volume
+  namespace: handbrake-web
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1G
+  storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-server-deployment
+  namespace: handbrake-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/name: handbrake-web
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/name: handbrake-web
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        image: ghcr.io/thenickoftime/handbrake-web-server@sha256:6aa18122e08299cf05edf0aa6135d9c97d92839933f5377f8fde59978430e543
+        name: handbrake-web-server
+        ports:
+        - containerPort: 9999
+          name: http
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /data
+          name: volume
+        - mountPath: /video
+          name: video
+        - mountPath: /data/config.yaml
+          name: config
+          subPath: config.yaml
+        - mountPath: /data/presets/super_hq_h265_mkv.json
+          name: config
+          subPath: super_hq_h265_mkv.json
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: handbrake-web-volume
+      - configMap:
+          name: config-map
+        name: config-map
+      - emptyDir: {}
+        name: video
+      - configMap:
+          name: handbrake-web-config-d4kgmk896g
+        name: config
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-worker-deployment
+  namespace: handbrake-web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+      app.kubernetes.io/name: handbrake-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/name: handbrake-web
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        - name: SERVER_URL
+          value: http://handbrake-web-app-service
+        - name: SERVER_PORT
+          value: "80"
+        - name: WORKER_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: ghcr.io/thenickoftime/handbrake-web-worker@sha256:4676054730c16fb7081d7c4f7b546272a022010e8adbb893df9d274885dfbc5e
+        name: handbrake-web-worker
+        resources:
+          limits:
+            memory: 8G
+          requests:
+            memory: 1G
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        - mountPath: /video
+          name: video
+      volumes:
+      - emptyDir: {}
+        name: data
+      - emptyDir: {}
+        name: video
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: handbrake-web
+  name: handbrake-web-internal-route
+  namespace: handbrake-web
+spec:
+  hostnames:
+  - handbrake-web.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: internal-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: handbrake-web-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

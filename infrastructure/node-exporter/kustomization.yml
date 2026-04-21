@@ -8,5 +8,8 @@ namespace: node-exporter
 resources:
   - ./node-exporter.yml
 
-commonLabels:
-  app.kubernetes.io/name: node-exporter
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: node-exporter
