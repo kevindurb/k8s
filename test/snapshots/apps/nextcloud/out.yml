@@ -122,7 +122,6 @@ spec:
             secretKeyRef:
               key: POSTGRES_PASSWORD
               name: nextcloud-postgres-secret
-        envFrom: []
         image: docker.io/library/nextcloud:33-apache@sha256:3e676af625884f4e228ac6655f51a4ea65f3a1e68f320ad23d17fccfa00d5b54
         name: app
         ports:
@@ -242,6 +241,16 @@ spec:
           name: var-cache
         - mountPath: /var/log
           name: var-log
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
@@ -251,6 +260,16 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: nextcloud-postgres-volume
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: var-tmp
+      - emptyDir: {}
+        name: var-run
+      - emptyDir: {}
+        name: var-cache
+      - emptyDir: {}
+        name: var-log
       - emptyDir: {}
         name: tmp
       - emptyDir: {}

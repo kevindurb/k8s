@@ -7,16 +7,14 @@ namePrefix: nextcloud-
 
 resources:
   - ../../bases/postgres
-  - ../../bases/app-with-storage
+  - ./deployment.yml
 
 components:
+  - ../../components/app-service
+  - ../../components/app-volume
   - ../../components/internal-http-route
-
-patches:
-  - path: ./app-deployment.patch.yml
-    target:
-      kind: Deployment
-      name: app-deployment
+  - ../../components/pod-hardening
+  - ../../components/tmpdirs
 
 replacements:
   - sourceValue: nextcloud.beaver-cloud.xyz
@@ -32,13 +30,6 @@ replacements:
           name: app-volume
         fieldPaths:
           - spec.resources.requests.storage
-  - sourceValue: /var/www/html
-    targets:
-      - select:
-          kind: Deployment
-          name: app-deployment
-        fieldPaths:
-          - spec.template.spec.containers.0.volumeMounts.[name=volume].mountPath
 
 configMapGenerator:
   - files:

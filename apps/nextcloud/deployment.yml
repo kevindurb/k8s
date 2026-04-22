@@ -2,13 +2,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
 spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
   template:
+    metadata:
+      labels: *labels
     spec:
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: app-volume
       containers:
         - name: app
           image: docker.io/library/nextcloud:33-apache@sha256:3e676af625884f4e228ac6655f51a4ea65f3a1e68f320ad23d17fccfa00d5b54
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          volumeMounts:
+            - name: volume
+              mountPath: /var/www/html
           env:
             - name: TZ
               value: America/Denver
@@ -27,3 +48,6 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
+          ports:
+            - name: http
+              containerPort: 80
