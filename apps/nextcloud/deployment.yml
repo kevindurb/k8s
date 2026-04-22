@@ -43,6 +43,8 @@ spec:
               value: postgres
             - name: POSTGRES_HOST
               value: nextcloud-postgres-service.nextcloud
+            - name: REDIS_HOST
+              value: nextcloud-valkey-service.nextcloud
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
