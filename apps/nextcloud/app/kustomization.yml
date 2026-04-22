@@ -1,0 +1,29 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: app-
+
+resources:
+  - ./deployment.yml
+
+components:
+  - ../../../components/service
+  - ../../../components/volume
+  - ../../../components/pod-hardening
+  - ../../../components/tmpdirs
+
+replacements:
+  - sourceValue: 10G
+    targets:
+      - select:
+          kind: PersistentVolumeClaim
+          name: app-volume
+        fieldPaths:
+          - spec.resources.requests.storage
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/component: app

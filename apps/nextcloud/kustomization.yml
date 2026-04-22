@@ -8,14 +8,10 @@ namePrefix: nextcloud-
 resources:
   - ../../bases/postgres
   - ../../bases/valkey
-  - ./deployment.yml
+  - ./app
 
 components:
-  - ../../components/app-service
-  - ../../components/app-volume
   - ../../components/internal-http-route
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
 
 replacements:
   - sourceValue: nextcloud.beaver-cloud.xyz
@@ -24,13 +20,6 @@ replacements:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
-  - sourceValue: 10G
-    targets:
-      - select:
-          kind: PersistentVolumeClaim
-          name: app-volume
-        fieldPaths:
-          - spec.resources.requests.storage
 
 configMapGenerator:
   - files:

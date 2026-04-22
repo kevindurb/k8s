@@ -2,23 +2,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-deployment
-  labels: &labels
-    app.kubernetes.io/component: app
+  name: deployment
 spec:
   replicas: 1
   strategy:
     type: Recreate
-  selector:
-    matchLabels: *labels
   template:
-    metadata:
-      labels: *labels
     spec:
       volumes:
         - name: volume
           persistentVolumeClaim:
-            claimName: app-volume
+            claimName: volume
       containers:
         - name: app
           image: docker.io/library/nextcloud:33-apache@sha256:3e676af625884f4e228ac6655f51a4ea65f3a1e68f320ad23d17fccfa00d5b54
