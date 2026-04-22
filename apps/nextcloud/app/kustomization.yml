@@ -10,8 +10,6 @@ resources:
 components:
   - ../../../components/service
   - ../../../components/volume
-  - ../../../components/pod-hardening
-  - ../../../components/tmpdirs
 
 replacements:
   - sourceValue: 10G

@@ -152,48 +152,13 @@ spec:
             memory: 1G
           requests:
             memory: 100M
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsGroup: 1000
-          runAsNonRoot: true
-          runAsUser: 1000
         volumeMounts:
         - mountPath: /var/www/html
           name: volume
-        - mountPath: /tmp
-          name: tmp
-        - mountPath: /var/tmp
-          name: var-tmp
-        - mountPath: /var/run
-          name: var-run
-        - mountPath: /var/cache
-          name: var-cache
-        - mountPath: /var/log
-          name: var-log
-      securityContext:
-        fsGroup: 1000
-        runAsGroup: 1000
-        runAsNonRoot: true
-        runAsUser: 1000
       volumes:
       - name: volume
         persistentVolumeClaim:
           claimName: nextcloud-app-volume
-      - emptyDir: {}
-        name: tmp
-      - emptyDir: {}
-        name: var-tmp
-      - emptyDir: {}
-        name: var-run
-      - emptyDir: {}
-        name: var-cache
-      - emptyDir: {}
-        name: var-log
 ---
 apiVersion: apps/v1
 kind: Deployment
