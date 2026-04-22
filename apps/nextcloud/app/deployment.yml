@@ -13,6 +13,9 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
+        - name: redis-session
+          configMap:
+            name: redis-session
       containers:
         - name: app
           image: docker.io/library/nextcloud:33-apache@sha256:3e676af625884f4e228ac6655f51a4ea65f3a1e68f320ad23d17fccfa00d5b54
@@ -24,6 +27,9 @@ spec:
           volumeMounts:
             - name: volume
               mountPath: /var/www/html
+            - name: redis-session
+              mountPath: /usr/local/etc/php/conf.d/redis-session.ini
+              subPath: redis-session.ini
           env:
             - name: TZ
               value: America/Denver
@@ -37,8 +43,6 @@ spec:
               value: postgres
             - name: POSTGRES_HOST
               value: nextcloud-postgres-service.nextcloud
-            # - name: REDIS_HOST
-            #   value: nextcloud-valkey-service.nextcloud
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:

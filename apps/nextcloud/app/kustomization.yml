@@ -22,6 +22,11 @@ replacements:
         fieldPaths:
           - spec.resources.requests.storage
 
+configMapGenerator:
+  - name: redis-session
+    files:
+      - ./redis-session.ini
+
 labels:
   - includeSelectors: true
     includeTemplates: true

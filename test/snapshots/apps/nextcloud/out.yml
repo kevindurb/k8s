@@ -1,5 +1,21 @@
 apiVersion: v1
 data:
+  redis-session.ini: |
+    session.save_handler = redis
+    session.save_path = "tcp://nextcloud-valkey-service.nextcloud:6379"
+    redis.session.locking_enabled = 1
+    redis.session.lock_retries = -1
+    redis.session.lock_wait_time = 10000
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-app-redis-session-fmk875686c
+  namespace: nextcloud
+---
+apiVersion: v1
+data:
   nextcloud.yml: |
     ---
     endpoints:
@@ -163,6 +179,9 @@ spec:
         volumeMounts:
         - mountPath: /var/www/html
           name: volume
+        - mountPath: /usr/local/etc/php/conf.d/redis-session.ini
+          name: redis-session
+          subPath: redis-session.ini
         - mountPath: /tmp
           name: tmp
         - mountPath: /var/tmp
@@ -182,6 +201,9 @@ spec:
       - name: volume
         persistentVolumeClaim:
           claimName: nextcloud-app-volume
+      - configMap:
+          name: nextcloud-app-redis-session-fmk875686c
+        name: redis-session
       - emptyDir: {}
         name: tmp
       - emptyDir: {}
