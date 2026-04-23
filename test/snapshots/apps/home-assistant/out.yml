@@ -89,10 +89,10 @@ spec:
           name: http
         resources:
           limits:
-            devic.es/zigbee-dongle: 1
+            devic.es/zigbee-dongle: "1"
             memory: 2G
           requests:
-            devic.es/zigbee-dongle: 1
+            devic.es/zigbee-dongle: "1"
             memory: 100M
         securityContext:
           allowPrivilegeEscalation: false
@@ -123,7 +123,7 @@ spec:
         runAsGroup: 1000
         runAsNonRoot: true
         runAsUser: 1000
-        suplementalGroups:
+        supplementalGroups:
         - 18
       volumes:
       - name: volume

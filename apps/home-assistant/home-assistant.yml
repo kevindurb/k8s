@@ -26,10 +26,10 @@ spec:
           resources:
             requests:
               memory: 100M
-              devic.es/zigbee-dongle: 1
+              devic.es/zigbee-dongle: '1'
             limits:
               memory: 2G
-              devic.es/zigbee-dongle: 1
+              devic.es/zigbee-dongle: '1'
           volumeMounts:
             - name: volume
               mountPath: /config

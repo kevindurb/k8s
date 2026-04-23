@@ -25,7 +25,7 @@ replacements:
 patches:
   - patch: |-
       - op: add
-        path: /spec/template/spec/securityContext/suplementalGroups
+        path: /spec/template/spec/securityContext/supplementalGroups
         value: [18]
     target:
       kind: Deployment
