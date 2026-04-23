@@ -11,7 +11,7 @@ spec:
   sources:
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
-      path: apps/mosquitto
+      path: platform/mosquitto
   destination:
     server: https://kubernetes.default.svc
     namespace: mosquitto
