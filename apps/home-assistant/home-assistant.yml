@@ -3,8 +3,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web-deployment
-  annotations:
-    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -31,6 +29,7 @@ spec:
           resources:
             requests:
               memory: 100M
+              devic.es/zigbee-dongle: 1
             limits:
               memory: 2G
           volumeMounts:
@@ -42,19 +41,6 @@ spec:
           ports:
             - name: http
               containerPort: 8123
-        - name: matter
-          image: ghcr.io/matter-js/python-matter-server:stable@sha256:6827e352011e2d8c2bde771e446fcf72acc49150ef66bad978816bac1762aad3
-          volumeMounts:
-            - name: matter-data
-              mountPath: /data
-          env:
-            - name: TZ
-              value: America/Denver
-        - name: mosquitto
-          image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
-          ports:
-            - name: mqtt
-              containerPort: 1883
 
 ---
 apiVersion: v1
@@ -67,18 +53,6 @@ spec:
   resources:
     requests:
       storage: 40G
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: matter-data
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
-  resources:
-    requests:
-      storage: 1G
 
 ---
 apiVersion: v1

@@ -40,21 +40,6 @@ kind: PersistentVolumeClaim
 metadata:
   labels:
     app.kubernetes.io/name: home-assistant
-  name: home-assistant-matter-data
-  namespace: home-assistant
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1G
-  storageClassName: longhorn-replicated
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    app.kubernetes.io/name: home-assistant
   name: home-assistant-volume
   namespace: home-assistant
 spec:
@@ -68,8 +53,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    reloader.stakater.com/auto: "true"
   labels:
     app.kubernetes.io/component: web
     app.kubernetes.io/name: home-assistant
@@ -108,6 +91,7 @@ spec:
           limits:
             memory: 2G
           requests:
+            devic.es/zigbee-dongle: 1
             memory: 100M
         securityContext:
           allowPrivilegeEscalation: false
@@ -132,19 +116,6 @@ spec:
           name: var-cache
         - mountPath: /var/log
           name: var-log
-      - env:
-        - name: TZ
-          value: America/Denver
-        image: ghcr.io/matter-js/python-matter-server:stable@sha256:6827e352011e2d8c2bde771e446fcf72acc49150ef66bad978816bac1762aad3
-        name: matter
-        volumeMounts:
-        - mountPath: /data
-          name: matter-data
-      - image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
-        name: mosquitto
-        ports:
-        - containerPort: 1883
-          name: mqtt
       hostNetwork: true
       securityContext:
         fsGroup: 1000
@@ -157,7 +128,7 @@ spec:
           claimName: home-assistant-volume
       - name: matter-data
         persistentVolumeClaim:
-          claimName: home-assistant-matter-data
+          claimName: matter-data
       - emptyDir: {}
         name: tmp
       - emptyDir: {}
