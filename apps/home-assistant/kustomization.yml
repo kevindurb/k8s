@@ -29,6 +29,9 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - home-assistant.yml=gatus.yml
+  - name: mosquitto-config
+    files:
+      - mosquitto.conf
 
 labels:
   - includeSelectors: true

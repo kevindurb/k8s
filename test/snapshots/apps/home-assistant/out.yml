@@ -17,6 +17,22 @@ metadata:
   namespace: home-assistant
 ---
 apiVersion: v1
+data:
+  mosquitto.conf: |
+    listener 1883 0.0.0.0
+    allow_anonymous true
+    persistence false
+    log_dest stdout
+    connection_messages true
+    max_keepalive 60
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: home-assistant
+  name: home-assistant-mosquitto-config-7t9fhkdmbb
+  namespace: home-assistant
+---
+apiVersion: v1
 kind: Service
 metadata:
   labels:
@@ -118,10 +134,24 @@ spec:
         - mountPath: /var/log
           name: var-log
       - image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
+        livenessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 30
+          tcpSocket:
+            port: mqtt
         name: mosquitto
         ports:
         - containerPort: 1883
           name: mqtt
+        resources:
+          limits:
+            memory: 128M
+          requests:
+            memory: 32M
+        volumeMounts:
+        - mountPath: /mosquitto/config
+          name: mosquitto-config
+          readOnly: true
       hostNetwork: true
       securityContext:
         fsGroup: 1000
@@ -132,6 +162,9 @@ spec:
       - name: volume
         persistentVolumeClaim:
           claimName: home-assistant-volume
+      - configMap:
+          name: home-assistant-mosquitto-config-7t9fhkdmbb
+        name: mosquitto-config
       - emptyDir: {}
         name: tmp
       - emptyDir: {}
