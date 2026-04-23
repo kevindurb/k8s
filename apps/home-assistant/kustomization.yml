@@ -22,6 +22,15 @@ replacements:
         fieldPaths:
           - spec.hostnames.0
 
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext/suplementalGroups
+        value: [18]
+    target:
+      kind: Deployment
+      name: web-deployment
+
 configMapGenerator:
   - name: gatus
     options:

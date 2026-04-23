@@ -15,8 +15,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        supplementalGroups: [18]
       volumes:
         - name: volume
           persistentVolumeClaim:
