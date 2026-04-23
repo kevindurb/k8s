@@ -193,7 +193,9 @@ spec:
         - mountPath: /var/log
           name: var-log
       - command:
-        - /cron.sh
+        - /bin/sh
+        - -c
+        - while true; do php -f /var/www/html/cron.php; sleep 300; done
         image: docker.io/library/nextcloud:33-apache@sha256:3e676af625884f4e228ac6655f51a4ea65f3a1e68f320ad23d17fccfa00d5b54
         name: cron
         resources:
@@ -209,9 +211,10 @@ spec:
             drop:
             - ALL
           privileged: false
-          runAsGroup: 33
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
           runAsNonRoot: true
-          runAsUser: 33
+          runAsUser: 1000
         volumeMounts:
         - mountPath: /var/www/html
           name: volume
