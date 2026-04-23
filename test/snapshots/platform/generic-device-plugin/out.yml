@@ -3,7 +3,7 @@ kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/name: generic-device-plugin
-  name: generic-device-plugin
+  name: generic-device-plugin-daemonset
   namespace: generic-device-plugin
 spec:
   selector:
@@ -18,62 +18,10 @@ spec:
       - args:
         - --device
         - |
-          name: serial
+          name: zigbee-dongle
           groups:
             - paths:
-                - path: /dev/ttyUSB*
-            - paths:
-                - path: /dev/ttyACM*
-            - paths:
-                - path: /dev/tty.usb*
-            - paths:
-                - path: /dev/cu.*
-            - paths:
-                - path: /dev/cuaU*
-            - paths:
-                - path: /dev/rfcomm*
-        - --device
-        - |
-          name: video
-          groups:
-            - paths:
-                - path: /dev/video0
-        - --device
-        - |
-          name: fuse
-          groups:
-            - count: 10
-              paths:
-                - path: /dev/fuse
-        - --device
-        - |
-          name: audio
-          groups:
-            - count: 10
-              paths:
-                - path: /dev/snd
-        - --device
-        - |
-          name: capture
-          groups:
-            - paths:
-                - path: /dev/snd/controlC0
-                - path: /dev/snd/pcmC0D0c
-            - paths:
-                - path: /dev/snd/controlC1
-                  mountPath: /dev/snd/controlC0
-                - path: /dev/snd/pcmC1D0c
-                  mountPath: /dev/snd/pcmC0D0c
-            - paths:
-                - path: /dev/snd/controlC2
-                  mountPath: /dev/snd/controlC0
-                - path: /dev/snd/pcmC2D0c
-                  mountPath: /dev/snd/pcmC0D0c
-            - paths:
-                - path: /dev/snd/controlC3
-                  mountPath: /dev/snd/controlC0
-                - path: /dev/snd/pcmC3D0c
-                  mountPath: /dev/snd/pcmC0D0c
+                - path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*
         image: squat/generic-device-plugin:0.2.0
         name: generic-device-plugin
         ports:
