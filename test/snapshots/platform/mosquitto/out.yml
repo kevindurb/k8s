@@ -4,7 +4,7 @@ data:
     ---
     endpoints:
       - name: mosquitto
-        url: tcp://mosquitto-service.mosquitto
+        url: tcp://mosquitto-service.mosquitto:1883
         group: platform
         conditions:
           - '[CONNECTED] == true'
@@ -14,7 +14,7 @@ metadata:
   labels:
     app.kubernetes.io/name: mosquitto
     gatus.io/enabled: "true"
-  name: mosquitto-gatus-87btgf2597
+  name: mosquitto-gatus-589g869g5d
   namespace: mosquitto
 ---
 apiVersion: v1
