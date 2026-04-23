@@ -6,6 +6,6 @@ resources:
   - ./bws-operator/app.yml
   - ./cert-manager/app.yml
   - ./envoy-gateway/app.yml
-  - ./generic-device-plugin/app.yml
   - ./smtp-relay/app.yml
   - ./wireguard/app.yml
+  - ./zigbee2mqtt/app.yml

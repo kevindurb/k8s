@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
   labels: &labels
     app.kubernetes.io/component: web
 spec:
@@ -26,10 +28,8 @@ spec:
           resources:
             requests:
               memory: 100M
-              devic.es/zigbee-dongle: '1'
             limits:
               memory: 2G
-              devic.es/zigbee-dongle: '1'
           volumeMounts:
             - name: volume
               mountPath: /config
@@ -39,6 +39,11 @@ spec:
           ports:
             - name: http
               containerPort: 8123
+        - name: mosquitto
+          image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
+          ports:
+            - name: mqtt
+              containerPort: 1883
 
 ---
 apiVersion: v1

@@ -53,6 +53,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
   labels:
     app.kubernetes.io/component: web
     app.kubernetes.io/name: home-assistant
@@ -89,10 +91,8 @@ spec:
           name: http
         resources:
           limits:
-            devic.es/zigbee-dongle: "1"
             memory: 2G
           requests:
-            devic.es/zigbee-dongle: "1"
             memory: 100M
         securityContext:
           allowPrivilegeEscalation: false
@@ -117,14 +117,17 @@ spec:
           name: var-cache
         - mountPath: /var/log
           name: var-log
+      - image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
+        name: mosquitto
+        ports:
+        - containerPort: 1883
+          name: mqtt
       hostNetwork: true
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
         runAsNonRoot: true
         runAsUser: 1000
-        supplementalGroups:
-        - 18
       volumes:
       - name: volume
         persistentVolumeClaim:
