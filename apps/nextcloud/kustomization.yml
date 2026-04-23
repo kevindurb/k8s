@@ -12,6 +12,7 @@ resources:
 
 components:
   - ../../components/internal-http-route
+  - ../../components/external-http-route
 
 replacements:
   - sourceValue: nextcloud.beaver-cloud.xyz

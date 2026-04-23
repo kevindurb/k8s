@@ -408,6 +408,35 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   annotations:
+    external-dns.alpha.kubernetes.io/target: external.beaver-cloud.xyz
+  labels:
+    app.kubernetes.io/name: nextcloud
+  name: nextcloud-external-route
+  namespace: nextcloud
+spec:
+  hostnames:
+  - nextcloud.beaver-cloud.xyz
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: external-beaver-cloud
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: nextcloud-app-service
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
     internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
   labels:
     app.kubernetes.io/name: nextcloud
