@@ -126,9 +126,6 @@ spec:
       - name: volume
         persistentVolumeClaim:
           claimName: home-assistant-volume
-      - name: matter-data
-        persistentVolumeClaim:
-          claimName: matter-data
       - emptyDir: {}
         name: tmp
       - emptyDir: {}
