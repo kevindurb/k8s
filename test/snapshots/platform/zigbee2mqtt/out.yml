@@ -4,7 +4,7 @@ data:
   ZIGBEE2MQTT_CONFIG_FRONTEND_URL: https://zigbee2mqtt.beaver-cloud.xyz
   ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED: "true"
   ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC: zigbee2mqtt
-  ZIGBEE2MQTT_CONFIG_MQTT_SERVER: mqtt://home-assistant-app-service.home-assistant:1883
+  ZIGBEE2MQTT_CONFIG_MQTT_SERVER: mqtt://mosquitto-service.mosquitto:1883
   ZIGBEE2MQTT_CONFIG_PERMIT_JOIN: "true"
   ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: zstack
   ZIGBEE2MQTT_CONFIG_SERIAL_PORT: /dev/ttyACM0
@@ -12,7 +12,7 @@ kind: ConfigMap
 metadata:
   labels:
     app.kubernetes.io/name: zigbee2mqtt
-  name: zigbee2mqtt-app-env-mm7hgcktkk
+  name: zigbee2mqtt-app-env-6h2f85tkbd
   namespace: zigbee2mqtt
 ---
 apiVersion: v1
@@ -93,7 +93,7 @@ spec:
           value: America/Denver
         envFrom:
         - configMapRef:
-            name: zigbee2mqtt-app-env-mm7hgcktkk
+            name: zigbee2mqtt-app-env-6h2f85tkbd
         image: ghcr.io/koenkk/zigbee2mqtt:latest@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0
         name: app
         ports:

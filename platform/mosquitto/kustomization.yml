@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mosquitto
+namePrefix: mosquitto-
+
+resources:
+  - ./deployment.yml
+
+components:
+  - ../../components/volume
+  - ../../components/pod-hardening
+  - ../../components/tmpdirs
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - mosquitto.yml=gatus.yml
+  - name: mosquitto-config
+    files:
+      - mosquitto.conf
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: mosquitto

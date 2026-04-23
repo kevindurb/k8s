@@ -21,9 +21,6 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        - name: mosquitto-config
-          configMap:
-            name: mosquitto-config
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2026.2.3@sha256:96fa92d83fa8dae987fbbbcf58b1fea1140985ff6a8517b37f7b65c76ef20133
@@ -42,25 +39,6 @@ spec:
           ports:
             - name: http
               containerPort: 8123
-        - name: mosquitto
-          image: docker.io/library/eclipse-mosquitto@sha256:a908c65cc8e67ec9d292ef27c2c0360dbaaee7eb1b935cdd194e67697f15dea1
-          volumeMounts:
-            - name: mosquitto-config
-              mountPath: /mosquitto/config
-              readOnly: true
-          resources:
-            requests:
-              memory: 32M
-            limits:
-              memory: 128M
-          livenessProbe:
-            tcpSocket:
-              port: mqtt
-            initialDelaySeconds: 5
-            periodSeconds: 30
-          ports:
-            - name: mqtt
-              containerPort: 1883
 
 ---
 apiVersion: v1
