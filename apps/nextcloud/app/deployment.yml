@@ -58,9 +58,8 @@ spec:
             privileged: false
             allowPrivilegeEscalation: false
             runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
+            runAsUser: 33
+            runAsGroup: 33
             capabilities:
               drop: [ALL]
           volumeMounts:

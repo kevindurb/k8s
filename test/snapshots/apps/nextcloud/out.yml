@@ -209,10 +209,9 @@ spec:
             drop:
             - ALL
           privileged: false
-          readOnlyRootFilesystem: true
-          runAsGroup: 1000
+          runAsGroup: 33
           runAsNonRoot: true
-          runAsUser: 1000
+          runAsUser: 33
         volumeMounts:
         - mountPath: /var/www/html
           name: volume
