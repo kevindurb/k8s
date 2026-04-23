@@ -64,6 +64,16 @@ patches:
       name: app-deployment
     patch: |-
       - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          feature.node.kubernetes.io/usb-ff_10c4_ea60.present: "true"
+      - op: add
+        path: /spec/template/spec/volumes/0
+        value:
+          name: zigbee-dongle
+          hostPath:
+            path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_dadea32ebf12ec11b8b720c7bd930c07-if00-port0
+      - op: add
         path: /spec/template/spec/volumes/0
         value:
           name: run-udev
@@ -76,14 +86,10 @@ patches:
           mountPath: /run/udev
           readOnly: true
       - op: add
-        path: /spec/template/spec/containers/0/resources
+        path: /spec/template/spec/containers/0/volumeMounts/0
         value:
-          resources:
-            devic.es/zigbee-dongle: '1'
-            memory: 100M
-          limits:
-            devic.es/zigbee-dongle: '1'
-            memory: 1G
+          name: zigbee-dongle
+          mountPath: /dev/ttyACM0
 
 labels:
   - includeSelectors: true
