@@ -126,6 +126,7 @@ spec:
         - mountPath: /opt/tplink/EAPController/logs
           name: volume
           subPath: logs
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       securityContext:
         fsGroup: 1000

@@ -117,6 +117,7 @@ spec:
           name: var-cache
         - mountPath: /var/log
           name: var-log
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       securityContext:
         fsGroup: 1000

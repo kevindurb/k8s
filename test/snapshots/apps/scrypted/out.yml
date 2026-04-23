@@ -87,6 +87,7 @@ spec:
         volumeMounts:
         - mountPath: /server/volume
           name: volume
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       nodeSelector:
         nvidia.com/gpu.product: Quadro-P620-SHARED

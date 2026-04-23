@@ -159,6 +159,7 @@ spec:
             - NET_RAW
             drop:
             - ALL
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: kube-vip-kube-vip
       tolerations:

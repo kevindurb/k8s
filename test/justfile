@@ -19,6 +19,23 @@ test-all:
   done
   exit $failed
 
+update-all:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  failed=0
+  for path in infrastructure/*/ platform/*/ apps/*/; do
+    [ -d "$path" ] || continue
+    path="${path%/}"
+    if [ ! -f "$path/kustomization.yaml" ] && [ ! -f "$path/kustomization.yml" ] && [ ! -f "$path/Kustomization" ]; then
+      continue
+    fi
+    echo "━━━ Updating $path ━━━"
+    if ! just test/update "$path"; then
+      failed=1
+    fi
+  done
+  exit $failed
+
 test path:
   #!/usr/bin/env bash
   set -euo pipefail

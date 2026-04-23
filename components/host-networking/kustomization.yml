@@ -7,11 +7,17 @@ patches:
       - op: add
         path: /spec/template/spec/hostNetwork
         value: true
+      - op: add
+        path: /spec/template/spec/dnsPolicy
+        value: ClusterFirstWithHostNet
     target:
       kind: Deployment
   - patch: |-
       - op: add
         path: /spec/template/spec/hostNetwork
         value: true
+      - op: add
+        path: /spec/template/spec/dnsPolicy
+        value: ClusterFirstWithHostNet
     target:
       kind: DaemonSet
