@@ -8,4 +8,3 @@ resources:
   - ./envoy-gateway/app.yml
   - ./smtp-relay/app.yml
   - ./wireguard/app.yml
-  - ./zigbee2mqtt/app.yml
