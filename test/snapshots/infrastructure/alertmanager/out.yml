@@ -68,49 +68,55 @@ metadata:
   annotations:
     prometheus.io/scrape: "true"
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: alertmanager
   name: alertmanager-app-service
   namespace: alertmanager
 spec:
   ports:
-  - name: web
+  - name: http
     port: 80
-    targetPort: web
+    targetPort: http
   selector:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: alertmanager
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: alertmanager
-  name: alertmanager-data-volume
+  name: alertmanager-app-volume
   namespace: alertmanager
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
+      storage: 1G
   storageClassName: longhorn-replicated
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: alertmanager
-  name: alertmanager-deployment
+  name: alertmanager-app-deployment
   namespace: alertmanager
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: alertmanager
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: alertmanager
     spec:
       containers:
@@ -118,11 +124,15 @@ spec:
         - --config.file=/etc/alertmanager/alertmanager.yml
         - --storage.path=/alertmanager
         - --web.external-url=https://alertmanager.beaver-cloud.xyz
+        env:
+        - name: TZ
+          value: America/Denver
+        envFrom: []
         image: docker.io/prom/alertmanager@sha256:58e117eabccebbff04e6643a3432d6315a2cc3a8c24ab5849bc628886bf08857
         name: alertmanager
         ports:
         - containerPort: 9093
-          name: web
+          name: http
         resources:
           limits:
             memory: 500M
@@ -156,7 +166,7 @@ spec:
       volumes:
       - name: data-volume
         persistentVolumeClaim:
-          claimName: alertmanager-data-volume
+          claimName: alertmanager-app-volume
       - configMap:
           name: alertmanager-config-dfc927m6k4
         name: config-volume
