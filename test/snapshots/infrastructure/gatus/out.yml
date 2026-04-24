@@ -59,9 +59,23 @@ subjects:
 ---
 apiVersion: v1
 data:
+  GATUS_CONFIG_PATH: /config
+  GATUS_LOG_LEVEL: DEBUG
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: gatus
+  name: gatus-app-env-kddh647t88
+  namespace: gatus
+---
+apiVersion: v1
+data:
   gatus.yml: |
     ---
     metrics: true
+    storage:
+      type: sqlite
+      path: /config/data.db
 
     endpoints:
       - name: gatus
@@ -113,7 +127,7 @@ kind: ConfigMap
 metadata:
   labels:
     app.kubernetes.io/name: gatus
-  name: gatus-config-b9fg79cm7k
+  name: gatus-config-bh9hgdfcm8
   namespace: gatus
 ---
 apiVersion: v1
@@ -148,6 +162,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: gatus
   name: gatus-app-volume
   namespace: gatus
@@ -183,6 +198,48 @@ spec:
     spec:
       containers:
       - env:
+        - name: TZ
+          value: America/Denver
+        envFrom:
+        - configMapRef:
+            name: gatus-app-env-kddh647t88
+        image: ghcr.io/twin/gatus:v5.34.0@sha256:3fff895e77d35ee62e898860f4613755bc2344127d93e3f326429d40270e2115
+        name: app
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          limits:
+            memory: 256M
+          requests:
+            memory: 128M
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /config
+          name: volume
+        - mountPath: /config/config.yaml
+          name: config-map
+          subPath: gatus.yml
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /var/tmp
+          name: var-tmp
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /var/cache
+          name: var-cache
+        - mountPath: /var/log
+          name: var-log
+      - env:
         - name: FOLDER
           value: /config
         - name: LABEL
@@ -202,48 +259,6 @@ spec:
           name: volume
         - mountPath: /tmp
           name: tmp
-      - env:
-        - name: GATUS_LOG_LEVEL
-          value: DEBUG
-        - name: GATUS_CONFIG_PATH
-          value: /config
-        envFrom: []
-        image: ghcr.io/twin/gatus:v5.34.0@sha256:3fff895e77d35ee62e898860f4613755bc2344127d93e3f326429d40270e2115
-        name: app
-        ports:
-        - containerPort: 8080
-          name: http
-        resources:
-          limits:
-            memory: 500M
-          requests:
-            memory: 100M
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsGroup: 1000
-          runAsNonRoot: true
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /config
-          name: volume
-        - mountPath: /tmp
-          name: tmp
-        - mountPath: /var/tmp
-          name: var-tmp
-        - mountPath: /var/run
-          name: var-run
-        - mountPath: /var/cache
-          name: var-cache
-        - mountPath: /var/log
-          name: var-log
-        - mountPath: /config/config.yaml
-          name: config-map
-          subPath: gatus.yml
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
@@ -251,9 +266,12 @@ spec:
         runAsUser: 1000
       serviceAccountName: gatus-service-account
       volumes:
+      - configMap:
+          name: gatus-config-bh9hgdfcm8
+        name: config-map
       - name: volume
         persistentVolumeClaim:
-          claimName: gatus-app-volume
+          name: app-volume
       - emptyDir: {}
         name: tmp
       - emptyDir: {}
@@ -264,9 +282,6 @@ spec:
         name: var-cache
       - emptyDir: {}
         name: var-log
-      - configMap:
-          name: gatus-config-b9fg79cm7k
-        name: config-map
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

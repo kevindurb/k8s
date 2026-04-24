@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      serviceAccountName: service-account
+      volumes:
+        - name: config-map
+          configMap:
+            name: config
+        - name: volume
+          persistentVolumeClaim:
+            name: app-volume
+      containers:
+        - name: app
+          image: ghcr.io/twin/gatus:v5.34.0@sha256:3fff895e77d35ee62e898860f4613755bc2344127d93e3f326429d40270e2115
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom: []
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+            - name: config-map
+              mountPath: /config/config.yaml
+              subPath: gatus.yml
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+          ports:
+            - name: http
+              containerPort: 8080
+        - image: ghcr.io/kiwigrid/k8s-sidecar:2.5.0@sha256:a6b3f707f883108376514489a94d6629109a327b2978e1d826cd104c4ca436df
+          name: config-sync
+          env:
+            - name: FOLDER
+              value: /config
+            - name: LABEL
+              value: gatus.io/enabled
+            - name: LABEL_VALUE
+              value: 'true'
+            - name: NAMESPACE
+              value: ALL
+            - name: RESOURCE
+              value: both
+            - name: HEALTH_PORT
+              value: '0'
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+            - name: tmp
+              mountPath: /tmp

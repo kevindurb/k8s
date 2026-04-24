@@ -11,4 +11,5 @@ patches:
             name: app-env
     target:
       kind: Deployment
+      # TODO: switch to label selector
       name: app-deployment

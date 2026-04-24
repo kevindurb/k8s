@@ -6,21 +6,25 @@ namespace: gatus
 namePrefix: gatus-
 
 resources:
-  - ../../bases/app-with-storage
+  - ./deployment.yml
   - ./rbac.yml
 
 components:
   - ../../components/internal-http-route
-
-images:
-  - name: app-image
-    newName: ghcr.io/twin/gatus
-    newTag: v5.34.0@sha256:3fff895e77d35ee62e898860f4613755bc2344127d93e3f326429d40270e2115
+  - ../../components/app-env
+  - ../../components/app-http-service
+  - ../../components/app-volume
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: config
     files:
       - ./config/gatus.yml
+  - name: app-env
+    literals:
+      - GATUS_LOG_LEVEL=DEBUG
+      - GATUS_CONFIG_PATH=/config
 
 replacements:
   - sourceValue: gatus.beaver-cloud.xyz
@@ -29,48 +33,6 @@ replacements:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
-
-patches:
-  - patch: |-
-      - op: add
-        path: /spec/template/spec/volumes/-
-        value:
-          name: config-map
-          configMap:
-            name: config
-      - op: add
-        path: /spec/template/spec/containers/0/volumeMounts/-
-        value:
-          name: config-map
-          mountPath: /config/config.yaml
-          subPath: gatus.yml
-      - op: add
-        path: /spec/template/spec/containers/0/env
-        value:
-          - name: GATUS_LOG_LEVEL
-            value: DEBUG
-          - name: GATUS_CONFIG_PATH
-            value: /config
-      - op: add
-        path: /spec/template/spec/containers/0/resources
-        value:
-          requests:
-            memory: 100M
-          limits:
-            memory: 500M
-      - op: add
-        path: /spec/template/spec/containers/0/ports/0/containerPort
-        value: 8080
-      - op: add
-        path: /spec/template/spec/serviceAccountName
-        value: service-account
-    target:
-      kind: Deployment
-      name: app-deployment
-  - path: ./k8s-sidecar.patch.yml
-    target:
-      kind: Deployment
-      name: app-deployment
 
 labels:
   - includeSelectors: true
