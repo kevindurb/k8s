@@ -24,28 +24,63 @@ metadata:
   name: cloudflared-config-9cmgbf7224
   namespace: cloudflared
 ---
+apiVersion: v1
+data:
+  alertmanager.yml: |
+    ---
+    endpoints:
+      - name: cloudflared
+        url: http://cloudflared-app-service.cloudflared/ready
+        group: infrastructure
+        conditions:
+          - '[STATUS] == 200'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: cloudflared
+    gatus.io/enabled: "true"
+  name: cloudflared-gatus-7b6h62fm6k
+  namespace: cloudflared
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: cloudflared
+  name: cloudflared-app-service
+  namespace: cloudflared
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: cloudflared
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
     reloader.stakater.com/auto: "true"
   labels:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: cloudflared
-  name: cloudflared-web-deployment
+  name: cloudflared-app-deployment
   namespace: cloudflared
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: cloudflared
   strategy:
-    type: Recreate
+    type: RollingUpdate
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: cloudflared
     spec:
       containers:
@@ -66,6 +101,9 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
         name: cloudflared
+        ports:
+        - containerPort: 2000
+          name: http
         resources:
           limits:
             memory: 1G

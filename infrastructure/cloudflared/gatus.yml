@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: cloudflared
+    url: http://cloudflared-app-service.cloudflared/ready
+    group: infrastructure
+    conditions:
+      - '[STATUS] == 200'

@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: app-deployment
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
 spec:
   replicas: 3
   strategy:
-    type: Recreate
+    type: RollingUpdate
   selector:
     matchLabels: *labels
   template:
@@ -54,6 +54,9 @@ spec:
               mountPath: /etc/cloudflared/creds/credentials.json
               subPath: credentials.json
               readOnly: true
+          ports:
+            - name: http
+              containerPort: 2000
           env:
             - name: TZ
               value: America/Denver

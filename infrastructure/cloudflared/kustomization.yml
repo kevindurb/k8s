@@ -9,12 +9,19 @@ resources:
   - ./cloudflared.yml
 
 components:
-  - ../../components/pod-hardening
+  - ../../components/app-pod-hardening
+  - ../../components/app-http-service
 
 configMapGenerator:
   - name: config
     files:
       - ./config/config.yml
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - alertmanager.yml=gatus.yml
 
 labels:
   - includeSelectors: true
