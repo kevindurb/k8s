@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: config-map
+          configMap:
+            name: config
+        - name: volume
+          persistentVolumeClaim:
+            claimName: app-volume
+      containers:
+        - name: app
+          image: ghcr.io/gtsteffaniak/filebrowser:1.3.0-beta@sha256:9f46fc0bc2aa15cbd8158c877d50f87ff617bab4301e599df38c82613fcf04ff
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom: []
+          volumeMounts:
+            - name: config-map
+              mountPath: /home/filebrowser/data/config.yaml
+              subPath: config.yaml
+            - name: volume
+              mountPath: /config
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          ports:
+            - name: http
+              containerPort: 80

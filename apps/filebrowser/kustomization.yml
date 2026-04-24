@@ -6,16 +6,15 @@ namespace: filebrowser
 namePrefix: filebrowser-
 
 resources:
-  - ../../bases/app-with-storage
+  - ./deployment.yml
 
 components:
   - ../../components/app-nas-media
   - ../../components/internal-http-route
-
-images:
-  - name: app-image
-    newName: ghcr.io/gtsteffaniak/filebrowser
-    newTag: 1.3.0-beta@sha256:9f46fc0bc2aa15cbd8158c877d50f87ff617bab4301e599df38c82613fcf04ff
+  - ../../components/app-http-service
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
+  - ../../components/app-volume
 
 configMapGenerator:
   - name: config
@@ -35,24 +34,6 @@ replacements:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
-
-patches:
-  - patch: |-
-      - op: add
-        path: /spec/template/spec/volumes/-
-        value:
-          name: config-map
-          configMap:
-            name: config
-      - op: add
-        path: /spec/template/spec/containers/0/volumeMounts/-
-        value:
-          name: config-map
-          mountPath: /home/filebrowser/data/config.yaml
-          subPath: config.yaml
-    target:
-      kind: Deployment
-      name: app-deployment
 
 labels:
   - includeSelectors: true
