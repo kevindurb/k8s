@@ -10,6 +10,7 @@ resources:
 
 components:
   - ../../components/internal-http-route
+  - ../../components/app-http-service
 
 replacements:
   - sourceValue: pihole.beaver-cloud.xyz
