@@ -5,3 +5,13 @@ endpoints:
     url: http://pihole-app-service.pihole/admin/login
     conditions:
       - '[STATUS] == 200'
+
+  - name: pihole dns
+    url: 192.168.42.53
+    group: dns
+    dns:
+      query-name: cloudflare.com
+      query-type: A
+    conditions:
+      - '[DNS_RCODE] == NOERROR'
+      - 'len([BODY]) > 0'

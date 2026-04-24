@@ -15,6 +15,16 @@ endpoints:
     group: external
     conditions: ['[STATUS] == 200']
 
+  - name: github
+    url: https://github.com
+    group: external
+    conditions: ['[STATUS] == 200']
+
+  - name: firefox portal
+    url: http://detectportal.firefox.com/success.txt
+    group: external
+    conditions: ['[STATUS] == 200']
+
   - name: router
     url: https://192.168.1.1
     group: networking
@@ -50,3 +60,13 @@ endpoints:
     url: http://192.168.50.11
     group: cameras
     conditions: ['[STATUS] == 200']
+
+  - name: cloudflare dns
+    url: 1.1.1.1
+    group: dns
+    dns:
+      query-name: cloudflare.com
+      query-type: A
+    conditions:
+      - '[DNS_RCODE] == NOERROR'
+      - 'len([BODY]) > 0'
