@@ -9,7 +9,7 @@ resources:
   - ./alertmanager.yml
 
 components:
-  - ../../components/pod-hardening
+  - ../../components/app-pod-hardening
   - ../../components/internal-http-route
   - ../../components/app-http-service
   - ../../components/prometheus-scrape-app-service

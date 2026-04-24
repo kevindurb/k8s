@@ -625,23 +625,26 @@ metadata:
   annotations:
     prometheus.io/scrape: "true"
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: prometheus
   name: prometheus-app-service
   namespace: prometheus
 spec:
   ports:
-  - name: web
+  - name: http
     port: 80
-    targetPort: web
+    targetPort: http
   selector:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: prometheus
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: prometheus
-  name: prometheus-data-volume
+  name: prometheus-app-volume
   namespace: prometheus
 spec:
   accessModes:
@@ -655,19 +658,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: prometheus
-  name: prometheus-deployment
+  name: prometheus-app-deployment
   namespace: prometheus
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: prometheus
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: prometheus
     spec:
       containers:
@@ -681,7 +687,7 @@ spec:
         name: prometheus
         ports:
         - containerPort: 9090
-          name: web
+          name: http
         resources:
           limits:
             memory: 2G
@@ -703,7 +709,7 @@ spec:
         - mountPath: /etc/prometheus/rules
           name: rules
         - mountPath: /prometheus
-          name: data-volume
+          name: volume
       hostname: prometheus
       securityContext:
         fsGroup: 1000
@@ -712,9 +718,9 @@ spec:
         runAsUser: 1000
       serviceAccountName: prometheus-service-account
       volumes:
-      - name: data-volume
+      - name: volume
         persistentVolumeClaim:
-          claimName: prometheus-data-volume
+          claimName: prometheus-app-volume
       - configMap:
           name: prometheus-config-5kd8b9kmcb
         name: config

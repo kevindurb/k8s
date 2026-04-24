@@ -2,19 +2,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
     type: Recreate
+  selector:
+    matchLabels: *labels
   template:
+    metadata:
+      labels: *labels
     spec:
       serviceAccountName: service-account
       hostname: prometheus
       volumes:
-        - name: data-volume
+        - name: volume
           persistentVolumeClaim:
-            claimName: data-volume
+            claimName: app-volume
         - name: config
           configMap:
             name: config
@@ -40,78 +46,8 @@ spec:
               mountPath: /etc/prometheus
             - name: rules
               mountPath: /etc/prometheus/rules
-            - name: data-volume
+            - name: volume
               mountPath: /prometheus
           ports:
-            - name: web
+            - name: http
               containerPort: 9090
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: data-volume
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn-replicated
-  resources:
-    requests:
-      storage: 35Gi
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: app-service
-  annotations:
-    prometheus.io/scrape: 'true'
-spec:
-  ports:
-    - name: web
-      port: 80
-      targetPort: web
-
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: service-account
-  namespace: monitoring
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: cluster-role
-rules:
-  - apiGroups:
-      - ''
-    resources:
-      - nodes/metrics
-      - nodes
-      - services
-      - endpoints
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cluster-role-binding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-role
-subjects:
-  - kind: ServiceAccount
-    name: service-account
-    namespace: monitoring

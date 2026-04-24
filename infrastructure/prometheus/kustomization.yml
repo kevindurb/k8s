@@ -7,10 +7,14 @@ namePrefix: prometheus-
 
 resources:
   - ./prometheus.yml
+  - ./rbac.yml
 
 components:
-  - ../../components/pod-hardening
+  - ../../components/app-pod-hardening
   - ../../components/internal-http-route
+  - ../../components/app-http-service
+  - ../../components/prometheus-scrape-app-service
+  - ../../components/app-volume
 
 replacements:
   - sourceValue: prometheus.beaver-cloud.xyz
@@ -19,6 +23,13 @@ replacements:
           kind: HTTPRoute
         fieldPaths:
           - spec.hostnames.0
+  - sourceValue: 35Gi
+    targets:
+      - select:
+          kind: PersistentVolumeClaim
+          name: app-volume
+        fieldPaths:
+          - spec.resources.requests.storage
 
 configMapGenerator:
   - name: config
