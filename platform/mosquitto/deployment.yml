@@ -2,12 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
     type: Recreate
+  selector:
+    matchLabels: *labels
   template:
+    metadata:
+      labels: *labels
     spec:
       volumes:
         - name: volume
@@ -43,8 +49,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: service
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
 spec:
+  selector: *labels
   ports:
     - name: mqtt
       port: 1883

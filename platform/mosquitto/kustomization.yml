@@ -9,9 +9,9 @@ resources:
   - ./deployment.yml
 
 components:
-  - ../../components/volume
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
+  - ../../components/app-volume
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus

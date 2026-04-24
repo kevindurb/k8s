@@ -38,8 +38,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: mosquitto
-  name: mosquitto-service
+  name: mosquitto-app-service
   namespace: mosquitto
 spec:
   ports:
@@ -47,14 +48,16 @@ spec:
     port: 1883
     targetPort: mqtt
   selector:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: mosquitto
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: mosquitto
-  name: mosquitto-volume
+  name: mosquitto-app-volume
   namespace: mosquitto
 spec:
   accessModes:
@@ -68,19 +71,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: mosquitto
-  name: mosquitto-deployment
+  name: mosquitto-app-deployment
   namespace: mosquitto
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: mosquitto
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: mosquitto
     spec:
       containers:
@@ -133,7 +139,7 @@ spec:
       volumes:
       - name: volume
         persistentVolumeClaim:
-          claimName: mosquitto-volume
+          claimName: volume
       - configMap:
           name: mosquitto-mosquitto-config-bkk7tc8kf9
         name: mosquitto-config
