@@ -271,7 +271,7 @@ spec:
         name: config-map
       - name: volume
         persistentVolumeClaim:
-          name: app-volume
+          claimName: gatus-app-volume
       - emptyDir: {}
         name: tmp
       - emptyDir: {}
