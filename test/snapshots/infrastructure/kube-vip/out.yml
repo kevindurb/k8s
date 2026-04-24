@@ -94,6 +94,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: kube-vip
+      app.kubernetes.io/version: v1.0.4
   template:
     metadata:
       labels:
