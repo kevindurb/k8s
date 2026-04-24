@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: zigbee2mqtt
-    group: apps
+    group: platform
     url: http://zigbee2mqtt-app-service.zigbee2mqtt
     conditions:
       - '[STATUS] == 200'

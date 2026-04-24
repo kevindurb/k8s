@@ -21,7 +21,7 @@ data:
     ---
     endpoints:
       - name: zigbee2mqtt
-        group: apps
+        group: platform
         url: http://zigbee2mqtt-app-service.zigbee2mqtt
         conditions:
           - '[STATUS] == 200'
@@ -30,7 +30,7 @@ metadata:
   labels:
     app.kubernetes.io/name: zigbee2mqtt
     gatus.io/enabled: "true"
-  name: zigbee2mqtt-gatus-km44d74km9
+  name: zigbee2mqtt-gatus-ck6tgcdm9t
   namespace: zigbee2mqtt
 ---
 apiVersion: v1

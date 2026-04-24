@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment
+  name: app-deployment
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
-    app.kubernetes.io/component: smtp
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
@@ -54,10 +54,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: service
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
 spec:
-  selector:
-    app.kubernetes.io/component: smtp
+  selector: *labels
   ports:
     - name: smtp
       port: 25

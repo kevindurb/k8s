@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: wireguard
-    group: platform
-    url: udp://wireguard-app-service.wireguard:51820
-    conditions:
-      - '[CONNECTED] == true'

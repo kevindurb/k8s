@@ -9,8 +9,8 @@ resources:
   - ./smtp-relay.yml
 
 components:
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus
