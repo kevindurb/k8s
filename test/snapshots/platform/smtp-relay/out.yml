@@ -38,7 +38,7 @@ data:
     ---
     endpoints:
       - name: smtp-relay
-        url: tcp://smtp-relay-service.smtp-relay:25
+        url: tcp://smtp-relay-app-service.smtp-relay:25
         group: platform
         conditions:
           - '[CONNECTED] == true'
@@ -48,7 +48,7 @@ metadata:
   labels:
     app.kubernetes.io/name: smtp-relay
     gatus.io/enabled: "true"
-  name: smtp-relay-gatus-2t78bgcm4f
+  name: smtp-relay-gatus-8d99mm2m4m
   namespace: smtp-relay
 ---
 apiVersion: v1

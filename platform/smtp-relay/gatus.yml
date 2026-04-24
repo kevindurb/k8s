@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: smtp-relay
-    url: tcp://smtp-relay-service.smtp-relay:25
+    url: tcp://smtp-relay-app-service.smtp-relay:25
     group: platform
     conditions:
       - '[CONNECTED] == true'

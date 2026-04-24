@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: mosquitto
-    url: tcp://mosquitto-service.mosquitto:1883
+    url: tcp://mosquitto-app-service.mosquitto:1883
     group: platform
     conditions:
       - '[CONNECTED] == true'
