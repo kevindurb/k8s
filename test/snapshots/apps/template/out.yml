@@ -33,21 +33,6 @@ spec:
     app.kubernetes.io/component: app
     app.kubernetes.io/name: template
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    app.kubernetes.io/name: template
-  name: template-app-volume
-  namespace: template
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1G
-  storageClassName: longhorn-replicated
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -57,7 +42,7 @@ metadata:
   name: template-app-deployment
   namespace: template
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app.kubernetes.io/component: app
@@ -82,9 +67,9 @@ spec:
           name: http
         resources:
           limits:
-            memory: 1G
+            memory: 256M
           requests:
-            memory: 100M
+            memory: 128M
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -96,8 +81,6 @@ spec:
           runAsNonRoot: true
           runAsUser: 1000
         volumeMounts:
-        - mountPath: /config
-          name: volume
         - mountPath: /tmp
           name: tmp
         - mountPath: /var/tmp
@@ -114,9 +97,6 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
       volumes:
-      - name: volume
-        persistentVolumeClaim:
-          claimName: template-app-volume
       - emptyDir: {}
         name: tmp
       - emptyDir: {}

@@ -6,16 +6,14 @@ namespace: template
 namePrefix: template-
 
 resources:
-  - ../../bases/app-with-storage
+  - ./deployment.yml
 
 components:
   - ../../components/internal-http-route
   - ../../components/external-http-route
-
-images:
-  - name: app-image
-    newName: docker.io/traefik/whoami
-    newTag: v1.11@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
+  - ../../components/app-http-service
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus

@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes: []
+      containers:
+        - name: app
+          image: docker.io/traefik/whoami:v1.11@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom: []
+          volumeMounts: []
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+          ports:
+            - name: http
+              containerPort: 80
