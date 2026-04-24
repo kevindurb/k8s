@@ -54,6 +54,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: zigbee2mqtt
   name: zigbee2mqtt-app-volume
   namespace: zigbee2mqtt
@@ -101,53 +102,34 @@ spec:
           name: http
         resources:
           limits:
-            memory: 1G
+            memory: 500M
           requests:
-            memory: 100M
+            memory: 50M
         securityContext:
           privileged: true
         volumeMounts:
-        - mountPath: /dev/ttyACM0
-          name: zigbee-dongle
+        - mountPath: /app/data
+          name: volume
         - mountPath: /run/udev
           name: run-udev
           readOnly: true
-        - mountPath: /app/data
-          name: volume
-        - mountPath: /tmp
-          name: tmp
-        - mountPath: /var/tmp
-          name: var-tmp
-        - mountPath: /var/run
-          name: var-run
-        - mountPath: /var/cache
-          name: var-cache
-        - mountPath: /var/log
-          name: var-log
+        - mountPath: /dev/ttyACM0
+          name: zigbee-dongle
+      hostname: zigbee2mqtt
       nodeSelector:
         feature.node.kubernetes.io/usb-ff_10c4_ea60.present: "true"
       securityContext:
         fsGroup: 1000
       volumes:
-      - hostPath:
-          path: /run/udev
-        name: run-udev
-      - hostPath:
-          path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_dadea32ebf12ec11b8b720c7bd930c07-if00-port0
-        name: zigbee-dongle
       - name: volume
         persistentVolumeClaim:
           claimName: zigbee2mqtt-app-volume
-      - emptyDir: {}
-        name: tmp
-      - emptyDir: {}
-        name: var-tmp
-      - emptyDir: {}
-        name: var-run
-      - emptyDir: {}
-        name: var-cache
-      - emptyDir: {}
-        name: var-log
+      - hostPath:
+          path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_dadea32ebf12ec11b8b720c7bd930c07-if00-port0
+        name: zigbee-dongle
+      - hostPath:
+          path: /run/udev
+        name: run-udev
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

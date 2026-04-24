@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      nodeSelector:
+        feature.node.kubernetes.io/usb-ff_10c4_ea60.present: 'true'
+      hostname: zigbee2mqtt
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: app-volume
+        - name: zigbee-dongle
+          hostPath:
+            path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_dadea32ebf12ec11b8b720c7bd930c07-if00-port0
+        - name: run-udev
+          hostPath:
+            path: /run/udev
+      containers:
+        - name: app
+          image: ghcr.io/koenkk/zigbee2mqtt:latest@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              memory: 50M
+            limits:
+              memory: 500M
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom: []
+          volumeMounts:
+            - name: volume
+              mountPath: /app/data
+            - name: run-udev
+              mountPath: /run/udev
+              readOnly: true
+            - name: zigbee-dongle
+              mountPath: /dev/ttyACM0
+          ports:
+            - name: http
+              containerPort: 8080

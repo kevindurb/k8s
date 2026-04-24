@@ -139,7 +139,7 @@ spec:
       volumes:
       - name: volume
         persistentVolumeClaim:
-          claimName: volume
+          claimName: mosquitto-app-volume
       - configMap:
           name: mosquitto-mosquitto-config-bkk7tc8kf9
         name: mosquitto-config
