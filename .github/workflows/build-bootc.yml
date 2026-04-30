@@ -23,13 +23,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout
+        uses: actions/checkout@v4
 
       - name: Install Podman and Buildah
         run: sudo apt update && sudo apt install -y buildah podman
 
       - name: Image Metadata
-        uses: docker/metadata-action
+        uses: docker/metadata-action@v5
         id: meta
         with:
           images: |
@@ -45,7 +45,7 @@ jobs:
             type=sha
 
       - name: Login to GitHub Container Registry
-        uses: redhat-actions/podman-login
+        uses: redhat-actions/podman-login@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Image
         id: build
-        uses: redhat-actions/buildah-build
+        uses: redhat-actions/buildah-build@v2
         with:
           oci: false
           context: ./bootc
@@ -64,12 +64,12 @@ jobs:
           platforms: ${{ inputs.arch }}
 
       - name: Push Image to GHCR
-        uses: redhat-actions/push-to-registry
+        uses: redhat-actions/push-to-registry@v2
         id: push
         with:
           tags: ${{ steps.meta.outputs.tags }}
 
-      - uses: sigstore/cosign-installer
+      - uses: sigstore/cosign-installer@v3.5.0
 
       - name: Sign container image
         run: |
