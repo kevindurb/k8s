@@ -50,8 +50,8 @@ spec:
   tags: [storage]
   disks:
     nvme:
-      allowScheduling: false
-      evictionRequested: true
+      allowScheduling: true
+      evictionRequested: false
       storageReserved: 0
       diskDriver: ''
       path: /var/lib/longhorn

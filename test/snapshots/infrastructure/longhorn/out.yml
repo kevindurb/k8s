@@ -119,10 +119,10 @@ spec:
   allowScheduling: false
   disks:
     nvme:
-      allowScheduling: false
+      allowScheduling: true
       diskDriver: ""
       diskType: filesystem
-      evictionRequested: true
+      evictionRequested: false
       path: /var/lib/longhorn
       storageReserved: 0
       tags:
