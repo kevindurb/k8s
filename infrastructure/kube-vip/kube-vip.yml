@@ -5,7 +5,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/name: kube-vip-ds
     app.kubernetes.io/version: v1.0.4
-  name: kube-vip-ds
+  name: ds
 spec:
   selector:
     matchLabels: *labels

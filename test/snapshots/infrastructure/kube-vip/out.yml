@@ -88,7 +88,7 @@ metadata:
   labels:
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v1.0.4
-  name: kube-vip-kube-vip-ds
+  name: kube-vip-ds
   namespace: kube-vip
 spec:
   selector:
