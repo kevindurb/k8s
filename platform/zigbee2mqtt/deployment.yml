@@ -32,7 +32,7 @@ spec:
             path: /run/udev
       containers:
         - name: app
-          image: ghcr.io/koenkk/zigbee2mqtt:latest@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0
+          image: ghcr.io/koenkk/zigbee2mqtt:latest@sha256:e9279e580bb25c512cf6e54c36e215a5cbd2881d1f201cf2a8213a97b14be3d2
           securityContext:
             privileged: true
           resources:
