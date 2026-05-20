@@ -201,7 +201,7 @@ spec:
     port: 80
     targetPort: http
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: handbrake-web
 ---
 apiVersion: v1
@@ -256,22 +256,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: handbrake-web
-  name: handbrake-web-server-deployment
+  name: handbrake-web-app-deployment
   namespace: handbrake-web
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: handbrake-web
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: handbrake-web
     spec:
       containers:

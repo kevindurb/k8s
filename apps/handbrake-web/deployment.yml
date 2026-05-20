@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server-deployment
+  name: app-deployment
   labels: &labels
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
@@ -30,11 +30,9 @@ spec:
       containers:
         - name: handbrake-web-server
           image: ghcr.io/thenickoftime/handbrake-web-server@sha256:6aa18122e08299cf05edf0aa6135d9c97d92839933f5377f8fde59978430e543
-          resources:
-            requests:
-              memory: 100M
-            limits:
-              memory: 1G
+          env:
+            - name: TZ
+              value: America/Denver
           volumeMounts:
             - name: volume
               mountPath: /data
@@ -46,13 +44,14 @@ spec:
             - name: config
               mountPath: /data/presets/super_hq_h265_mkv.json
               subPath: super_hq_h265_mkv.json
-          env:
-            - name: TZ
-              value: America/Denver
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
           ports:
             - name: http
               containerPort: 9999
-
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -76,16 +75,6 @@ spec:
       containers:
         - name: handbrake-web-worker
           image: ghcr.io/thenickoftime/handbrake-web-worker@sha256:4676054730c16fb7081d7c4f7b546272a022010e8adbb893df9d274885dfbc5e
-          resources:
-            requests:
-              memory: 1G
-            limits:
-              memory: 8G
-          volumeMounts:
-            - name: data
-              mountPath: /data
-            - name: video
-              mountPath: /video
           env:
             - name: TZ
               value: America/Denver
@@ -97,7 +86,16 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: video
+              mountPath: /video
+          resources:
+            requests:
+              memory: 1G
+            limits:
+              memory: 8G
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -109,7 +107,6 @@ spec:
   resources:
     requests:
       storage: 1G
-
 ---
 apiVersion: v1
 kind: Service
@@ -117,8 +114,34 @@ metadata:
   name: app-service
 spec:
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
   ports:
     - name: http
       port: 80
       targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - handbrake-web.beaver-cloud.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: app-service
+          port: 80
+          weight: 1
