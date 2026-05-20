@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: app-deployment
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
@@ -17,6 +17,8 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       volumes:
         - name: volume
           persistentVolumeClaim:
@@ -25,21 +27,20 @@ spec:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:2026.2.3@sha256:96fa92d83fa8dae987fbbbcf58b1fea1140985ff6a8517b37f7b65c76ef20133
           command: [python, -m, homeassistant, --config, /config]
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: volume
+              mountPath: /config
           resources:
             requests:
               memory: 100M
             limits:
               memory: 2G
-          volumeMounts:
-            - name: volume
-              mountPath: /config
-          env:
-            - name: TZ
-              value: America/Denver
           ports:
             - name: http
               containerPort: 8123
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -51,7 +52,6 @@ spec:
   resources:
     requests:
       storage: 40G
-
 ---
 apiVersion: v1
 kind: Service
@@ -59,7 +59,7 @@ metadata:
   name: app-service
 spec:
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
   ports:
     - name: http
       port: 80
@@ -67,3 +67,29 @@ spec:
     - name: mqtt
       port: 1883
       targetPort: mqtt
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - home-assistant.beaver-cloud.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: app-service
+          port: 80
+          weight: 1
