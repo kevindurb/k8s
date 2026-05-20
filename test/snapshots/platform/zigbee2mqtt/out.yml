@@ -95,7 +95,7 @@ spec:
         envFrom:
         - configMapRef:
             name: zigbee2mqtt-app-env-c74gf4f8kt
-        image: ghcr.io/koenkk/zigbee2mqtt:latest@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0
+        image: ghcr.io/koenkk/zigbee2mqtt:latest@sha256:67c26dcf8346aced02fe1380a6afd1b57268bcef10faae3f6057c13d5d3dfa80
         name: app
         ports:
         - containerPort: 8080
