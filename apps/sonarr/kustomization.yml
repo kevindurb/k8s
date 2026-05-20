@@ -6,13 +6,12 @@ namespace: sonarr
 namePrefix: sonarr-
 
 resources:
-  - ./sonarr.yml
+  - ./deployment.yml
 
 components:
-  - ../../components/nas-media
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
-  - ../../components/internal-http-route
+  - ../../components/http-route-refs
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus
@@ -21,14 +20,6 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - sonarr.yml=gatus.yml
-
-replacements:
-  - sourceValue: sonarr.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 labels:
   - includeSelectors: true
