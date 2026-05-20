@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        nvidia.com/gpu.product: Quadro-P620-SHARED
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
+        - name: config
+          persistentVolumeClaim:
+            claimName: config-pvc
+      containers:
+        - name: jellyfin
+          image: jellyfin/jellyfin:latest@sha256:1694ff069f0c9dafb283c36765175606866769f5d72f2ed56b6a0f1be922fc37
+          securityContext:
+            privileged: true
+            runAsUser: 1000
+            runAsGroup: 1000
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: nas-media
+              mountPath: /media
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              memory: 1G
+            limits:
+              memory: 4G
+              nvidia.com/gpu: '1'
+          ports:
+            - name: http
+              containerPort: 8096
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config-pvc
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  selector:
+    app.kubernetes.io/component: app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8096
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - jellyfin.beaver-cloud.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: app-service
+          port: 80
+          weight: 1

@@ -1,25 +1,16 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namePrefix: jellyfin-
+
 namespace: jellyfin
+namePrefix: jellyfin-
 
 resources:
-  - ./resources/config-pvc.yml
-  - ./resources/deployment.yml
-  - ./resources/service.yml
+  - ./deployment.yml
 
 components:
+  - ../../components/http-route-refs
   - ../../components/nas-media
-  - ../../components/internal-http-route
-
-replacements:
-  - sourceValue: jellyfin.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 configMapGenerator:
   - name: gatus
@@ -28,3 +19,9 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - jellyfin.yml=gatus.yml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: jellyfin
