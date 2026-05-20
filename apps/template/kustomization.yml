@@ -9,9 +9,7 @@ resources:
   - ./deployment.yml
 
 components:
-  - ../../components/internal-http-route
-  - ../../components/external-http-route
-  - ../../components/app-http-service
+  - ../../components/http-route-refs
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 
@@ -22,14 +20,6 @@ configMapGenerator:
         gatus.io/enabled: 'true'
     files:
       - template.yml=gatus.yml
-
-replacements:
-  - sourceValue: template.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 labels:
   - includeSelectors: true
