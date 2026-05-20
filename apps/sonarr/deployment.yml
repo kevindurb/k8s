@@ -2,14 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: app-deployment
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
-    app.kubernetes.io/component: web
-    # Vestigial: dropping this label would change Deployment.spec.selector
-    # (immutable in K8s) and force a manual delete to recreate.
-    beaver-cloud.xyz/nas-media: 'true'
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
@@ -91,7 +88,7 @@ metadata:
   name: app-service
 spec:
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
   ports:
     - name: http
       port: 80
