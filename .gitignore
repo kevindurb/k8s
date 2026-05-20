@@ -13,3 +13,5 @@ dist/*
 .task
 kubeconfig
 *.key
+# CocoIndex Code (ccc)
+/.cocoindex_code/
