@@ -29,7 +29,7 @@ spec:
     port: 80
     targetPort: http
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: syncthing
 ---
 apiVersion: v1
@@ -51,22 +51,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: syncthing
-  name: syncthing-web-deployment
+  name: syncthing-app-deployment
   namespace: syncthing
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: syncthing
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: syncthing
     spec:
       containers:
