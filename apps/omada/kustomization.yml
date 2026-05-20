@@ -6,11 +6,7 @@ namespace: omada
 namePrefix: omada-
 
 resources:
-  - ./resources/omada.yml
-  - ./resources/pvc.yml
-
-components:
-  - ../../components/host-networking
+  - ./deployment.yml
 
 configMapGenerator:
   - name: gatus

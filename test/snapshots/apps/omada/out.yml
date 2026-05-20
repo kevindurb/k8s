@@ -31,7 +31,7 @@ spec:
     port: 443
     targetPort: https
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: omada
 ---
 apiVersion: v1
@@ -55,22 +55,22 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
   labels:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: omada
-  name: omada-web-deployment
+  name: omada-app-deployment
   namespace: omada
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: omada
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: omada
     spec:
       containers:
