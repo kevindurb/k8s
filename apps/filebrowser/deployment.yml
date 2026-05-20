@@ -16,6 +16,9 @@ spec:
       labels: *labels
     spec:
       volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
         - name: config-map
           configMap:
             name: config
@@ -30,6 +33,8 @@ spec:
               value: America/Denver
           envFrom: []
           volumeMounts:
+            - name: nas-media
+              mountPath: /media
             - name: config-map
               mountPath: /home/filebrowser/data/config.yaml
               subPath: config.yaml
@@ -43,3 +48,55 @@ spec:
           ports:
             - name: http
               containerPort: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-volume
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1G
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - filebrowser.beaver-cloud.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: app-service
+          port: 80
+          weight: 1
