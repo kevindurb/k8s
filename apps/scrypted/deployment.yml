@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: app-deployment
   labels: &labels
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
@@ -15,6 +15,8 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       runtimeClassName: nvidia
       nodeSelector:
         nvidia.com/gpu.product: Quadro-P620-SHARED
@@ -25,22 +27,21 @@ spec:
       containers:
         - name: scrypted
           image: ghcr.io/koush/scrypted:v0.144.1-noble-nvidia@sha256:da86752279289444ba093caf908c2534abbdf134058143755cd0b085bd88b47c
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: volume
+              mountPath: /server/volume
           resources:
             requests:
               memory: 100M
             limits:
-              nvidia.com/gpu: '1'
               memory: 4G
-          volumeMounts:
-            - name: volume
-              mountPath: /server/volume
-          env:
-            - name: TZ
-              value: America/Denver
+              nvidia.com/gpu: '1'
           ports:
             - name: http
               containerPort: 11080
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -52,7 +53,6 @@ spec:
   resources:
     requests:
       storage: 10G
-
 ---
 apiVersion: v1
 kind: Service
@@ -60,8 +60,34 @@ metadata:
   name: app-service
 spec:
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
   ports:
     - name: http
       port: 80
       targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - scrypted.beaver-cloud.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: app-service
+          port: 80
+          weight: 1

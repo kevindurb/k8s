@@ -29,7 +29,7 @@ spec:
     port: 80
     targetPort: http
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: scrypted
 ---
 apiVersion: v1
@@ -51,22 +51,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: scrypted
-  name: scrypted-web-deployment
+  name: scrypted-app-deployment
   namespace: scrypted
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: scrypted
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: scrypted
     spec:
       containers:
