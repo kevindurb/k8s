@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-volume
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 10G
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: app-volume
+      containers:
+        - name: app
+          image: codeberg.org/forgejo/forgejo:15-rootless
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom:
+            - configMapRef:
+                name: app-env
+          volumeMounts:
+            - name: volume
+              mountPath: /var/lib/gitea
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          ports:
+            - name: http
+              containerPort: 3000

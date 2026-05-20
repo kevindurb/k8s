@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: drone-04
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
+      containers:
+        - name: app
+          image: jlesage/makemkv:v26.01.2@sha256:4c114cfbd0ba7feef85c72d1721b8ea13a44ebc010b4996b644e618906e61717
+          securityContext:
+            privileged: true
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom:
+            - configMapRef:
+                name: app-env
+          volumeMounts:
+            - name: nas-media
+              mountPath: /output
+              subPath: Downloads
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          ports:
+            - name: http
+              containerPort: 5800
