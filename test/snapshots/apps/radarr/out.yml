@@ -29,7 +29,7 @@ spec:
     port: 80
     targetPort: http
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: radarr
 ---
 apiVersion: v1
@@ -86,26 +86,23 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
   labels:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: radarr
-    beaver-cloud.xyz/nas-media: "true"
-  name: radarr-web-deployment
+  name: radarr-app-deployment
   namespace: radarr
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: app
       app.kubernetes.io/name: radarr
-      beaver-cloud.xyz/nas-media: "true"
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: app
         app.kubernetes.io/name: radarr
-        beaver-cloud.xyz/nas-media: "true"
     spec:
       containers:
       - env:

@@ -6,21 +6,13 @@ namespace: radarr
 namePrefix: radarr-
 
 resources:
-  - ./radarr.yml
+  - ./deployment.yml
 
 components:
+  - ../../components/http-route-refs
   - ../../components/nas-media
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
-  - ../../components/internal-http-route
-
-replacements:
-  - sourceValue: radarr.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus
