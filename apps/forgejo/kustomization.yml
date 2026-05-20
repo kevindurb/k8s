@@ -6,16 +6,12 @@ namespace: forgejo
 namePrefix: forgejo-
 
 resources:
-  - ../../bases/app-with-storage
+  - ./deployment.yml
 
 components:
-  - ../../components/internal-http-route
-  - ../../components/app-env
-
-images:
-  - name: app-image
-    newName: codeberg.org/forgejo/forgejo
-    newTag: 15-rootless
+  - ../../components/http-route-refs
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus
@@ -28,33 +24,6 @@ configMapGenerator:
     literals:
       - USER_UID=1000
       - USER_GID=1000
-
-replacements:
-  - sourceValue: '3000'
-    targets:
-      - select: &app-deployment
-          kind: Deployment
-          name: app-deployment
-        fieldPaths:
-          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
-  - sourceValue: forgejo.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
-  - sourceValue: 10G
-    targets:
-      - select:
-          kind: PersistentVolumeClaim
-          name: app-volume
-        fieldPaths:
-          - spec.resources.requests.storage
-  - sourceValue: /var/lib/gitea
-    targets:
-      - select: *app-deployment
-        fieldPaths:
-          - spec.template.spec.containers.0.volumeMounts.[name=volume].mountPath
 
 labels:
   - includeSelectors: true
