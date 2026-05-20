@@ -6,21 +6,13 @@ namespace: handbrake-web
 namePrefix: handbrake-web-
 
 resources:
-  - ./handbrake-web.yml
+  - ./deployment.yml
 
 components:
+  - ../../components/http-route-refs
   - ../../components/nas-media
-  - ../../components/pod-hardening
-  - ../../components/tmpdirs
-  - ../../components/internal-http-route
-
-replacements:
-  - sourceValue: handbrake-web.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: config
