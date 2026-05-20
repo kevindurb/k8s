@@ -6,20 +6,11 @@ namespace: paperless-ngx
 namePrefix: paperless-ngx-
 
 resources:
-  - ../../bases/valkey
-  - ./paperless-ngx.yml
+  - ./deployment.yml
 
 components:
+  - ../../components/http-route-refs
   - ../../components/nas-media
-  - ../../components/internal-http-route
-
-replacements:
-  - sourceValue: paperless.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 configMapGenerator:
   - name: gatus

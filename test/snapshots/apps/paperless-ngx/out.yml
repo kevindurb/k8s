@@ -29,7 +29,7 @@ spec:
     port: 80
     targetPort: http
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
     app.kubernetes.io/name: paperless-ngx
 ---
 apiVersion: v1
@@ -96,6 +96,75 @@ spec:
     requests:
       storage: 10G
   storageClassName: longhorn-replicated
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: paperless-ngx
+  name: paperless-ngx-app-deployment
+  namespace: paperless-ngx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: paperless-ngx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: paperless-ngx
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: America/Denver
+        - name: USERMAP_UID
+          value: "1000"
+        - name: USERMAP_GID
+          value: "1000"
+        - name: PAPERLESS_REDIS
+          value: redis://paperless-ngx-valkey-service.paperless-ngx:6379
+        - name: PAPERLESS_URL
+          value: https://paperless.beaver-cloud.xyz
+        image: ghcr.io/paperless-ngx/paperless-ngx:latest@sha256:6c86cad803970ea782683a8e80e7403444c5bf3cf70de63b4d3c8e87500db92f
+        name: paperless-ngx
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            memory: 100M
+        securityContext:
+          privileged: false
+          runAsGroup: 1000
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /usr/src/paperless/data
+          name: volume
+        - mountPath: /usr/src/paperless/media
+          name: nas-media
+          subPath: paperless/media
+        - mountPath: /usr/src/paperless/export
+          name: nas-media
+          subPath: paperless/export
+        - mountPath: /usr/src/paperless/consume
+          name: nas-media
+          subPath: paperless/consume
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: paperless-ngx-volume
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -173,75 +242,6 @@ spec:
         name: var-cache
       - emptyDir: {}
         name: var-log
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    reloader.stakater.com/auto: "true"
-  labels:
-    app.kubernetes.io/component: web
-    app.kubernetes.io/name: paperless-ngx
-  name: paperless-ngx-web-deployment
-  namespace: paperless-ngx
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/component: web
-      app.kubernetes.io/name: paperless-ngx
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/component: web
-        app.kubernetes.io/name: paperless-ngx
-    spec:
-      containers:
-      - env:
-        - name: TZ
-          value: America/Denver
-        - name: USERMAP_UID
-          value: "1000"
-        - name: USERMAP_GID
-          value: "1000"
-        - name: PAPERLESS_REDIS
-          value: redis://paperless-ngx-valkey-service.paperless-ngx:6379
-        - name: PAPERLESS_URL
-          value: https://paperless.beaver-cloud.xyz
-        image: ghcr.io/paperless-ngx/paperless-ngx:latest@sha256:6c86cad803970ea782683a8e80e7403444c5bf3cf70de63b4d3c8e87500db92f
-        name: paperless-ngx
-        ports:
-        - containerPort: 8000
-          name: http
-        resources:
-          limits:
-            memory: 1G
-          requests:
-            memory: 100M
-        securityContext:
-          privileged: false
-          runAsGroup: 1000
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /usr/src/paperless/data
-          name: volume
-        - mountPath: /usr/src/paperless/media
-          name: nas-media
-          subPath: paperless/media
-        - mountPath: /usr/src/paperless/export
-          name: nas-media
-          subPath: paperless/export
-        - mountPath: /usr/src/paperless/consume
-          name: nas-media
-          subPath: paperless/consume
-      securityContext:
-        fsGroup: 1000
-      volumes:
-      - name: volume
-        persistentVolumeClaim:
-          claimName: paperless-ngx-volume
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
