@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: app-deployment
   annotations:
     reloader.stakater.com/auto: 'true'
   labels: &labels
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
 spec:
   replicas: 1
   strategy:
@@ -17,6 +17,8 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       securityContext:
         fsGroup: 1000
       volumes:
@@ -26,27 +28,6 @@ spec:
       containers:
         - name: omada
           image: mbentley/omada-controller:beta-5.14.30.7@sha256:1ef5fa0a27fefa44a3a991553dc930a376f039a4c13c0fd5b60b0b14f241fe3b
-          resources:
-            requests:
-              memory: 100M
-            limits:
-              memory: 4G
-          # securityContext:
-          #   privileged: false
-          #   allowPrivilegeEscalation: false
-          #   runAsNonRoot: true
-          #   runAsUser: 1000
-          #   runAsGroup: 1000
-          #   readOnlyRootFilesystem: true
-          #   capabilities:
-          #     drop: [ALL]
-          volumeMounts:
-            - name: volume
-              subPath: data
-              mountPath: /opt/tplink/EAPController/data
-            - name: volume
-              subPath: logs
-              mountPath: /opt/tplink/EAPController/logs
           env:
             - name: TZ
               value: America/Denver
@@ -82,10 +63,32 @@ spec:
               value: tls.crt
             - name: SSL_KEY_NAME
               value: tls.key
+          volumeMounts:
+            - name: volume
+              subPath: data
+              mountPath: /opt/tplink/EAPController/data
+            - name: volume
+              subPath: logs
+              mountPath: /opt/tplink/EAPController/logs
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 4G
           ports:
             - name: https
               containerPort: 8043
-
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 10G
 ---
 apiVersion: v1
 kind: Service
@@ -93,39 +96,8 @@ metadata:
   name: app-service
 spec:
   selector:
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: app
   ports:
     - name: https
       port: 443
       targetPort: https
-#
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: ingress
-#   annotations:
-#     internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
-#     cert-manager.io/cluster-issuer: cloudflare-issuer
-#     nginx.ingress.kubernetes.io/backend-protocol: 'HTTPS'
-#     nginx.ingress.kubernetes.io/proxy-ssl-verify: 'off'
-#     nginx.ingress.kubernetes.io/use-regex: 'true'
-#     nginx.ingress.kubernetes.io/upstream-vhost: 'omada.beaver-cloud.xyz:8043'
-#     nginx.ingress.kubernetes.io/proxy-redirect-from: '~https://(.+):8043/(.+)/login$'
-#     nginx.ingress.kubernetes.io/proxy-redirect-to: 'https://$1/$2/login'
-# spec:
-#   ingressClassName: internal
-#   rules:
-#     - host: &host omada.beaver-cloud.xyz
-#       http:
-#         paths:
-#           - pathType: Prefix
-#             path: '/'
-#             backend:
-#               service:
-#                 name: app-service
-#                 port:
-#                   name: https
-#   tls:
-#     - hosts: [*host]
-#       secretName: *host
