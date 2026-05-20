@@ -15,49 +15,15 @@ spec:
     metadata:
       labels: *labels
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-      volumes:
-        - name: tmp
-          emptyDir: {}
-        - name: var-tmp
-          emptyDir: {}
-        - name: var-run
-          emptyDir: {}
-        - name: var-cache
-          emptyDir: {}
-        - name: var-log
-          emptyDir: {}
+      volumes: []
       containers:
         - name: app
           image: docker.io/traefik/whoami:v1.11@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
           env:
             - name: TZ
               value: America/Denver
           envFrom: []
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-            - name: var-tmp
-              mountPath: /var/tmp
-            - name: var-run
-              mountPath: /var/run
-            - name: var-cache
-              mountPath: /var/cache
-            - name: var-log
-              mountPath: /var/log
+          volumeMounts: []
           resources:
             requests:
               memory: 128M
@@ -102,7 +68,7 @@ spec:
       backendRefs:
         - group: ''
           kind: Service
-          name: template-app-service
+          name: app-service
           port: 80
           weight: 1
 ---
@@ -128,6 +94,6 @@ spec:
       backendRefs:
         - group: ''
           kind: Service
-          name: template-app-service
+          name: app-service
           port: 80
           weight: 1
