@@ -6,18 +6,12 @@ namespace: makemkv
 namePrefix: makemkv-
 
 resources:
-  - ../../bases/app
+  - ./deployment.yml
 
 components:
-  - ../../components/app-nas-media
-  - ../../components/internal-http-route
-  - ../../components/app-env
-  - ../../components/privileged-app
-
-images:
-  - name: app-image
-    newName: jlesage/makemkv
-    newTag: v26.01.2@sha256:4c114cfbd0ba7feef85c72d1721b8ea13a44ebc010b4996b644e618906e61717
+  - ../../components/http-route-refs
+  - ../../components/nas-media
+  - ../../components/app-tmp-dirs
 
 configMapGenerator:
   - name: gatus
@@ -38,36 +32,6 @@ configMapGenerator:
       - AUTO_DISC_RIPPER_EJECT=1
       - AUTO_DISC_RIPPER_MIN_TITLE_LENGTH=600 # 10 minutes
       - AUTO_DISC_RIPPER_FORCE_UNIQUE_OUTPUT_DIR=1
-
-replacements:
-  - sourceValue: '5800'
-    targets:
-      - select: &app-deployment
-          kind: Deployment
-          name: app-deployment
-        fieldPaths:
-          - spec.template.spec.containers.[name=app].ports.[name=http].containerPort
-
-  - sourceValue: makemkv.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
-
-patches:
-  - patch: |-
-      - op: add
-        path: /spec/template/spec/nodeSelector
-        value:
-          kubernetes.io/hostname: drone-04
-      - op: replace
-        path: /spec/template/spec/containers/0/volumeMounts/0
-        value:
-          name: nas-media
-          mountPath: /output
-          subPath: Downloads
-    target: *app-deployment
 
 labels:
   - includeSelectors: true
