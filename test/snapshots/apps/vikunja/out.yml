@@ -78,10 +78,10 @@ spec:
           value: https://vikunja.beaver-cloud.xyz
         - name: VIKUNJA_SERVICE_ROOTPATH
           value: /config
-        image: docker.io/traefik/whoami:v1.11@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
+        image: ghcr.io/go-vikunja/vikunja:2
         name: app
         ports:
-        - containerPort: 80
+        - containerPort: 3456
           name: http
         resources:
           limits:
