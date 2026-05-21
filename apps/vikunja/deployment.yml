@@ -34,6 +34,10 @@ spec:
               value: /config
             - name: VIKUNJA_DATABASE_PATH
               value: /config/vikunja.db
+            - name: VIKUNJA_SERVICE_ENABLEREGISTRATION
+              value: 'false'
+            - name: VIKUNJA_FILES_BASEPATH
+              value: /config/files
           resources:
             requests:
               memory: 128M
