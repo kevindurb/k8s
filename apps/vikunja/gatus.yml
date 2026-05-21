@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: vikunja
+    group: apps
+    url: http://vikunja-app-service.vikunja
+    conditions:
+      - '[STATUS] == 200'
