@@ -78,6 +78,8 @@ spec:
           value: https://vikunja.beaver-cloud.xyz
         - name: VIKUNJA_SERVICE_ROOTPATH
           value: /config
+        - name: VIKUNJA_DATABASE_PATH
+          value: /config/vikunja.db
         image: ghcr.io/go-vikunja/vikunja:2
         name: app
         ports:
