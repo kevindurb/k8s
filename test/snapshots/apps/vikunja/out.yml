@@ -57,7 +57,7 @@ metadata:
   name: vikunja-app-deployment
   namespace: vikunja
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/component: app
