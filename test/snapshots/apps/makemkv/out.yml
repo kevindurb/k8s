@@ -66,7 +66,7 @@ spec:
   mountOptions:
   - nfsvers=4.2
   nfs:
-    path: /
+    path: /media
     server: 192.168.42.24
 ---
 apiVersion: v1

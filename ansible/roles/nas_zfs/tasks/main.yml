@@ -8,12 +8,29 @@
       - type: mirror
         disks: [/dev/sdb, /dev/sdc]
 
+- name: Configure rust pool as NFSv4 pseudo-root
+  community.general.zfs:
+    name: rust
+    state: present
+    extra_zfs_properties:
+      sharenfs: fsid=0,rw,sync,no_subtree_check,nohide,crossmnt,insecure,no_root_squash
+  notify: [Restart NFS]
+
 - name: Create media dataset
   community.general.zfs:
     name: rust/media
     state: present
     extra_zfs_properties:
-      sharenfs: fsid=0,rw,sync,no_subtree_check,nohide,insecure,no_root_squash
+      sharenfs: 'on'
+  notify: [Restart NFS]
+
+- name: Create longhorn backup dataset
+  community.general.zfs:
+    name: rust/longhorn
+    state: present
+    extra_zfs_properties:
+      sharenfs: 'on'
+      quota: 2T
   notify: [Restart NFS]
 
 - name: Start NFS
