@@ -31,7 +31,7 @@ spec:
             claimName: config-pvc
       containers:
         - name: jellyfin
-          image: jellyfin/jellyfin:latest@sha256:1694ff069f0c9dafb283c36765175606866769f5d72f2ed56b6a0f1be922fc37
+          image: jellyfin/jellyfin:latest@sha256:f66273e014b307e4ac46778845ebc1e9ee24b2e57c1fc17d5ec5ac3015649bfa
           securityContext:
             privileged: true
             runAsUser: 1000
