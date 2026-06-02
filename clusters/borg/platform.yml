@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: platform
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
@@ -20,5 +18,6 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true

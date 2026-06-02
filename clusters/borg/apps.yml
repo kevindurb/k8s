@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: apps
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -17,7 +15,8 @@ spec:
     namespace: default
   syncPolicy:
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
