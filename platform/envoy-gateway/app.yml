@@ -22,7 +22,8 @@ spec:
     namespace: envoy-gateway-system
   syncPolicy:
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true

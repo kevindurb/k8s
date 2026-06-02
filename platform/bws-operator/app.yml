@@ -26,7 +26,8 @@ spec:
     namespace: bitwarden-secrets
   syncPolicy:
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true

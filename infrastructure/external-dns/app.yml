@@ -18,14 +18,7 @@ spec:
           provider:
             name: cloudflare
           txtOwnerId: kevindurb
-          sources:
-            [
-              gateway-grpcroute,
-              gateway-httproute,
-              gateway-tcproute,
-              gateway-tlsroute,
-              gateway-udproute,
-            ]
+          sources: [gateway-grpcroute, gateway-httproute, gateway-tcproute, gateway-tlsroute, gateway-udproute]
           extraArgs:
             gateway-name: external-beaver-cloud
             domain-filter: beaver-cloud.xyz
@@ -43,9 +36,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true
-
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -66,15 +59,7 @@ spec:
           provider:
             name: pihole
           registry: noop
-          sources:
-            [
-              crd,
-              gateway-grpcroute,
-              gateway-httproute,
-              gateway-tcproute,
-              gateway-tlsroute,
-              gateway-udproute,
-            ]
+          sources: [crd, gateway-grpcroute, gateway-httproute, gateway-tcproute, gateway-tlsroute, gateway-udproute]
           extraArgs:
             pihole-server: http://pihole-app-service.pihole.svc.cluster.local
             gateway-name: internal-beaver-cloud
@@ -94,9 +79,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true
-
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -118,5 +103,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
     automated:
-      prune: true
+      enabled: true
+      prune: false
       selfHeal: true
