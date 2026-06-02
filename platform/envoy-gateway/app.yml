@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: envoy-gateway
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
   annotations:
     argocd.argoproj.io/refresh-interval: '6h'
 spec:

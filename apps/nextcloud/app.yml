@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: nextcloud
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:

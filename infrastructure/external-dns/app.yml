@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: cloudflare-external-dns
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
@@ -45,8 +43,6 @@ kind: Application
 metadata:
   name: pihole-external-dns
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
@@ -88,8 +84,6 @@ kind: Application
 metadata:
   name: external-dns-secrets
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
