@@ -4,16 +4,6 @@ kind: BackupTarget
 metadata:
   name: default
 spec:
-  backupTargetURL: ''
-  credentialSecret: ''
-  pollInterval: 5m0s
-
----
-apiVersion: longhorn.io/v1beta2
-kind: BackupTarget
-metadata:
-  name: drone-04
-spec:
   backupTargetURL: nfs://192.168.42.24:/longhorn
   credentialSecret: ''
   pollInterval: 5m0s
