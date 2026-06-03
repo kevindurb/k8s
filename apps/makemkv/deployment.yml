@@ -37,7 +37,7 @@ spec:
           volumeMounts:
             - name: nas-media
               mountPath: /output
-              subPath: media/Downloads
+              subPath: Downloads
           resources:
             requests:
               memory: 100M
