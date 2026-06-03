@@ -21,7 +21,7 @@
     name: rust/media
     state: present
     extra_zfs_properties:
-      sharenfs: 'on'
+      sharenfs: rw,no_subtree_check,mountpoint,crossmnt,insecure
   notify: [Restart NFS]
 
 - name: Create longhorn backup dataset
@@ -29,7 +29,7 @@
     name: rust/longhorn
     state: present
     extra_zfs_properties:
-      sharenfs: 'on'
+      sharenfs: rw,no_subtree_check,mountpoint,crossmnt,insecure
       quota: 2T
   notify: [Restart NFS]
 
