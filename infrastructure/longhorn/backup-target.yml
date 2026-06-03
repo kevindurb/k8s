@@ -4,6 +4,6 @@ kind: BackupTarget
 metadata:
   name: default
 spec:
-  backupTargetURL: nfs://192.168.42.24:/longhorn/backup
+  backupTargetURL: nfs://192.168.42.24:/media/longhorn/backup
   credentialSecret: ''
   pollInterval: 5m0s
