@@ -13,5 +13,6 @@ resources:
   - ./radarr/app.yml
   - ./scrypted/app.yml
   - ./sonarr/app.yml
+  - ./steam/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml

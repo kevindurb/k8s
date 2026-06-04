@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: steam
+    group: apps
+    url: http://steam-app-service.steam
+    conditions:
+      - '[STATUS] == 200'
