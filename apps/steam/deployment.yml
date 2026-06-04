@@ -24,7 +24,7 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 1G
+            sizeLimit: 2G
       containers:
         - name: app
           image: lscr.io/linuxserver/steam:latest
@@ -34,9 +34,9 @@ spec:
               type: Unconfined
           resources:
             requests:
-              memory: 128M
-            limits:
               memory: 1G
+            limits:
+              memory: 4G
               nvidia.com/gpu: '1'
           ports:
             - name: http
@@ -54,6 +54,8 @@ spec:
               value: /dev/dri/renderD128
             - name: DRI_NODE
               value: /dev/dri/renderD128
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: 'graphics,compute,display,utility'
           volumeMounts:
             - name: dshm
               mountPath: /dev/shm
