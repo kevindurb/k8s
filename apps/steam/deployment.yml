@@ -46,6 +46,12 @@ spec:
               value: '1000'
             - name: PGID
               value: '1000'
+            - name: PIXELFLUX_WAYLAND
+              value: true
+            - name: DRINODE
+              value: /dev/dri/renderD128
+            - name: DRI_NODE
+              value: /dev/dri/renderD128
           volumeMounts:
             - name: dshm
               mountPath: /dev/shm
