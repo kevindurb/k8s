@@ -15,6 +15,7 @@ spec:
     metadata:
       labels: *labels
     spec:
+      ipcMode: host
       hostNetwork: true
       hostname: steam
       runtimeClassName: nvidia
