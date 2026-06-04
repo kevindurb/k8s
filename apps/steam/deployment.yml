@@ -58,8 +58,12 @@ spec:
               value: /dev/dri/renderD128
             - name: DRI_NODE
               value: /dev/dri/renderD128
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: 'all'
             - name: NVIDIA_DRIVER_CAPABILITIES
-              value: 'graphics,compute,display,utility'
+              value: 'graphics,compute,display,utility,video'
+            - name: CAP_SYS_ADMIN
+              value: 'true'
             - name: MAX_RES
               value: 1920x1080
           volumeMounts:
