@@ -78,7 +78,7 @@ spec:
       name: internal-beaver-cloud
       namespace: envoy-gateway-system
   hostnames:
-    - template.beaver-cloud.xyz
+    - steam.beaver-cloud.xyz
   rules:
     - matches:
         - path:
