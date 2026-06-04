@@ -30,6 +30,8 @@ spec:
           image: lscr.io/linuxserver/steam:latest
           securityContext:
             privileged: true
+            seccompProfile:
+              type: Unconfined
           resources:
             requests:
               memory: 128M
