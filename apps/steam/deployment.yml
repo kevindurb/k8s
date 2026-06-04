@@ -60,6 +60,8 @@ spec:
               value: /dev/dri/renderD128
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: 'graphics,compute,display,utility'
+            - name: MAX_RES
+              value: 1920x1080
           volumeMounts:
             - name: dshm
               mountPath: /dev/shm
