@@ -1,0 +1,14 @@
+default:
+  @just --list
+
+create-auth-token ns token:
+  kubectl create secret generic bw-auth-token \
+    -n {{ns}} --from-literal=token="{{token}}"
+
+copy-auth-token to from="default":
+  _copy-secret {{from}} bw-auth-token {{to}}
+
+_copy-secret from name to:
+   kubectl -n {{from}} get secret {{name}} -o yaml \
+     | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' \
+     | kubectl apply --namespace {{to}} -f -

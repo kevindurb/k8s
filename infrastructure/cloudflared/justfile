@@ -1,0 +1,5 @@
+default:
+  @just --list
+
+add-route host:
+  cloudflared tunnel route dns kube "{{host}}"

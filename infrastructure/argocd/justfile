@@ -1,0 +1,15 @@
+default:
+  @just --list
+
+refresh app:
+  kubectl annotate -n argocd application {{app}} argocd.argoproj.io/refresh='normal'
+
+refresh-all:
+  kubectl get applications -n argocd --no-headers -o custom-columns=":metadata.name" \
+    | xargs -I % just argocd-refresh %
+
+get-initial-admin-password:
+  kubectl get secret -o json -n argocd \
+  argocd-initial-admin-secret \
+  | jq -r .data.password \
+  | base64 --decode
