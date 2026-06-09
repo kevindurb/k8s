@@ -2,6 +2,6 @@
 endpoints:
   - name: dufs
     group: apps
-    url: http://dufs-app-service.dufs
+    url: http://dufs-app-service.dufs/__dufs__/health
     conditions:
       - '[STATUS] == 200'

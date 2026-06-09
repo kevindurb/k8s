@@ -56,11 +56,6 @@ endpoints:
     group: cameras
     conditions: ['[STATUS] == 200']
 
-  - name: Living Room Camera
-    url: http://192.168.50.11
-    group: cameras
-    conditions: ['[STATUS] == 200']
-
   - name: cloudflare dns
     url: 1.1.1.1
     group: dns
