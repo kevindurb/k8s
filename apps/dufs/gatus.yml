@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: dufs
+    group: apps
+    url: http://dufs-app-service.dufs
+    conditions:
+      - '[STATUS] == 200'
