@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: audiobookshelf
+    group: apps
+    url: http://audiobookshelf-app-service.audiobookshelf
+    conditions:
+      - '[STATUS] == 200'

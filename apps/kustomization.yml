@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
   - ./project.yml
+  - ./audiobookshelf/app.yml
   - ./filebrowser/app.yml
   - ./forgejo/app.yml
   - ./home-assistant/app.yml
