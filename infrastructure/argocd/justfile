@@ -6,7 +6,7 @@ refresh app:
 
 refresh-all:
   kubectl get applications -n argocd --no-headers -o custom-columns=":metadata.name" \
-    | xargs -I % just argocd-refresh %
+    | xargs -I % just refresh %
 
 get-initial-admin-password:
   kubectl get secret -o json -n argocd \
