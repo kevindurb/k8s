@@ -30,3 +30,24 @@ drain node:
 
 pre-commit-install:
   pre-commit install
+
+check-kustomize:
+    find apps platform infrastructure clusters -name "kustomization.y*ml" -execdir kustomize build . > /dev/null \;
+
+check-kustomize-changed *files:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    for file in {{files}}; do
+        dir=$(dirname "$file")
+        while [[ "$dir" != "." && ! -f "$dir/kustomization.yaml" && ! -f "$dir/kustomization.yml" ]]; do
+            dir=$(dirname "$dir")
+        done
+        echo "$dir"
+    done \
+    | sort -u \
+    | grep -v '^\.$' \
+    | while read -r target_dir; do
+        echo "🔎 Checking $target_dir..."
+        kustomize build "$target_dir" > /dev/null
+    done

@@ -20,3 +20,12 @@ repos:
     rev: v26.3.0
     hooks:
       - id: ansible-lint
+
+  - repo: local
+    hooks:
+      - id: kustomize-changed-check
+        name: Validate Changed Kustomize Dirs
+        entry: just check-kustomize-changed
+        language: system
+        files: ^(apps|platform|infrastructure|clusters)/.+\.ya?ml$
+        pass_filenames: true
