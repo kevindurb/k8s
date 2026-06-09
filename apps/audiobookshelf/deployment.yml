@@ -16,6 +16,9 @@ spec:
       labels: *labels
     spec:
       volumes:
+        - name: books
+          persistentVolumeClaim:
+            claimName: books
         - name: audiobooks
           persistentVolumeClaim:
             claimName: audiobooks
@@ -36,6 +39,8 @@ spec:
               value: America/Denver
           envFrom: []
           volumeMounts:
+            - name: books
+              mountPath: /books
             - name: audiobooks
               mountPath: /audiobooks
             - name: podcasts
@@ -65,7 +70,21 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 1G
+      storage: 10G
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: books
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 10G
 
 ---
 apiVersion: v1
@@ -79,7 +98,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 1G
+      storage: 10G
 
 ---
 apiVersion: v1
