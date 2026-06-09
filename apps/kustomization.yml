@@ -6,7 +6,6 @@ resources:
   - ./project.yml
   - ./audiobookshelf/app.yml
   - ./dufs/app.yml
-  - ./filebrowser/app.yml
   - ./forgejo/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
