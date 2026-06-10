@@ -6,24 +6,33 @@ get-kubeconfig:
 
 tmpl type name:
   #! /usr/bin/env bash
+  echo "Creating {{type}}/{{name}}..."
   cp -r apps/template {{type}}/{{name}}
-  mv {{type}}/{{name}}/template.yml {{type}}/{{name}}/{{name}}.yml
 
   cd {{type}}/{{name}}
-  kustomize edit set namespace {{name}}
-  kustomize edit set nameprefix {{name}}-
+  echo "Updating kustomization.yml..."
+  yq -i '.namespace = "{{name}}"' ./kustomization.yml
+  yq -i '.namePrefix = "{{name}}-"' ./kustomization.yml
+  yq -i '.configMapGenerator[0].files[0] = "{{name}}.yml=gatus.yml"' ./kustomization.yml
+  yq -i '.labels[0].pairs["app.kubernetes.io/name"] = "{{name}}"' ./kustomization.yml
+
+  echo "Updating app.yml..."
+  yq -i '.metadata.name = "{{name}}"' ./app.yml
+  yq -i '.spec.sources[0].path = "{{type}}/{{name}}"' ./app.yml
+  yq -i '.spec.destination.namespace = "{{name}}"' ./app.yml
+
+  echo "Updating gatus.yml..."
+  yq -i '.endpoints[0].name = "{{name}}"' ./gatus.yml
+  yq -i '.endpoints[0].url = "http://{{name}}-app-service.{{name}}"' ./gatus.yml
+
+  echo "Updating deployment.yml..."
+  yq -i 'select(.kind == "HTTPRoute").spec.hostnames[0] = "{{name}}.beaver-cloud.xyz"' ./deployment.yml
 
   cd ..
+  echo "Adding to {{type}}/kustomization.yml"
   kustomize edit add resource ./{{name}}/app.yml
 
-  echo "./{{type}}/{{name}}/ Created!
-
-  TODO:
-    - [ ] Update app.yml
-    - [ ] Update labels in kustomization.yml
-    - [ ] Update configMapGenerator for gatus config
-    - [ ] Update gatus.yml
-  "
+  echo "./{{type}}/{{name}}/ Created!"
 
 drain node:
   kubectl drain --delete-emptydir-data --ignore-daemonsets {{node}}
