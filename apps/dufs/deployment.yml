@@ -21,7 +21,7 @@ spec:
             claimName: nas
       containers:
         - name: app
-          image: docker.io/sigoden/dufs:latest
+          image: docker.io/sigoden/dufs:v0.46.0
           args: [/data, -A]
           env:
             - name: TZ
