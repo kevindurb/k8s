@@ -54,23 +54,14 @@ metadata:
     internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
 spec:
   parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: internal-beaver-cloud
+    - name: internal-beaver-cloud
       namespace: envoy-gateway-system
   hostnames:
     - template.beaver-cloud.xyz
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - group: ''
-          kind: Service
-          name: app-service
+    - backendRefs:
+        - name: app-service
           port: 80
-          weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -80,20 +71,11 @@ metadata:
     external-dns.alpha.kubernetes.io/target: external.beaver-cloud.xyz
 spec:
   parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: external-beaver-cloud
+    - name: external-beaver-cloud
       namespace: envoy-gateway-system
   hostnames:
     - template.beaver-cloud.xyz
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - group: ''
-          kind: Service
-          name: app-service
+    - backendRefs:
+        - name: app-service
           port: 80
-          weight: 1
