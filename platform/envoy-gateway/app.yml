@@ -11,7 +11,7 @@ spec:
   sources:
     - chart: gateway-helm
       repoURL: docker.io/envoyproxy
-      targetRevision: 1.7.3
+      targetRevision: 1.7.4
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: platform/envoy-gateway
