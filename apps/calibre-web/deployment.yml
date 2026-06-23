@@ -22,6 +22,10 @@ spec:
           env:
             - name: TZ
               value: America/Denver
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
           envFrom: []
           volumeMounts: []
           resources:
