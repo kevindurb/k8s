@@ -25,7 +25,7 @@ spec:
             claimName: nas-media
       containers:
         - name: app
-          image: jlesage/makemkv:v26.01.2@sha256:4c114cfbd0ba7feef85c72d1721b8ea13a44ebc010b4996b644e618906e61717
+          image: jlesage/makemkv:v26.03.1
           securityContext:
             privileged: true
           env:
