@@ -16,3 +16,5 @@ resources:
   - ./sonarr/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
+  - ./calibre/app.yml
+  - ./calibre-web/app.yml

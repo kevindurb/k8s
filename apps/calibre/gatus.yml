@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: calibre
+    group: apps
+    url: http://calibre-app-service.calibre
+    conditions:
+      - '[STATUS] == 200'
