@@ -15,7 +15,13 @@ spec:
     metadata:
       labels: *labels
     spec:
-      volumes: []
+      volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
       containers:
         - name: app
           image: lscr.io/linuxserver/calibre-web:latest
@@ -27,7 +33,12 @@ spec:
             - name: PGID
               value: '1000'
           envFrom: []
-          volumeMounts: []
+          volumeMounts:
+            - name: nas-media
+              mountPath: /eBooks
+              subPath: eBooks
+            - name: config
+              mountPath: /config
           resources:
             requests:
               memory: 128M
@@ -36,6 +47,17 @@ spec:
           ports:
             - name: http
               containerPort: 8083
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
