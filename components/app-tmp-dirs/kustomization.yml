@@ -25,6 +25,11 @@ patches:
       - op: add
         path: *volumes
         value:
+          name: run
+          emptyDir: {}
+      - op: add
+        path: *volumes
+        value:
           name: var-cache
           emptyDir: {}
       - op: add
@@ -47,6 +52,11 @@ patches:
         value:
           name: var-run
           mountPath: /var/run
+      - op: add
+        path: *mounts
+        value:
+          name: run
+          mountPath: /run
       - op: add
         path: *mounts
         value:
