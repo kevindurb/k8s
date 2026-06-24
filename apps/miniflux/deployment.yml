@@ -28,7 +28,7 @@ spec:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
             - name: DATABASE_URL
-              value: 'postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux'
+              value: 'postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux?sslmode=disable'
           envFrom: []
           volumeMounts: []
           resources:

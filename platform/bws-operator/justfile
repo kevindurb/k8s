@@ -6,7 +6,7 @@ create-auth-token ns token:
     -n {{ns}} --from-literal=token="{{token}}"
 
 copy-auth-token to from="default":
-  _copy-secret {{from}} bw-auth-token {{to}}
+  just _copy-secret {{from}} bw-auth-token {{to}}
 
 _copy-secret from name to:
    kubectl -n {{from}} get secret {{name}} -o yaml \
