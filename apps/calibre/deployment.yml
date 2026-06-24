@@ -43,7 +43,7 @@ spec:
             requests:
               memory: 128M
             limits:
-              memory: 1G
+              memory: 2G
           ports:
             - name: http
               containerPort: 8080
