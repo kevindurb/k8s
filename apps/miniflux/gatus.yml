@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: miniflux
+    group: apps
+    url: http://miniflux-app-service.miniflux
+    conditions:
+      - '[STATUS] == 200'

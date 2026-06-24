@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes: []
+      containers:
+        - name: app
+          image: ghcr.io/miniflux/miniflux
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: 'postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux'
+          envFrom: []
+          volumeMounts: []
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+          ports:
+            - name: http
+              containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - miniflux.beaver-cloud.xyz
+  rules:
+    - backendRefs:
+        - name: app-service
+          port: 80

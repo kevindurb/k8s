@@ -1,0 +1,123 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  labels: &labels
+    app.kubernetes.io/component: postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-volume
+        - name: tmp
+          emptyDir: {}
+        - name: var-tmp
+          emptyDir: {}
+        - name: var-run
+          emptyDir: {}
+        - name: var-cache
+          emptyDir: {}
+        - name: var-log
+          emptyDir: {}
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres:18.1-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              value: miniflux
+            - name: POSTGRES_DB
+              value: miniflux
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+            - name: tmp
+              mountPath: /tmp
+            - name: var-tmp
+              mountPath: /var/tmp
+            - name: var-run
+              mountPath: /var/run
+            - name: var-cache
+              mountPath: /var/cache
+            - name: var-log
+              mountPath: /var/log
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          ports:
+            - name: postgres
+              containerPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-volume
+  labels:
+    app.kubernetes.io/component: postgres
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1G
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  labels: &labels
+    app.kubernetes.io/component: postgres
+spec:
+  selector: *labels
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: postgres-secret
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/component: postgres
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: postgres-secret
+  map:
+    - secretKeyName: POSTGRES_PASSWORD
+      bwSecretId: f6b247ba-56f5-4176-89c4-b47301494d42
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

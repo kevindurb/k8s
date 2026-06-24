@@ -5,16 +5,17 @@ kind: Kustomization
 resources:
   - ./project.yml
   - ./audiobookshelf/app.yml
+  - ./calibre-web/app.yml
+  - ./calibre/app.yml
   - ./dufs/app.yml
   - ./forgejo/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
   - ./makemkv/app.yml
+  - ./miniflux/app.yml
   - ./nextcloud/app.yml
   - ./radarr/app.yml
   - ./scrypted/app.yml
   - ./sonarr/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
-  - ./calibre/app.yml
-  - ./calibre-web/app.yml
