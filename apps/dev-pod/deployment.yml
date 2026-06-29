@@ -71,7 +71,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 10G
+      storage: 20G
 
 ---
 apiVersion: k8s.bitwarden.com/v1
