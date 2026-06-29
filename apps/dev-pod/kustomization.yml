@@ -12,6 +12,15 @@ components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 
+patches:
+  - target:
+      kind: Deployment
+      labelSelector: app.kubernetes.io/component=app
+    patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext/fsGroupChangePolicy
+        value: OnRootMismatch
+
 labels:
   - includeSelectors: true
     includeTemplates: true
