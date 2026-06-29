@@ -22,7 +22,7 @@ spec:
             claimName: home
       containers:
         - name: app
-          image: ghcr.io/kevindurb/box
+          image: ghcr.io/kevindurb/box:2026.06.29
           env:
             - name: TZ
               value: America/Denver
