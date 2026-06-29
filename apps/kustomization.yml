@@ -19,3 +19,4 @@ resources:
   - ./sonarr/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
+  - ./dev-pod/app.yml
