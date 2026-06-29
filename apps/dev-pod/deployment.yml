@@ -15,6 +15,7 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostname: dev-pod
       volumes:
         - name: home
           persistentVolumeClaim:
