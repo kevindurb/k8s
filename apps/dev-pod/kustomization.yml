@@ -12,6 +12,19 @@ components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 
+# The home PVC carries ~/.ssh. The shared hardening component sets fsGroup: 1000,
+# which by default (Always) recursively re-chowns/relaxes perms on the whole volume
+# every pod start, re-loosening private keys and ssh config until ssh rejects them.
+# OnRootMismatch skips that walk when the volume root already matches fsGroup.
+patches:
+  - target:
+      kind: Deployment
+      labelSelector: app.kubernetes.io/component=app
+    patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext/fsGroupChangePolicy
+        value: OnRootMismatch
+
 labels:
   - includeSelectors: true
     includeTemplates: true
