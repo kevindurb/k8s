@@ -25,11 +25,11 @@ spec:
           env:
             - name: TZ
               value: America/Denver
-            - name: TS_AUTH_KEY
+            - name: TS_AUTHKEY
               valueFrom:
                 secretKeyRef:
                   name: ts-auth-key
-                  key: TS_AUTH_KEY
+                  key: TS_AUTHKEY
           volumeMounts:
             - name: home
               mountPath: /home/kevindurb
@@ -66,7 +66,7 @@ spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
   secretName: ts-auth-key
   map:
-    - secretKeyName: TS_AUTH_KEY
+    - secretKeyName: TS_AUTHKEY
       bwSecretId: 3a7e3a83-5e8a-4d18-97ea-b478012bce6a
   authToken:
     secretName: bw-auth-token
