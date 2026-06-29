@@ -24,7 +24,7 @@ spec:
             claimName: config
       containers:
         - name: app
-          image: lscr.io/linuxserver/calibre:latest
+          image: lscr.io/linuxserver/calibre:latest@sha256:210dc050f7473197109fdc76f3809e9295566d68d2737363e60b1fc5fe170398
           env:
             - name: TZ
               value: America/Denver
