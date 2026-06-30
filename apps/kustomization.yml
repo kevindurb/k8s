@@ -10,7 +10,6 @@ resources:
   - ./dev-pod/app.yml
   - ./dufs/app.yml
   - ./forgejo/app.yml
-  - ./holdarr/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
   - ./makemkv/app.yml
