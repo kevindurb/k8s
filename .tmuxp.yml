@@ -1,0 +1,5 @@
+---
+session_name: k8s
+start_directory: ./
+windows:
+  - window_name: main
