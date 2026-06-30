@@ -7,8 +7,10 @@ resources:
   - ./audiobookshelf/app.yml
   - ./calibre-web/app.yml
   - ./calibre/app.yml
+  - ./dev-pod/app.yml
   - ./dufs/app.yml
   - ./forgejo/app.yml
+  - ./holdarr/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
   - ./makemkv/app.yml
@@ -19,4 +21,3 @@ resources:
   - ./sonarr/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
-  - ./dev-pod/app.yml

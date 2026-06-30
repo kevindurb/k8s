@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: holdarr
+    group: apps
+    url: http://holdarr-app-service.holdarr
+    conditions:
+      - '[STATUS] == 200'

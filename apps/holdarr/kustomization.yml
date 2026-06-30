@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: holdarr
+namePrefix: holdarr-
+resources:
+  - ./deployment.yml
+components:
+  - ../../components/http-route-refs
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - holdarr.yml=gatus.yml
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: holdarr
