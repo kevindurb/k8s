@@ -70,7 +70,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 10G
+      storage: 10Gi
 
 ---
 apiVersion: v1
@@ -84,7 +84,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 10G
+      storage: 10Gi
 
 ---
 apiVersion: v1
@@ -98,7 +98,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 11G
+      storage: 11Gi
 
 ---
 apiVersion: v1
@@ -112,7 +112,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 1G
+      storage: 1Gi
 
 ---
 apiVersion: v1
@@ -126,7 +126,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 1G
+      storage: 1Gi
 
 ---
 apiVersion: v1
