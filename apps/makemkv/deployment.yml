@@ -42,7 +42,7 @@ spec:
             requests:
               memory: 100M
             limits:
-              memory: 1G
+              memory: 4G
           ports:
             - name: http
               containerPort: 5800
@@ -80,7 +80,7 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - group: ''
+        - group: ""
           kind: Service
           name: app-service
           port: 80
