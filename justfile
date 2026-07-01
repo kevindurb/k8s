@@ -27,6 +27,7 @@ tmpl type name:
 
   echo "Updating deployment.yml..."
   yq -i 'select(.kind == "HTTPRoute").spec.hostnames[0] = "{{name}}.beaver-cloud.xyz"' ./deployment.yml
+  yq -i 'select(.kind == "Deployment").spec.replicas = 1' ./deployment.yml
 
   cd ..
   echo "Adding to {{type}}/kustomization.yml"
