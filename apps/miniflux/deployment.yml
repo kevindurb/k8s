@@ -23,14 +23,16 @@ spec:
             - name: TZ
               value: America/Denver
             - name: RUN_MIGRATIONS
-              value: '1'
+              value: "1"
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
             - name: DATABASE_URL
-              value: 'postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux?sslmode=disable'
+              value: "postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux?sslmode=disable"
+            - name: BASE_URL
+              value: https://miniflux.beaver-cloud.xyz
           envFrom: []
           volumeMounts: []
           resources:
