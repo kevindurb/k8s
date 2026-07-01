@@ -6,6 +6,7 @@ namePrefix: dev-pod-
 
 resources:
   - ./deployment.yml
+  - ./rbac.yml
 
 components:
   - ../../components/http-route-refs

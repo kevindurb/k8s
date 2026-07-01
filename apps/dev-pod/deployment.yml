@@ -16,6 +16,7 @@ spec:
       labels: *labels
     spec:
       hostname: dev-pod
+      serviceAccountName: service-account
       volumes:
         - name: home
           persistentVolumeClaim:
