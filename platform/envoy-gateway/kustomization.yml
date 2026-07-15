@@ -7,6 +7,7 @@ namespace: envoy-gateway-system
 resources:
   - ./internal.yml
   - ./external.yml
+  - ./https-redirect.yml
 
 labels:
   - includeSelectors: true
