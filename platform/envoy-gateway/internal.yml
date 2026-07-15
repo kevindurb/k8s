@@ -66,6 +66,8 @@ spec:
       name: internal-beaver-cloud
       namespace: envoy-gateway-system
       sectionName: http
+  hostnames:
+    - '*.beaver-cloud.xyz'
   rules:
     - filters:
         - type: RequestRedirect
