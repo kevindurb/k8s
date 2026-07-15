@@ -37,7 +37,7 @@ spec:
       value: 192.168.42.4
   listeners:
     - name: http
-      protocol: http
+      protocol: HTTP
       port: 80
       hostname: '*.beaver-cloud.xyz'
     - name: https
