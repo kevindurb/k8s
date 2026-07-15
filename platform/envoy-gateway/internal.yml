@@ -66,6 +66,11 @@ spec:
       name: internal-beaver-cloud
       namespace: envoy-gateway-system
       sectionName: http
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: external-beaver-cloud
+      namespace: envoy-gateway-system
+      sectionName: http
   hostnames:
     - '*.beaver-cloud.xyz'
   rules:
