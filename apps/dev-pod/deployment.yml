@@ -26,7 +26,7 @@ spec:
             claimName: linuxbrew
       containers:
         - name: app
-          image: ghcr.io/kevindurb/box:2026.06.29
+          image: ghcr.io/kevindurb/box:2026.06.29@sha256:75106862314db8d2e4513aa43ea358a505f0dff9e67b058f9cd4c070612c569b
           env:
             - name: TZ
               value: America/Denver
