@@ -18,7 +18,7 @@ spec:
       volumes: []
       containers:
         - name: app
-          image: ghcr.io/miniflux/miniflux
+          image: ghcr.io/miniflux/miniflux@sha256:cd353a6af9ce663291f405eddef26fa0d567f486b521c5d34e3fb50e41938b9a
           env:
             - name: TZ
               value: America/Denver
