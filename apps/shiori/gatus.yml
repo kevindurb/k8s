@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: shiori
-    group: apps
-    url: http://shiori-app-service.shiori
-    conditions:
-      - '[STATUS] == 200'
