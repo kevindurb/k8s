@@ -12,6 +12,7 @@ resources:
   - ./forgejo/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
+  - ./linkding/app.yml
   - ./makemkv/app.yml
   - ./miniflux/app.yml
   - ./nextcloud/app.yml

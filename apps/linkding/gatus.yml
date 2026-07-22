@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: linkding
+    group: apps
+    url: http://linkding-app-service.linkding
+    conditions:
+      - '[STATUS] == 200'
