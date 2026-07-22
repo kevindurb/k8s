@@ -75,6 +75,8 @@ spec:
   parentRefs:
     - name: internal-beaver-cloud
       namespace: envoy-gateway-system
+    - name: external-beaver-cloud
+      namespace: envoy-gateway-system
   hostnames:
     - linkding.beaver-cloud.xyz
   rules:
