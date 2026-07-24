@@ -16,8 +16,12 @@ components:
 configMapGenerator:
   - name: hooks
     files:
-      - ./hooks/send_email.sh
       - ./hooks/automatic_disk_ripper_started.sh
+      - ./hooks/disk_eject_failed.sh
+      - ./hooks/disk_rip_skipped.sh
+      - ./hooks/disk_rip_started.sh
+      - ./hooks/disk_rip_terminated.sh
+      - ./hooks/send_email.sh
   - name: gatus
     options:
       labels:
