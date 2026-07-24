@@ -37,6 +37,8 @@ spec:
               value: '1000'
             - name: WEB_AUDIO
               value: '1'
+            - name: DARK_MODE
+              value: '1'
           envFrom: []
           volumeMounts:
             - name: nas-media
