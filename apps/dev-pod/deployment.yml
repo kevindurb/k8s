@@ -24,6 +24,9 @@ spec:
         - name: linuxbrew
           persistentVolumeClaim:
             claimName: linuxbrew
+        - name: nas
+          persistentVolumeClaim:
+            claimName: nas
       containers:
         - name: app
           image: ghcr.io/kevindurb/box:2026.06.29
@@ -40,6 +43,8 @@ spec:
               mountPath: /home/kevindurb
             - name: linuxbrew
               mountPath: /home/linuxbrew
+            - name: nas
+              mountPath: /mnt/nas
           resources:
             requests:
               memory: 128M
@@ -73,6 +78,35 @@ spec:
   resources:
     requests:
       storage: 20G
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nas
+spec:
+  capacity:
+    storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.42.24
+    path: /
+  mountOptions: [nfsvers=4.2]
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nas
+spec:
+  resources:
+    requests:
+      storage: 12Ti
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ''
+  volumeName: nas
 
 ---
 apiVersion: k8s.bitwarden.com/v1
