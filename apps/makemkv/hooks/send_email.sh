@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-SMTP_SERVER="smtp-relay-service.smtp-relay:25"
+SMTP_SERVER="smtp-relay-app-service.smtp-relay:25"
 FROM_EMAIL="beavercloud@fastmail.com"
 TO_EMAIL="kevindurb@fastmail.com"
 
