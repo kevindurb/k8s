@@ -15,6 +15,9 @@ spec:
     metadata:
       labels: *labels
     spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        nvidia.com/gpu.product: Quadro-P620-SHARED
       volumes:
         - name: nas-media
           persistentVolumeClaim:
@@ -43,6 +46,7 @@ spec:
               memory: 128M
             limits:
               memory: 1G
+              nvidia.com/gpu: '1'
           ports:
             - name: http
               containerPort: 5800
