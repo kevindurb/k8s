@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: vlc
+    group: apps
+    url: http://vlc-app-service.vlc
+    conditions:
+      - '[STATUS] == 200'
