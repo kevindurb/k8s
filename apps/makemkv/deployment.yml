@@ -23,6 +23,10 @@ spec:
         - name: nas-media
           persistentVolumeClaim:
             claimName: nas-media
+        - name: hooks
+          configMap:
+            name: hooks
+            defaultMode: '0777'
       containers:
         - name: app
           image: jlesage/makemkv:v26.03.1
@@ -38,6 +42,8 @@ spec:
             - name: nas-media
               mountPath: /output
               subPath: Downloads
+            - name: hooks
+              mountPath: /config/hooks
           resources:
             requests:
               memory: 100M
@@ -80,7 +86,7 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - group: ""
+        - group: ''
           kind: Service
           name: app-service
           port: 80

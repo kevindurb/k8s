@@ -14,6 +14,10 @@ components:
   - ../../components/app-tmp-dirs
 
 configMapGenerator:
+  - name: hooks
+    files:
+      - ./hooks/send_email.sh
+      - ./hooks/automatic_disk_ripper_started.sh
   - name: gatus
     options:
       labels:
@@ -22,6 +26,7 @@ configMapGenerator:
       - makemkv.yml=gatus.yml
   - name: app-env
     literals:
+      - INSTALL_PACKAGES=curl
       - UMASK=000
       - MAKEMKV_KEY=BETA
       - USER_ID=1000
