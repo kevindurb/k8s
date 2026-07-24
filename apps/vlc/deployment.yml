@@ -19,6 +19,8 @@ spec:
         - name: nas-media
           persistentVolumeClaim:
             claimName: nas-media
+        - name: config
+          emptyDir: {}
       containers:
         - name: app
           image: ghcr.io/jlesage/vlc
@@ -33,6 +35,8 @@ spec:
           volumeMounts:
             - name: nas-media
               mountPath: /media
+            - name: config
+              mountPath: /config
           resources:
             requests:
               memory: 128M
