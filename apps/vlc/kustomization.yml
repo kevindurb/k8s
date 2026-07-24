@@ -7,7 +7,6 @@ resources:
   - ./deployment.yml
 components:
   - ../../components/http-route-refs
-  - ../../components/app-tmp-dirs
   - ../../components/nas-media
 configMapGenerator:
   - name: gatus
