@@ -27,6 +27,18 @@ spec:
           configMap:
             name: hooks
             defaultMode: 0o777
+        - name: sg0
+          hostPath:
+            path: /dev/sg0
+        - name: sr0
+          hostPath:
+            path: /dev/sr0
+        - name: sg2
+          hostPath:
+            path: /dev/sg2
+        - name: sr1
+          hostPath:
+            path: /dev/sr1
       containers:
         - name: app
           image: jlesage/makemkv:v26.03.1
@@ -44,6 +56,14 @@ spec:
               subPath: Downloads
             - name: hooks
               mountPath: /config/hooks
+            - name: sg0
+              mountPath: /dev/sg0
+            - name: sr0
+              mountPath: /dev/sr0
+            - name: sg2
+              mountPath: /dev/sg2
+            - name: sr1
+              mountPath: /dev/sr1
           resources:
             requests:
               memory: 100M
