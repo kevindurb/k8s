@@ -1,6 +1,6 @@
 ---
 global:
-  smtp_smarthost: smtp-relay-service.smtp-relay:25
+  smtp_smarthost: smtp-relay-app-service.smtp-relay:25
   smtp_from: beavercloud@fastmail.com
   smtp_require_tls: false
   smtp_auth_username: ''
@@ -28,7 +28,7 @@ receivers:
   - name: 'null'
   - name: email-alerts
     email_configs:
-      - to: beavercloud@fastmail.com
+      - to: kevindurb@fastmail.com
         send_resolved: true
   - name: watchdog
     webhook_configs:
