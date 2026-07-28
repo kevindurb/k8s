@@ -107,3 +107,45 @@ endpoints:
     url: icmp://192.168.42.24
     conditions:
       - "[CONNECTED] == true"
+
+  - name: unimatrix-01-kubelet
+    group: nodes
+    url: tcp://192.168.42.11:10250
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: unimatrix-02-kubelet
+    group: nodes
+    url: tcp://192.168.42.12:10250
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: unimatrix-03-kubelet
+    group: nodes
+    url: tcp://192.168.42.13:10250
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-01-kubelet
+    group: nodes
+    url: tcp://192.168.42.21:10250
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-02-kubelet
+    group: nodes
+    url: tcp://192.168.42.22:10250
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-03-kubelet
+    group: nodes
+    url: tcp://192.168.42.23:10250
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-04-kubelet
+    group: nodes
+    url: tcp://192.168.42.24:10250
+    conditions:
+      - "[CONNECTED] == true"
