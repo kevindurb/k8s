@@ -65,3 +65,45 @@ endpoints:
     conditions:
       - '[DNS_RCODE] == NOERROR'
       - 'len([BODY]) > 0'
+
+  - name: unimatrix-01-ping
+    group: nodes
+    url: icmp://192.168.42.11
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: unimatrix-02-ping
+    group: nodes
+    url: icmp://192.168.42.12
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: unimatrix-03-ping
+    group: nodes
+    url: icmp://192.168.42.13
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-01-ping
+    group: nodes
+    url: icmp://192.168.42.21
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-02-ping
+    group: nodes
+    url: icmp://192.168.42.22
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-03-ping
+    group: nodes
+    url: icmp://192.168.42.23
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: drone-04-ping
+    group: nodes
+    url: icmp://192.168.42.24
+    conditions:
+      - "[CONNECTED] == true"
