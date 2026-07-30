@@ -444,3 +444,16 @@ groups:
             It indicates a slower storage backend access or too complex query.
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
+  - name: Deployments
+    rules:
+      - alert: ContainerImageChanged
+        expr: |
+          sum by (namespace, container, image) (kube_pod_container_info)
+            unless on (namespace, container, image)
+          sum by (namespace, container, image) (kube_pod_container_info offset 10m)
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: Container image changed in {{ $labels.namespace }}
+          description: Container '{{ $labels.container }}' in namespace '{{ $labels.namespace }}' updated its image to '{{ $labels.image }}'.
