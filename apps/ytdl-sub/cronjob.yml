@@ -1,0 +1,58 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  suspend: false
+  schedule: '0 * * * *'
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels: *labels
+        spec:
+          volumes:
+            - name: nas-media
+              persistentVolumeClaim:
+                claimName: nas-media
+            - name: config-tmp
+              emptyDir: {}
+            - name: config
+              configMap:
+                name: config
+          restartPolicy: Never
+          containers:
+            - name: ytdl-sub
+              image: ghcr.io/jmbannon/ytdl-sub:2026.02.23
+              command:
+                - ytdl-sub
+                - --config
+                - /config/config.yml
+                - sub
+                - /config/subscriptions.yml
+              resources:
+                requests:
+                  memory: 100M
+                limits:
+                  memory: 4G
+              volumeMounts:
+                - name: nas-media
+                  mountPath: /media
+                - name: config-tmp
+                  mountPath: /config
+                - name: config
+                  mountPath: /config/subscriptions.yml
+                  subPath: subscriptions.yml
+                  readOnly: true
+                - name: config
+                  mountPath: /config/config.yml
+                  subPath: config.yml
+                  readOnly: true
+              env:
+                - name: TZ
+                  value: America/Denver
