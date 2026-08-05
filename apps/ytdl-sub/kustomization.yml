@@ -9,6 +9,7 @@ components:
   - ../../components/http-route-refs
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
+  - ../../components/nas-media
 configMapGenerator:
   - name: config
     files:
