@@ -25,3 +25,25 @@ patches:
     target:
       kind: Deployment
       labelSelector: app.kubernetes.io/component=app
+  - patch: |-
+      - op: add
+        path: /spec/jobTemplate/spec/template/spec/securityContext
+        value:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+      - op: add
+        path: /spec/jobTemplate/spec/template/spec/containers/0/securityContext
+        value:
+          privileged: false
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+    target:
+      kind: CronJob
+      labelSelector: app.kubernetes.io/component=app
