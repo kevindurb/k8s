@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actions-runner-controller
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set-controller
+      targetRevision: '0.14.2'
+      helm:
+        releaseName: arc-controller
+        valuesObject:
+          fullnameOverride: arc-controller
+          serviceAccount:
+            name: arc-controller
+    - repoURL: oci://ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
+      targetRevision: '0.14.2'
+      helm:
+        releaseName: arc-runner-set
+        valuesObject:
+          githubConfigUrl: https://github.com/kevindurb/app-template
+          # pre-defined secret; create it in this namespace before this app can sync
+          # (see PR description for the fields it needs)
+          githubConfigSecret: arc-github-config
+          controllerServiceAccount:
+            namespace: arc-system
+            name: arc-controller
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true
