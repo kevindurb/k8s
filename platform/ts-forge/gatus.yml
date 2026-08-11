@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: ts-forge
+    group: apps
+    url: http://ts-forge-app-service.ts-forge
+    conditions:
+      - '[STATUS] == 200'

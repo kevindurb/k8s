@@ -8,4 +8,5 @@ resources:
   - ./envoy-gateway/app.yml
   - ./mosquitto/app.yml
   - ./smtp-relay/app.yml
+  - ./ts-forge/app.yml
   - ./zigbee2mqtt/app.yml
