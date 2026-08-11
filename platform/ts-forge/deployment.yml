@@ -22,7 +22,7 @@ spec:
             claimName: home
       containers:
         - name: app
-          image: ghcr.io/kevindurb/ts-forge
+          image: ghcr.io/kevindurb/ts-forge:2026.08.11
           env:
             - name: TZ
               value: America/Denver
