@@ -15,6 +15,7 @@ spec:
     metadata:
       labels: *labels
     spec:
+      hostname: ts-forge
       volumes:
         - name: home
           persistentVolumeClaim:
