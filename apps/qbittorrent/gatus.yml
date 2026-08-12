@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: qbittorrent
+    group: apps
+    url: http://qbittorrent-app-service.qbittorrent
+    conditions:
+      - '[STATUS] == 200'

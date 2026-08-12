@@ -1,0 +1,168 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  annotations:
+    reloader.stakater.com/auto: 'true'
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: qbittorrent-defaults
+          configMap:
+            name: qbittorrent-defaults
+        - name: tailscale-tmp
+          emptyDir: {}
+        - name: tailscale-state
+          emptyDir: {}
+      containers:
+        - name: qbittorrent
+          image: ghcr.io/home-operations/qbittorrent:5.1.2@sha256:31ac39705e31f7cdcc04dc46c1c0b0cdf8dc6f9865d4894efc097a33adc41524
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: qbittorrent-defaults
+              mountPath: /defaults/qBittorrent.conf
+              subPath: qBittorrent.conf
+              readOnly: true
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 1G
+          ports:
+            - name: http
+              containerPort: 8080
+        - name: tailscale
+          image: ghcr.io/tailscale/tailscale:stable@sha256:321ce041508c19079b57a28b6666c8d81ab0b08accc0a2585b3ab663d557ac24
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: ts-auth-key
+                  key: TS_AUTHKEY
+            - name: TS_USERSPACE
+              value: 'true'
+            - name: TS_SOCKS5_SERVER
+              value: ':1055'
+            - name: TS_HOSTNAME
+              value: qbittorrent
+            - name: TS_KUBE_SECRET
+              value: ''
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_SOCKET
+              value: /tmp/tailscaled.sock
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    for i in $(seq 1 30); do
+                      tailscale set --exit-node=us-chi-wg-301.mullvad.ts.net --exit-node-allow-lan-access=false && break
+                      sleep 2
+                    done
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tailscale-tmp
+              mountPath: /tmp
+            - name: tailscale-state
+              mountPath: /var/lib/tailscale
+          resources:
+            requests:
+              memory: 32M
+            limits:
+              memory: 128M
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 10G
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  selector:
+    app.kubernetes.io/component: app
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: internal-route
+  annotations:
+    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: internal-beaver-cloud
+      namespace: envoy-gateway-system
+  hostnames:
+    - qbittorrent.beaver-cloud.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: app-service
+          port: 80
+          weight: 1
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: ts-auth-key
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: ts-auth-key
+  map:
+    - secretKeyName: TS_AUTHKEY
+      bwSecretId: 822466c3-b8de-4c68-a354-b4a40126a87a
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
