@@ -24,6 +24,8 @@ configMapGenerator:
     literals:
       - USER_UID=1000
       - USER_GID=1000
+      - DOMAIN=forgejo.beaver-cloud.xyz
+      - SSH_DOMAIN=git.beaver-cloud.xyz
 
 labels:
   - includeSelectors: true
