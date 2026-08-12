@@ -18,6 +18,9 @@ spec:
       labels: *labels
     spec:
       volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
         - name: config
           persistentVolumeClaim:
             claimName: config
@@ -38,6 +41,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: nas-media
+              mountPath: /media
             - name: qbittorrent-defaults
               mountPath: /defaults/qBittorrent.conf
               subPath: qBittorrent.conf
