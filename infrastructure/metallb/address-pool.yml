@@ -9,6 +9,7 @@ spec:
     - 192.168.42.4/32 # internal gateway
     - 192.168.42.7/32 # wireguard
     - 192.168.42.53/32 # pihole
+    - 192.168.42.222/32 # forgejo ssh
 
 ---
 apiVersion: metallb.io/v1beta1
