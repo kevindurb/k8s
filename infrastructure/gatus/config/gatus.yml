@@ -149,3 +149,33 @@ endpoints:
     url: tcp://192.168.42.24:10250
     conditions:
       - "[CONNECTED] == true"
+
+  - name: garage-relay
+    group: esphome
+    url: http://192.168.137.1
+    conditions: ['[STATUS] == 200']
+
+  - name: master-bedroom-switches
+    group: esphome
+    url: http://192.168.137.2
+    conditions: ['[STATUS] == 200']
+
+  - name: office-lights
+    group: esphome
+    url: http://192.168.137.3
+    conditions: ['[STATUS] == 200']
+
+  - name: kitchen-lamp
+    group: esphome
+    url: http://192.168.137.4
+    conditions: ['[STATUS] == 200']
+
+  - name: living-room-lamp
+    group: esphome
+    url: http://192.168.137.5
+    conditions: ['[STATUS] == 200']
+
+  - name: sprinkler-controller
+    group: esphome
+    url: http://192.168.137.6
+    conditions: ['[STATUS] == 200']
