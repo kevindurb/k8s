@@ -9,13 +9,6 @@ components:
   - ../../components/http-route-refs
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
-configMapGenerator:
-  - name: gatus
-    options:
-      labels:
-        gatus.io/enabled: 'true'
-    files:
-      - ts-forge.yml=gatus.yml
 labels:
   - includeSelectors: true
     includeTemplates: true
