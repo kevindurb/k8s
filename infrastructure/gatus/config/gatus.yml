@@ -69,113 +69,99 @@ endpoints:
   - name: unimatrix-01-ping
     group: nodes
     url: icmp://192.168.42.11
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: unimatrix-02-ping
     group: nodes
     url: icmp://192.168.42.12
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: unimatrix-03-ping
     group: nodes
     url: icmp://192.168.42.13
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-01-ping
     group: nodes
     url: icmp://192.168.42.21
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-02-ping
     group: nodes
     url: icmp://192.168.42.22
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-03-ping
     group: nodes
     url: icmp://192.168.42.23
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-04-ping
     group: nodes
     url: icmp://192.168.42.24
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: unimatrix-01-kubelet
     group: nodes
     url: tcp://192.168.42.11:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: unimatrix-02-kubelet
     group: nodes
     url: tcp://192.168.42.12:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: unimatrix-03-kubelet
     group: nodes
     url: tcp://192.168.42.13:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-01-kubelet
     group: nodes
     url: tcp://192.168.42.21:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-02-kubelet
     group: nodes
     url: tcp://192.168.42.22:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-03-kubelet
     group: nodes
     url: tcp://192.168.42.23:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: drone-04-kubelet
     group: nodes
     url: tcp://192.168.42.24:10250
-    conditions:
-      - "[CONNECTED] == true"
+    conditions: ["[CONNECTED] == true"]
 
   - name: garage-relay
     group: esphome
-    url: http://192.168.137.1
-    conditions: ['[STATUS] == 200']
+    url: tcp://192.168.137.1:6053
+    conditions: ["[CONNECTED] == true"]
 
   - name: master-bedroom-switches
     group: esphome
-    url: http://192.168.137.2
-    conditions: ['[STATUS] == 200']
+    url: tcp://192.168.137.2:6053
+    conditions: ["[CONNECTED] == true"]
 
   - name: office-lights
     group: esphome
-    url: http://192.168.137.3
-    conditions: ['[STATUS] == 200']
+    url: tcp://192.168.137.3:6053
+    conditions: ["[CONNECTED] == true"]
 
   - name: kitchen-lamp
     group: esphome
-    url: http://192.168.137.4
-    conditions: ['[STATUS] == 200']
+    url: tcp://192.168.137.4:6053
+    conditions: ["[CONNECTED] == true"]
 
   - name: living-room-lamp
     group: esphome
-    url: http://192.168.137.5
-    conditions: ['[STATUS] == 200']
+    url: tcp://192.168.137.5:6053
+    conditions: ["[CONNECTED] == true"]
 
   - name: sprinkler-controller
     group: esphome
-    url: http://192.168.137.6
-    conditions: ['[STATUS] == 200']
+    url: tcp://192.168.137.6:6053
+    conditions: ["[CONNECTED] == true"]
