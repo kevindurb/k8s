@@ -95,9 +95,9 @@ spec:
               mountPath: /var/lib/tailscale
           resources:
             requests:
-              memory: 32M
+              memory: 64M
             limits:
-              memory: 128M
+              memory: 512M
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
