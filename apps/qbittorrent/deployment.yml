@@ -32,30 +32,9 @@ spec:
         - name: tailscale-state
           persistentVolumeClaim:
             claimName: ts-state
-      containers:
-        - name: qbittorrent
-          image: ghcr.io/home-operations/qbittorrent:5.1.2@sha256:31ac39705e31f7cdcc04dc46c1c0b0cdf8dc6f9865d4894efc097a33adc41524
-          env:
-            - name: TZ
-              value: America/Denver
-          volumeMounts:
-            - name: config
-              mountPath: /config
-            - name: nas-media
-              mountPath: /media
-            - name: qbittorrent-defaults
-              mountPath: /defaults/qBittorrent.conf
-              subPath: qBittorrent.conf
-              readOnly: true
-          resources:
-            requests:
-              memory: 100M
-            limits:
-              memory: 2G
-          ports:
-            - name: http
-              containerPort: 8080
+      initContainers:
         - name: tailscale
+          restartPolicy: Always
           image: ghcr.io/tailscale/tailscale:stable@sha256:321ce041508c19079b57a28b6666c8d81ab0b08accc0a2585b3ab663d557ac24
           env:
             - name: TZ
@@ -95,9 +74,65 @@ spec:
               mountPath: /var/lib/tailscale
           resources:
             requests:
-              memory: 64M
+              memory: 128M
             limits:
-              memory: 512M
+              memory: 1500M
+          # Gates the qbittorrent container from starting until the exit node is actually
+          # connected, not just until tailscaled is up — closes the startup race where
+          # qbittorrent could start proxying before Mullvad was reachable.
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - tailscale --socket=/tmp/tailscaled.sock status --json | grep -A3 ExitNodeStatus | grep -Eq 'Online.*true'
+            periodSeconds: 2
+            timeoutSeconds: 5
+            failureThreshold: 30
+          # If the exit-node tunnel drops later (Mullvad relay issue, WireGuard handshake
+          # failure), restart the sidecar rather than leaving qbittorrent silently proxying
+          # through a dead tunnel.
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - tailscale --socket=/tmp/tailscaled.sock status --json | grep -A3 ExitNodeStatus | grep -Eq 'Online.*true'
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - tailscale --socket=/tmp/tailscaled.sock status --json | grep -A3 ExitNodeStatus | grep -Eq 'Online.*true'
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      containers:
+        - name: qbittorrent
+          image: ghcr.io/home-operations/qbittorrent:5.1.2@sha256:31ac39705e31f7cdcc04dc46c1c0b0cdf8dc6f9865d4894efc097a33adc41524
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: nas-media
+              mountPath: /media
+            - name: qbittorrent-defaults
+              mountPath: /defaults/qBittorrent.conf
+              subPath: qBittorrent.conf
+              readOnly: true
+          resources:
+            requests:
+              memory: 100M
+            limits:
+              memory: 2G
+          ports:
+            - name: http
+              containerPort: 8080
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
