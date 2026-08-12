@@ -27,7 +27,8 @@ spec:
         - name: tailscale-tmp
           emptyDir: {}
         - name: tailscale-state
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: ts-state
       containers:
         - name: qbittorrent
           image: ghcr.io/home-operations/qbittorrent:5.1.2@sha256:31ac39705e31f7cdcc04dc46c1c0b0cdf8dc6f9865d4894efc097a33adc41524
@@ -71,17 +72,8 @@ spec:
               value: /var/lib/tailscale
             - name: TS_SOCKET
               value: /tmp/tailscaled.sock
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                  - /bin/sh
-                  - -c
-                  - |
-                    for i in $(seq 1 30); do
-                      tailscale set --exit-node=us-chi-wg-301.mullvad.ts.net --exit-node-allow-lan-access=false && break
-                      sleep 2
-                    done
+            - name: TS_EXTRA_ARGS
+              value: --exit-node=us-chi-wg-301.mullvad.ts.net --exit-node-allow-lan-access=false
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
@@ -110,6 +102,17 @@ spec:
   resources:
     requests:
       storage: 10G
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ts-state
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 100Mi
 ---
 apiVersion: v1
 kind: Service
