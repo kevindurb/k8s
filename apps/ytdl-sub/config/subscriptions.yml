@@ -111,6 +111,7 @@ TV Show:
   Zip Tie Tech: https://www.youtube.com/@zip_tie_tech
   Zip Tie Tuning: https://www.youtube.com/@ZipTieTuning
   xkcd's What If?: https://www.youtube.com/@xkcd_whatif
+  ETA PRIME: https://www.youtube.com/@ETAPRIME
 
 TV Show Collection:
   = Tutorials:
@@ -126,9 +127,19 @@ TV Show Collection:
     ~The Promised Land:
       s01_name: Season 1
       s01_url: https://www.youtube.com/playlist?list=PLaKYsaAeVpIaO4QGF41-ZvvuG6rPqYPI3
+
+Kids Show Collection:
   = Kids:
     ~Bumble Nums:
       s01_name: Season 1
       s01_url: https://www.youtube.com/playlist?list=PLu5x8wTdwBhET1uXa2LT0x6gM26Y8_9Yg
       s02_name: Season 2
       s02_url: https://www.youtube.com/playlist?list=PLu5x8wTdwBhEwC6IRWQ-SeelJzOa9tVdc
+    ~Danny Go!:
+      s01_name: Dance-Along Adventures!
+      s01_url: https://www.youtube.com/playlist?list=PL-i89lrKRaYQGe8Lz_vMrLNWD9yVeY7Ky
+      s02_name: Animal Dance Songs
+      s02_url: https://www.youtube.com/playlist?list=PL-i89lrKRaYQpHcxjIec47Pl2h6Map61R
+    ~Mayta the Brown Bear:
+      s01_name: Science For Kids
+      s01_url: https://www.youtube.com/playlist?list=PLydGLPvG0kEYwwX73EfUcwlPCoSxlpcEl

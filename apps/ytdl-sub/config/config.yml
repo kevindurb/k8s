@@ -11,13 +11,19 @@ presets:
       tv_show_directory: /media/YouTube
       only_recent_date_range: 2month
       only_recent_max_files: 30
-      episode_title: '{title}'
+      episode_title: "{title}"
   TV Show Collection:
     preset:
       - Jellyfin TV Show Collection
     overrides:
       tv_show_directory: /media/YouTube
-      episode_title: '{title}'
+      episode_title: "{title}"
+  Kids Show Collection:
+    preset:
+      - Jellyfin TV Show Collection
+    overrides:
+      tv_show_directory: /media/TV Shows
+      episode_title: "{title}"
   Music:
     preset:
       - YouTube Releases
