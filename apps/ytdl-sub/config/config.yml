@@ -3,9 +3,10 @@ configuration:
   working_directory: /media/.ytdl-sub-working-directory
 presets:
   __preset__:
+    overrides:
+      enable_throttle_protection: false
     ytdl_options:
       cookiefile: /config/cookie.txt
-
   YouTube Channel:
     preset:
       - Jellyfin TV Show by Date
