@@ -2,7 +2,7 @@
 configuration:
   working_directory: /media/.ytdl-sub-working-directory
 presets:
-  TV Show:
+  YouTube Channel:
     preset:
       - Jellyfin TV Show by Date
       - Only Recent
@@ -12,13 +12,13 @@ presets:
       only_recent_date_range: 2month
       only_recent_max_files: 30
       episode_title: "{title}"
-  TV Show Collection:
+  YouTube Playlist:
     preset:
       - Jellyfin TV Show Collection
     overrides:
       tv_show_directory: /media/YouTube
       episode_title: "{title}"
-  Kids Show Collection:
+  TV Show:
     preset:
       - Jellyfin TV Show Collection
     overrides:

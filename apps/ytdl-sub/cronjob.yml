@@ -6,8 +6,8 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: app
 spec:
-  suspend: false
-  schedule: '0 * * * *'
+  suspend: true
+  schedule: "0 * * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:

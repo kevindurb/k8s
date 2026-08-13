@@ -1,5 +1,5 @@
 ---
-TV Show:
+YouTube Channel:
   3Blue1Brown: https://www.youtube.com/@3blue1brown
   Action Retro: https://www.youtube.com/@ActionRetro
   Adam Neely: https://www.youtube.com/@AdamNeely
@@ -113,7 +113,7 @@ TV Show:
   xkcd's What If?: https://www.youtube.com/@xkcd_whatif
   ETA PRIME: https://www.youtube.com/@ETAPRIME
 
-TV Show Collection:
+YouTube Playlist:
   = Tutorials:
     ~Event Lightning:
       s01_name: GrandMA 3 Tutorials
@@ -123,12 +123,12 @@ TV Show Collection:
       s01_url: https://www.youtube.com/playlist?list=PLcl55cI1T_GxbwcgzPTvrOZ0-3Gp6_ApB
       s02_name: Timing Tuesday
       s02_url: https://www.youtube.com/playlist?list=PLcl55cI1T_GxPad4tGmZG2lGhtArrI2WX
+
+TV Show:
   = Christian:
     ~The Promised Land:
       s01_name: Season 1
       s01_url: https://www.youtube.com/playlist?list=PLaKYsaAeVpIaO4QGF41-ZvvuG6rPqYPI3
-
-Kids Show Collection:
   = Kids:
     ~Bumble Nums:
       s01_name: Season 1
