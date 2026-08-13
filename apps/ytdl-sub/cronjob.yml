@@ -75,7 +75,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: ts-auth-key
+  secretName: cookie
   map:
     - secretKeyName: cookie.txt
       bwSecretId: e3eadbbf-ab9a-4491-80d7-b4a501450131
