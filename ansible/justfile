@@ -1,0 +1,17 @@
+default:
+  @just --list
+
+ansible *args:
+  ansible -i ./inventory/prod.yml {{args}}
+
+playbook *args:
+  ansible-playbook -i ./inventory/prod.yml {{args}}
+
+adhoc module filter='all':
+  just ansible -m {{module}} {{filter}}
+
+ping filter='all':
+  just adhoc ping {{filter}}
+
+reboot filter='all':
+  just adhoc reboot {{filter}}
