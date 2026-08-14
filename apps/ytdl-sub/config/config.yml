@@ -12,33 +12,21 @@ presets:
       only_recent_date_range: 2month
       only_recent_max_files: 30
       episode_title: "{title}"
-      enable_throttle_protection: false
-    ytdl_options:
-      cookiefile: /config/cookie.txt
   YouTube Playlist:
     preset:
       - Jellyfin TV Show Collection
     overrides:
       tv_show_directory: /media/YouTube
       episode_title: "{title}"
-      enable_throttle_protection: false
-    ytdl_options:
-      cookiefile: /config/cookie.txt
   TV Show:
     preset:
       - Jellyfin TV Show Collection
     overrides:
       tv_show_directory: /media/TV Shows
       episode_title: "{title}"
-      enable_throttle_protection: false
-    ytdl_options:
-      cookiefile: /config/cookie.txt
   Music:
     preset:
       - YouTube Releases
       - Max Audio Quality
     overrides:
       music_directory: /media/Music
-      enable_throttle_protection: false
-    ytdl_options:
-      cookiefile: /config/cookie.txt
