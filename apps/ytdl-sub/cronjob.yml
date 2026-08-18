@@ -25,9 +25,6 @@ spec:
             - name: config
               configMap:
                 name: config
-            - name: cookie
-              secret:
-                secretName: cookie
           restartPolicy: Never
           containers:
             - name: ytdl-sub
@@ -48,10 +45,6 @@ spec:
                   mountPath: /media
                 - name: config-tmp
                   mountPath: /config
-                - name: cookie
-                  mountPath: /config/cookie.txt
-                  subPath: cookie.txt
-                  readOnly: true
                 - name: config
                   mountPath: /config/subscriptions.yml
                   subPath: subscriptions.yml
@@ -65,20 +58,13 @@ spec:
                   value: America/Denver
 
 ---
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: cookie
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
-  labels:
-    app.kubernetes.io/component: app
+  name: config
 spec:
-  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: cookie
-  map:
-    - secretKeyName: cookie.txt
-      bwSecretId: e3eadbbf-ab9a-4491-80d7-b4a501450131
-  authToken:
-    secretName: bw-auth-token
-    secretKey: token
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1Gi
