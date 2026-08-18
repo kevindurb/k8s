@@ -12,6 +12,7 @@ presets:
       only_recent_date_range: 2month
       only_recent_max_files: 30
       episode_title: "{title}"
+      enable_throttle_protection: false
     ytdl_options:
       cookiefile: "/config/cookie.txt"
   YouTube Playlist:
@@ -20,6 +21,7 @@ presets:
     overrides:
       tv_show_directory: /media/YouTube
       episode_title: "{title}"
+      enable_throttle_protection: false
     ytdl_options:
       cookiefile: "/config/cookie.txt"
   TV Show:
@@ -28,6 +30,7 @@ presets:
     overrides:
       tv_show_directory: /media/TV Shows
       episode_title: "{title}"
+      enable_throttle_protection: false
     ytdl_options:
       cookiefile: "/config/cookie.txt"
   Music:
@@ -36,5 +39,6 @@ presets:
       - Max Audio Quality
     overrides:
       music_directory: /media/Music
+      enable_throttle_protection: false
     ytdl_options:
       cookiefile: "/config/cookie.txt"
