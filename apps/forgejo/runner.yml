@@ -35,6 +35,10 @@ spec:
           hostPath:
             path: /dev/fuse
             type: CharDevice
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
         - name: tmp
           emptyDir: {}
         - name: var-tmp
@@ -115,7 +119,10 @@ spec:
             runAsGroup: 1000
             readOnlyRootFilesystem: true
             capabilities:
-              add: [SETUID, SETGID]
+              # NET_ADMIN is needed to set up the tap device for rootless
+              # networking (pasta); without it, job containers fail to start
+              # with "Failed to set up tap device in namespace".
+              add: [SETUID, SETGID, NET_ADMIN]
               drop: [ALL]
           volumeMounts:
             - name: podman-socket
@@ -124,6 +131,8 @@ spec:
               mountPath: /home/podman/.local/share/containers
             - name: dev-fuse
               mountPath: /dev/fuse
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
             - name: tmp
               mountPath: /tmp
             - name: var-tmp
