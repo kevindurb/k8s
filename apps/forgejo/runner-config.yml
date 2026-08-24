@@ -1,0 +1,25 @@
+---
+log:
+  level: info
+
+runner:
+  file: .runner
+  capacity: 2
+  timeout: 3h
+  insecure: false
+
+cache:
+  enabled: true
+  dir: ''
+
+container:
+  network: ''
+  privileged: false
+  docker_host: unix:///podman/podman.sock
+  # Job containers need this to bind-mount the podman socket back in, so a
+  # `podman build` step can talk to the same podman-in-podman sidecar.
+  valid_volumes:
+    - /podman/podman.sock
+
+host:
+  workdir_parent: ''

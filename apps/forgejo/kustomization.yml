@@ -7,11 +7,13 @@ namePrefix: forgejo-
 
 resources:
   - ./deployment.yml
+  - ./runner.yml
 
 components:
   - ../../components/http-route-refs
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
+  - ../../components/bitwarden-secret-name-reference
 
 configMapGenerator:
   - name: gatus
@@ -29,6 +31,10 @@ configMapGenerator:
       - FORGEJO__SERVER__SSH_PORT=22
       - FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_USER=true
       - FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_ORG=true
+      - FORGEJO__ACTIONS__ENABLED=true
+  - name: runner-config
+    files:
+      - config.yml=runner-config.yml
 
 labels:
   - includeSelectors: true
