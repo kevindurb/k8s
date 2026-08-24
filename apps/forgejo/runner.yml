@@ -118,6 +118,11 @@ spec:
             runAsUser: 1000
             runAsGroup: 1000
             readOnlyRootFilesystem: true
+            # Kubernetes/runc mount /proc/sys read-only by default for every
+            # non-privileged container regardless of granted capabilities;
+            # netavark needs to write net.ipv4.conf.<bridge>.route_localnet
+            # when it sets up a job network, so that default has to be lifted.
+            procMount: Unmasked
             capabilities:
               # NET_ADMIN is needed to set up the tap device for rootless
               # networking (pasta); without it, job containers fail to start
