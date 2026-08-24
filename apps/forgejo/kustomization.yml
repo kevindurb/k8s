@@ -32,9 +32,6 @@ configMapGenerator:
       - FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_USER=true
       - FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_ORG=true
       - FORGEJO__ACTIONS__ENABLED=true
-  - name: runner-config
-    files:
-      - config.yml=runner-config.yml
 
 labels:
   - includeSelectors: true

@@ -1,12 +1,14 @@
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: runner-statefulset
+  name: runner-deployment
   labels: &labels
     app.kubernetes.io/component: runner
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels: *labels
   template:
@@ -19,9 +21,12 @@ spec:
         runAsGroup: 1000
         fsGroup: 1000
       volumes:
+        - name: runner-data
+          persistentVolumeClaim:
+            claimName: runner-volume
         - name: runner-config
-          configMap:
-            name: runner-config
+          secret:
+            secretName: runner-config
         - name: podman-socket
           emptyDir: {}
         - name: podman-storage
@@ -42,67 +47,20 @@ spec:
           emptyDir: {}
         - name: var-log
           emptyDir: {}
-      initContainers:
-        - name: register
+      containers:
+        - name: runner
           image: data.forgejo.org/forgejo/runner:13
           command: ['/bin/sh', '-c']
           args:
             - |
               set -eu
-              if [ ! -f /data/.runner ]; then
-                forgejo-runner register --no-interactive \
-                  --instance "$GITEA_INSTANCE_URL" \
-                  --token "$GITEA_RUNNER_REGISTRATION_TOKEN" \
-                  --name "$GITEA_RUNNER_NAME" \
-                  --labels "$GITEA_RUNNER_LABELS" \
-                  --config /etc/forgejo-runner/config.yml
-              fi
-          env:
-            - name: GITEA_INSTANCE_URL
-              value: https://forgejo.beaver-cloud.xyz
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: GITEA_RUNNER_NAME
-              value: k8s-podman-runner-$(POD_NAME)
-            - name: GITEA_RUNNER_LABELS
-              value: podman:docker://ghcr.io/catthehacker/ubuntu:act-22.04
-            - name: GITEA_RUNNER_REGISTRATION_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: runner-secret
-                  key: REGISTRATION_TOKEN
-          securityContext:
-            privileged: false
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: [ALL]
-          volumeMounts:
-            - name: runner-data
-              mountPath: /data
-            - name: runner-config
-              mountPath: /etc/forgejo-runner
-            - name: tmp
-              mountPath: /tmp
-            - name: var-tmp
-              mountPath: /var/tmp
-            - name: var-run
-              mountPath: /var/run
-            - name: run
-              mountPath: /run
-            - name: var-cache
-              mountPath: /var/cache
-            - name: var-log
-              mountPath: /var/log
-      containers:
-        - name: runner
-          image: data.forgejo.org/forgejo/runner:13
-          command: ['forgejo-runner', 'daemon', '--config', '/etc/forgejo-runner/config.yml']
+              # The podman sidecar can take a while to pull its image and start
+              # its API service; the daemon doesn't retry a failed initial
+              # connection, it just exits, so wait for the socket first.
+              until [ -e /podman/podman.sock ]; do
+                sleep 1
+              done
+              exec forgejo-runner daemon --config /etc/forgejo-runner/config.yml
           env:
             - name: DOCKER_HOST
               value: unix:///podman/podman.sock
@@ -183,33 +141,36 @@ spec:
               memory: 512M
             limits:
               memory: 4G
-  volumeClaimTemplates:
-    - metadata:
-        name: runner-data
-        labels:
-          app.kubernetes.io/component: runner
-      spec:
-        accessModes: [ReadWriteOnce]
-        storageClassName: longhorn-replicated
-        resources:
-          requests:
-            storage: 2G
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: runner-volume
+  labels:
+    app.kubernetes.io/component: runner
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 2G
 
 ---
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:
-  name: runner-secret
+  name: runner-config
   annotations:
     argocd.argoproj.io/sync-options: Replace=true
   labels:
     app.kubernetes.io/component: runner
 spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: runner-secret
+  secretName: runner-config
   map:
-    - secretKeyName: REGISTRATION_TOKEN
-      bwSecretId: 290102ee-0d77-4149-8983-b4b0016302b2
+    - secretKeyName: config.yml
+      bwSecretId: c02f12b6-6e31-45aa-bc1b-b4b00166b1b3
   authToken:
     secretName: bw-auth-token
     secretKey: token

@@ -10,6 +10,8 @@ nameReference:
         kind: Deployment
       - path: spec/template/spec/initContainers/env/valueFrom/secretKeyRef/name
         kind: Deployment
+      - path: spec/template/spec/volumes/secret/secretName
+        kind: Deployment
       - path: spec/template/spec/containers/envFrom/secretRef/name
         kind: StatefulSet
       - path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
@@ -17,6 +19,8 @@ nameReference:
       - path: spec/template/spec/initContainers/envFrom/secretRef/name
         kind: StatefulSet
       - path: spec/template/spec/initContainers/env/valueFrom/secretKeyRef/name
+        kind: StatefulSet
+      - path: spec/template/spec/volumes/secret/secretName
         kind: StatefulSet
 
 nameSuffix:
