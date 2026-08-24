@@ -9,7 +9,7 @@ on:
 jobs:
   renovate:
     name: Renovate
-    runs-on: ubuntu-latest
+    runs-on: podman
 
     steps:
       - name: Checkout
