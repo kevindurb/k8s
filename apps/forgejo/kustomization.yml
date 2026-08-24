@@ -17,7 +17,7 @@ configMapGenerator:
   - name: gatus
     options:
       labels:
-        gatus.io/enabled: 'true'
+        gatus.io/enabled: "true"
     files:
       - forgejo.yml=gatus.yml
   - name: app-env
@@ -27,6 +27,8 @@ configMapGenerator:
       - FORGEJO__SERVER__DOMAIN=forgejo.beaver-cloud.xyz
       - FORGEJO__SERVER__SSH_DOMAIN=git.beaver-cloud.xyz
       - FORGEJO__SERVER__SSH_PORT=22
+      - FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_USER=true
+      - FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_ORG=true
 
 labels:
   - includeSelectors: true
