@@ -88,3 +88,6 @@ spec:
     - backendRefs:
         - name: app-service
           port: 80
+      timeouts:
+        request: 600s
+        backendRequest: 600s
