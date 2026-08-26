@@ -93,3 +93,6 @@ spec:
           name: app-service
           port: 80
           weight: 1
+      timeouts:
+        request: 600s
+        backendRequest: 600s
