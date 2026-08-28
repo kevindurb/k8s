@@ -4,7 +4,8 @@ kind: Kustomization
 
 namespace: tailscale
 
-resources: []
+resources:
+  - ./operator-oauth.yml
 
 labels:
   - includeSelectors: true
