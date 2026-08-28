@@ -10,7 +10,7 @@ spec:
     - repoURL: https://pkgs.tailscale.com/helmcharts
       targetRevision: 1.102.3
       chart: tailscale-operator
-    - repoURL: https://github.com/kevindurb/k8s.git
+    - repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/tailscale
   destination:
