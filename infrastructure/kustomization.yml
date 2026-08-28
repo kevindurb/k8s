@@ -18,3 +18,4 @@ resources:
   - node-feature-discovery/app.yml
   - pihole/app.yml
   - prometheus/app.yml
+  - tailscale/app.yml
