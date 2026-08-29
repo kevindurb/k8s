@@ -10,8 +10,14 @@ playbook *args:
 adhoc module filter='all':
   just ansible -m {{module}} {{filter}}
 
+sudo-adhoc module filter='all':
+  just ansible -b -m {{module}} {{filter}}
+
 ping filter='all':
   just adhoc ping {{filter}}
 
 reboot filter='all':
-  just adhoc reboot {{filter}}
+  just sudo-adhoc reboot {{filter}}
+
+shutdown filter='all':
+  just sudo-adhoc community.general.shutdown {{filter}}
