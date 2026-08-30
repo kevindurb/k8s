@@ -6,3 +6,14 @@ metadata:
 spec:
   type: ingress
   replicas: 2
+
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: borg-cluster
+spec:
+  type: kube-apiserver
+  replicas: 2
+  kubeAPIServer:
+    mode: auth
