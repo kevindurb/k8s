@@ -71,11 +71,16 @@ metadata:
   annotations:
     tailscale.com/proxy-group: ingress-proxy-group
 spec:
-  defaultBackend:
-    service:
-      name: app-service
-      port:
-        name: http
   ingressClassName: tailscale
   tls:
     - hosts: [template]
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app-service
+                port:
+                  name: http
