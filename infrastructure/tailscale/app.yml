@@ -10,6 +10,10 @@ spec:
     - repoURL: https://pkgs.tailscale.com/helmcharts
       targetRevision: 1.102.3
       chart: tailscale-operator
+      helm:
+        valuesObject:
+          apiServerProxyConfig:
+            allowImpersonation: true
     - repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/tailscale
