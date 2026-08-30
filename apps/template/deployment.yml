@@ -73,7 +73,7 @@ spec:
     service:
       name: app-service
       port:
-        hame: http
+        name: http
   ingressClassName: tailscale
   tls:
     - hosts: [template]
