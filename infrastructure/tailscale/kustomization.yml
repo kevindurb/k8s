@@ -6,6 +6,7 @@ namespace: tailscale
 
 resources:
   - ./operator-oauth.yml
+  - ./ingress-proxy-group.yml
 
 labels:
   - includeSelectors: true

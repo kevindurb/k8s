@@ -68,6 +68,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
 spec:
   defaultBackend:
     service:
