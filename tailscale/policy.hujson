@@ -1,0 +1,77 @@
+// vim: set ft=hjson:
+
+{
+	"groups": {},
+	"hosts":  {},
+
+	"tagOwners": {
+		"tag:pve":          ["autogroup:admin"],
+		"tag:ci":           ["autogroup:admin"],
+		"tag:infra":        ["autogroup:admin"],
+		"tag:work":         ["autogroup:admin"],
+		"tag:personal":     ["autogroup:admin"],
+		"tag:k8s-operator": ["autogroup:admin"],
+		"tag:k8s":          ["tag:k8s-operator"],
+		"tag:dev-pod":      ["autogroup:admin"],
+		"tag:k8s-node":     ["autogroup:admin"],
+		"tag:golink":       ["autogroup:admin"],
+	},
+
+	"nodeAttrs": [
+		{
+			"target": ["autogroup:member", "tag:k8s"],
+			"attr":   ["funnel"],
+		},
+		{
+			"target": ["100.75.211.8"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["100.125.200.122"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["100.111.85.36"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["100.111.1.9"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["100.84.100.102"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["100.81.157.25"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["100.101.43.87"],
+			"attr":   ["mullvad"],
+		},
+	],
+
+	"ssh": [
+		{
+			"action": "accept",
+			"src":    ["autogroup:admin"],
+			"dst":    ["autogroup:self", "autogroup:tagged"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+	],
+
+	"grants": [
+		{
+			"src": ["*"],
+			"dst": ["*"],
+			"ip":  ["*"],
+		},
+	],
+
+	"autoApprovers": {
+    "services": {
+      "svc:*": ["tag:k8s"],
+    },
+  },
+}
