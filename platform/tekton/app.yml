@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
     targetRevision: HEAD
-    path: infrastructure/tekton
+    path: platform/tekton
   destination:
     server: https://kubernetes.default.svc
     namespace: tekton
