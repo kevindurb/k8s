@@ -5,7 +5,7 @@ metadata:
   name: config
 spec:
   profile: all
-  targetNamespace: tekton
+  targetNamespace: tekton-pipelines
   pruner:
     resources:
       - pipelinerun

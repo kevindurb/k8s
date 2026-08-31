@@ -2,17 +2,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tekton
+  name: tekton-pipelines
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
     targetRevision: HEAD
-    path: platform/tekton
+    path: platform/tekton-pipelines
   destination:
     server: https://kubernetes.default.svc
-    namespace: tekton
+    namespace: tekton-pipelines
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
