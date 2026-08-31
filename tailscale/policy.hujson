@@ -23,40 +23,29 @@
 			"attr":   ["funnel"],
 		},
 		{
-			"target": ["100.75.211.8"],
-			"attr":   ["mullvad"],
-		},
-		{
-			"target": ["100.125.200.122"],
-			"attr":   ["mullvad"],
-		},
-		{
-			"target": ["100.111.85.36"],
-			"attr":   ["mullvad"],
-		},
-		{
-			"target": ["100.111.1.9"],
-			"attr":   ["mullvad"],
-		},
-		{
-			"target": ["100.84.100.102"],
-			"attr":   ["mullvad"],
-		},
-		{
-			"target": ["100.81.157.25"],
-			"attr":   ["mullvad"],
-		},
-		{
 			"target": ["100.101.43.87"],
 			"attr":   ["mullvad"],
 		},
+    {
+      "target": ["autogroup:member", "autogroup:tagged"],
+      "attr": [
+        "drive:share",
+        "drive:access",
+      ],
+    },
 	],
 
 	"ssh": [
 		{
 			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:self"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			"action": "accept",
 			"src":    ["autogroup:admin"],
-			"dst":    ["autogroup:self", "autogroup:tagged"],
+			"dst":    ["autogroup:tagged"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
 	],
@@ -67,6 +56,26 @@
 			"dst": ["*"],
 			"ip":  ["*"],
 		},
+    {
+      "src": ["autogroup:member"],
+      "dst": ["autogroup:self"],
+      "app": {
+        "tailscale.com/cap/drive": [{
+        "shares": ["*"],
+        "access": "rw"
+        }]
+      }
+    },
+    {
+      "src": ["autogroup:admin"],
+      "dst": ["autogroup:tagged"],
+      "app": {
+        "tailscale.com/cap/drive": [{
+        "shares": ["*"],
+        "access": "rw"
+        }]
+      }
+    },
 	],
 
 	"autoApprovers": {
