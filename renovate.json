@@ -2,18 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    "docker:pinDigests",
-    ":automergeDigest",
-    ":automergeLinters",
-    ":automergePatch",
-    ":automergeMinor",
-    ":disableRateLimiting"
+    "docker:pinDigests"
   ],
-  "ignoreTests": true,
-  "automergeType": "pr",
-  "automergeStrategy": "merge-commit",
-  "platform": "github",
-  "repositories": ["kevindurb/k8s"],
   "dockerfile": {
     "enabled": false
   },
