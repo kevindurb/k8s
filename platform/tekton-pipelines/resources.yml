@@ -12,3 +12,20 @@ spec:
       - taskrun
     keep: 100
     schedule: "0 8 * * *"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard-ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+spec:
+  defaultBackend:
+    service:
+      name: tekton-dashboard
+      port:
+        number: 9097
+  ingressClassName: tailscale
+  tls:
+    - hosts: [tekton]
