@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tekton
+  namespace: tekton
+spec:
+  project: default
+  source:
+    repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
+    targetRevision: HEAD
+    path: infrastructure/tekton
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tekton
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true
