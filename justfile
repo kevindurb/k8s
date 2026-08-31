@@ -26,7 +26,7 @@ tmpl type name:
   yq -i '.endpoints[0].url = "http://{{name}}-app-service.{{name}}"' ./gatus.yml
 
   echo "Updating deployment.yml..."
-  yq -i 'select(.kind == "HTTPRoute").spec.hostnames[0] = "{{name}}.beaver-cloud.xyz"' ./deployment.yml
+  yq -i 'select(.kind == "Ingress").spec.tls[0].hosts[0] = "{{name}}"' ./deployment.yml
   yq -i 'select(.kind == "Deployment").spec.replicas = 1' ./deployment.yml
 
   cd ..

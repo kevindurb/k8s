@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: golink
+  namespace: argocd
+spec:
+  project: apps
+  sources:
+    - repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/golink
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: golink
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

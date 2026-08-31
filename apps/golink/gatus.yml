@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: golink
+    group: apps
+    url: http://golink-app-service.golink
+    conditions:
+      - '[STATUS] == 200'

@@ -4,22 +4,24 @@ kind: Kustomization
 
 resources:
   - ./project.yml
+
   - ./audiobookshelf/app.yml
   - ./calibre-web/app.yml
   - ./calibre/app.yml
   - ./dev-pod/app.yml
   - ./dufs/app.yml
   - ./forgejo/app.yml
+  - ./golink/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
   - ./linkding/app.yml
   - ./makemkv/app.yml
   - ./miniflux/app.yml
   - ./nextcloud/app.yml
+  - ./qbittorrent/app.yml
   - ./radarr/app.yml
   - ./scrypted/app.yml
   - ./sonarr/app.yml
   - ./syncthing/app.yml
   - ./template/app.yml
   - ./ytdl-sub/app.yml
-  - ./qbittorrent/app.yml
