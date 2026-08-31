@@ -14,7 +14,7 @@ spec:
         valuesObject:
           apiServerProxyConfig:
             allowImpersonation: true
-    - repoURL: https://forgejo.beaver-cloud.xyz/kevindurb/k8s.git
+    - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/tailscale
   destination:
