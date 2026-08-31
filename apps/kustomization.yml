@@ -10,7 +10,6 @@ resources:
   - ./calibre/app.yml
   - ./dev-pod/app.yml
   - ./dufs/app.yml
-  - ./forgejo/app.yml
   - ./golink/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
