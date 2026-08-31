@@ -25,6 +25,8 @@ spec:
           env:
             - name: TZ
               value: America/Denver
+            - name: TS_SERVICE_NAME
+              value: svc:go
           envFrom: []
           volumeMounts:
             - name: volume
