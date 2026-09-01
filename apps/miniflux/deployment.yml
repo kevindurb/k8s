@@ -58,20 +58,20 @@ spec:
     - name: http
       port: 80
       targetPort: http
+
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: route
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
 spec:
-  parentRefs:
-    - name: internal-beaver-cloud
-      namespace: envoy-gateway-system
-    - name: external-beaver-cloud
-      namespace: envoy-gateway-system
-  hostnames:
-    - miniflux.beaver-cloud.xyz
-  rules:
-    - backendRefs:
-        - name: app-service
-          port: 80
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [miniflux]
