@@ -37,7 +37,7 @@ spec:
           args:
             - --config.file=/etc/alertmanager/alertmanager.yml
             - --storage.path=/alertmanager
-            - --web.external-url=https://alertmanager.beaver-cloud.xyz
+            - --web.external-url=https://alertmanager.beaver-cloud.ts.net
           env:
             - name: TZ
               value: America/Denver

@@ -35,7 +35,7 @@ spec:
             - --storage.tsdb.path=/prometheus
             - --storage.tsdb.retention.time=5d
             - --storage.tsdb.retention.size=20GB
-            - --web.external-url=https://prometheus.beaver-cloud.xyz
+            - --web.external-url=https://prometheus.beaver-cloud.ts.net
           resources:
             limits:
               memory: 2G

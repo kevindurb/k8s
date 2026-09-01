@@ -7,4 +7,4 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
 data:
-  url: https://argocd.beaver-cloud.xyz
+  url: https://argocd.beaver-cloud.ts.net
