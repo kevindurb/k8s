@@ -71,20 +71,20 @@ spec:
     - name: http
       port: 80
       targetPort: http
+
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: internal-route
+  name: ingress
   annotations:
-    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+    tailscale.com/proxy-group: ingress-proxy-group
 spec:
-  parentRefs:
-    - name: internal-beaver-cloud
-      namespace: envoy-gateway-system
-  hostnames:
-    - calibre.beaver-cloud.xyz
-  rules:
-    - backendRefs:
-        - name: app-service
-          port: 80
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [calibre]
