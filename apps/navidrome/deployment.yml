@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+      containers:
+        - name: app
+          image: ghcr.io/navidrome/navidrome:0.63.2
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom: []
+          volumeMounts:
+            - name: nas-media
+              mountPath: /music
+              subPath: Music
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+          ports:
+            - name: http
+              containerPort: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [navidrome]

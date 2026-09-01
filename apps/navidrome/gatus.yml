@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: navidrome
+    group: apps
+    url: http://navidrome-app-service.navidrome
+    conditions:
+      - '[STATUS] == 200'
