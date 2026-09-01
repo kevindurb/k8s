@@ -10,7 +10,6 @@ resources:
   - ./rbac.yml
 
 components:
-  - ../../components/internal-http-route
   - ../../components/app-env
   - ../../components/app-http-service
   - ../../components/app-volume
@@ -25,14 +24,6 @@ configMapGenerator:
     literals:
       - GATUS_LOG_LEVEL=DEBUG
       - GATUS_CONFIG_PATH=/config
-
-replacements:
-  - sourceValue: gatus.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 labels:
   - includeSelectors: true

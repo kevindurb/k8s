@@ -9,7 +9,6 @@ resources:
   - ./deployment.yml
 
 components:
-  - ../../components/internal-http-route
   - ../../components/app-env
   - ../../components/app-http-service
   - ../../components/app-volume
@@ -31,14 +30,6 @@ configMapGenerator:
       - ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED=true
       - ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED=true
       - ZIGBEE2MQTT_CONFIG_FRONTEND_URL=https://zigbee2mqtt.beaver-cloud.xyz
-
-replacements:
-  - sourceValue: zigbee2mqtt.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 labels:
   - includeSelectors: true

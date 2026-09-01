@@ -10,18 +10,9 @@ resources:
 
 components:
   - ../../components/app-pod-hardening
-  - ../../components/internal-http-route
   - ../../components/app-http-service
   - ../../components/prometheus-scrape-app-service
   - ../../components/app-volume
-
-replacements:
-  - sourceValue: alertmanager.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
 
 configMapGenerator:
   - name: config

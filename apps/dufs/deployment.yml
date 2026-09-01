@@ -83,31 +83,18 @@ spec:
       targetPort: http
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: internal-route
+  name: ingress
   annotations:
-    internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+    tailscale.com/proxy-group: ingress-proxy-group
 spec:
-  parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: internal-beaver-cloud
-      namespace: envoy-gateway-system
-  hostnames:
-    - dufs.beaver-cloud.xyz
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - group: ''
-          kind: Service
-          name: app-service
-          port: 80
-          weight: 1
-      timeouts:
-        request: 600s
-        backendRequest: 600s
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [dufs]

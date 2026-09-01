@@ -11,18 +11,11 @@ resources:
 
 components:
   - ../../components/app-pod-hardening
-  - ../../components/internal-http-route
   - ../../components/app-http-service
   - ../../components/prometheus-scrape-app-service
   - ../../components/app-volume
 
 replacements:
-  - sourceValue: prometheus.beaver-cloud.xyz
-    targets:
-      - select:
-          kind: HTTPRoute
-        fieldPaths:
-          - spec.hostnames.0
   - sourceValue: 35Gi
     targets:
       - select:
