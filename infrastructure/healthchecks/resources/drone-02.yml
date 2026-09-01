@@ -9,6 +9,7 @@ spec:
     spec:
       template:
         spec:
+          dnsPolicy: Default
           restartPolicy: Never
           nodeSelector:
             kubernetes.io/hostname: drone-02

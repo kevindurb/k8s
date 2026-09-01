@@ -13,6 +13,7 @@ spec:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
               effect: NoSchedule
+          dnsPolicy: Default
           restartPolicy: Never
           nodeSelector:
             kubernetes.io/hostname: unimatrix-01
