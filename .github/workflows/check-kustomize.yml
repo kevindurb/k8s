@@ -1,0 +1,36 @@
+---
+name: Build Bootc Image
+on:
+  schedule:
+    - cron: '05 10 * * 0' # 10:05am UTC Sunday
+  push:
+    branches:
+      - main
+    paths:
+      - apps/**
+      - platform/**
+      - infrastructure/**
+      - clusters/**
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-image:
+    name: Build and push image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: alexellis/arkade-get@master
+        with:
+          kustomize: latest
+
+      - name: Check Kustomize
+        run: find apps platform infrastructure clusters -name "kustomization.y*ml" -execdir kustomize build . > /dev/null \;
