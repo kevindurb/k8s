@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: transcoding
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: apps/transcoding
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: transcoding
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

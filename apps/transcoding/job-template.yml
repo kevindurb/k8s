@@ -1,0 +1,25 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: PLACEHOLDER
+  namespace: transcoding
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: nas-media
+          persistentVolumeClaim: {claimName: nas-media}
+      containers:
+        - name: handbrake
+          image: ghcr.io/kevindurb/handbrake-cli:latest
+          command: ["sh", "-c"]
+          args: ["PLACEHOLDER"]
+          volumeMounts:
+            - {name: nas-media, mountPath: /media}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {memory: 8Gi}

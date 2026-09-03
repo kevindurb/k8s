@@ -1,0 +1,16 @@
+transcode input:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  input="{{input}}"
+  output="transcoded/${input%.*}.mp4"
+  name="transcode-$(echo -n "$input" | shasum | cut -c1-10)-$(date +%s)"
+  tmp=$(mktemp)
+  cp job-template.yml "$tmp"
+  cmd="mkdir -p \"/media/$(dirname "$output")\" && HandBrakeCLI -i \"/media/$input\" -o \"/media/$output\" --preset \"Super HQ 2160p60 4K HEVC Surround\""
+  NAME="$name" yq -i '.metadata.name = strenv(NAME)' "$tmp"
+  CMD="$cmd" yq -i '.spec.template.spec.containers[0].args[0] = strenv(CMD)' "$tmp"
+  kubectl create -f "$tmp"
+  rm "$tmp"
+  echo "Waiting for pod to start..."
+  kubectl wait --for=condition=Ready pod -l job-name="$name" -n transcoding --timeout=120s
+  kubectl logs -f -n transcoding "job/$name"
