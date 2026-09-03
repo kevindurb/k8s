@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: PLACEHOLDER
+  namespace: transcoding
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: drone-04
+  volumes:
+    - name: nas-media
+      persistentVolumeClaim: {claimName: nas-media, readOnly: true}
+  containers:
+    - name: list
+      image: busybox:1.36
+      command: ["sh", "-c"]
+      args: ["PLACEHOLDER"]
+      volumeMounts:
+        - {name: nas-media, mountPath: /media, readOnly: true}
+      resources:
+        requests: {cpu: 50m, memory: 32Mi}
+        limits: {memory: 128Mi}

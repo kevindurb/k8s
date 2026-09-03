@@ -14,3 +14,39 @@ transcode input:
   echo "Waiting for pod to start..."
   kubectl wait --for=condition=Ready pod -l job-name="$name" -n transcoding --timeout=120s
   kubectl logs -f -n transcoding "job/$name"
+
+find:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  name="transcoding-list-$(date +%s)"
+  tmp=$(mktemp)
+  cp list-pod-template.yml "$tmp"
+  cmd='find "/media/Movies" "/media/TV Shows" -type f ! -iname "._*" \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" -o -iname "*.mov" -o -iname "*.m4v" -o -iname "*.wmv" -o -iname "*.flv" -o -iname "*.ts" -o -iname "*.m2ts" -o -iname "*.webm" \)'
+  NAME="$name" yq -i '.metadata.name = strenv(NAME)' "$tmp"
+  CMD="$cmd" yq -i '.spec.containers[0].args[0] = strenv(CMD)' "$tmp"
+  kubectl apply -f "$tmp" >/dev/null
+  rm "$tmp"
+
+  echo "Listing media files..." >&2
+  phase=""
+  until [[ "$phase" == "Succeeded" || "$phase" == "Failed" ]]; do
+    sleep 1
+    phase=$(kubectl get pod -n transcoding "$name" -o jsonpath='{.status.phase}' 2>/dev/null || true)
+  done
+
+  files=$(kubectl logs -n transcoding "$name" | sed 's#^/media/##')
+  kubectl delete pod -n transcoding "$name" --wait=false >/dev/null
+
+  if [[ "$phase" != "Succeeded" ]]; then
+    echo "Listing pod failed:" >&2
+    echo "$files" >&2
+    exit 1
+  fi
+
+  echo "$files" | fzf --prompt="transcode> "
+
+pick:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  selected=$(just find)
+  just transcode "$selected"
