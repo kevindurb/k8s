@@ -73,6 +73,9 @@ spec:
       labels: *labels
     spec:
       volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
         - name: data
           emptyDir: {}
         - name: video
@@ -92,6 +95,8 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
           volumeMounts:
+            - name: nas-media
+              mountPath: /media
             - name: data
               mountPath: /data
             - name: video
