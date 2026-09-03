@@ -47,7 +47,7 @@ spec:
               mountPath: /data/config.yaml
               subPath: config.yaml
             - name: presets
-              mountPath: /data/presets
+              mountPath: /data/presets/
           resources:
             requests:
               memory: 100M
