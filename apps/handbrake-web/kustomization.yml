@@ -18,9 +18,6 @@ configMapGenerator:
   - name: config
     files:
       - ./config/config.yaml
-  - name: presets
-    files:
-      - ./config/presets/super_hq_4k_hvec.json
   - name: gatus
     options:
       labels:

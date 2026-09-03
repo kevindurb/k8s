@@ -6,7 +6,7 @@ paths:
   input-path: /media
   output-path: /media/transcoded
 presets:
-  show-default-presets: false
+  show-default-presets: true
   allow-preset-creator: false
 application:
   update-check-interval: 0
