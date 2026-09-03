@@ -16,6 +16,9 @@ spec:
       labels: *labels
     spec:
       volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
         - name: volume
           persistentVolumeClaim:
             claimName: volume
@@ -34,6 +37,8 @@ spec:
             - name: TZ
               value: America/Denver
           volumeMounts:
+            - name: nas-media
+              mountPath: /media
             - name: volume
               mountPath: /data
             - name: video
