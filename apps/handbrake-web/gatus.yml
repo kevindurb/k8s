@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: handbrake-web
-    group: apps
-    url: http://handbrake-web-app-service.handbrake-web
-    conditions:
-      - '[STATUS] == 200'
