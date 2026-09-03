@@ -47,8 +47,8 @@ spec:
               mountPath: /data/config.yaml
               subPath: config.yaml
             - name: config
-              mountPath: /data/presets/super_hq_h265_mkv.json
-              subPath: super_hq_h265_mkv.json
+              mountPath: /data/presets/super-hq-4k-hvec.json
+              subPath: super-hq-4k-hvec.json
           resources:
             requests:
               memory: 100M
