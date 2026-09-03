@@ -10,7 +10,6 @@ resources:
   - ./dev-pod/app.yml
   - ./dufs/app.yml
   - ./golink/app.yml
-  - ./handbrake-web/app.yml
   - ./home-assistant/app.yml
   - ./jellyfin/app.yml
   - ./linkding/app.yml
