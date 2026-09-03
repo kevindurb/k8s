@@ -47,8 +47,8 @@ spec:
               mountPath: /data/config.yaml
               subPath: config.yaml
             - name: config
-              mountPath: /data/presets/super-hq-4k-hvec.json
-              subPath: super-hq-4k-hvec.json
+              mountPath: /data/presets/super_hq_4k_hvec.json
+              subPath: super_hq_4k_hvec.json
           resources:
             requests:
               memory: 100M
