@@ -18,7 +18,7 @@ configMapGenerator:
   - name: config
     files:
       - ./config/config.yaml
-      - ./config/presets/super_hq_h265_mkv.json
+      - ./config/presets/super-hq-4k-hvec.json
   - name: gatus
     options:
       labels:
