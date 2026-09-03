@@ -22,14 +22,14 @@ spec:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
-        - name: config-map
-          configMap:
-            name: config-map
         - name: video
           emptyDir: {}
         - name: config
           configMap:
             name: config
+        - name: presets
+          configMap:
+            name: presets
       containers:
         - name: handbrake-web-server
           image: ghcr.io/thenickoftime/handbrake-web-server@sha256:6aa18122e08299cf05edf0aa6135d9c97d92839933f5377f8fde59978430e543
@@ -46,9 +46,8 @@ spec:
             - name: config
               mountPath: /data/config.yaml
               subPath: config.yaml
-            - name: config
-              mountPath: /data/presets/super_hq_4k_hvec.json
-              subPath: super_hq_4k_hvec.json
+            - name: presets
+              mountPath: /data/presets
           resources:
             requests:
               memory: 100M
