@@ -21,6 +21,13 @@ patches:
       - op: add
         path: /spec/template/spec/securityContext/fsGroupChangePolicy
         value: OnRootMismatch
+  - target:
+      kind: Deployment
+      labelSelector: app.kubernetes.io/component=app
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/securityContext/capabilities/add
+        value: [NET_ADMIN, NET_RAW]
 
 labels:
   - includeSelectors: true

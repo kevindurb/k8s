@@ -27,9 +27,13 @@ spec:
         - name: nas
           persistentVolumeClaim:
             claimName: nas
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
       containers:
         - name: app
-          image: ghcr.io/kevindurb/box:2026.06.29@sha256:75106862314db8d2e4513aa43ea358a505f0dff9e67b058f9cd4c070612c569b
+          image: ghcr.io/kevindurb/box:2026.09.04@sha256:232a7b65f4e4e73be072e976cd4bd5c18de23e8621fe28bba1ef435878464ddc
           env:
             - name: TZ
               value: America/Denver
@@ -45,6 +49,8 @@ spec:
               mountPath: /home/linuxbrew
             - name: nas
               mountPath: /mnt/nas
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
           resources:
             requests:
               memory: 128M
