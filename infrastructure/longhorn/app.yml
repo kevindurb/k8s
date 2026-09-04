@@ -18,14 +18,14 @@ spec:
           persistence:
             defaultClass: false
             dataEngine: v1
-          httproute:
+          ingress:
             enabled: true
-            parentRefs:
-              - name: internal-beaver-cloud
-                namespace: envoy-gateway-system
-            hostnames: [longhorn.beaver-cloud.xyz]
+            ingressClassName: tailscale
+            host: longhorn
+            tls: true
             annotations:
-              internal-dns.alpha.kubernetes.io/target: internal.beaver-cloud.xyz
+              tailscale.com/proxy-group: ingress-proxy-group
+              tailscale.com/tags: tag:k8s
           longhornManager:
             serviceAnnotations:
               prometheus.io/scrape: 'true'

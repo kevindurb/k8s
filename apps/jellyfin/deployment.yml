@@ -105,3 +105,21 @@ spec:
       timeouts:
         request: 600s
         backendRequest: 600s
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:k8s,tag:apps,tag:media
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [jellyfin]

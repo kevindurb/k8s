@@ -175,6 +175,7 @@ metadata:
   name: ingress
   annotations:
     tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:k8s,tag:apps
 spec:
   defaultBackend:
     service:
