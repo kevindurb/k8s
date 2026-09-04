@@ -33,7 +33,7 @@ spec:
             type: CharDevice
       containers:
         - name: app
-          image: ghcr.io/kevindurb/box:2026.09.04@sha256:232a7b65f4e4e73be072e976cd4bd5c18de23e8621fe28bba1ef435878464ddc
+          image: ghcr.io/kevindurb/box:2026.09.04@sha256:cd3c1648656af4940a905d712e682a1c7e09ae4876ca3b5a3e3fceb9e4e6f3a5
           env:
             - name: TZ
               value: America/Denver
