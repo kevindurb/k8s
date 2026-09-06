@@ -8,6 +8,7 @@ resources:
 components:
   - ../../components/http-route-refs
   - ../../components/app-pod-hardening
+  - ../../components/nas-media
   - ../../components/app-tmp-dirs
 configMapGenerator:
   - name: gatus
