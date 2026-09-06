@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: kiwix
+    group: apps
+    url: http://kiwix-app-service.kiwix
+    conditions:
+      - '[STATUS] == 200'
