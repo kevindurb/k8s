@@ -31,3 +31,6 @@ subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: User
     name: kevindurb@github
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: dev-pod.beaver-cloud.ts.net
