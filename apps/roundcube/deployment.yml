@@ -24,7 +24,7 @@ spec:
             claimName: plugins
       containers:
         - name: app
-          image: docker.io/roundcube/roundcubemail:fpm-alpine
+          image: docker.io/roundcube/roundcubemail:1.6.x-fpm-alpine-nonroot
           env:
             - name: TZ
               value: America/Denver
