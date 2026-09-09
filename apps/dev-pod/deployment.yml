@@ -29,7 +29,7 @@ spec:
             claimName: nas
       containers:
         - name: app
-          image: ghcr.io/kevindurb/box:2026.09.06
+          image: ghcr.io/kevindurb/box:sha-f7f8d32
           env:
             - name: TZ
               value: America/Denver
