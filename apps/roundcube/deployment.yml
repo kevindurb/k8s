@@ -22,6 +22,8 @@ spec:
         - name: plugins
           persistentVolumeClaim:
             claimName: plugins
+        - name: html
+          emptyDir: {}
       containers:
         - name: app
           image: docker.io/roundcube/roundcubemail:1.6.x-fpm-alpine-nonroot
@@ -35,7 +37,9 @@ spec:
           envFrom: []
           volumeMounts:
             - name: config
-              mountPath: /var/roundcube/config
+              mountPath: /var/roundcube
+            - name: html
+              mountPath: /var/www/html
             - name: plugins
               mountPath: /var/www/html/plugins
           resources:
