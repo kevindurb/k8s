@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: roundcube
+    group: apps
+    url: http://roundcube-app-service.roundcube
+    conditions:
+      - '[STATUS] == 200'
