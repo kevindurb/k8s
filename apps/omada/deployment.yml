@@ -19,50 +19,16 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      securityContext:
-        fsGroup: 1000
       volumes:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
       containers:
         - name: omada
-          image: mbentley/omada-controller:beta-5.14.30.7@sha256:1ef5fa0a27fefa44a3a991553dc930a376f039a4c13c0fd5b60b0b14f241fe3b
+          image: mbentley/omada-controller:6
           env:
             - name: TZ
               value: America/Denver
-            - name: PUID
-              value: '508'
-            - name: PGID
-              value: '508'
-            - name: MANAGE_HTTP_PORT
-              value: '8088'
-            - name: MANAGE_HTTPS_PORT
-              value: '8043'
-            - name: PORTAL_HTTP_PORT
-              value: '8888'
-            - name: PORTAL_HTTPS_PORT
-              value: '8843'
-            - name: PORT_APP_DISCOVERY
-              value: '27001'
-            - name: PORT_ADOPT_V1
-              value: '29812'
-            - name: PORT_UPGRADE_V1
-              value: '29813'
-            - name: PORT_MANAGER_V1
-              value: '29811'
-            - name: PORT_MANAGER_V2
-              value: '29814'
-            - name: PORT_DISCOVERY
-              value: '29810'
-            - name: SHOW_SERVER_LOGS
-              value: 'true'
-            - name: SHOW_MONGODB_LOGS
-              value: 'false'
-            - name: SSL_CERT_NAME
-              value: tls.crt
-            - name: SSL_KEY_NAME
-              value: tls.key
           volumeMounts:
             - name: volume
               subPath: data
@@ -101,3 +67,21 @@ spec:
     - name: https
       port: 443
       targetPort: https
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:k8s,tag:infra
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: https
+  ingressClassName: tailscale
+  tls:
+    - hosts: [omada]
