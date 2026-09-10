@@ -34,6 +34,14 @@ spec:
               value: sqlite
             - name: ROUNDCUBEMAIL_SKIN
               value: elastic
+            - name: ROUNDCUBEMAIL_DEFAULT_HOST
+              value: ssl://imap.fastmail.com
+            - name: ROUNDCUBEMAIL_DEFAULT_PORT
+              value: '993'
+            - name: ROUNDCUBEMAIL_SMTP_SERVER
+              value: ssl://smtp.fastmail.com
+            - name: ROUNDCUBEMAIL_SMTP_PORT
+              value: '465'
           envFrom: []
           volumeMounts:
             - name: config
