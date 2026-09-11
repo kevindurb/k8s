@@ -74,6 +74,20 @@ spec:
               memory: 100M
             limits:
               memory: 1G
+          readinessProbe:
+            tcpSocket:
+              port: postgres
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: postgres
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           ports:
             - name: postgres
               containerPort: 5432

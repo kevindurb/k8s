@@ -44,6 +44,20 @@ spec:
               value: '25'
             - name: SMTP_RELAY_METRICS_PORT
               value: '8080'
+          readinessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           ports:
             - name: smtp
               containerPort: 25

@@ -41,6 +41,24 @@ spec:
               memory: 100M
             limits:
               memory: 4G
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
           ports:
             - name: https
               containerPort: 8043
