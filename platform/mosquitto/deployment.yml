@@ -36,6 +36,13 @@ spec:
               memory: 32M
             limits:
               memory: 128M
+          readinessProbe:
+            tcpSocket:
+              port: mqtt
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           livenessProbe:
             tcpSocket:
               port: mqtt
