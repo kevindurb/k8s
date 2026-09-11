@@ -2,6 +2,6 @@
 endpoints:
   - name: roundcube
     group: apps
-    url: http://roundcube-app-service.roundcube
+    url: https://roundcube.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

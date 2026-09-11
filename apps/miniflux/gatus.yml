@@ -2,6 +2,6 @@
 endpoints:
   - name: miniflux
     group: apps
-    url: http://miniflux-app-service.miniflux
+    url: https://miniflux.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

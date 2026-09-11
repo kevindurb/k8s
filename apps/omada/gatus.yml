@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: omada
-    url: https://omada-app-service.omada/login
+    url: https://omada.beaver-cloud.ts.net/login
     group: apps
     client:
       insecure: true

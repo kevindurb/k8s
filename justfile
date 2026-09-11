@@ -23,7 +23,7 @@ tmpl type name:
 
   echo "Updating gatus.yml..."
   yq -i '.endpoints[0].name = "{{name}}"' ./gatus.yml
-  yq -i '.endpoints[0].url = "http://{{name}}-app-service.{{name}}"' ./gatus.yml
+  yq -i '.endpoints[0].url = "https://{{name}}.beaver-cloud.ts.net"' ./gatus.yml
 
   echo "Updating deployment.yml..."
   yq -i 'select(.kind == "Ingress").spec.tls[0].hosts[0] = "{{name}}"' ./deployment.yml

@@ -2,6 +2,6 @@
 endpoints:
   - name: syncthing
     group: apps
-    url: http://syncthing-app-service.syncthing
+    url: https://syncthing.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

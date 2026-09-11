@@ -2,6 +2,6 @@
 endpoints:
   - name: audiobookshelf
     group: apps
-    url: http://audiobookshelf-app-service.audiobookshelf
+    url: https://audiobookshelf.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

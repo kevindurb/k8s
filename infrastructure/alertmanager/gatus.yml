@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: alertmanager
-    url: http://alertmanager-app-service.alertmanager/-/healthy
+    url: https://alertmanager.beaver-cloud.ts.net/-/healthy
     group: infrastructure
     conditions:
       - '[STATUS] == 200'

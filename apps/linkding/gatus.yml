@@ -2,6 +2,6 @@
 endpoints:
   - name: linkding
     group: apps
-    url: http://linkding-app-service.linkding
+    url: https://linkding.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

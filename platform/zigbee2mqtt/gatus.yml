@@ -2,6 +2,6 @@
 endpoints:
   - name: zigbee2mqtt
     group: platform
-    url: http://zigbee2mqtt-app-service.zigbee2mqtt
+    url: https://zigbee2mqtt.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

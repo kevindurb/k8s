@@ -2,6 +2,6 @@
 endpoints:
   - name: kiwix
     group: apps
-    url: http://kiwix-app-service.kiwix
+    url: https://kiwix.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'
