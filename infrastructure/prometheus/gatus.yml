@@ -2,6 +2,6 @@
 endpoints:
   - name: prometheus
     group: infrastructure
-    url: http://prometheus-app-service.prometheus/-/healthy
+    url: https://prometheus.beaver-cloud.ts.net/-/healthy
     conditions:
       - '[STATUS] == 200'

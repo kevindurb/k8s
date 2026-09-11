@@ -2,6 +2,6 @@
 endpoints:
   - name: calibre-web
     group: apps
-    url: http://calibre-web-app-service.calibre-web
+    url: https://calibre-web.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

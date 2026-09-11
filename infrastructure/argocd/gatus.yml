@@ -1,7 +1,7 @@
 ---
 endpoints:
   - name: argocd
-    url: http://argocd-server.argocd
+    url: https://argocd.beaver-cloud.ts.net
     group: infrastructure
     conditions:
       - '[STATUS] == 200'

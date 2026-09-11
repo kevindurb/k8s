@@ -2,6 +2,6 @@
 endpoints:
   - name: golink
     group: apps
-    url: http://golink-app-service.golink
+    url: https://go.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'

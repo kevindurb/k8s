@@ -2,6 +2,6 @@
 endpoints:
   - name: sonarr
     group: apps
-    url: http://sonarr-app-service.sonarr
+    url: https://sonarr.beaver-cloud.ts.net
     conditions:
       - '[STATUS] == 200'
