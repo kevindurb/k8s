@@ -21,7 +21,7 @@ spec:
           ingress:
             enabled: true
             ingressClassName: tailscale
-            host: longhorn
+            host: longhorn.beaver-cloud.ts.net
             tls: true
             annotations:
               tailscale.com/proxy-group: ingress-proxy-group
