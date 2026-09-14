@@ -2,6 +2,6 @@
 endpoints:
   - name: radarr
     group: apps
-    url: https://radarr.beaver-cloud.ts.net
+    url: https://radarr.beaver-cloud.ts.net/radarr
     conditions:
       - '[STATUS] == 200'
