@@ -146,11 +146,11 @@ endpoints:
     url: tcp://192.168.137.2:6053
     conditions: ['[CONNECTED] == true']
 
-  - name: office-lights
-    enabled: false
-    group: esphome
-    url: tcp://192.168.137.3:6053
-    conditions: ['[CONNECTED] == true']
+  # - name: office-lights
+  #   enabled: false
+  #   group: esphome
+  #   url: tcp://192.168.137.3:6053
+  #   conditions: ['[CONNECTED] == true']
 
   - name: kitchen-lamp
     group: esphome
