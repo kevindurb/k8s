@@ -10,6 +10,7 @@ resources:
   - ./limit-range.yml
   - ./jobs.yml
   - ./backup-target.yml
+  - ./ingress.yml
 
 labels:
   - includeSelectors: true

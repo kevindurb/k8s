@@ -18,14 +18,6 @@ spec:
           persistence:
             defaultClass: false
             dataEngine: v1
-          ingress:
-            enabled: true
-            ingressClassName: tailscale
-            host: longhorn.beaver-cloud.ts.net
-            tls: true
-            annotations:
-              tailscale.com/proxy-group: ingress-proxy-group
-              tailscale.com/tags: tag:k8s
           longhornManager:
             serviceAnnotations:
               prometheus.io/scrape: 'true'
