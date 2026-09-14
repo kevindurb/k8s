@@ -12,6 +12,14 @@ resources:
   - ./backup-target.yml
   - ./ingress.yml
 
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - longhorn.yml=gatus.yml
+
 labels:
   - includeSelectors: true
     includeTemplates: true

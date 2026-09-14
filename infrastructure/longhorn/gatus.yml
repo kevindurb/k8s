@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: longhorn
+    group: infrastructure
+    url: https://longhorn.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'
