@@ -183,6 +183,29 @@ groups:
             The used storage of disk {{ $labels.disk }} on node {{ $labels.node }}
             is at {{ $value }}% capacity for more than 5 minutes.
 
+      - alert: LonghornBackupFailed
+        expr: longhorn_backup_state == 4
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Longhorn backup {{ $labels.backup }} failed.
+          description: |-
+            Longhorn backup {{ $labels.backup }} of volume {{ $labels.volume }}
+            has been in the Error state for more than 15 minutes.
+
+      - alert: LonghornNoRecentBackup
+        expr: (count((longhorn_backup_state == 3) unless (longhorn_backup_state offset 24h == 3)) or vector(0)) == 0
+        for: 2h
+        labels:
+          severity: critical
+        annotations:
+          summary: No Longhorn backup has completed in the last 24 hours.
+          description: |-
+            No new completed Longhorn backup has appeared in 24h, so the
+            daily-backup recurring job is not running. Stale Backup records
+            from previous runs do not clear this alert.
+
   - name: ZFS
     rules:
       - alert: ZfsOfflinePool
