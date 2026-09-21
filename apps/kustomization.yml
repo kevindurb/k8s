@@ -11,6 +11,7 @@ resources:
   - ./dufs/app.yml
   - ./golink/app.yml
   - ./home-assistant/app.yml
+  - ./homer/app.yml
   - ./jellyfin/app.yml
   - ./kiwix/app.yml
   - ./linkding/app.yml

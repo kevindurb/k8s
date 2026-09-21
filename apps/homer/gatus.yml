@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: homer
+    group: apps
+    url: https://home.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'
