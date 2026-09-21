@@ -4,8 +4,6 @@ kind: Kustomization
 
 resources:
   - ./bws-operator/app.yml
-  - ./cert-manager/app.yml
-  - ./envoy-gateway/app.yml
   - ./mosquitto/app.yml
   - ./smtp-relay/app.yml
   - ./zigbee2mqtt/app.yml
