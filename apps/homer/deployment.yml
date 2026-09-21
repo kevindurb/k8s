@@ -15,7 +15,12 @@ spec:
     metadata:
       labels: *labels
     spec:
-      volumes: []
+      volumes:
+        - name: config
+          configMap:
+            name: config
+        - name: volume
+          emptyDir: {}
       containers:
         - name: app
           image: docker.io/b4bz/homer
@@ -23,7 +28,12 @@ spec:
             - name: TZ
               value: America/Denver
           envFrom: []
-          volumeMounts: []
+          volumeMounts:
+            - name: volume
+              mountPath: /config
+            - name: config
+              mountPath: /assets/config.yml
+              subPath: config.yml
           resources:
             requests:
               memory: 128M
