@@ -30,7 +30,7 @@ spec:
           envFrom: []
           volumeMounts:
             - name: volume
-              mountPath: /config
+              mountPath: /assets
             - name: config
               mountPath: /assets/config.yml
               subPath: config.yml
