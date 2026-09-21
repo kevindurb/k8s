@@ -26,7 +26,7 @@ spec:
           emptyDir: {}
       containers:
         - name: app
-          image: docker.io/roundcube/roundcubemail:1.7.x-apache-nonroot
+          image: docker.io/roundcube/roundcubemail:1.7.x-apache-nonroot@sha256:38e4b5295c6b80da288b023e650286a65e4e3fe9f5b9e7f6b4993cf6b8f27cf4
           env:
             - name: TZ
               value: America/Denver
