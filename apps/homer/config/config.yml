@@ -1,3 +1,11 @@
 ---
 title: Home
 subtitle: Beaver Cloud
+
+services:
+  - name: Apps
+    items:
+      - name: Home Assistant
+        url: https://home-assistant.beaver-cloud.ts.net
+      - name: Jellyfin
+        url: https://jellyfin.beaver-cloud.ts.net
