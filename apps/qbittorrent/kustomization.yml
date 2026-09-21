@@ -6,7 +6,6 @@ namePrefix: qbittorrent-
 resources:
   - ./deployment.yml
 components:
-  - ../../components/http-route-refs
   - ../../components/nas-media
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs

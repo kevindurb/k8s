@@ -8,9 +8,6 @@ namePrefix: scrypted-
 resources:
   - ./deployment.yml
 
-components:
-  - ../../components/http-route-refs
-
 configMapGenerator:
   - name: gatus
     options:

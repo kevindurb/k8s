@@ -9,7 +9,6 @@ resources:
   - ./deployment.yml
 
 components:
-  - ../../components/http-route-refs
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 
