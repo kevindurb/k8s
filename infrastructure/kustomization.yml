@@ -5,7 +5,6 @@ kind: Kustomization
 resources:
   - alertmanager/app.yml
   - argocd/app.yml
-  - external-dns/app.yml
   - gatus/app.yml
   - gpu-operator/app.yml
   - healthchecks/app.yml
@@ -15,6 +14,5 @@ resources:
   - metallb/app.yml
   - node-exporter/app.yml
   - node-feature-discovery/app.yml
-  - pihole/app.yml
   - prometheus/app.yml
   - tailscale/app.yml
