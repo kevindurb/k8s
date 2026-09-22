@@ -3,6 +3,7 @@ title: Home
 subtitle: Beaver Cloud
 icon: fas fa-house
 footer: false
+connectivityCheck: true
 
 defaults:
   layout: list
