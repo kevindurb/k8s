@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+      containers:
+        - name: app
+          image: ghcr.io/tailscale/tsidp:latest
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: TAILSCALE_USE_WIP_CODE
+              value: '1'
+            - name: TS_STATE_DIR
+              value: /data
+            - name: TS_HOSTNAME
+              value: idp
+            - name: TSIDP_ENABLE_STS
+              value: '1'
+            - name: TS_ADVERTISE_TAGS
+              value: tag:tsidp
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  annotations:
+    longhorn.io/data-locality: best-effort
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1Gi

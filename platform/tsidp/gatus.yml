@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: tsidp
+    group: apps
+    url: https://idp.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'

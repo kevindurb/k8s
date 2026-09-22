@@ -7,3 +7,4 @@ resources:
   - ./mosquitto/app.yml
   - ./smtp-relay/app.yml
   - ./zigbee2mqtt/app.yml
+  - ./tsidp/app.yml

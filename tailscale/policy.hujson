@@ -26,6 +26,7 @@
 		"tag:apps":            ["autogroup:admin", "tag:k8s-operator"],
 		"tag:home":            ["autogroup:admin", "tag:k8s-operator"],
 		"tag:border0-managed": ["autogroup:admin"],
+		"tag:tsidp":           ["autogroup:admin"],
 	},
 
 	"nodeAttrs": [
