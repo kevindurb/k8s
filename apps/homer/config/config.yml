@@ -7,8 +7,8 @@ defaults:
   layout: list
 
 services:
-  - name: Media
-    icon: fas fa-film
+  - name: Apps
+    icon: fas fa-star
     items:
       - name: Jellyfin
         url: https://jellyfin.beaver-cloud.ts.net
@@ -22,28 +22,9 @@ services:
         url: https://audiobookshelf.beaver-cloud.ts.net
         icon: fas fa-headphones
 
-      - name: Radarr
-        url: https://radarr.beaver-cloud.ts.net/radarr
-        icon: fas fa-film
-
-      - name: Sonarr
-        url: https://sonarr.beaver-cloud.ts.net
-        icon: fas fa-tv
-
-      - name: qBittorrent
-        url: https://qbittorrent.beaver-cloud.ts.net
-        icon: fas fa-cloud-download-alt
-
-      - name: MakeMKV
-        url: https://makemkv.beaver-cloud.ts.net
-        icon: fas fa-compact-disc
-
-  - name: Reading
-    icon: fas fa-book
-    items:
-      - name: Calibre
-        url: https://calibre.beaver-cloud.ts.net
-        icon: fas fa-book
+      - name: Aperture
+        url: https://ai.beaver-cloud.ts.net
+        icon: fas fa-robot
 
       - name: Calibre Web
         url: https://calibre-web.beaver-cloud.ts.net
@@ -61,12 +42,48 @@ services:
         url: https://miniflux.beaver-cloud.ts.net
         icon: fas fa-rss
 
-  - name: Smart Home
-    icon: fas fa-house-user
-    items:
       - name: Home Assistant
         url: https://home-assistant.beaver-cloud.ts.net
         icon: fas fa-house-user
+
+      - name: Ender 3
+        url: https://ender3.beaver-cloud.ts.net
+        icon: fas fa-cubes
+
+      - name: Nextcloud
+        url: https://nextcloud.beaver-cloud.ts.net
+        icon: fas fa-cloud
+
+      - name: Roundcube
+        url: https://roundcube.beaver-cloud.ts.net
+        icon: fas fa-envelope
+
+      - name: Golink
+        url: https://go.beaver-cloud.ts.net
+        icon: fas fa-link
+
+  - name: Admin
+    icon: fas fa-gear
+    items:
+      - name: Calibre
+        url: https://calibre.beaver-cloud.ts.net
+        icon: fas fa-book
+
+      - name: Radarr
+        url: https://radarr.beaver-cloud.ts.net/radarr
+        icon: fas fa-film
+
+      - name: Sonarr
+        url: https://sonarr.beaver-cloud.ts.net
+        icon: fas fa-tv
+
+      - name: qBittorrent
+        url: https://qbittorrent.beaver-cloud.ts.net
+        icon: fas fa-cloud-download-alt
+
+      - name: MakeMKV
+        url: https://makemkv.beaver-cloud.ts.net
+        icon: fas fa-compact-disc
 
       - name: Scrypted
         url: https://scrypted.beaver-cloud.ts.net
@@ -76,17 +93,6 @@ services:
         url: https://zigbee2mqtt.beaver-cloud.ts.net
         icon: fas fa-network-wired
 
-      - name: Ender 3
-        url: https://ender3.beaver-cloud.ts.net
-        icon: fas fa-cubes
-
-  - name: Files & Sync
-    icon: fas fa-folder-open
-    items:
-      - name: Nextcloud
-        url: https://nextcloud.beaver-cloud.ts.net
-        icon: fas fa-cloud
-
       - name: Syncthing
         url: https://syncthing.beaver-cloud.ts.net
         icon: fas fa-sync-alt
@@ -94,13 +100,6 @@ services:
       - name: Dufs
         url: https://dufs.beaver-cloud.ts.net
         icon: fas fa-file-upload
-
-  - name: Communication
-    icon: fas fa-envelope
-    items:
-      - name: Roundcube
-        url: https://roundcube.beaver-cloud.ts.net
-        icon: fas fa-envelope
 
   - name: Infrastructure
     icon: fas fa-server
@@ -128,7 +127,3 @@ services:
       - name: Omada
         url: https://omada.beaver-cloud.ts.net
         icon: fas fa-wifi
-
-      - name: Golink
-        url: https://go.beaver-cloud.ts.net
-        icon: fas fa-link
