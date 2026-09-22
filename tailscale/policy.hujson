@@ -1,38 +1,42 @@
 // vim: set ft=hjson:
 
 {
-	"groups": {},
-	"hosts":  {},
+	"groups": {
+		"group:k8s-admins":    ["kevindurb@github"],
+		"group:dev-pod-users": ["kevindurb@github"],
+	},
+
+	"hosts": {},
 
 	"tagOwners": {
-		"tag:pve":          ["autogroup:admin"],
-		"tag:ci":           ["autogroup:admin"],
-		"tag:infra":        ["autogroup:admin"],
-		"tag:work":         ["autogroup:admin"],
-		"tag:personal":     ["autogroup:admin"],
-		"tag:k8s-operator": ["autogroup:admin"],
-		"tag:k8s":          ["tag:k8s-operator"],
-		"tag:dev-pod":      ["autogroup:admin"],
-		"tag:k8s-node":     ["autogroup:admin"],
-		"tag:golink":       ["autogroup:admin"],
+		"tag:pve":             ["autogroup:admin"],
+		"tag:ci":              ["autogroup:admin", "tag:k8s-operator"],
+		"tag:infra":           ["autogroup:admin", "tag:k8s-operator"],
+		"tag:work":            ["autogroup:admin"],
+		"tag:personal":        ["autogroup:admin"],
+		"tag:k8s-operator":    ["autogroup:admin"],
+		"tag:k8s":             ["tag:k8s-operator"],
+		"tag:dev-pod":         ["autogroup:admin"],
+		"tag:k8s-node":        ["autogroup:admin"],
+		"tag:golink":          ["autogroup:admin"],
+		"tag:router":          ["autogroup:admin"],
+		"tag:travel-router":   ["autogroup:admin"],
+		"tag:media":           ["autogroup:admin", "tag:k8s-operator"],
+		"tag:monitoring":      ["autogroup:admin", "tag:k8s-operator"],
+		"tag:apps":            ["autogroup:admin", "tag:k8s-operator"],
+		"tag:home":            ["autogroup:admin", "tag:k8s-operator"],
+		"tag:border0-managed": ["autogroup:admin"],
 	},
 
 	"nodeAttrs": [
 		{
-			"target": ["autogroup:member", "tag:k8s"],
+			"target": ["autogroup:member", "tag:k8s", "tag:work"],
 			"attr":   ["funnel"],
 		},
 		{
-			"target": ["100.101.43.87"],
-			"attr":   ["mullvad"],
+			"target": ["autogroup:member", "autogroup:tagged"],
+			"attr":   ["drive:share", "drive:access"],
 		},
-    {
-      "target": ["autogroup:member", "autogroup:tagged"],
-      "attr": [
-        "drive:share",
-        "drive:access",
-      ],
-    },
 	],
 
 	"ssh": [
@@ -48,6 +52,18 @@
 			"dst":    ["autogroup:tagged"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
+		{
+			"action": "accept",
+			"src":    ["group:k8s-admins"],
+			"dst":    ["tag:k8s-node"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			"action": "accept",
+			"src":    ["group:dev-pod-users"],
+			"dst":    ["tag:dev-pod"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
 	],
 
 	"grants": [
@@ -56,31 +72,81 @@
 			"dst": ["*"],
 			"ip":  ["*"],
 		},
-    {
-      "src": ["autogroup:member"],
-      "dst": ["autogroup:self"],
-      "app": {
-        "tailscale.com/cap/drive": [{
-        "shares": ["*"],
-        "access": "rw"
-        }]
-      }
-    },
-    {
-      "src": ["autogroup:admin"],
-      "dst": ["autogroup:tagged"],
-      "app": {
-        "tailscale.com/cap/drive": [{
-        "shares": ["*"],
-        "access": "rw"
-        }]
-      }
-    },
+		{
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:self"],
+
+			"app": {
+				"tailscale.com/cap/drive": [
+					{
+						"shares": ["*"],
+						"access": "rw",
+					},
+				],
+			},
+		},
+		{
+			"src": ["autogroup:admin"],
+			"dst": ["autogroup:tagged"],
+
+			"app": {
+				"tailscale.com/cap/drive": [
+					{
+						"shares": ["*"],
+						"access": "rw",
+					},
+				],
+			},
+		},
+		{
+			"src": ["tag:travel-router"],
+			"dst": ["*"],
+
+			"app": {
+				"tailscale.com/cap/drive": [
+					{
+						"shares": ["*"],
+						"access": "rw",
+					},
+				],
+			},
+		},
+		// Automatically added by enabling PAM. This grants access to every user with the "Admin" role for all PAM services.
+		{
+			"src": ["autogroup:admin"],
+			"dst": ["tag:border0-managed"],
+			"ip":  ["*"],
+
+			"app": {
+				"tailscale.com/cap/pam": [
+					{
+						"version": "v1",
+
+						"permissions": {
+							"ssh": {
+								"shell": {},
+								"exec":  {},
+								"sftp":  {},
+							},
+
+							"database":   {},
+							"http":       {},
+							"rdp":        {},
+							"vnc":        {},
+							"tcp":        {},
+							"kubernetes": {},
+							"aws_s3":     {},
+						},
+					},
+				],
+			},
+		},
 	],
 
 	"autoApprovers": {
-    "services": {
-      "svc:*": ["tag:k8s"],
-    },
-  },
+		"services": {
+			"tag:k8s":             ["tag:k8s"],
+			"tag:border0-managed": ["tag:border0-managed"],
+		},
+	},
 }
