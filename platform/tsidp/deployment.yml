@@ -21,7 +21,7 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: ghcr.io/tailscale/tsidp:latest
+          image: ghcr.io/tailscale/tsidp:latest@sha256:cae91835375efcbf75ecb8f9520e3472cda946e3ca9af1df3bce9540902f289e
           env:
             - name: TZ
               value: America/Denver
