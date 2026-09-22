@@ -35,7 +35,19 @@ spec:
               value: 'postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux?sslmode=disable'
             - name: BASE_URL
               value: https://miniflux.beaver-cloud.ts.net
-          envFrom: []
+            - name: OAUTH2_OIDC_DISCOVERY_ENDPOINT
+              value: https://idp.beaver-cloud.ts.net
+            - name: OAUTH2_OIDC_PROVIDER_NAME
+              value: tsidp
+            - name: OAUTH2_PROVIDER
+              value: oidc
+            - name: OAUTH2_REDIRECT_URL
+              value: https://miniflux.beaver-cloud.ts.net/oauth2/oidc/callback
+            - name: OAUTH2_USER_CREATION
+              value: '1'
+          envFrom:
+            - secretRef:
+                name: tsidp
           volumeMounts: []
           resources:
             requests:
@@ -76,3 +88,24 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts: [miniflux]
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: tsidp
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/component: postgres
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: tsidp
+  map:
+    - secretKeyName: OAUTH2_CLIENT_ID
+      bwSecretId: 752fc36d-c872-4cac-a188-b4cd014c4603
+    - secretKeyName: OAUTH2_CLIENT_SECRET
+      bwSecretId: 0b869e11-d833-4bc1-affd-b4cd014c8496
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token
