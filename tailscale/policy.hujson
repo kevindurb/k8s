@@ -100,6 +100,22 @@
 			},
 		},
 		{
+			"src": ["autogroup:admin"],
+			"dst": ["tag:tsidp"],
+
+      "app": {
+        "tailscale.com/cap/tsidp": [
+          {
+            "allow_admin_ui": true,
+            "allow_dcr": true,
+            "users":     ["*"],
+            "resources": ["*"],
+            "includeInUserInfo": true,
+          },
+        ],
+      },
+		},
+		{
 			"src": ["tag:travel-router"],
 			"dst": ["*"],
 
