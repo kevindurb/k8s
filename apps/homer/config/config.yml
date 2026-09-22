@@ -2,6 +2,7 @@
 title: Home
 subtitle: Beaver Cloud
 icon: fas fa-house
+footer: false
 
 defaults:
   layout: list
