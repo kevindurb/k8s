@@ -129,3 +129,14 @@ services:
       - name: Omada
         url: https://omada.beaver-cloud.ts.net
         icon: fas fa-wifi
+
+  - name: External
+    icon: fas fa-globe
+    items:
+      - name: NextDNS
+        url: https://my.nextdns.io
+        icon: fas fa-shield
+
+      - name: Tailscale
+        url: https://console.tailscale.com
+        icon: fas fa-network-wired
