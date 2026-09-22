@@ -7,12 +7,128 @@ defaults:
   layout: list
 
 services:
-  - name: Apps
+  - name: Media
+    icon: fas fa-film
+    items:
+      - name: Jellyfin
+        url: https://jellyfin.beaver-cloud.ts.net
+        icon: fas fa-play
+
+      - name: Navidrome
+        url: https://navidrome.beaver-cloud.ts.net
+        icon: fas fa-music
+
+      - name: Audiobookshelf
+        url: https://audiobookshelf.beaver-cloud.ts.net
+        icon: fas fa-headphones
+
+      - name: Radarr
+        url: https://radarr.beaver-cloud.ts.net/radarr
+        icon: fas fa-film
+
+      - name: Sonarr
+        url: https://sonarr.beaver-cloud.ts.net
+        icon: fas fa-tv
+
+      - name: qBittorrent
+        url: https://qbittorrent.beaver-cloud.ts.net
+        icon: fas fa-cloud-download-alt
+
+      - name: MakeMKV
+        url: https://makemkv.beaver-cloud.ts.net
+        icon: fas fa-compact-disc
+
+  - name: Reading
+    icon: fas fa-book
+    items:
+      - name: Calibre
+        url: https://calibre.beaver-cloud.ts.net
+        icon: fas fa-book
+
+      - name: Calibre Web
+        url: https://calibre-web.beaver-cloud.ts.net
+        icon: fas fa-book-reader
+
+      - name: Kiwix
+        url: https://kiwix.beaver-cloud.ts.net
+        icon: fas fa-globe
+
+      - name: Linkding
+        url: https://linkding.beaver-cloud.ts.net
+        icon: fas fa-bookmark
+
+      - name: Miniflux
+        url: https://miniflux.beaver-cloud.ts.net
+        icon: fas fa-rss
+
+  - name: Smart Home
+    icon: fas fa-house-user
     items:
       - name: Home Assistant
         url: https://home-assistant.beaver-cloud.ts.net
         icon: fas fa-house-user
 
-      - name: Jellyfin
-        url: https://jellyfin.beaver-cloud.ts.net
-        icon: fas fa-film
+      - name: Scrypted
+        url: https://scrypted.beaver-cloud.ts.net
+        icon: fas fa-video
+
+      - name: Zigbee2MQTT
+        url: https://zigbee2mqtt.beaver-cloud.ts.net
+        icon: fas fa-network-wired
+
+      - name: Ender 3
+        url: https://ender3.beaver-cloud.ts.net
+        icon: fas fa-cubes
+
+  - name: Files & Sync
+    icon: fas fa-folder-open
+    items:
+      - name: Nextcloud
+        url: https://nextcloud.beaver-cloud.ts.net
+        icon: fas fa-cloud
+
+      - name: Syncthing
+        url: https://syncthing.beaver-cloud.ts.net
+        icon: fas fa-sync-alt
+
+      - name: Dufs
+        url: https://dufs.beaver-cloud.ts.net
+        icon: fas fa-file-upload
+
+  - name: Communication
+    icon: fas fa-envelope
+    items:
+      - name: Roundcube
+        url: https://roundcube.beaver-cloud.ts.net
+        icon: fas fa-envelope
+
+  - name: Infrastructure
+    icon: fas fa-server
+    items:
+      - name: Argo CD
+        url: https://argocd.beaver-cloud.ts.net
+        icon: fas fa-ship
+
+      - name: Prometheus
+        url: https://prometheus.beaver-cloud.ts.net
+        icon: fas fa-chart-line
+
+      - name: Alertmanager
+        url: https://alertmanager.beaver-cloud.ts.net
+        icon: fas fa-bell
+
+      - name: Longhorn
+        url: https://longhorn.beaver-cloud.ts.net
+        icon: fas fa-hdd
+
+      - name: Gatus
+        url: https://gatus.beaver-cloud.ts.net
+        icon: fas fa-heartbeat
+
+      - name: Omada
+        url: https://omada.beaver-cloud.ts.net
+        icon: fas fa-wifi
+
+      - name: Golink
+        url: https://go.beaver-cloud.ts.net
+        icon: fas fa-link
