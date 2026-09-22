@@ -1,6 +1,10 @@
 ---
 title: Home
 subtitle: Beaver Cloud
+icon: fas fa-house
+
+defaults:
+  layout: list
 
 services:
   - name: Apps
