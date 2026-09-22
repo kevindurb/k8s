@@ -35,7 +35,7 @@ spec:
       initContainers:
         - name: tailscale
           restartPolicy: Always
-          image: ghcr.io/tailscale/tailscale:stable@sha256:321ce041508c19079b57a28b6666c8d81ab0b08accc0a2585b3ab663d557ac24
+          image: ghcr.io/tailscale/tailscale:stable@sha256:2667499ed87ae29218f292556ba062918402dd5e92e93637af14867e4df12dd3
           env:
             - name: TZ
               value: America/Denver
