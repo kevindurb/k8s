@@ -10,6 +10,8 @@
     ":disableRateLimiting"
   ],
   "ignoreTests": true,
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
   "automergeType": "pr",
   "automergeStrategy": "merge-commit",
   "platform": "github",
