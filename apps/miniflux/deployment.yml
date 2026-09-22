@@ -45,6 +45,8 @@ spec:
               value: https://miniflux.beaver-cloud.ts.net/oauth2/oidc/callback
             - name: OAUTH2_USER_CREATION
               value: '1'
+            - name: DISABLE_LOCAL_AUTH
+              value: '1'
           envFrom:
             - secretRef:
                 name: tsidp
