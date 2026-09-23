@@ -35,6 +35,8 @@ spec:
               value: https://idp.beaver-cloud.ts.net/.well-known/jwks.json
             - name: LD_ENABLE_OIDC
               value: '1'
+            - name: LD_DISABLE_LOGIN_FORM
+              value: '1'
           envFrom:
             - secretRef:
                 name: tsidp
