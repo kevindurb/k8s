@@ -2,6 +2,6 @@
 endpoints:
   - name: consignment-app
     group: apps
-    url: https://consignment-app.beaver-cloud.ts.net/healthz
+    url: https://consignment.beaver-cloud.ts.net/healthz
     conditions:
       - '[STATUS] == 200'
