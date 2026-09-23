@@ -23,7 +23,7 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: ghcr.io/kevindurb/consignment-app:v0.0.1
+          image: ghcr.io/kevindurb/consignment-app:v0.1.0
           env:
             - name: TZ
               value: America/Denver
