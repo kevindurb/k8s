@@ -25,7 +25,19 @@ spec:
           env:
             - name: TZ
               value: America/Denver
-          envFrom: []
+            - name: OIDC_OP_AUTHORIZATION_ENDPOINT
+              value: https://idp.beaver-cloud.ts.net/authorize
+            - name: OIDC_OP_TOKEN_ENDPOINT
+              value: https://idp.beaver-cloud.ts.net/token
+            - name: OIDC_OP_USER_ENDPOINT
+              value: https://idp.beaver-cloud.ts.net/userinfo
+            - name: OIDC_OP_JWKS_ENDPOINT
+              value: https://idp.beaver-cloud.ts.net/.well-known/jwks.json
+            - name: LD_ENABLE_OIDC
+              value: '1'
+          envFrom:
+            - secretRef:
+                name: tsidp
           volumeMounts:
             - name: data
               mountPath: /etc/linkding/data
@@ -83,3 +95,24 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts: [linkding]
+
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: tsidp
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
+  secretName: tsidp
+  map:
+    - secretKeyName: OIDC_RP_CLIENT_ID
+      bwSecretId: e7d5f245-f964-4972-9c3a-b4ce00d77e4e
+    - secretKeyName: OIDC_RP_CLIENT_SECRET
+      bwSecretId: d8a29415-8104-47c4-81d1-b4ce00d79263
+  authToken:
+    secretName: bw-auth-token
+    secretKey: token

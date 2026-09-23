@@ -99,7 +99,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: Replace=true
   labels:
-    app.kubernetes.io/component: postgres
+    app.kubernetes.io/component: app
 spec:
   organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
   secretName: tsidp
