@@ -23,10 +23,12 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: ghcr.io/kevindurb/consignment-app:v0.2.0
+          image: ghcr.io/kevindurb/consignment-app:v0.3.0
           env:
             - name: TZ
               value: America/Denver
+            - name: STYLEGUIDE
+              value: '1'
           envFrom: []
           volumeMounts:
             - name: data
