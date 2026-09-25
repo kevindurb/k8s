@@ -8,15 +8,14 @@ Kevin's homelab GitOps repo: Kubernetes manifests, Ansible playbooks, and a boot
 
 ## Cluster hardware
 
-Single k3s cluster (`clusters/borg`), 7 Fedora CoreOS/bootc nodes, all `amd64`:
-- `unimatrix-01/02/03` — control-plane + etcd (tainted `NoSchedule`), 2 CPU / 16Gi each.
-- `drone-01/02/03/04` — workers, untainted (general app + media workloads). `drone-01`, `02`, `04` expose `nvidia.com/gpu` capacity (GPU-operator managed, e.g. for Jellyfin/transcoding); `drone-02` has less RAM (8Gi) than the others (16Gi); `drone-04` has 8 CPUs vs 4 on the other drones. `drone-03` has no GPU.
+@./HARDWARE.md
 
 Get current live details with `kubectl get nodes -o wide` / `kubectl describe node <name>`; don't assume the numbers above stay accurate — hardware gets added/changed over time.
 
 ## Common commands
 
 Root `justfile`:
+
 - `just check-kustomize` — builds every `kustomization.y*ml` under `apps`, `platform`, `infrastructure`, `clusters` with `kustomize build`. This is the main validation step and mirrors CI (`.github/workflows/check-kustomize.yml`).
 - `just check-kustomize-changed <files...>` — same check, but scoped to the kustomization dirs owning the given changed files (used by the pre-commit hook).
 - `just tmpl <type> <name>` — scaffold a new app: copies `apps/template` to `<type>/<name>` (e.g. `apps/<name>`) and rewrites `kustomization.yml`, `app.yml`, `gatus.yml`, `deployment.yml` via `yq`, then registers the new `app.yml` in the parent `kustomization.yml` via `kustomize edit add resource`. Use this instead of hand-copying an existing app when adding a new one.
@@ -25,6 +24,7 @@ Root `justfile`:
 - `just pre-commit-install` — installs the pre-commit hooks (see below).
 
 Validating a single app after editing it (faster than the full `check-kustomize`):
+
 ```
 kustomize build apps/<name>
 ```
@@ -38,15 +38,17 @@ Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just
 ### Argo CD app-of-apps, three top-level trees
 
 `clusters/borg/kustomization.yml` is the entrypoint applied to the (single) cluster and includes three Argo CD `Application` manifests, each pointing at a top-level directory in this repo via `sources[].path`:
+
 - `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale, cloudflared, external-dns), storage (longhorn), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, pihole, gpu-operator, node-feature-discovery.
 - `platform/` — shared platform services apps depend on: cert-manager, bws-operator (Bitwarden Secrets Manager operator), smtp-relay, mosquitto, zigbee2mqtt. `envoy-gateway` also lives here but is deprecated (see Ingress/routing note below).
 - `apps/` — user-facing applications (jellyfin, nextcloud, radarr/sonarr, syncthing, home-assistant, etc.), plus an `AppProject` (`apps/project.yml`) and one Argo CD `Application` per app (each app dir has its own `app.yml`).
 
-Each subdirectory under these three trees is a Kustomize root with its own `kustomization.yml`; the parent dir's `kustomization.yml` just lists them as resources (see `apps/kustomization.yml`). Argo CD auto-syncs everything (`automated.enabled: true`, `selfHeal: true`, `prune: false`) — pruning is intentionally off, so removing an app requires deleting its resource line from the parent kustomization *and* removing the Argo CD Application manually (or letting it go orphaned) rather than relying on prune.
+Each subdirectory under these three trees is a Kustomize root with its own `kustomization.yml`; the parent dir's `kustomization.yml` just lists them as resources (see `apps/kustomization.yml`). Argo CD auto-syncs everything (`automated.enabled: true`, `selfHeal: true`, `prune: false`) — pruning is intentionally off, so removing an app requires deleting its resource line from the parent kustomization _and_ removing the Argo CD Application manually (or letting it go orphaned) rather than relying on prune.
 
 ### Anatomy of one app (`apps/<name>/`)
 
 Every real app follows the layout in `apps/template/` (copy this, or use `just tmpl apps <name>`):
+
 - `app.yml` — the Argo CD `Application` (project: `apps`, source path `apps/<name>`, destination namespace `<name>`).
 - `kustomization.yml` — sets `namespace`/`namePrefix` to `<name>`/`<name>-`, lists `deployment.yml` (and any extra manifests like `postgres.yml`), pulls in shared `components/` (see below), a `gatus` ConfigMap generator for healthcheck config, and a top-level label `app.kubernetes.io/name: <name>`.
 - `deployment.yml` — multi-doc YAML: `Deployment` + `Service` + `Ingress`, using YAML anchors (`&labels`/`*labels`) to keep selector/template labels in sync. Container is always named `app`, component container port always named `http`.
@@ -61,6 +63,7 @@ Standard, current pattern: plain `Ingress` with `ingressClassName: tailscale` (s
 ### Shared Kustomize components (`components/*`)
 
 These are `kind: Component` (not plain kustomizations) mixed into apps via each app's `components:` list — they patch or add resources rather than being applied standalone. Key ones:
+
 - `app-pod-hardening` / `pod-hardening` — JSON-patch adds a restrictive `securityContext` (runAsNonRoot, uid/gid 1000, readOnlyRootFilesystem, drop ALL caps) to Deployments/CronJobs selected by `app.kubernetes.io/component=app`.
 - `app-tmp-dirs` / `tmpdirs` — emptyDir tmp mounts (paired with the read-only-root-fs hardening above).
 - `http-route-refs` — registers `nameReference` rules so `kustomize` correctly renames `Service`/`Gateway` refs inside `HTTPRoute` when `namePrefix` is applied. Deprecated along with `envoy-gateway`/`HTTPRoute` (see Ingress/routing note above); most apps still list it in `components:` but it's inert once there's no `HTTPRoute` resource left in the app.
