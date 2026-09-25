@@ -10,7 +10,7 @@
 | ------------------ | --------------------------------------------------------------------------- |
 | Physical machines  | 7 (4× DIY Haswell/Ryzen desktops, 3× Mac mini 2012)                         |
 | Physical CPU cores | 22 (16 threads / vCPUs reported)                                            |
-| Total RAM          | 104 GiB DDR3/DDR4                                                           |
+| Total RAM          | 120 GiB DDR3/DDR4                                                           |
 | Discrete GPUs      | 2 NVIDIA (Quadro P620 2GB, GTX 1060 6GB) = 8 GiB VRAM                       |
 | NVMe SSDs          | 4 × 480 GB (Team TM8FP6512G)                                                |
 | SATA SSDs          | 9 (56 GB – 954 GB, Crucial/Kingston/OCZ/Team)                               |
@@ -35,13 +35,13 @@
 
 |         |                                                                                                                |
 | ------- | -------------------------------------------------------------------------------------------------------------- |
-| OS      | Fedora CoreOS 44.20260802.3.1 (uCore), kernel 7.1.6-201.fc44                                                   |
-| CPU     | Intel Core i5-4590 (Haswell) — 4C/4T @ 3.3 GHz                                                                 |
+| OS      | Fedora CoreOS 44.20260829.3.1 (uCore), kernel 7.1.10-200.fc44                                                 |
+| CPU     | Intel Core i5-4590 (Haswell) — 4C/4T @ 3.3 GHz                                                                |
 | GPU     | NVIDIA Quadro P620, 2 GB — driver 580.173.02                                                                   |
-| RAM     | ⚠️ **8 GiB only** DDR3-1600 → 2× 4 GiB G.Skill F3-2400C11-4GXM; 2 slots empty/unrecognized — upgrade candidate |
-| Storage | 56 GB OCZ Vertex Plus SATA SSD · 480 GB Team NVMe · ~48 GB iSCSI LUNs                                          |
-| NIC     | enp0s25 (1GbE)                                                                                                 |
-| Swap    | 3.8 GiB zram · **9.3 GiB free of 7.7** (heavily loaded, 6.1 GiB in use)                                        |
+| RAM     | **24 GiB** DDR3-1333 → 2× 4 GiB + 2× 8 GiB G.Skill F3-2400C11 (4GXM/8GXM)                       |
+| Storage | 56 GB OCZ Vertex Plus SATA SSD · 480 GB Team NVMe · ~48 GB iSCSI LUNs                           |
+| NIC     | enp0s25 (1GbE)                                                                                  |
+| Swap    | 11.7 GiB zram                                                                                   |
 
 ### drone-03
 
@@ -82,7 +82,7 @@
 
 ## Notes & observations
 
-- **Capacity imbalance:** drone-02 has half the RAM of every other node (8 vs 16 GiB) and is the most memory-pressured (1.5 GiB available, swap in use). Adding 2× 4 GiB DDR3 DIMMs would bring it in line.
+- **Capacity balance:** drone-02 was historically the weak node (8 GiB); it now carries 24 GiB (2× 8 GiB G.Skill added 2026-09) and is the only node with more than 16 GiB.
 - **GPU workloads** can only target drone-01 (Quadro P620) and drone-04 (GTX 1060). drone-03's NVIDIA driver is missing despite the tooling being installed.
 - **Storage tiers:** every DIY node has a 480 GB NVMe (Team TM8FP6512G); drone-04 adds 24 TB raw HDD capacity — likely PV/local-storage host or the iSCSI target box.
 - **iSCSI LUNs** ("VIRTUAL-DISK" model) are distributed across drone-01/02/03/04 — consistent with a network storage backend for PVCs; unimatrix nodes have none.
