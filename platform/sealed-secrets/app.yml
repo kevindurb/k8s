@@ -7,9 +7,9 @@ metadata:
 spec:
   project: apps
   sources:
-    - repoURL: https://charts.bitwarden.com/
+    - repoURL: https://bitnami.github.io/sealed-secrets
       targetRevision: 2.20.0
-      chart: sm-operator
+      chart: sealed-secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
