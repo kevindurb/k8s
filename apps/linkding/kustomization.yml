@@ -5,6 +5,8 @@ namespace: linkding
 namePrefix: linkding-
 resources:
   - ./deployment.yml
+  - ./tsidp-sealed-secret.yml
+
 components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
@@ -12,7 +14,7 @@ configMapGenerator:
   - name: gatus
     options:
       labels:
-        gatus.io/enabled: 'true'
+        gatus.io/enabled: "true"
     files:
       - linkding.yml=gatus.yml
 labels:
