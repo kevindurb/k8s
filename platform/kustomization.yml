@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./bws-operator/app.yml
   - ./mosquitto/app.yml
+  - ./sealed-secrets/app.yml
   - ./smtp-relay/app.yml
-  - ./zigbee2mqtt/app.yml
   - ./tsidp/app.yml
+  - ./zigbee2mqtt/app.yml
