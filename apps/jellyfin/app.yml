@@ -13,11 +13,6 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: jellyfin
-  ignoreDifferences:
-    - group: ""
-      kind: PersistentVolume
-      jsonPointers:
-        - /spec/claimRef
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
