@@ -90,6 +90,9 @@ spec:
             # the OAuth redirect URL
             - name: NEKO_SERVER_PROXY
               value: 'true'
+            # OAuth login requires cookie sessions (v3 defaults cookie.enabled false)
+            - name: NEKO_SESSION_COOKIE_ENABLED
+              value: 'true'
           volumeMounts:
             - name: profile
               mountPath: /home/neko/.mozilla/firefox/profile.default
