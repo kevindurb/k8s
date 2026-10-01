@@ -29,4 +29,3 @@ resources:
   - ./syncthing/app.yml
   - ./template/app.yml
   - ./transcoding/app.yml
-  - ./freepbx/app.yml
