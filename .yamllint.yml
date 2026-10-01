@@ -1,6 +1,10 @@
 ---
 extends: default
 
+ignore: |
+  # sealed secrets are ciphertext blobs, line-length cannot apply
+  *-sealed-secret.yml
+
 rules:
   document-start:
     present: true
