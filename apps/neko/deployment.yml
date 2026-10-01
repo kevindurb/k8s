@@ -63,6 +63,8 @@ spec:
             # user (can_watch/can_host) and the admin console stays unused.
             - name: NEKO_MEMBER_PROVIDER
               value: oauth
+            - name: NEKO_MEMBER_OAUTH_ENABLED
+              value: 'true'
             - name: NEKO_MEMBER_OAUTH_ISSUER_URL
               value: https://idp.beaver-cloud.ts.net
             - name: NEKO_MEMBER_OAUTH_NAME
