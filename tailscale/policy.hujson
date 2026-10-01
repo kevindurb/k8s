@@ -80,8 +80,6 @@
 			"app": {
 				"tailscale.com/cap/tsidp": [
 					{
-						// neko: identities logging in via tsidp carry isAdmin: true
-						// so neko grants its admin role
 						"includeInUserInfo": true,
 						"extraClaims": {
 							"isAdmin": true,

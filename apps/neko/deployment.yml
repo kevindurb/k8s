@@ -17,8 +17,6 @@ spec:
     metadata:
       labels: *labels
     spec:
-      # kubelet group-owns mounted volumes for the `neko` user (uid/gid 1000)
-      # so firefox can write the profile volume without an init-container chown
       securityContext:
         fsGroup: 1000
       volumes:
@@ -30,9 +28,6 @@ spec:
             medium: Memory
             sizeLimit: 2Gi
       containers:
-        # The neko image's supervisord starts as root and drops privileges to
-        # the `neko` user per program, so it cannot use the pod-hardening
-        # component (runAsNonRoot) and stays reachable only on the tailnet.
         - name: app
           image: ghcr.io/m1k1o/neko/firefox:3@sha256:f832b3e28492b9cc10f702cc9feb9da462320502944fc0ddbddbcab352428e02
           env:
@@ -42,25 +37,14 @@ spec:
               value: ':8080'
             - name: NEKO_DESKTOP_SCREEN
               value: 1920x1080@30
-            # WebRTC media does not go through the Ingress: UDP EPR ports are
-            # bound directly on the node via the host-networking component (no
-            # containerPorts declared for them, the range is bound host-wide).
             - name: NEKO_WEBRTC_EPR
               value: 52000-52100
-            # Advertise the node IP as ICE candidate so clients connect to the
-            # host directly (works on the LAN; remote tailnet clients need a
-            # TURN server or the node's tailscale IP instead).
             - name: NEKO_WEBRTC_NAT1TO1
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: NEKO_WEBRTC_ICELITE
               value: 'true'
-            # Auth via tsidp (Tailscale OIDC). Client ID/secret live in the
-            # neko-tsidp SealedSecret; redirect URL registered on the IdP:
-            # https://neko.beaver-cloud.ts.net/api/oauth/callback
-            # No admin_emails: every authenticated tailnet user is a regular
-            # user (can_watch/can_host) and the admin console stays unused.
             - name: NEKO_MEMBER_PROVIDER
               value: oauth
             - name: NEKO_MEMBER_OAUTH_ENABLED
@@ -73,7 +57,6 @@ spec:
               value: openid profile email
             - name: NEKO_MEMBER_OAUTH_AUTO_REDIRECT
               value: 'true'
-            # tsidp userinfo exposes the login local part as `username`
             - name: NEKO_MEMBER_OAUTH_USERNAME_FIELD
               value: username
             - name: NEKO_MEMBER_OAUTH_CLIENT_ID
@@ -86,11 +69,8 @@ spec:
                 secretKeyRef:
                   name: neko-tsidp
                   key: OIDC_CLIENT_SECRET
-            # trust X-Forwarded-* from the tailscale ingress proxy when deriving
-            # the OAuth redirect URL
             - name: NEKO_SERVER_PROXY
               value: 'true'
-            # OAuth login requires cookie sessions (v3 defaults cookie.enabled false)
             - name: NEKO_SESSION_COOKIE_ENABLED
               value: 'true'
           volumeMounts:
