@@ -38,7 +38,7 @@ jobs:
           find apps platform infrastructure clusters -name "kustomization.y*ml" -execdir kustomize build . > /dev/null \;
 
       - name: Connect to tailnet
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@v4.2.0
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
