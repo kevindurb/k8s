@@ -33,4 +33,26 @@ jobs:
           kustomize: latest
 
       - name: Check Kustomize
-        run: find apps platform infrastructure clusters -name "kustomization.y*ml" -execdir kustomize build . > /dev/null \;
+        run: |
+          # shellcheck disable=SC2227
+          find apps platform infrastructure clusters -name "kustomization.y*ml" -execdir kustomize build . > /dev/null \;
+
+      - name: Connect to tailnet
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: argocd
+
+      - name: Trigger Argo CD refresh
+        env:
+          REV: ${{ github.event.head_commit.id }}
+        run: |
+          repo='https://github.com/kevindurb/k8s'
+          curl -fsS -X POST https://argocd.beaver-cloud.ts.net/api/webhook \
+            -H 'Content-Type: application/json' \
+            -H 'X-GitHub-Event: push' \
+            -d @- <<EOF
+          {"repository": {"html_url": "$repo", "clone_url": "$repo.git"}, "after": "${REV:-0000000000000000000000000000000000000000}"}
+          EOF
