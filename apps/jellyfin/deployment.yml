@@ -8,7 +8,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: app
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -55,6 +55,26 @@ spec:
               containerPort: 8096
 ---
 apiVersion: v1
+kind: PersistentVolume
+type: PersistentVolume
+metadata:
+  name: config-restored
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn-replicated
+  claimRef:
+    # namePrefix doesn't rewrite claimRef.name; must match the rendered PVC name
+    name: jellyfin-config-pvc
+    namespace: jellyfin
+  csi:
+    driver: driver.longhorn.io
+    volumeHandle: backup-19754bfd5b74483e
+    fsType: xfs
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: config-pvc
@@ -63,6 +83,7 @@ metadata:
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: longhorn-replicated
+  volumeName: config-restored
   resources:
     requests:
       storage: 50Gi
