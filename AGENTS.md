@@ -16,7 +16,7 @@ Get current live details with `kubectl get nodes -o wide` / `kubectl describe no
 
 Root `justfile`:
 
-- `just check-kustomize` — builds every `kustomization.y*ml` under `apps`, `platform`, `infrastructure`, `clusters` with `kustomize build`. This is the main validation step and mirrors CI (`.github/workflows/check-kustomize.yml`).
+- `just check-kustomize` — builds every `kustomization.y*ml` under `apps`, `platform`, `infrastructure`, `clusters` with `kustomize build`. This is the main validation step and mirrors CI (`.github/workflows/ci.yml`).
 - `just check-kustomize-changed <files...>` — same check, but scoped to the kustomization dirs owning the given changed files (used by the pre-commit hook).
 - `just tmpl <type> <name>` — scaffold a new app: copies `apps/template` to `<type>/<name>` (e.g. `apps/<name>`) and rewrites `kustomization.yml`, `app.yml`, `gatus.yml`, `deployment.yml` via `yq`, then registers the new `app.yml` in the parent `kustomization.yml` via `kustomize edit add resource`. Use this instead of hand-copying an existing app when adding a new one.
 - `just drain <node>` — `kubectl drain --delete-emptydir-data --ignore-daemonsets <node>`.
@@ -87,7 +87,7 @@ The older Bitwarden Secrets Manager path (`platform/bws-operator` with `Bitwarde
 
 ### CI
 
-GitHub Actions workflows (`.github/workflows/`) rebuild `bootc` and `ansible` container images on path-scoped pushes plus a weekly schedule, and run `check-kustomize.yml` (same command as `just check-kustomize`) on pushes touching `apps|platform|infrastructure|clusters`. Renovate (`.github/renovate.json`) auto-updates image digests/versions across the k8s manifests and Argo CD `app.yml` files, and auto-merges digest/lint/patch/minor bumps.
+GitHub Actions workflows (`.github/workflows/`) rebuild `bootc` and `ansible` container images on path-scoped pushes plus a weekly schedule, and run the kustomize check (`ci.yml`, same command as `just check-kustomize`) on PRs and pushes touching `apps|platform|infrastructure|clusters`, with an Argo CD refresh job gated to pushes to main. Renovate (`.github/renovate.json`) auto-updates image digests/versions across the k8s manifests and Argo CD `app.yml` files, and auto-merges digest/lint/patch/minor bumps.
 
 ## Conventions to follow when adding/editing an app
 

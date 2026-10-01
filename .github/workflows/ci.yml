@@ -1,8 +1,14 @@
 ---
-name: Check Kustomize
+name: CI
 on:
   schedule:
     - cron: '05 10 * * 0' # 10:05am UTC Sunday
+  pull_request:
+    paths:
+      - apps/**
+      - platform/**
+      - infrastructure/**
+      - clusters/**
   push:
     branches:
       - main
@@ -12,17 +18,14 @@ on:
       - infrastructure/**
       - clusters/**
   workflow_dispatch:
-  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   check:
     name: Check Kustomize
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
 
     steps:
       - name: Checkout
@@ -37,6 +40,16 @@ jobs:
           # shellcheck disable=SC2227
           find apps platform infrastructure clusters -name "kustomization.y*ml" -execdir kustomize build . > /dev/null \;
 
+  deploy:
+    name: Deploy
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+
+    steps:
       - name: Connect to tailnet
         uses: tailscale/github-action@v4.2.0
         with:
