@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: freepbx
+    group: apps
+    url: https://freepbx.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'
