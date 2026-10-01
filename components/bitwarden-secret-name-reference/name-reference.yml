@@ -1,4 +1,6 @@
 ---
+# DEPRECATED: Bitwarden Secrets Manager (BitwardenSecret) is being migrated to Sealed Secrets.
+# Remove this component from an app's components: list as its secrets convert to SealedSecret — see docs/secrets.md.
 nameReference:
   - kind: BitwardenSecret
     fieldSpecs:

@@ -92,6 +92,8 @@ spec:
     - hosts: [miniflux]
 
 ---
+# DEPRECATED: Bitwarden Secrets Manager is being migrated to Sealed Secrets (platform/sealed-secrets).
+# Replace this BitwardenSecret with a SealedSecret — see docs/secrets.md.
 apiVersion: k8s.bitwarden.com/v1
 kind: BitwardenSecret
 metadata:

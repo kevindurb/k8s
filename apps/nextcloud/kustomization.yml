@@ -11,6 +11,7 @@ resources:
   - ./valkey.yml
 
 components:
+  # DEPRECATED: Bitwarden Secrets Manager is being migrated to Sealed Secrets — see docs/secrets.md.
   - ../../components/bitwarden-secret-name-reference
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs

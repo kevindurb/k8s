@@ -39,8 +39,8 @@ Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just
 
 `clusters/borg/kustomization.yml` is the entrypoint applied to the (single) cluster and includes three Argo CD `Application` manifests, each pointing at a top-level directory in this repo via `sources[].path`:
 
-- `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale, cloudflared, external-dns), storage (longhorn), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, pihole, gpu-operator, node-feature-discovery.
-- `platform/` — shared platform services apps depend on: cert-manager, bws-operator (Bitwarden Secrets Manager operator), smtp-relay, mosquitto, zigbee2mqtt. `envoy-gateway` also lives here but is deprecated (see Ingress/routing note below).
+- `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (longhorn), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, gpu-operator, node-feature-discovery.
+- `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, tsidp, mosquitto, zigbee2mqtt. `bws-operator` (Bitwarden Secrets Manager operator) also lives here but is deprecated (see Secrets section).
 - `apps/` — user-facing applications (jellyfin, nextcloud, radarr/sonarr, syncthing, home-assistant, etc.), plus an `AppProject` (`apps/project.yml`) and one Argo CD `Application` per app (each app dir has its own `app.yml`).
 
 Each subdirectory under these three trees is a Kustomize root with its own `kustomization.yml`; the parent dir's `kustomization.yml` just lists them as resources (see `apps/kustomization.yml`). Argo CD auto-syncs everything (`automated.enabled: true`, `selfHeal: true`, `prune: false`) — pruning is intentionally off, so removing an app requires deleting its resource line from the parent kustomization _and_ removing the Argo CD Application manually (or letting it go orphaned) rather than relying on prune.
@@ -58,7 +58,7 @@ Every real app follows the layout in `apps/template/` (copy this, or use `just t
 
 Standard, current pattern: plain `Ingress` with `ingressClassName: tailscale` (see `apps/template/deployment.yml`), served by the Tailscale Kubernetes operator (`infrastructure/tailscale`, Helm chart `tailscale-operator`), which owns that IngressClass and exposes services on the tailnet.
 
-`platform/envoy-gateway` (Gateway API `HTTPRoute`/`Gateway`) and the `components/http-route-refs` component are **deprecated** — a leftover from before the move to the Tailscale operator + plain `Ingress`. Don't use `HTTPRoute` or `http-route-refs` for new apps; only `apps/jellyfin` still has a leftover `HTTPRoute` resource pending cleanup. Prefer removing `http-route-refs` from an app's `components:` list when you touch it, unless it's still routing something real.
+`platform/envoy-gateway` (Gateway API `HTTPRoute`/`Gateway`) and the `components/http-route-refs` component used to exist but have been fully removed, with no `HTTPRoute`s left in the cluster — don't reintroduce them; plain `Ingress` with the Tailscale operator is the only supported routing path.
 
 ### Shared Kustomize components (`components/*`)
 
@@ -66,8 +66,7 @@ These are `kind: Component` (not plain kustomizations) mixed into apps via each 
 
 - `app-pod-hardening` / `pod-hardening` — JSON-patch adds a restrictive `securityContext` (runAsNonRoot, uid/gid 1000, readOnlyRootFilesystem, drop ALL caps) to Deployments/CronJobs selected by `app.kubernetes.io/component=app`.
 - `app-tmp-dirs` / `tmpdirs` — emptyDir tmp mounts (paired with the read-only-root-fs hardening above).
-- `http-route-refs` — registers `nameReference` rules so `kustomize` correctly renames `Service`/`Gateway` refs inside `HTTPRoute` when `namePrefix` is applied. Deprecated along with `envoy-gateway`/`HTTPRoute` (see Ingress/routing note above); most apps still list it in `components:` but it's inert once there's no `HTTPRoute` resource left in the app.
-- `bitwarden-secret-name-reference` — same idea for Bitwarden `BitwardenSecret` name references.
+- `bitwarden-secret-name-reference` — same idea for Bitwarden `BitwardenSecret` name references. Deprecated along with Bitwarden Secrets Manager (see Secrets section); drop it from an app's `components:` list as its secrets convert to sealed secrets.
 - `nas-media` / `nas` — patches in a shared NAS-backed PVC volume/mount (`nas-media` claim mounted at `/media`) for media apps like jellyfin/radarr/sonarr.
 - `app-env`, `app-http-service`/`service`, `app-volume`, `host-networking`, `prometheus-scrape-app-service` — smaller composable patches/resources for env vars, extra Services, extra volumes, hostNetwork pods, and Prometheus scrape annotations respectively.
 
@@ -75,7 +74,9 @@ Components are additive/patch-only; always check whether an existing component c
 
 ### Secrets
 
-Secrets are managed via the Bitwarden Secrets Manager operator (`platform/bws-operator`) using `BitwardenSecret` CRs that sync a Bitwarden Secrets Manager project into a native k8s `Secret`. Pattern documented in `docs/secrets.md`: define a `BitwardenSecret` (with `argocd.argoproj.io/sync-options: Replace=true` and an `authToken` secretRef), then consume the generated Secret via normal `env[].valueFrom.secretKeyRef` or `envFrom.secretRef`. Never commit raw secret values — only `bwSecretId` references.
+Secrets are managed via sealed secrets (`platform/sealed-secrets`, Bitnami's `sealed-secrets` controller deployed in `kube-system`): commit `SealedSecret` CRs encrypted with the cluster key (e.g. `apps/linkding/tsidp-sealed-secret.yml`) and the controller unseals them into native k8s `Secret`s, consumed via normal `env[].valueFrom.secretKeyRef` or `envFrom.secretRef`. Workflow documented in `docs/secrets.md`: `kubectl create secret ... --dry-run=client -o yaml` piped through `kubeseal`, then commit the `SealedSecret`. The controller's private key is the root of trust — back it up (`just -f platform/sealed-secrets/justfile export-secrets`). Never commit raw secret values.
+
+The older Bitwarden Secrets Manager path (`platform/bws-operator` with `BitwardenSecret` CRs + the `components/bitwarden-secret-name-reference` component) is **deprecated** mid-migration: existing usages are marked with `DEPRECATED` comments; convert them to `SealedSecret`s as you touch them, and remove them plus the `bws-operator` Application once done.
 
 ### Node OS / provisioning (outside the k8s tree)
 
@@ -94,5 +95,6 @@ GitHub Actions workflows (`.github/workflows/`) rebuild `bootc` and `ansible` co
 - Use YAML anchors for label pairs shared between a Deployment's `spec.selector.matchLabels` and `spec.template.metadata.labels` (see `apps/template/deployment.yml`).
 - `namespace`/`namePrefix` in `kustomization.yml` match the app directory name.
 - Always add a `gatus` ConfigMap generator entry pointing at that app's `gatus.yml` with label `gatus.io/enabled: 'true'`, so it shows up in the Gatus status page.
-- Ingress uses `ingressClassName: tailscale` with `tailscale.com/proxy-group`/`tailscale.com/tags` annotations, served by the Tailscale operator. Do not use `HTTPRoute`/envoy-gateway for new apps — that path is deprecated.
+- Ingress uses `ingressClassName: tailscale` with `tailscale.com/proxy-group`/`tailscale.com/tags` annotations, served by the Tailscale operator — plain `Ingress` only, not `HTTPRoute`/Gateway API.
+- Use `SealedSecret`s (via kubeseal, see Secrets section and `docs/secrets.md`) for new secrets — do not add new `BitwardenSecret` CRs; that path is deprecated.
 - Run `kustomize build apps/<name>` (or `just check-kustomize`) before considering a manifest change done.
