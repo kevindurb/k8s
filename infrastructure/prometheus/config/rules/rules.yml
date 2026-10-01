@@ -226,7 +226,7 @@ groups:
         expr: >
           (
             avg_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
-            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}
+            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"} > 0
           ) > 60
         for: 5m
         labels:
@@ -242,7 +242,7 @@ groups:
         expr: >
           (
             max_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
-            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}
+            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"} > 0
           ) > 70
         for: 2m
         labels:
@@ -259,6 +259,8 @@ groups:
           max_over_time(
             smartctl_device_temperature{temperature_type="current"} [10m]
           ) >= on(device, instance) smartctl_device_temperature{temperature_type="drive_trip"}
+          and on(device, instance)
+          smartctl_device_temperature{temperature_type="drive_trip"} > 0
         for: 2m
         labels:
           severity: critical
@@ -275,6 +277,8 @@ groups:
             smartctl_device_temperature{temperature_type="current"} [10m]
           ) >= on(device, instance)
           (smartctl_device_temperature{temperature_type="drive_trip"} * .80)
+          and on(device, instance)
+          smartctl_device_temperature{temperature_type="drive_trip"} > 0
         for: 5m
         labels:
           severity: warning
