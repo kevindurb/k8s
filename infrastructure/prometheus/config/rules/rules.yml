@@ -333,6 +333,42 @@ groups:
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
 
+      - alert: SmartReallocatedSectors
+        expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: SMART reallocated sectors (instance {{ $labels.instance }})
+          description: |-
+            Disk has reallocated bad sectors on {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: SmartPendingSectors
+        expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector",attribute_value_type="raw"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: SMART pending sectors (instance {{ $labels.instance }})
+          description: |-
+            Disk has unreadable sectors awaiting remap on {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: SmartInterfaceCrcErrors
+        expr: smartctl_device_attribute{attribute_name="UDMA_CRC_Error_Count",attribute_value_type="raw"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: SMART interface CRC errors (instance {{ $labels.instance }})
+          description: |-
+            SATA cable or connector issues on {{ $labels.instance }} drive {{ $labels.device }}
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
   - name: Kubernetes
     rules:
       - alert: KubernetesNodeNotReady

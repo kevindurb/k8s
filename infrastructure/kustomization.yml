@@ -15,4 +15,5 @@ resources:
   - node-exporter/app.yml
   - node-feature-discovery/app.yml
   - prometheus/app.yml
+  - smartctl-exporter/app.yml
   - tailscale/app.yml

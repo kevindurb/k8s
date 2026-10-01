@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemon-set
+spec:
+  template:
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      containers:
+        - name: smartctl-exporter
+          image: quay.io/prometheuscommunity/smartctl-exporter:v0.14.0@sha256:cfe22c36d7d2fac48ebf619707305acb65eb0fb670656eb80f356e606d782bc1
+          ports:
+            - containerPort: 9633
+              protocol: TCP
+          securityContext:
+            # smartctl needs raw device ioctls, which require privilege
+            privileged: true
+          resources:
+            limits:
+              cpu: 250m
+              memory: 180Mi
+          volumeMounts:
+            - mountPath: /dev
+              name: dev
+      volumes:
+        - hostPath:
+            path: /dev
+          name: dev
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  ports:
+    - name: smartctl-exporter
+      protocol: TCP
+      port: 9633
+      targetPort: 9633
