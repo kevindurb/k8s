@@ -70,7 +70,7 @@ spec:
             - name: NEKO_MEMBER_OAUTH_NAME
               value: tsidp
             - name: NEKO_MEMBER_OAUTH_SCOPES
-              value: '["openid","profile","email"]'
+              value: openid profile email
             - name: NEKO_MEMBER_OAUTH_AUTO_REDIRECT
               value: 'true'
             # tsidp userinfo exposes the login local part as `username`
