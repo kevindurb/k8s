@@ -4,7 +4,7 @@ kind: RecurringJob
 metadata:
   name: daily-backup
 spec:
-  concurrency: 1
+  concurrency: 3
   cron: 0 0 * * *
   groups: [default]
   labels: {}
