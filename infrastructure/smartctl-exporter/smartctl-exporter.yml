@@ -16,8 +16,12 @@ spec:
             - containerPort: 9633
               protocol: TCP
           securityContext:
-            # smartctl needs raw device ioctls, which require privilege
+            # smartctl needs raw device ioctls; the v0.14.0 image defaults to
+            # nobody, so root must be forced explicitly
             privileged: true
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
           resources:
             limits:
               cpu: 250m
