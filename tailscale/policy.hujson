@@ -120,6 +120,23 @@
       },
 		},
 		{
+			// neko: identities logging in via tsidp carry isAdmin: true so neko
+			// grants its admin role (claims merge is limited to holders of this cap)
+			"src": ["autogroup:admin"],
+			"dst": ["svc:neko"],
+
+			"app": {
+				"tailscale.com/cap/tsidp": [
+					{
+						"includeInUserInfo": true,
+						"extraClaims": {
+							"isAdmin": true,
+						},
+					},
+				],
+			},
+		},
+		{
 			"src": ["tag:travel-router"],
 			"dst": ["*"],
 
