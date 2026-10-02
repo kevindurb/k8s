@@ -24,7 +24,7 @@ spec:
             name: redis-session
       containers:
         - name: app
-          image: &image docker.io/library/nextcloud:34-apache
+          image: &image docker.io/library/nextcloud:35-apache
           env:
             - name: TZ
               value: America/Denver
