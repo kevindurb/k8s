@@ -52,14 +52,6 @@ services:
         url: https://ender3.beaver-cloud.ts.net
         icon: fas fa-cubes
 
-      - name: Nextcloud
-        url: https://nextcloud.beaver-cloud.ts.net
-        icon: fas fa-cloud
-
-      - name: Roundcube
-        url: https://roundcube.beaver-cloud.ts.net
-        icon: fas fa-envelope
-
       - name: Golink
         url: https://go.beaver-cloud.ts.net
         icon: fas fa-link
