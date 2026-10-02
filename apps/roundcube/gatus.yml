@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: roundcube
-    group: apps
-    url: https://roundcube.beaver-cloud.ts.net
-    conditions:
-      - '[STATUS] == 200'

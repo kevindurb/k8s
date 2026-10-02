@@ -8,7 +8,6 @@ resources:
   - ./calibre-web/app.yml
   - ./calibre/app.yml
   - ./consignment-app/app.yml
-  - ./dev-pod/app.yml
   - ./dufs/app.yml
   - ./golink/app.yml
   - ./home-assistant/app.yml
@@ -19,11 +18,9 @@ resources:
   - ./makemkv/app.yml
   - ./miniflux/app.yml
   - ./navidrome/app.yml
-  - ./nextcloud/app.yml
   - ./omada/app.yml
   - ./qbittorrent/app.yml
   - ./radarr/app.yml
-  - ./roundcube/app.yml
   - ./scrypted/app.yml
   - ./sonarr/app.yml
   - ./syncthing/app.yml

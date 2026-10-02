@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: nextcloud
-    group: apps
-    url: https://nextcloud.beaver-cloud.ts.net/cron.php
-    conditions:
-      - '[STATUS] == 400'

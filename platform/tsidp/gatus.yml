@@ -2,6 +2,6 @@
 endpoints:
   - name: tsidp
     group: apps
-    url: https://idp.beaver-cloud.ts.net
+    url: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
     conditions:
-      - '[STATUS] == 200'
+      - "[STATUS] == 200"
