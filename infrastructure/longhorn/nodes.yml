@@ -10,10 +10,10 @@ spec:
   tags: [storage]
   disks:
     nvme:
-      allowScheduling: true
+      allowScheduling: false
       evictionRequested: false
       storageReserved: 0
-      diskDriver: ''
+      diskDriver: ""
       path: /var/lib/longhorn
       diskType: filesystem
       tags: [nvme]
@@ -33,7 +33,7 @@ spec:
       allowScheduling: true
       evictionRequested: false
       storageReserved: 0
-      diskDriver: ''
+      diskDriver: ""
       path: /var/lib/longhorn
       diskType: filesystem
       tags: [nvme]
@@ -53,7 +53,7 @@ spec:
       allowScheduling: true
       evictionRequested: false
       storageReserved: 0
-      diskDriver: ''
+      diskDriver: ""
       path: /var/lib/longhorn
       diskType: filesystem
       tags: [nvme]
@@ -73,7 +73,7 @@ spec:
       allowScheduling: true
       evictionRequested: false
       storageReserved: 0
-      diskDriver: ''
+      diskDriver: ""
       path: /var/lib/longhorn
       diskType: filesystem
       tags: [nvme]
