@@ -6,7 +6,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: app
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -84,19 +84,19 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-# ---
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: app-volume
-#   labels:
-#     app.kubernetes.io/component: app
-# spec:
-#   accessModes: [ReadWriteOnce]
-#   storageClassName: longhorn-replicated
-#   resources:
-#     requests:
-#       storage: 9538Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-volume
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 9538Mi
 ---
 apiVersion: v1
 kind: Service
