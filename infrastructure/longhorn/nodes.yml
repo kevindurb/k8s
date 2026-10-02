@@ -5,18 +5,18 @@ metadata:
   name: drone-01
   namespace: longhorn-system
 spec:
-  allowScheduling: true
-  evictionRequested: false
+  allowScheduling: false
+  evictionRequested: true
   tags: [storage]
-  disks:
-    nvme:
-      allowScheduling: false
-      evictionRequested: false
-      storageReserved: 0
-      diskDriver: ""
-      path: /var/lib/longhorn
-      diskType: filesystem
-      tags: [nvme]
+  disks: {}
+    # nvme:
+    #   allowScheduling: false
+    #   evictionRequested: false
+    #   storageReserved: 0
+    #   diskDriver: ""
+    #   path: /var/lib/longhorn
+    #   diskType: filesystem
+    #   tags: [nvme]
 
 ---
 apiVersion: longhorn.io/v1beta2
