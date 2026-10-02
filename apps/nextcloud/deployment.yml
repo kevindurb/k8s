@@ -96,7 +96,7 @@ spec:
   storageClassName: longhorn-replicated
   resources:
     requests:
-      storage: 9538Mi
+      storage: 10Gi
 ---
 apiVersion: v1
 kind: Service
