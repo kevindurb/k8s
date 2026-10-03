@@ -4,6 +4,7 @@ selinux: true
 disable:
   - traefik
   - servicelb
+  - local-storage
 tls-san:
   - {{ k3s_hostname }}
   - 192.168.42.1

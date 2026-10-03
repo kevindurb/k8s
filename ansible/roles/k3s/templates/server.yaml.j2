@@ -5,6 +5,7 @@ selinux: true
 disable:
   - traefik
   - servicelb
+  - local-storage
 tls-san:
   - {{ k3s_hostname }}
   - {{ k3s_server }}
