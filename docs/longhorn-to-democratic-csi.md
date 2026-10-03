@@ -46,6 +46,8 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 Notes from the first migration: a one-off `alpine` + `apk add rsync` Job works for the copy (the volume is ext4 with a setgid `2775` root dir, which `rsync -a` preserves). Verify with `md5sum` plus `stat` of the root dir. The app image may have no shell, so verify through its logs and health endpoint.
 
+**Wave 2 blocked 2026-10-03 on the 4 MiB nvmet-tcp limit** (see the first gotcha in `.claude/skills/democratic-csi/SKILL.md`). radarr was started and rolled back (still on Longhorn, healthy). Do not migrate PVCs of about 10G or more until the `max_sectors_kb` cap is in place on all drones. A leftover `Released` PV `pvc-c5ce2bab…` with sanoid snapshots needs `zfs destroy -r` on drone-04.
+
 ## Live inventory (actual used size)
 
 | Wave | PVCs (ns/name) | Used |
