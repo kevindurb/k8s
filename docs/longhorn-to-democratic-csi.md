@@ -40,7 +40,7 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 | audiobookshelf ×5 (config, metadata, audiobooks, books, podcasts) | **Migrated 2026-10-03** (`809c9e85`). Old PVs kept `Retain`/`Released` |
 | omada/volume | **Migrated 2026-10-03** (`ec4c5653`). Host-networked and unpinned: the pod moved from drone-02 (192.168.42.22) to drone-04 (192.168.42.24), so its IP changed |
 | scrypted/volume | **Migrated 2026-10-03** (`a9965e6d`) |
-| navidrome/data | **Migrated 2026-10-03** (`dd2f00bb`). **Crash-looping**: OOMKilled (256M limit) right after "Resuming interrupted scan"; the scan was interrupted by the scale-down. Needs a higher memory limit or the scan state cleared |
+| navidrome/data | **Migrated 2026-10-03** (`dd2f00bb`). After the migration it was OOMKilled at the 256M limit while resuming an interrupted scan (the scale-down interrupted one). Fixed by raising the limit to 1G (`0b798eff`); the scan then completed in 44s with no restarts |
 | qbittorrent config + ts-state | **Migrated 2026-10-03** (`006abf33`). The deployment is at 0 replicas, so it hasn't been run on the new volumes yet |
 | sonarr/volume | **Migrated 2026-10-03** (`e5cc6fcb`) |
 | radarr/volume | **Migrated 2026-10-03** (`83f4b76b`) |
