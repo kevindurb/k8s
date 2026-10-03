@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:k8s
+  labels:
+    app.kubernetes.io/name: zigbee2mqtt
+  name: zigbee2mqtt-ingress
+  namespace: zigbee2mqtt
+spec:
+  defaultBackend:
+    service:
+      name: zigbee2mqtt-app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - zigbee2mqtt
+kind+:
+  metadata:
+    name: null

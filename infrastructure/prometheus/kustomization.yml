@@ -13,16 +13,6 @@ components:
   - ../../components/app-pod-hardening
   - ../../components/app-http-service
   - ../../components/prometheus-scrape-app-service
-  - ../../components/app-volume
-
-replacements:
-  - sourceValue: 35Gi
-    targets:
-      - select:
-          kind: PersistentVolumeClaim
-          name: app-volume
-        fieldPaths:
-          - spec.resources.requests.storage
 
 configMapGenerator:
   - name: config

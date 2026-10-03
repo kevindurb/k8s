@@ -11,7 +11,6 @@ resources:
 components:
   - ../../components/app-env
   - ../../components/app-http-service
-  - ../../components/app-volume
 
 configMapGenerator:
   - name: gatus

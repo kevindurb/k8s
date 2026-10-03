@@ -58,3 +58,16 @@ spec:
     - name: mqtt
       port: 1883
       targetPort: mqtt
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-volume
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-replicated
+  resources:
+    requests:
+      storage: 1G

@@ -12,7 +12,6 @@ resources:
 components:
   - ../../components/app-env
   - ../../components/app-http-service
-  - ../../components/app-volume
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 

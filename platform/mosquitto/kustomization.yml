@@ -9,7 +9,6 @@ resources:
   - ./deployment.yml
 
 components:
-  - ../../components/app-volume
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 

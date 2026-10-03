@@ -12,7 +12,6 @@ components:
   - ../../components/app-pod-hardening
   - ../../components/app-http-service
   - ../../components/prometheus-scrape-app-service
-  - ../../components/app-volume
 
 configMapGenerator:
   - name: config
