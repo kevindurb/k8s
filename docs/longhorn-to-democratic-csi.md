@@ -45,6 +45,10 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 ## Phase 0 – Prove democratic-csi before moving any data
 
+**Status: done 2026-10-03.** Findings are in `.claude/skills/democratic-csi/SKILL.md`. Two results change later phases:
+- drone-04 took ~7 min to reboot and remote initiators give up after ~10 min (`ctrl_loss_tmo`). Drain or scale down stateful apps before rebooting drone-04.
+- Sanoid snapshots on `rust/k8s/volumes` block `DeleteVolume` ("dependent snapshots"), so deleted PVs stay `Released` until `zfs destroy -r` is run by hand. Phase 2 and Phase 4 PV deletions need that extra step.
+
 1. Apply a scratch PVC plus a pod in a test namespace and pin it to **drone-04** first (the loopback case, which had the `nr-io-queues` problem), then to one other drone. Check write → delete pod → reschedule on another node → data still there.
 2. Test expansion (raise the PVC size), a VolumeSnapshot, and restoring a PVC from that snapshot. Then delete everything and confirm the zvol under `rust/k8s/volumes` is gone too.
 3. Reboot drone-04 while a test volume is attached. Confirm nvmet comes back (`nvmet-config-loaded` flag) and the pod recovers. Recent bootc commits touched this, so test it before real data depends on it.
