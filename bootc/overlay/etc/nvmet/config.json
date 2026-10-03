@@ -21,7 +21,7 @@
       "param": {
         "inline_data_size": "16384",
         "max_queue_size": "1024",
-        "mdts": "0",
+        "mdts": "8",
         "pi_enable": "0"
       },
       "portid": 1,
