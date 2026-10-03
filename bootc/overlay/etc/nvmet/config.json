@@ -1,0 +1,33 @@
+{
+  "hosts": [],
+  "ports": [
+    {
+      "addr": {
+        "adrfam": "ipv4",
+        "traddr": "192.168.42.24",
+        "treq": "not specified",
+        "trsvcid": "4420",
+        "trtype": "tcp",
+        "tsas": "none"
+      },
+      "ana_groups": [
+        {
+          "ana": {
+            "state": "optimized"
+          },
+          "grpid": 1
+        }
+      ],
+      "param": {
+        "inline_data_size": "16384",
+        "max_queue_size": "1024",
+        "mdts": "0",
+        "pi_enable": "0"
+      },
+      "portid": 1,
+      "referrals": [],
+      "subsystems": []
+    }
+  ],
+  "subsystems": []
+}
