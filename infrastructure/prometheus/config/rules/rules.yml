@@ -206,6 +206,70 @@ groups:
             daily-backup recurring job is not running. Stale Backup records
             from previous runs do not clear this alert.
 
+  - name: Network
+    rules:
+      - alert: HostNetworkInterfaceSlow
+        expr: >
+          node_network_speed_bytes{device=~"en.*"} < 125000000
+          and node_network_speed_bytes{device=~"en.*"} > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host network interface negotiated below 1 Gb/s (instance {{ $labels.instance }})
+          description: |-
+            {{ $labels.device }} on {{ $labels.instance }} is linked at {{ $value | humanize }}B/s
+            (< 1 Gb/s). Usually a bad cable, connector or switch port.
+            LABELS = {{ $labels }}
+
+      - alert: HostNetworkLinkDown
+        expr: node_network_carrier{device=~"en.*"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Host network link down (instance {{ $labels.instance }})
+          description: |-
+            {{ $labels.device }} on {{ $labels.instance }} has no carrier.
+            LABELS = {{ $labels }}
+
+      - alert: HostNetworkLinkFlapping
+        expr: increase(node_network_carrier_changes_total{device=~"en.*"}[1h]) > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host network link flapping (instance {{ $labels.instance }})
+          description: |-
+            {{ $labels.device }} on {{ $labels.instance }} changed carrier state {{ $value }} times in the last hour.
+            LABELS = {{ $labels }}
+
+      - alert: HostNetworkErrors
+        expr: >
+          increase(node_network_receive_errs_total{device=~"en.*"}[1h])
+          + increase(node_network_transmit_errs_total{device=~"en.*"}[1h]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host network interface errors (instance {{ $labels.instance }})
+          description: |-
+            {{ $labels.device }} on {{ $labels.instance }} had {{ $value }} rx/tx errors in the last hour.
+            A healthy link has none.
+            LABELS = {{ $labels }}
+
+      - alert: HostNetworkCrcErrors
+        expr: increase(node_ethtool_rx_crc_errors{device=~"en.*"}[1h]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host network CRC errors (instance {{ $labels.instance }})
+          description: |-
+            {{ $labels.device }} on {{ $labels.instance }} saw {{ $value }} CRC errors in the last hour,
+            which points at a bad cable or port.
+            LABELS = {{ $labels }}
+
   - name: ZFS
     rules:
       - alert: ZfsOfflinePool

@@ -8,6 +8,9 @@ namespace: node-exporter
 resources:
   - ./node-exporter.yml
 
+components:
+  - ../../components/host-networking
+
 labels:
   - includeSelectors: true
     includeTemplates: true
