@@ -8,4 +8,4 @@ labels:
   - includeSelectors: true
     includeTemplates: true
     pairs:
-      app.kubernetes.io/name: longhorn-system
+      app.kubernetes.io/name: democratic-csi

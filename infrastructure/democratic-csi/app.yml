@@ -16,7 +16,7 @@ spec:
             name: "org.democratic-csi.nvmeof"
           storageClasses:
             - name: zfs-generic-nvmeof-csi
-              defaultClass: false
+              defaultClass: true
               reclaimPolicy: Delete
               volumeBindingMode: Immediate
               allowVolumeExpansion: true
