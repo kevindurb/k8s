@@ -1,0 +1,22 @@
+default:
+  @just --list
+
+# Reseal driver-config.yml (+ the ssh key from the live secret) into driver-config-sealed-secret.yml.
+# Pass a private key path (`just reseal path/to/key`) to use a new key instead of the one already in the cluster.
+reseal key='':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "{{justfile_directory()}}"
+  if [ -n "{{key}}" ]; then
+    KEY="$(cat "{{key}}")"
+  else
+    KEY="$(kubectl -n democratic-csi get secret democratic-csi-driver-config-sealed \
+      -o jsonpath='{.data.driver-config-file\.yaml}' | base64 -d | yq '.sshConnection.privateKey')"
+  fi
+  tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
+  KEY="$KEY" yq '.sshConnection.privateKey = strenv(KEY)' driver-config.yml \
+    | kubectl create secret generic democratic-csi-driver-config-sealed -n democratic-csi \
+        --from-file=driver-config-file.yaml=/dev/stdin --dry-run=client -o yaml \
+    | kubeseal --controller-namespace kube-system --controller-name sealed-secrets-controller -o yaml \
+    > "$tmp"
+  mv "$tmp" driver-config-sealed-secret.yml

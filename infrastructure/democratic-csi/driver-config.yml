@@ -1,0 +1,27 @@
+---
+driver: zfs-generic-nvmeof
+sshConnection:
+  host: 192.168.42.24
+  username: core
+zfs:
+  cli:
+    sudoEnabled: true
+  datasetParentName: rust/k8s/volumes
+  detachedSnapshotsDatasetParentName: rust/k8s/snapshots
+  zvolCompression: lz4
+  zvolDedup: false
+  zvolEnableReservation: false
+  zvolBlocksize: 16K
+nvmeof:
+  transports:
+    - tcp://192.168.42.24:4420
+  shareStrategy: "nvmetCli"
+  shareStrategyNvmetCli:
+    basename: "nqn.2003-01.org.linux-nvme"
+    ports:
+      - "1"
+    subsystem:
+      attributes:
+        allow_any_host: 1
+    sudoEnabled: true
+    configIsImportedFilePath: /var/run/nvmet-config-loaded

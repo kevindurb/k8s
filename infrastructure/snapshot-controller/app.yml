@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: snapshot-controller
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://democratic-csi.github.io/charts/
+      targetRevision: 0.3.0
+      chart: snapshot-controller
+      helm:
+        valuesObject:
+          controller:
+            replicaCount: 2
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
