@@ -37,6 +37,7 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 | PVC | Status |
 |---|---|
+| calibre-web/config | **Migrated 2026-10-03** (`2d9bf6a5`). Old PV `pvc-b1ea29ae…` kept `Retain`/`Released` |
 | calibre/config | **Migrated 2026-10-03** (`5bf6d1e7`). Old PV `pvc-04b41406…` kept `Retain`/`Released` |
 | linkding/data | **Migrated 2026-10-03** (`c113f8da`). Old PV `pvc-f29dd1b7…` kept `Retain`/`Released` |
 | golink/volume | **Migrated 2026-10-03** (`bfb07357`). Old PV `pvc-7ea27847…` kept `Retain`/`Released` |
