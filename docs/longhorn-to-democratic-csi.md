@@ -33,6 +33,14 @@ For each of the five:
 
 Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, and confirm all five Argo apps are `Synced` with no diff. **Stop here for review.**
 
+## Progress
+
+| PVC | Status |
+|---|---|
+| consignment-app/data | **Migrated 2026-10-03** (`b6fdc1c4`). Old Longhorn PV `pvc-2b81ebb7…` kept as `Retain`/`Released` until Phase 4 |
+
+Notes from the first migration: a one-off `alpine` + `apk add rsync` Job works for the copy (the volume is ext4 with a setgid `2775` root dir, which `rsync -a` preserves). Verify with `md5sum` plus `stat` of the root dir. The app image may have no shell, so verify through its logs and health endpoint.
+
 ## Live inventory (actual used size)
 
 | Wave | PVCs (ns/name) | Used |
@@ -64,7 +72,9 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 Keep the **same PVC name** so manifests only change on the `storageClassName` line. A PV rebind means the data is copied only once:
 
-1. **Pause Argo** for the app: `kubectl -n argocd patch app <app> --type merge -p '{"spec":{"syncPolicy":{"automated":null}}}'`. Without this, `selfHeal` would undo the scale-down and recreate the PVC.
+1. **Pause Argo** for the app. Patching only the app's own Application does **not** hold: the parent `apps` Application (and `borg` above it) have `selfHeal` and put the child's sync policy back within seconds, which also scales the deployment back up. Pause the whole chain, top-down:
+   `for a in borg apps <app>; do kubectl -n argocd patch app $a --type json -p '[{"op":"remove","path":"/spec/syncPolicy/automated"}]'; done`
+   Resume bottom-up after the git push, with `[{"op":"add","path":"/spec/syncPolicy/automated","value":{"enabled":true,"prune":false,"selfHeal":true}}]` on `<app>`, then `apps`, then `borg`.
 2. `kubectl -n <ns> scale deploy --all --replicas=0`, then wait for the Longhorn volume to show `detached`.
 3. Create a temp PVC `<pvc>-zfs` on `zfs-generic-nvmeof-csi`, same size and accessModes.
 4. Run a one-off copy Job that mounts the old PVC read-only and the new PVC, and runs `rsync -aHAX --numeric-ids /old/ /new/`. Prefer an `alpine` + rsync Job manifest kept in the scratchpad. `pv-migrate` is an alternative. Compare file counts and `du`.
