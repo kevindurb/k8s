@@ -1,0 +1,102 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: democratic-csi
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://democratic-csi.github.io/charts/
+      targetRevision: 0.15.1
+      chart: democratic-csi
+      helm:
+        valuesObject:
+          csiDriver:
+            name: "org.democratic-csi.nvmeof"
+
+          storageClasses:
+            - name: zfs-generic-nvmeof-csi
+              defaultClass: false
+              reclaimPolicy: Delete
+              volumeBindingMode: Immediate
+              allowVolumeExpansion: true
+              parameters:
+                fsType: ext4
+
+              mountOptions: []
+              secrets:
+                provisioner-secret:
+                controller-publish-secret:
+                node-stage-secret:
+                node-publish-secret:
+                controller-expand-secret:
+
+          volumeSnapshotClasses:
+            - name: zfs-generic-nvmeof-csi
+              parameters:
+              secrets:
+                snapshotter-secret:
+
+          driver:
+            config:
+              driver: zfs-generic-nvmeof
+              sshConnection:
+                host: 192.168.42.24
+                username: core
+
+              zfs:
+                cli:
+                  sudoEnabled: true
+
+                datasetParentName: rust/k8s/volumes
+                detachedSnapshotsDatasetParentName: rust/k8s/snapshots
+
+                zvolCompression: lz4
+                zvolDedup: false
+                zvolEnableReservation: false
+                zvolBlocksize: 16K
+
+              nvmeof:
+                transports:
+                  - tcp://192.168.42.24:4420
+
+                shareStrategy: "nvmetCli"
+
+                shareStrategyNvmetCli:
+                  basename: "nqn.2003-01.org.linux-nvme"
+                  ports:
+                    - "1"
+                  subsystem:
+                    attributes:
+                      allow_any_host: 1
+
+                shareStrategySpdkCli:
+                  configPath: /etc/spdk/spdk.json
+                  basename: "nqn.2003-01.org.linux-nvmeof"
+                  bdev:
+                    type: uring
+                    attributes:
+                      block_size: 512
+                  subsystem:
+                    attributes:
+                      allow_any_host: "true"
+                  listeners:
+                    - trtype: tcp
+                      traddr: server
+                      trsvcid: port
+                      adrfam: ipv4
+
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: infrastructure/democratic-csi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: democratic-csi
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

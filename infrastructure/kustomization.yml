@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - alertmanager/app.yml
   - argocd/app.yml
+  - democratic-csi/app.yml
   - gatus/app.yml
   - gpu-operator/app.yml
   - healthchecks/app.yml
