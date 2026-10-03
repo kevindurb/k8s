@@ -37,6 +37,9 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 | PVC | Status |
 |---|---|
+| home-assistant/volume | **Migrated 2026-10-03** (`9480df7e`). Host-networked and unpinned: the pod moved from drone-03 (192.168.42.23) to drone-04 (192.168.42.24), so its IP changed. The migration script's "wait for detached" step hung ~1h because a Longhorn volume-eviction ticket (drone-01 eviction) kept the volume attached with its frontend disabled; the script now ignores eviction tickets |
+| zigbee2mqtt/app-volume | **Migrated 2026-10-03** (`e7654447`). Pinned to drone-02 (USB dongle) |
+| mosquitto/app-volume | **Migrated 2026-10-03** (`23836001`) |
 | audiobookshelf ×5 (config, metadata, audiobooks, books, podcasts) | **Migrated 2026-10-03** (`809c9e85`). Old PVs kept `Retain`/`Released` |
 | omada/volume | **Migrated 2026-10-03** (`ec4c5653`). Host-networked and unpinned: the pod moved from drone-02 (192.168.42.22) to drone-04 (192.168.42.24), so its IP changed |
 | scrypted/volume | **Migrated 2026-10-03** (`a9965e6d`) |
