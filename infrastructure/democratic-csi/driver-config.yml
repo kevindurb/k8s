@@ -13,8 +13,10 @@ zfs:
   zvolEnableReservation: false
   zvolBlocksize: 16K
 nvmeof:
+  # nr-io-queues=1: nodes that are also the target (drone-04 loopback) fail to connect >1 I/O queue (-EXDEV, kernel 7.2.5);
+  # one queue is plenty on 1GbE.
   transports:
-    - tcp://192.168.42.24:4420
+    - tcp://192.168.42.24:4420?nr-io-queues=1
   shareStrategy: "nvmetCli"
   shareStrategyNvmetCli:
     basename: "nqn.2003-01.org.linux-nvme"
