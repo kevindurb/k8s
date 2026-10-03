@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: neko
-    group: apps
-    url: https://neko.beaver-cloud.ts.net/health
-    conditions:
-      - '[STATUS] == 200'
