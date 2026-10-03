@@ -67,7 +67,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 10Gi
@@ -81,7 +81,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 10Gi
@@ -95,7 +95,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 11Gi
@@ -109,7 +109,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 1Gi
@@ -123,7 +123,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 1Gi
