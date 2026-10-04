@@ -1,0 +1,76 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      # the pool lives on drone-04 and the exporter needs its zpool/zfs binaries and /dev/zfs
+      nodeSelector:
+        kubernetes.io/hostname: drone-04
+      # nsenter -t 1 needs the host PID namespace
+      hostPID: true
+      initContainers:
+        # drop the exporter binary on the host so the main container can run it in the host mount namespace
+        - name: install
+          image: alpine:3.22@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8
+          command:
+            - sh
+            - -ec
+            - |
+              v=2.4.1
+              f=zfs_exporter-$v.linux-amd64.tar.gz
+              wget -q -O /tmp/$f https://github.com/pdf/zfs_exporter/releases/download/v$v/$f
+              echo "60489e74e8f41eadff4f313fb16e94fc0964d37b9cf1be79c25c927b285a3228  /tmp/$f" | sha256sum -c -
+              tar -xzf /tmp/$f -C /dst --strip-components=1 zfs_exporter-$v.linux-amd64/zfs_exporter
+          volumeMounts:
+            - mountPath: /dst
+              name: bin
+      containers:
+        - name: app
+          image: alpine:3.22@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8
+          command:
+            - nsenter
+            - --target=1
+            - --mount
+            - --
+            - /var/lib/zfs-exporter/zfs_exporter
+            - --web.listen-address=:9134
+            - --properties.dataset-filesystem=available,used,referenced
+            - --properties.dataset-volume=available,used,volsize
+          ports:
+            - name: http
+              containerPort: 9134
+              protocol: TCP
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            runAsNonRoot: false
+          resources:
+            limits:
+              cpu: 250m
+              memory: 180Mi
+      volumes:
+        - name: bin
+          hostPath:
+            path: /var/lib/zfs-exporter
+            type: DirectoryOrCreate
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9134'
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9134
+      targetPort: http

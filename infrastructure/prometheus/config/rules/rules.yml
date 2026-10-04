@@ -437,6 +437,203 @@ groups:
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
 
+  - name: DemocraticCSI
+    rules:
+      - alert: CsiPvStuck
+        expr: kube_persistentvolume_status_phase{phase=~"Released|Failed"} == 1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: PersistentVolume {{ $labels.persistentvolume }} stuck in {{ $labels.phase }}
+          description: |-
+            Usually democratic-csi DeleteVolume failing on dependent (sanoid) snapshots.
+            See the democratic-csi skill, Gotchas.
+
+      - alert: CsiControllerDown
+        expr: kube_deployment_status_replicas_available{namespace="democratic-csi"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: democratic-csi controller {{ $labels.deployment }} has no available replicas
+
+      - alert: CsiNodeDriverUnavailable
+        expr: kube_daemonset_status_number_unavailable{namespace="democratic-csi"} > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: democratic-csi node driver unavailable on {{ $value }} node(s)
+
+      - alert: CsiPodCrashLooping
+        expr: increase(kube_pod_container_status_restarts_total{namespace="democratic-csi"}[30m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: democratic-csi pod {{ $labels.pod }} ({{ $labels.container }}) restarting
+
+      - alert: StorageNodeDown
+        expr: kube_node_status_condition{node="drone-04",condition="Ready",status="true"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: drone-04 (NVMe-oF/ZFS backend) is NotReady
+          description: |-
+            All democratic-csi volumes depend on drone-04. Initiators drop their
+            controllers after ~10 minutes (ctrl_loss_tmo).
+
+      - alert: CsiVolumeAttachmentStuck
+        expr: kube_volumeattachment_status_attached{volumeattachment=~"csi-.*"} == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: VolumeAttachment {{ $labels.volumeattachment }} not attached
+
+      - alert: PodStuckContainerCreating
+        expr: kube_pod_container_status_waiting_reason{reason="ContainerCreating"} == 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Pod {{ $labels.namespace }}/{{ $labels.pod }} stuck in ContainerCreating
+          description: Often a failed volume mount or mkfs (see the MDTS gotcha in the democratic-csi skill).
+
+      - alert: PvcFillingUp
+        expr: predict_linear(kubelet_volume_stats_available_bytes[6h], 4 * 24 * 3600) < 0 and kubelet_volume_stats_available_bytes > 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} will fill within 4 days
+
+      - alert: PvcInodesLow
+        expr: kubelet_volume_stats_inodes_free / kubelet_volume_stats_inodes * 100 < 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} has < 10% free inodes
+
+  - name: StoragePerformance
+    rules:
+      - alert: StorageNicSaturated
+        expr: |
+          rate(node_network_transmit_bytes_total{instance="drone-04",device="enp5s0"}[5m]) > 100e6
+          or
+          rate(node_network_receive_bytes_total{instance="drone-04",device="enp5s0"}[5m]) > 100e6
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: drone-04 1GbE link above 100 MB/s ({{ $labels.device }})
+
+      - alert: BackendHddHighUtilisation
+        expr: rate(node_disk_io_time_seconds_total{instance="drone-04",device=~"sd[a-z]+"}[5m]) > 0.9
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: drone-04 disk {{ $labels.device }} is >90% busy
+
+      - alert: BackendHddHighLatency
+        expr: |
+          rate(node_disk_read_time_seconds_total{instance="drone-04",device=~"sd[a-z]+"}[5m])
+            / (rate(node_disk_reads_completed_total{instance="drone-04",device=~"sd[a-z]+"}[5m]) > 1) > 0.05
+          or
+          rate(node_disk_write_time_seconds_total{instance="drone-04",device=~"sd[a-z]+"}[5m])
+            / (rate(node_disk_writes_completed_total{instance="drone-04",device=~"sd[a-z]+"}[5m]) > 1) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: drone-04 disk {{ $labels.device }} average I/O latency > 50ms
+
+      - alert: NvmeofInitiatorHighLatency
+        expr: |
+          rate(node_disk_read_time_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m])
+            / (rate(node_disk_reads_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.05
+          or
+          rate(node_disk_write_time_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m])
+            / (rate(node_disk_writes_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: NVMe device {{ $labels.device }} on {{ $labels.instance }} average I/O latency > 50ms
+          description: >-
+            Includes the local NVMe boot disk on drone-01..03, but is dominated
+            by NVMe-oF volumes when they are slow.
+
+      - alert: NvmeofInitiatorQueueBacklog
+        expr: rate(node_disk_io_time_weighted_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: NVMe device {{ $labels.device }} on {{ $labels.instance }} average queue depth > 8
+
+      - alert: StorageNicRetransmits
+        expr: rate(node_netstat_Tcp_RetransSegs{instance="drone-04"}[5m]) > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: drone-04 TCP retransmits high ({{ $value | humanize }}/s)
+
+  - name: ZfsExporter
+    rules:
+      - alert: ZfsExporterDown
+        expr: up{job="kubernetes-service-endpoints",kubernetes_namespace="zfs-exporter"} == 0 or absent(up{kubernetes_namespace="zfs-exporter"})
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: zfs_exporter on drone-04 is unreachable
+
+      - alert: ZfsPoolCapacityHigh
+        expr: zfs_pool_allocated_bytes / zfs_pool_size_bytes * 100 > 80
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZFS pool {{ $labels.pool }} is {{ $value | humanize }}% full
+
+      - alert: ZfsPoolCapacityCritical
+        expr: zfs_pool_allocated_bytes / zfs_pool_size_bytes * 100 > 90
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: ZFS pool {{ $labels.pool }} is {{ $value | humanize }}% full (ZFS slows down badly above ~90%)
+
+      - alert: ZfsPoolFragmentationHigh
+        expr: zfs_pool_fragmentation_ratio > 0.5
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: ZFS pool {{ $labels.pool }} fragmentation above 50%
+
+      - alert: ZfsPoolUnhealthy
+        expr: zfs_pool_health > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: ZFS pool {{ $labels.pool }} health is not ONLINE
+
+      - alert: ZfsPoolFreeSpaceLow
+        expr: zfs_pool_free_bytes < 500e9
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZFS pool {{ $labels.pool }} has under 500 GB free
+
   - name: Kubernetes
     rules:
       - alert: KubernetesNodeNotReady

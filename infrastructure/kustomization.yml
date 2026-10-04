@@ -19,3 +19,4 @@ resources:
   - smartctl-exporter/app.yml
   - snapshot-controller/app.yml
   - tailscale/app.yml
+  - zfs-exporter/app.yml
