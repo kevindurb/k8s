@@ -86,7 +86,7 @@ metadata:
     app.kubernetes.io/component: postgres
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 1G
