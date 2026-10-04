@@ -12,6 +12,11 @@ spec:
       # the pool lives on drone-04 and the exporter needs its zpool/zfs binaries and /dev/zfs
       nodeSelector:
         kubernetes.io/hostname: drone-04
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: storage
+          effect: NoSchedule
       # nsenter -t 1 needs the host PID namespace
       hostPID: true
       initContainers:

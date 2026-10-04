@@ -9,6 +9,11 @@ spec:
     spec:
       template:
         spec:
+          tolerations:
+            - key: dedicated
+              operator: Equal
+              value: storage
+              effect: NoSchedule
           dnsPolicy: Default
           restartPolicy: Never
           nodeSelector:

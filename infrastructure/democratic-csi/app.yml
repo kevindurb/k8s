@@ -34,6 +34,13 @@ spec:
               parameters:
               secrets:
                 snapshotter-secret:
+          node:
+            # drone-04 is tainted dedicated=storage; the node plugin must still run there (it is the NVMe-oF target)
+            tolerations:
+              - key: dedicated
+                operator: Equal
+                value: storage
+                effect: NoSchedule
           driver:
             existingConfigSecret: democratic-csi-driver-config-sealed
             config:

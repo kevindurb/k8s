@@ -8,6 +8,8 @@ spec:
   restartPolicy: Never
   nodeSelector:
     kubernetes.io/hostname: drone-04
+  tolerations:
+    - {key: dedicated, operator: Equal, value: storage, effect: NoSchedule}
   volumes:
     - name: nas-media
       persistentVolumeClaim: {claimName: nas-media, readOnly: true}

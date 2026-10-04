@@ -17,6 +17,11 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: drone-04
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: storage
+          effect: NoSchedule
       securityContext:
         fsGroup: 1000
       volumes:
