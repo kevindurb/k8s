@@ -440,7 +440,10 @@ groups:
   - name: DemocraticCSI
     rules:
       - alert: CsiPvStuck
-        expr: kube_persistentvolume_status_phase{phase=~"Released|Failed"} == 1
+        expr: |
+          kube_persistentvolume_status_phase{phase=~"Released|Failed"} == 1
+            and on (persistentvolume)
+          kube_persistentvolume_info{storageclass="zfs-generic-nvmeof-csi"}
         for: 1h
         labels:
           severity: warning
