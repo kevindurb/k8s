@@ -6,7 +6,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: app
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -49,7 +49,7 @@ metadata:
   name: volume
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 100G
