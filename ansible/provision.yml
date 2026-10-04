@@ -73,7 +73,16 @@
   tags: k3s
   hosts: all
   become: true
+  serial: 1 # one k3s restart at a time
   roles: [k3s]
+  post_tasks:
+    - name: Wait for node to be Ready
+      delegate_to: localhost
+      become: false
+      ansible.builtin.command:
+        cmd: kubectl wait --for=condition=Ready node/{{ k3s_hostname }} --timeout=300s
+      changed_when: false
+      check_mode: false
 
 - name: Setup drone-04 as NAS
   tags: zfs
