@@ -13,6 +13,7 @@ description: Operate and debug the cluster's democratic-csi storage (zfs-generic
 - Export: kernel nvmet, TCP port 4420, one subsystem per PVC (`nqn.2003-01.org.linux-nvme:pvc-<uid>`, `allow_any_host=1`). Config persists in `/etc/nvmet/config.json`, restored at boot by `nvmet.service`. A drop-in creates `/var/run/nvmet-config-loaded`, which the driver requires before it will run.
 - Initiators use one I/O queue (`?nr-io-queues=1` in the transport URI). drone-04 itself can't connect more than one queue to its own target (-EXDEV on kernel 7.2.5).
 - Node pods run on drone-01..04; the controller currently runs on drone-02. The unimatrix nodes are tainted, so they don't use it.
+- **drone-04 is tainted `dedicated=storage:NoSchedule`** (2026-10-04) so ZFS gets the RAM: ARC max is 8 GiB (`bootc/overlay/etc/modprobe.d/zfs.conf`; tune live with `/sys/module/zfs/parameters/zfs_arc_max`). Anything that must run there (the node plugin via `node.tolerations` in `infrastructure/democratic-csi/app.yml`, zfs-exporter, makemkv, transcoding, its healthcheck) needs a matching toleration. Don't use plain `kubectl drain` to move apps off it: evict or `rollout restart` the specific pods. The taint also lives in `k3s_node_taints` (ansible host_vars); `node-taint` only applies at registration, so a live `kubectl taint` is needed on an already-registered node.
 
 ## Verified behaviour (tested 2026-10-03, Phase 0)
 

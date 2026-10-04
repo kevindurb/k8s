@@ -84,6 +84,7 @@
 
 - **Capacity balance:** drone-02 was historically the weak node (8 GiB); it now carries 24 GiB (2× 8 GiB G.Skill added 2026-09) and is the only node with more than 16 GiB.
 - **GPU workloads** can only target drone-01 (Quadro P620) and drone-04 (GTX 1060). drone-03's NVIDIA driver is missing despite the tooling being installed.
+- **drone-04 is storage-first** (since 2026-10-04): tainted `dedicated=storage:NoSchedule` so general app pods stay off it and ZFS ARC (`zfs_arc_max` 8 GiB, set in `bootc/overlay/etc/modprobe.d/zfs.conf`) gets the RAM. Only pods that tolerate the taint run there: the democratic-csi node plugin, makemkv (optical drives), zfs-exporter, the transcoding jobs and its healthcheck. The taint is also set via `k3s_node_taints` in `ansible/inventory/host_vars/drone-04.yml`. Its GTX 1060 currently has no workloads.
 - **Storage tiers:** every DIY node has a 480 GB NVMe (Team TM8FP6512G); drone-04 adds 24 TB raw HDD capacity — likely PV/local-storage host or the iSCSI target box.
 - **iSCSI LUNs** ("VIRTUAL-DISK" model) are distributed across drone-01/02/03/04 — consistent with a network storage backend for PVCs; unimatrix nodes have none.
 - **Kernel drift:** drone-03 is one minor version behind (7.0.12 / build 20260720 vs 7.1.6 / 20260802) — reboot it to pick up the current bootentry.
