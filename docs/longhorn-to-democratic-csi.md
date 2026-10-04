@@ -37,6 +37,7 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 | PVC | Status |
 |---|---|
+| miniflux/postgres-volume | **Migrated 2026-10-03** (`f27e8ccc`), done attended, one app at a time. `pg_dump` taken first (24.8 MB, kept in the session scratchpad only); after the move the live row counts matched the dump (6395 entries, 18 feeds). Old PV `pvc-0758f89e…` kept `Retain`/`Released` |
 | home-assistant/volume | **Migrated 2026-10-03** (`9480df7e`). Host-networked and unpinned: the pod moved from drone-03 (192.168.42.23) to drone-04 (192.168.42.24), so its IP changed. The migration script's "wait for detached" step hung ~1h because a Longhorn volume-eviction ticket (drone-01 eviction) kept the volume attached with its frontend disabled; the script now ignores eviction tickets |
 | zigbee2mqtt/app-volume | **Migrated 2026-10-03** (`e7654447`). Pinned to drone-02 (USB dongle) |
 | mosquitto/app-volume | **Migrated 2026-10-03** (`23836001`) |
