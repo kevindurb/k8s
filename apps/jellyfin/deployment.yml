@@ -58,11 +58,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: config-pvc
-  annotations:
-    longhorn.io/data-locality: best-effort
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: longhorn-replicated
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 50Gi
