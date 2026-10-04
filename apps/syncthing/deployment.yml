@@ -17,6 +17,7 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      hostname: k8s-syncthing
       volumes:
         - name: volume
           persistentVolumeClaim:
