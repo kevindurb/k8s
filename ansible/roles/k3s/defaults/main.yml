@@ -6,3 +6,4 @@ k3s_token: ''
 k3s_server: ''
 k3s_config_dir: '/etc/rancher/k3s'
 k3s_config_path: '{{ k3s_config_dir }}/config.yaml'
+k3s_node_taints: [] # only applied at node registration; also `kubectl taint` live

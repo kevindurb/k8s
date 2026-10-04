@@ -2,5 +2,8 @@
 k3s_role: agent
 k3s_hostname: drone-04
 k3s_server: 192.168.42.1
+# storage-first node: general app pods stay off it so ZFS ARC gets the RAM
+k3s_node_taints:
+  - dedicated=storage:NoSchedule
 
 tuned_profile: k8s-node
