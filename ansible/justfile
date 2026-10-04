@@ -16,7 +16,10 @@ sudo-adhoc module filter='all':
 ping filter='all':
   just adhoc ping {{filter}}
 
-reboot filter='all':
+# Raw reboot (no drain). The filter is required and "all" is rejected so a stray
+# `just reboot` can't take down every node, drone-04 (storage) included.
+reboot filter:
+  @if [ "{{filter}}" = "all" ]; then echo "refusing to reboot 'all': name the hosts (never drone-04, use reboot-drone-04.yml)" >&2; exit 1; fi
   just sudo-adhoc reboot {{filter}}
 
 shutdown filter='all':

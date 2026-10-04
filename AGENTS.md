@@ -31,7 +31,7 @@ kustomize build apps/<name>
 
 Pre-commit (`.pre-commit-config.yaml`): trailing-whitespace/EOF/merge-conflict/large-file/private-key checks, `yamllint` (config in `.yamllint.yml` — document-start required, 150-char line length), `ansible-lint`, and the kustomize-changed check above scoped to `apps|platform|infrastructure|clusters`.
 
-Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just playbook <args>` wrap `ansible`/`ansible-playbook -i ./inventory/prod.yml`. Shortcuts: `just ping [filter]`, `just reboot [filter]`, `just shutdown [filter]`, `just adhoc <module> [filter]`, `just sudo-adhoc <module> [filter]`.
+Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just playbook <args>` wrap `ansible`/`ansible-playbook -i ./inventory/prod.yml`. Shortcuts: `just ping [filter]`, `just reboot <filter>` (filter required, `all` rejected), `just shutdown [filter]`, `just adhoc <module> [filter]`, `just sudo-adhoc <module> [filter]`.
 
 ## Architecture
 
@@ -91,7 +91,7 @@ The older Bitwarden Secrets Manager path (`platform/bws-operator` with `Bitwarde
 drone-04 hosts the ZFS pool and the NVMe-oF target for democratic-csi, so every stateful app depends on it. **Never reboot it with `roles/node_reboot`, `upgrade.yml` or `just reboot`**; use `just playbook reboot-drone-04.yml` (`-e dry_run=true` previews).
 
 - The play stops the Argo CD application controller (selfHeal would undo the scale-down), scales every Deployment/StatefulSet using a `zfs-generic-nvmeof-csi` PVC to 0, waits for the pods and VolumeAttachments to go, reboots, waits for `/var/run/nvmet-config-loaded` and the same number of exported volumes, then scales back up and restarts Argo CD (also on failure). If it dies midway, scale `argocd-application-controller` back up and Argo restores replicas from git.
-- `node_reboot` fails on hosts in `node_reboot_refuse_hosts` (default `drone-04`), so `upgrade.yml` fails at drone-04 on purpose after the other nodes; run the play above for it. `just reboot` uses the raw `reboot` module and is not guarded, and its default filter `all` includes drone-04.
+- `node_reboot` fails on hosts in `node_reboot_refuse_hosts` (default `drone-04`), so `upgrade.yml` fails at drone-04 on purpose after the other nodes; run the play above for it. `just reboot` uses the raw `reboot` module and requires an explicit filter (`all` is rejected), but a group like `agents` still matches drone-04.
 - Shutdown order is set in the image: `k3s-agent.service` is `After=nvmet.service` (k3s stops first; `KillMode=process` means that does not stop pods), and the `nvmet.service` drop-in `20-shutdown-order.conf` runs `/usr/libexec/nvmet-detach-local` (unmount + sync NVMe-oF volumes), `nvme disconnect-all`, then `nvmetcli clear`. Without this, shutdown hung ~3.5 min in `sync` on drone-04's own loopback initiator.
 - bootc 3-way merges `/etc`: a file hand-edited on a node keeps winning over a changed image copy. When patching a unit live, make it byte-identical to the overlay copy.
 
