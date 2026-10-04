@@ -1,5 +1,12 @@
 # SPDX-License-Identifier: MIT-0
 ---
+- name: Refuse to run the generic reboot on the storage node
+  ansible.builtin.fail:
+    msg: >-
+      {{ inventory_hostname }} serves storage for the whole cluster (ZFS + NVMe-oF target), so a drain
+      and reboot is not safe. Use reboot-drone-04.yml instead.
+  when: inventory_hostname in node_reboot_refuse_hosts
+
 - name: Drain node
   delegate_to: localhost
   ansible.builtin.command:

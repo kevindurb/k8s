@@ -1,3 +1,6 @@
 # SPDX-License-Identifier: MIT-0
 ---
 # defaults file for node_reboot
+# Hosts that must not use this generic drain-and-reboot procedure.
+node_reboot_refuse_hosts:
+  - drone-04

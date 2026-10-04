@@ -1,0 +1,230 @@
+---
+# vim: set ft=yaml.ansible
+# Reboot drone-04, the storage node (ZFS pool + NVMe-oF target for democratic-csi).
+#
+# Every stateful app depends on this node, so a plain drain-and-reboot (roles/node_reboot) is refused for it.
+# This play instead:
+#   1. stops the Argo CD application controller (selfHeal would otherwise undo the scale-down),
+#   2. scales every Deployment/StatefulSet that uses a democratic-csi PVC to 0 and waits for pods and
+#      VolumeAttachments to go away, so nothing is writing when the target disappears,
+#   3. reboots and waits for the NVMe-oF target (and the same number of exported volumes) and the node,
+#   4. scales everything back up and restarts Argo CD, even if a step above failed.
+#
+# If the play dies without reaching step 4 (e.g. the control machine goes away), scaling
+# argocd-application-controller back up is enough: Argo CD restores replicas from git.
+#
+# Preview what would be scaled without touching anything:
+#   just playbook reboot-drone-04.yml -e dry_run=true
+- name: Reboot drone-04 (storage node)
+  hosts: drone-04
+  gather_facts: false
+  vars:
+    dry_run: false
+    csi_storage_class: zfs-generic-nvmeof-csi
+    csi_attacher: org.democratic-csi.nvmeof
+    argocd_namespace: argocd
+    argocd_controller: argocd-application-controller
+    scale_timeout: 300
+    reboot_timeout: 1200
+  tasks:
+    - name: Get the Argo CD application controller
+      delegate_to: localhost
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: StatefulSet
+        name: '{{ argocd_controller }}'
+        namespace: '{{ argocd_namespace }}'
+      register: argocd_sts
+
+    - name: Check the Argo CD controller is running
+      ansible.builtin.assert:
+        that:
+          - argocd_sts.resources | length == 1
+          - argocd_sts.resources[0].spec.replicas > 0
+        fail_msg: >-
+          {{ argocd_controller }} is missing or already at 0 replicas, so a previous run probably aborted.
+          Scale it back up first so Argo CD restores the app replicas.
+
+    - name: Get PVCs
+      delegate_to: localhost
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: PersistentVolumeClaim
+      register: all_pvcs
+
+    - name: Get Deployments and StatefulSets
+      delegate_to: localhost
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: '{{ item }}'
+      loop: [Deployment, StatefulSet]
+      register: all_workloads
+
+    - name: Work out what to scale down
+      ansible.builtin.set_fact:
+        argocd_replicas: '{{ argocd_sts.resources[0].spec.replicas }}'
+        csi_pvc_names: >-
+          {%- set pvcs = all_pvcs.resources | selectattr('spec.storageClassName', 'equalto', csi_storage_class) | list -%}
+          {{ pvcs | map(attribute='metadata.namespace') | zip(pvcs | map(attribute='metadata.name')) | map('join', '/') | list }}
+        csi_namespaces: >-
+          {{ all_pvcs.resources | selectattr('spec.storageClassName', 'equalto', csi_storage_class)
+             | map(attribute='metadata.namespace') | unique | list }}
+        scale_targets: >-
+          {%- set pvcs = all_pvcs.resources | selectattr('spec.storageClassName', 'equalto', csi_storage_class) | list -%}
+          {%- set names = pvcs | map(attribute='metadata.namespace')
+              | zip(pvcs | map(attribute='metadata.name')) | map('join', '/') | list -%}
+          {%- set out = [] -%}
+          {%- for result in all_workloads.results -%}
+          {%- for w in result.resources -%}
+          {%- set hits = [] -%}
+          {%- for v in w.spec.template.spec.volumes | default([]) if v.persistentVolumeClaim is defined -%}
+          {%- if (w.metadata.namespace ~ '/' ~ v.persistentVolumeClaim.claimName) in names -%}{%- set _ = hits.append(1) -%}{%- endif -%}
+          {%- endfor -%}
+          {%- for t in w.spec.volumeClaimTemplates | default([]) if t.spec.storageClassName | default('') == csi_storage_class -%}
+          {%- set _ = hits.append(1) -%}
+          {%- endfor -%}
+          {%- if hits and w.spec.replicas | default(1) > 0 -%}
+          {%- set _ = out.append({'kind': w.kind, 'namespace': w.metadata.namespace, 'name': w.metadata.name, 'replicas': w.spec.replicas}) -%}
+          {%- endif -%}
+          {%- endfor -%}
+          {%- endfor -%}
+          {{ out }}
+
+    - name: Show what will be scaled down
+      ansible.builtin.debug:
+        msg: >-
+          {{ scale_targets | length }} workloads on {{ csi_pvc_names | length }} {{ csi_storage_class }} PVCs:
+          {{ scale_targets | map(attribute='namespace') | zip(scale_targets | map(attribute='name')) | map('join', '/') | list }}
+
+    - name: Stop here for a dry run
+      ansible.builtin.meta: end_play
+      when: dry_run | bool
+
+    - name: Count NVMe-oF volumes exported by drone-04
+      become: true
+      ansible.builtin.find:
+        paths: /sys/kernel/config/nvmet/subsystems
+        patterns: '*pvc-*'
+        file_type: directory
+      register: subsystems_before
+
+    - name: Reboot with stateful apps scaled down
+      block:
+        - name: Stop the Argo CD application controller
+          delegate_to: localhost
+          kubernetes.core.k8s_scale:
+            api_version: apps/v1
+            kind: StatefulSet
+            name: '{{ argocd_controller }}'
+            namespace: '{{ argocd_namespace }}'
+            replicas: 0
+            wait: true
+            wait_timeout: '{{ scale_timeout }}'
+
+        - name: Scale stateful workloads to 0
+          delegate_to: localhost
+          kubernetes.core.k8s_scale:
+            api_version: apps/v1
+            kind: '{{ item.kind }}'
+            name: '{{ item.name }}'
+            namespace: '{{ item.namespace }}'
+            replicas: 0
+            wait: true
+            wait_timeout: '{{ scale_timeout }}'
+          loop: '{{ scale_targets }}'
+          loop_control:
+            label: '{{ item.namespace }}/{{ item.name }}'
+
+        - name: Wait for every pod using a {{ csi_storage_class }} PVC to be gone
+          delegate_to: localhost
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Pod
+          register: pods
+          until: >-
+            pods.resources
+            | selectattr('metadata.namespace', 'in', csi_namespaces)
+            | selectattr('spec.volumes', 'defined')
+            | map(attribute='spec.volumes') | flatten
+            | selectattr('persistentVolumeClaim', 'defined')
+            | map(attribute='persistentVolumeClaim.claimName')
+            | intersect(csi_pvc_names | map('regex_replace', '^.*/', '') | list)
+            | length == 0
+          retries: 60
+          delay: 5
+          changed_when: false
+
+        - name: Wait for the volumes to be detached
+          delegate_to: localhost
+          kubernetes.core.k8s_info:
+            api_version: storage.k8s.io/v1
+            kind: VolumeAttachment
+          register: attachments
+          until: attachments.resources | selectattr('spec.attacher', 'equalto', csi_attacher) | list | length == 0
+          retries: 60
+          delay: 5
+          changed_when: false
+
+        - name: Reboot drone-04
+          become: true
+          ansible.builtin.reboot:
+            reboot_timeout: '{{ reboot_timeout }}'
+
+        - name: Wait for the NVMe-oF target config to be restored
+          become: true
+          ansible.builtin.wait_for:
+            path: /var/run/nvmet-config-loaded
+            timeout: 300
+
+        - name: Count NVMe-oF volumes exported again
+          become: true
+          ansible.builtin.find:
+            paths: /sys/kernel/config/nvmet/subsystems
+            patterns: '*pvc-*'
+            file_type: directory
+          register: subsystems_after
+
+        - name: Check every volume came back
+          ansible.builtin.assert:
+            that: subsystems_after.matched == subsystems_before.matched
+            fail_msg: >-
+              drone-04 exported {{ subsystems_before.matched }} volumes before the reboot and
+              {{ subsystems_after.matched }} after. Check nvmet.service and /etc/nvmet/config.json.
+
+        - name: Wait for drone-04 to be Ready
+          delegate_to: localhost
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Node
+            name: drone-04
+            wait: true
+            wait_condition:
+              type: Ready
+              status: 'True'
+            wait_timeout: '{{ scale_timeout }}'
+
+      always:
+        # Restore even when a step failed: leaving every stateful app down is worse than having
+        # them wait (Pending) for a drone-04 that did not come back.
+        - name: Scale stateful workloads back up
+          delegate_to: localhost
+          kubernetes.core.k8s_scale:
+            api_version: apps/v1
+            kind: '{{ item.kind }}'
+            name: '{{ item.name }}'
+            namespace: '{{ item.namespace }}'
+            replicas: '{{ item.replicas }}'
+            wait: false
+          loop: '{{ scale_targets }}'
+          loop_control:
+            label: '{{ item.namespace }}/{{ item.name }}'
+
+        - name: Start the Argo CD application controller
+          delegate_to: localhost
+          kubernetes.core.k8s_scale:
+            api_version: apps/v1
+            kind: StatefulSet
+            name: '{{ argocd_controller }}'
+            namespace: '{{ argocd_namespace }}'
+            replicas: '{{ argocd_replicas }}'
+            wait: false

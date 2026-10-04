@@ -1,0 +1,18 @@
+#!/bin/sh
+# Run from nvmet.service ExecStop on the storage node. It mounts some democratic-csi
+# volumes from its own NVMe-oF target (loopback). Unmount them and sync before the
+# initiators are disconnected and the target is cleared, so nothing is still writing
+# to a device that is about to disappear. Best effort: never fails the shutdown.
+for blk in /sys/block/nvme*n*; do
+  name=${blk##*/}
+  # nvmeXcYnZ are the hidden per-path devices; the mounted one is the head device nvmeXnZ.
+  case $name in nvme*c*n*) continue ;; esac
+  read -r nqn < "$blk/device/subsysnqn" 2> /dev/null || continue
+  case $nqn in nqn.2003-01.org.linux-nvme:pvc-*) ;; *) continue ;; esac
+  # Reverse mount order so pod bind mounts go before the kubelet staging mount.
+  for target in $(findmnt -rn -S "/dev/$name" -o TARGET | tac); do
+    umount "$target" || echo "nvmet-detach-local: could not unmount $target" >&2
+  done
+done
+sync
+exit 0
