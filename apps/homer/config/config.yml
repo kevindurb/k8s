@@ -40,6 +40,10 @@ services:
         url: https://linkding.beaver-cloud.ts.net
         icon: fas fa-bookmark
 
+      - name: SearXNG
+        url: https://searxng.beaver-cloud.ts.net
+        icon: fas fa-search
+
       - name: Miniflux
         url: https://miniflux.beaver-cloud.ts.net
         icon: fas fa-rss
@@ -109,10 +113,6 @@ services:
       - name: Alertmanager
         url: https://alertmanager.beaver-cloud.ts.net
         icon: fas fa-bell
-
-      - name: Longhorn
-        url: https://longhorn.beaver-cloud.ts.net
-        icon: fas fa-hdd
 
       - name: Gatus
         url: https://gatus.beaver-cloud.ts.net
