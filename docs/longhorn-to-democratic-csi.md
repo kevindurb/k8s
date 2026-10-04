@@ -37,6 +37,7 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 
 | PVC | Status |
 |---|---|
+| jellyfin/config-pvc | **Migrated 2026-10-03** (`af8c2247`), the last Longhorn PVC. Checked first for corruption (Longhorn healthy, no kernel XFS errors); the cold-read copy had no errors and all 49,813 files matched by checksum. Dropped the `longhorn.io/data-locality` annotation. Old PV `pvc-5d66d102…` kept `Retain`/`Released`. Started in 28s, Gatus healthy |
 | prometheus/app-volume | **Migrated 2026-10-03** (`f2a58612`). 95 files, ~16.5G TSDB; WAL replayed cleanly, a gap of a few minutes in metrics. Old PV `pvc-1e73291a…` kept `Retain`/`Released` |
 | alertmanager/app-volume | **Migrated 2026-10-03** (`5aaea49e`) |
 | gatus/app-volume | **Migrated 2026-10-03** (`809289ee`) |
