@@ -12,6 +12,17 @@ components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 
+# The data volume has XFS metadata corruption; kubelet's recursive fsGroup chown fails on it
+# ("structure needs cleaning") and the pod can't start. Only chown when the root dir mismatches.
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext/fsGroupChangePolicy
+        value: OnRootMismatch
+    target:
+      kind: Deployment
+      labelSelector: app.kubernetes.io/component=app
+
 configMapGenerator:
   - name: gatus
     options:
