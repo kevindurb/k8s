@@ -35,7 +35,7 @@ agents:
 
 all:
   vars:
-    ansible_ssh_common_args: '-o "SetEnv TERM=dumb" -o ControlMaster=auto -o ControlPersist=60s'
+    ansible_ssh_common_args: '-o "SetEnv TERM=dumb" -o ControlMaster=auto -o ControlPersist=60s -o ServerAliveInterval=15 -o ServerAliveCountMax=6'
   children:
     servers:
     agents:
