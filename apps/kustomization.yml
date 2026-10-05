@@ -26,3 +26,4 @@ resources:
 - ./template/app.yml
 - ./transcoding/app.yml
 - ./searxng/app.yml
+- ./minecraft/app.yml

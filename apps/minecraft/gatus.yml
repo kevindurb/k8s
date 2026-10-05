@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: minecraft
+    group: apps
+    url: tcp://minecraft-app-service.minecraft:25565
+    conditions:
+      - '[CONNECTED] == true'
