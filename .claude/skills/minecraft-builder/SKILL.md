@@ -34,7 +34,8 @@ description: Build structures in the cluster's Minecraft server (apps/minecraft,
 - `execute ... run //paste` does not work; use the pos1 route.
 - `say`/`tellraw` output is not returned through rcon; use `execute if block` (loaded chunks only) or `data get` to read state back.
 - Pastes load chunks themselves, but very large pastes (>1M blocks) can stall the server; split them.
-- Paste flags: `-a` skips air (keeps existing terrain inside the bounding box), `-e` includes entities.
+- Paste flags: `build.sh` pastes with `-a` by default. Without it every unset block in the schematic's bounding box is air and erases water/terrain there (bad for builds over water). Use `PASTE_FLAGS=""` to clear a site on purpose. `-e` includes entities.
+- Finding a site: players' `Pos` via `data get entity`, then probe a grid in a `sh -c` loop inside the pod (`kubectl exec ... sh -c 'for ...; do rcon-cli "execute if block x y z minecraft:water"; done'`); one rcon-cli call per probe, never pass hundreds of args to one call.
 
 ## Handy server commands
 

@@ -19,5 +19,5 @@ if [[ $# -ge 4 ]]; then
   rcon "//world $world"
   rcon "//schem load $name"
   rcon "//pos1 $2,$3,$4"
-  rcon "//paste"
+  rcon "//paste ${PASTE_FLAGS:--a}"   # -a skips air so water/terrain inside the bounding box survives; PASTE_FLAGS="" to clear it
 fi
