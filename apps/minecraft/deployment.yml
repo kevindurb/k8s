@@ -21,7 +21,7 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: docker.io/itzg/minecraft-server:java21@sha256:63948ade43e562b9400db3bfe7367c04903d509d2c4167ace717a9a426156eb6
+          image: docker.io/itzg/minecraft-server:java25@sha256:951c21928ffcca5b5b6efc996c994d43e292f7bd86345b2cc28535a1e3a3efb7
           env:
             - name: TZ
               value: America/Denver
