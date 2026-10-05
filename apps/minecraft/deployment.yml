@@ -36,6 +36,9 @@ spec:
               value: |-
                 https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
                 https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+            # Large builds: pre-generated .schem files pasted with WorldEdit (see .claude/skills/minecraft-builder)
+            - name: MODRINTH_PROJECTS
+              value: worldedit
           volumeMounts:
             - name: data
               mountPath: /data
