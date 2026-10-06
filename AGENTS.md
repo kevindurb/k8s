@@ -39,7 +39,7 @@ Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just
 
 `clusters/borg/kustomization.yml` is the entrypoint applied to the (single) cluster and includes three Argo CD `Application` manifests, each pointing at a top-level directory in this repo via `sources[].path`:
 
-- `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (longhorn), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, gpu-operator, node-feature-discovery.
+- `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (democratic-csi), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, gpu-operator, node-feature-discovery.
 - `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, tsidp, mosquitto, zigbee2mqtt. `bws-operator` (Bitwarden Secrets Manager operator) also lives here but is deprecated (see Secrets section).
 - `apps/` — user-facing applications (jellyfin, nextcloud, radarr/sonarr, syncthing, home-assistant, etc.), plus an `AppProject` (`apps/project.yml`) and one Argo CD `Application` per app (each app dir has its own `app.yml`).
 
@@ -80,7 +80,7 @@ The older Bitwarden Secrets Manager path (`platform/bws-operator` with `Bitwarde
 
 ### Node OS / provisioning (outside the k8s tree)
 
-- `bootc/` — Containerfile + `overlay/` building the bootc (rpm-ostree/bootc) image used for cluster nodes (`ghcr.io/kevindurb/k8s-node`), including k3s systemd units, sysctl/module config for k8s and ZFS/longhorn, and a tuned profile. Built/pushed/signed (cosign) by `.github/workflows/build-bootc.yml` on changes under `bootc/**`.
+- `bootc/` — Containerfile + `overlay/` building the bootc (rpm-ostree/bootc) image used for cluster nodes (`ghcr.io/kevindurb/k8s-node`), including k3s systemd units, sysctl/module config for k8s and ZFS/NVMe-oF, and a tuned profile. Built/pushed/signed (cosign) by `.github/workflows/build-bootc.yml` on changes under `bootc/**`.
 - `butane/node.bu.j2` — Jinja2-templated Butane config (Ignition) for node first-boot config, rendered per-host presumably via the ansible inventory.
 - `ansible/` — provisioning/upgrade playbooks (`provision.yml`, `upgrade.yml`, `pull-upgrade.yml`, `check-zfs.yml`, `reboot-drone-04.yml`) run against `inventory/prod.yml`; also has its own `Containerfile` building `ghcr.io/kevindurb/k8s-ansible`, built by `.github/workflows/build-ansible.yml` on changes under `ansible/**`.
 - `tailscale/policy.hujson` — Tailscale ACL policy for the tailnet the cluster/ingress sits on.

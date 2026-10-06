@@ -121,9 +121,13 @@ Special cases:
 
 ## Phase 3 – Repo-wide cleanup after the last wave
 
+**Done 2026-10-06** (see `docs/retire-longhorn.md`).
+
 - `grep -rn longhorn apps platform infrastructure components` should only match `infrastructure/longhorn`.
 
 ## Phase 4 – Retire Longhorn (after about 1–2 weeks of soak)
+
+**Mostly done 2026-10-06:** retained PVs/volumes deleted and repo references removed. Remaining: delete the Argo `longhorn` Application and `longhorn-system` namespace/CRDs, clean `/var/lib/longhorn` on the drones, and expire `[rust/longhorn]` backups later. There was no homer link or ZFS-capacity alert work left (alerts already exist).
 
 1. Final check: `kubectl get pvc -A | grep longhorn` returns nothing. Make one last Longhorn backup per volume (kept on `rust/longhorn`).
 2. Delete the retained Longhorn PVs/volumes. Set the Longhorn `deleting-confirmation-flag` setting, then delete the `longhorn` Argo Application. Prune is off, so remove it from `infrastructure/kustomization.yml` and delete the app manually.
