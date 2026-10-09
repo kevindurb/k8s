@@ -6,7 +6,7 @@ namespace: healthchecks
 namePrefix: healthchecks-
 
 resources:
-  - ./resources/secret.yml
+  - ./resources/healthchecks-sealed-secret.yml
   - ./resources/drone-01.yml
   - ./resources/drone-02.yml
   - ./resources/drone-03.yml
