@@ -5,6 +5,7 @@ namespace: qbittorrent
 namePrefix: qbittorrent-
 resources:
   - ./deployment.yml
+  - ./qbittorrent-sealed-secret.yml
 components:
   - ../../components/nas-media
   - ../../components/app-pod-hardening

@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: tailscale
 
 resources:
-  - ./operator-oauth.yml
+  - ./operator-oauth-sealed-secret.yml
   - ./resources.yml
 
 labels:

@@ -50,7 +50,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
+                  name: miniflux-postgres-secret
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_USER
               value: miniflux
@@ -103,23 +103,3 @@ spec:
     - name: postgres
       port: 5432
       targetPort: postgres
----
-# DEPRECATED: Bitwarden Secrets Manager is being migrated to Sealed Secrets (platform/sealed-secrets).
-# Replace this BitwardenSecret with a SealedSecret — see docs/secrets.md.
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
-metadata:
-  name: postgres-secret
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
-  labels:
-    app.kubernetes.io/component: postgres
-spec:
-  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: postgres-secret
-  map:
-    - secretKeyName: POSTGRES_PASSWORD
-      bwSecretId: f6b247ba-56f5-4176-89c4-b47301494d42
-  authToken:
-    secretName: bw-auth-token
-    secretKey: token

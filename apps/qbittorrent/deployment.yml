@@ -42,7 +42,7 @@ spec:
             - name: TS_AUTHKEY
               valueFrom:
                 secretKeyRef:
-                  name: ts-auth-key
+                  name: qbittorrent-ts-auth-key
                   key: TS_AUTHKEY
             - name: TS_USERSPACE
               value: 'true'
@@ -185,24 +185,3 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts: [qbittorrent]
-
----
-# DEPRECATED: Bitwarden Secrets Manager is being migrated to Sealed Secrets (platform/sealed-secrets).
-# Replace this BitwardenSecret with a SealedSecret — see docs/secrets.md.
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
-metadata:
-  name: ts-auth-key
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
-  labels:
-    app.kubernetes.io/component: app
-spec:
-  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: ts-auth-key
-  map:
-    - secretKeyName: TS_AUTHKEY
-      bwSecretId: 822466c3-b8de-4c68-a354-b4a40126a87a
-  authToken:
-    secretName: bw-auth-token
-    secretKey: token

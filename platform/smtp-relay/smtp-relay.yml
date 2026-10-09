@@ -61,24 +61,3 @@ spec:
     - name: smtp
       port: 25
       targetPort: smtp
-
----
-# DEPRECATED: Bitwarden Secrets Manager is being migrated to Sealed Secrets (platform/sealed-secrets).
-# Replace this BitwardenSecret with a SealedSecret — see docs/secrets.md.
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
-metadata:
-  name: secret
-spec:
-  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: smtp-relay-secret
-  map:
-    - secretKeyName: SMTP_RELAY_SERVER
-      bwSecretId: 8a55bbb3-aa52-4751-a2fb-b1af01667293
-    - secretKeyName: SMTP_RELAY_USERNAME
-      bwSecretId: 0620c8f0-5281-4159-85d7-b1af01499e7a
-    - secretKeyName: SMTP_RELAY_PASSWORD
-      bwSecretId: 51f782d4-a1a2-4b08-bb3d-b1af013a69cb
-  authToken:
-    secretName: bw-auth-token
-    secretKey: token

@@ -29,7 +29,7 @@ spec:
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
+                  name: miniflux-postgres-secret
                   key: POSTGRES_PASSWORD
             - name: DATABASE_URL
               value: 'postgres://miniflux:$(DATABASE_PASSWORD)@miniflux-postgres-service.miniflux/miniflux?sslmode=disable'
@@ -49,7 +49,7 @@ spec:
               value: '1'
           envFrom:
             - secretRef:
-                name: tsidp
+                name: miniflux-tsidp
           volumeMounts: []
           resources:
             requests:
@@ -90,26 +90,3 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts: [miniflux]
-
----
-# DEPRECATED: Bitwarden Secrets Manager is being migrated to Sealed Secrets (platform/sealed-secrets).
-# Replace this BitwardenSecret with a SealedSecret — see docs/secrets.md.
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
-metadata:
-  name: tsidp
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
-  labels:
-    app.kubernetes.io/component: app
-spec:
-  organizationId: 575f69b2-49f4-456d-bd6f-b14101103188
-  secretName: tsidp
-  map:
-    - secretKeyName: OAUTH2_CLIENT_ID
-      bwSecretId: 752fc36d-c872-4cac-a188-b4cd014c4603
-    - secretKeyName: OAUTH2_CLIENT_SECRET
-      bwSecretId: 0b869e11-d833-4bc1-affd-b4cd014c8496
-  authToken:
-    secretName: bw-auth-token
-    secretKey: token

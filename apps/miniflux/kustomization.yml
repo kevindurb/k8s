@@ -6,6 +6,8 @@ namePrefix: miniflux-
 resources:
   - ./deployment.yml
   - ./postgres.yml
+  - ./postgres-sealed-secret.yml
+  - ./tsidp-sealed-secret.yml
 components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
