@@ -40,7 +40,7 @@ Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just
 `clusters/borg/kustomization.yml` is the entrypoint applied to the (single) cluster and includes three Argo CD `Application` manifests, each pointing at a top-level directory in this repo via `sources[].path`:
 
 - `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (democratic-csi), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, gpu-operator, node-feature-discovery.
-- `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, tsidp, mosquitto, zigbee2mqtt. `bws-operator` (Bitwarden Secrets Manager operator) also lives here but is deprecated (see Secrets section).
+- `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, tsidp, mosquitto, zigbee2mqtt.
 - `apps/` — user-facing applications (jellyfin, nextcloud, radarr/sonarr, syncthing, home-assistant, etc.), plus an `AppProject` (`apps/project.yml`) and one Argo CD `Application` per app (each app dir has its own `app.yml`).
 
 Each subdirectory under these three trees is a Kustomize root with its own `kustomization.yml`; the parent dir's `kustomization.yml` just lists them as resources (see `apps/kustomization.yml`). Argo CD auto-syncs everything (`automated.enabled: true`, `selfHeal: true`, `prune: false`) — pruning is intentionally off, so removing an app requires deleting its resource line from the parent kustomization _and_ removing the Argo CD Application manually (or letting it go orphaned) rather than relying on prune.
@@ -66,7 +66,6 @@ These are `kind: Component` (not plain kustomizations) mixed into apps via each 
 
 - `app-pod-hardening` / `pod-hardening` — JSON-patch adds a restrictive `securityContext` (runAsNonRoot, uid/gid 1000, readOnlyRootFilesystem, drop ALL caps) to Deployments/CronJobs selected by `app.kubernetes.io/component=app`.
 - `app-tmp-dirs` / `tmpdirs` — emptyDir tmp mounts (paired with the read-only-root-fs hardening above).
-- `bitwarden-secret-name-reference` — same idea for Bitwarden `BitwardenSecret` name references. Deprecated along with Bitwarden Secrets Manager (see Secrets section); drop it from an app's `components:` list as its secrets convert to sealed secrets.
 - `nas-media` / `nas` — patches in a shared NAS-backed PVC volume/mount (`nas-media` claim mounted at `/media`) for media apps like jellyfin/radarr/sonarr.
 - `app-env`, `app-http-service`/`service`, `app-volume`, `host-networking`, `prometheus-scrape-app-service` — smaller composable patches/resources for env vars, extra Services, extra volumes, hostNetwork pods, and Prometheus scrape annotations respectively.
 
@@ -76,7 +75,7 @@ Components are additive/patch-only; always check whether an existing component c
 
 Secrets are managed via sealed secrets (`platform/sealed-secrets`, Bitnami's `sealed-secrets` controller deployed in `kube-system`): commit `SealedSecret` CRs encrypted with the cluster key (e.g. `apps/linkding/tsidp-sealed-secret.yml`) and the controller unseals them into native k8s `Secret`s, consumed via normal `env[].valueFrom.secretKeyRef` or `envFrom.secretRef`. Workflow documented in `docs/secrets.md`: `kubectl create secret ... --dry-run=client -o yaml` piped through `kubeseal`, then commit the `SealedSecret`. The controller's private key is the root of trust — back it up (`just -f platform/sealed-secrets/justfile export-secrets`). Never commit raw secret values.
 
-The older Bitwarden Secrets Manager path (`platform/bws-operator` with `BitwardenSecret` CRs + the `components/bitwarden-secret-name-reference` component) is **deprecated** mid-migration: existing usages are marked with `DEPRECATED` comments; convert them to `SealedSecret`s as you touch them, and remove them plus the `bws-operator` Application once done.
+Note the app `namePrefix` interaction: the generated `Secret` takes the `SealedSecret`'s own (post-`namePrefix`) name, so name it accordingly and reference that name — see `docs/secrets.md`.
 
 ### Node OS / provisioning (outside the k8s tree)
 
@@ -106,5 +105,5 @@ GitHub Actions workflows (`.github/workflows/`) rebuild `bootc` and `ansible` co
 - `namespace`/`namePrefix` in `kustomization.yml` match the app directory name.
 - Always add a `gatus` ConfigMap generator entry pointing at that app's `gatus.yml` with label `gatus.io/enabled: 'true'`, so it shows up in the Gatus status page.
 - Ingress uses `ingressClassName: tailscale` with `tailscale.com/proxy-group`/`tailscale.com/tags` annotations, served by the Tailscale operator — plain `Ingress` only, not `HTTPRoute`/Gateway API.
-- Use `SealedSecret`s (via kubeseal, see Secrets section and `docs/secrets.md`) for new secrets — do not add new `BitwardenSecret` CRs; that path is deprecated.
+- Use `SealedSecret`s (via kubeseal, see Secrets section and `docs/secrets.md`) for new secrets.
 - Run `kustomize build apps/<name>` (or `just check-kustomize`) before considering a manifest change done.
