@@ -60,6 +60,10 @@ services:
         url: https://go.beaver-cloud.ts.net
         icon: fas fa-link
 
+      - name: PokeSim
+        url: https://pokesim.beaver-cloud.ts.net
+        icon: fas fa-gamepad
+
   - name: Admin
     icon: fas fa-gear
     items:

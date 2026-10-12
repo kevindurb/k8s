@@ -27,3 +27,4 @@ resources:
 - ./transcoding/app.yml
 - ./searxng/app.yml
 - ./minecraft/app.yml
+- ./pokesim/app.yml

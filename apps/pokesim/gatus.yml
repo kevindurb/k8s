@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: pokesim
+    group: apps
+    url: https://pokesim.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'
