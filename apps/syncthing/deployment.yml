@@ -19,6 +19,9 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostname: k8s-syncthing
       volumes:
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
         - name: volume
           persistentVolumeClaim:
             claimName: volume
@@ -33,6 +36,9 @@ spec:
             - name: PGID
               value: '1000'
           volumeMounts:
+            - name: nas-media
+              mountPath: /retrodeck
+              subPath: retrodeck
             - name: volume
               mountPath: /var/syncthing
           resources:
