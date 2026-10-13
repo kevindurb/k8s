@@ -39,6 +39,10 @@ spec:
             # Large builds: pre-generated .schem files pasted with WorldEdit (see .claude/skills/minecraft-builder)
             - name: MODRINTH_PROJECTS
               value: worldedit
+            # WorldEdit's latest Modrinth versions are betas; without this the version
+            # resolver finds no "release" candidate and container exits (see CrashLoop 2026-10-12)
+            - name: MODRINTH_VERSION_TYPE
+              value: beta
           volumeMounts:
             - name: data
               mountPath: /data
