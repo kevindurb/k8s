@@ -41,7 +41,7 @@ spec:
               value: worldedit
             # WorldEdit's latest Modrinth versions are betas; without this the version
             # resolver finds no "release" candidate and container exits (see CrashLoop 2026-10-12)
-            - name: MODRINTH_VERSION_TYPE
+            - name: MODRINTH_PROJECTS_DEFAULT_VERSION_TYPE
               value: beta
           volumeMounts:
             - name: data
