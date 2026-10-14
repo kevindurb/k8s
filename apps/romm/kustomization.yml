@@ -12,9 +12,6 @@ resources:
   - ./secret-sealed-secret.yml
   - ./mariadb-sealed-secret.yml
 
-components:
-  - ../../components/app-tmp-dirs
-
 configMapGenerator:
   - name: gatus
     options:

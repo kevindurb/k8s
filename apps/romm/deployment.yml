@@ -2,8 +2,10 @@
 # RomM's init/envsubst writes into /etc/nginx/conf.d and /etc/gunicorn, so it
 # cannot run with readOnlyRootFilesystem: true (the shared app-pod-hardening
 # component forces it). Hardening is applied inline instead: non-root uid/gid
-# 1000, no privilege escalation, all capabilities dropped, tmp emptyDirs via
-# the app-tmp-dirs component.
+# 1000, no privilege escalation, all capabilities dropped. The app-tmp-dirs
+# component is also skipped: mounting an emptyDir over /var/log hides the
+# image's /var/log/nginx and breaks nginx. Only /tmp is a tmpfs, for RomM's
+# cache and PID files.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -57,6 +59,8 @@ spec:
         - name: redis-data
           persistentVolumeClaim:
             claimName: redis-data
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: app
           image: docker.io/rommapp/romm:5.4.0@sha256:03295f95a6290e752641f9553ac4198b0e5b71b879d57f7b2371b98f608feb54
@@ -128,6 +132,8 @@ spec:
               mountPath: /romm/config
             - name: redis-data
               mountPath: /redis-data
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             httpGet:
               path: /
