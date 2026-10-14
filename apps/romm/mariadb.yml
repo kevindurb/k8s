@@ -70,11 +70,10 @@ spec:
             - name: var-log
               mountPath: /var/log
           readinessProbe:
-            exec:
-              command: ['healthcheck.sh', '--connect', '--innodb_initialized']
+            tcpSocket:
+              port: mysql
             initialDelaySeconds: 20
             periodSeconds: 10
-            timeoutSeconds: 5
             failureThreshold: 5
           resources:
             requests:
