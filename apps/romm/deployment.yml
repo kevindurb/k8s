@@ -121,6 +121,8 @@ spec:
               value: https://idp.beaver-cloud.ts.net
             - name: OIDC_SERVER_METADATA_URL
               value: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
+            - name: DISABLE_USERPASS_LOGIN
+              value: 'true'
           volumeMounts:
             - name: library
               mountPath: /romm/library
