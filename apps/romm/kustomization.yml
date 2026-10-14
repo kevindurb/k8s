@@ -1,0 +1,30 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: romm
+namePrefix: romm-
+
+resources:
+  - ./deployment.yml
+  - ./library.yml
+  - ./mariadb.yml
+  - ./secret-sealed-secret.yml
+  - ./mariadb-sealed-secret.yml
+
+components:
+  - ../../components/app-tmp-dirs
+
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - romm.yml=gatus.yml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: romm

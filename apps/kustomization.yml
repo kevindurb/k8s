@@ -20,6 +20,7 @@ resources:
 - ./omada/app.yml
 - ./qbittorrent/app.yml
 - ./radarr/app.yml
+- ./romm/app.yml
 - ./scrypted/app.yml
 - ./sonarr/app.yml
 - ./syncthing/app.yml

@@ -1,0 +1,33 @@
+---
+# Dedicated NAS export for the ROM library. Structured as RomM "Structure A":
+# /media/romm/roms/{platform}/{game} and /media/romm/bios/{platform}, mounted
+# at /romm/library. Kept separate from the shared nas-media component (which
+# mounts all of /media at /media) and from the existing retrodeck/Emulation/ROMS
+# trees, which are left untouched.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: library
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.42.24
+    path: /media/romm
+  mountOptions: [nfsvers=4.2, nconnect=8]
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: library
+spec:
+  resources:
+    requests:
+      storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ''
+  volumeName: library

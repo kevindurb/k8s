@@ -1,0 +1,233 @@
+---
+# RomM's init/envsubst writes into /etc/nginx/conf.d and /etc/gunicorn, so it
+# cannot run with readOnlyRootFilesystem: true (the shared app-pod-hardening
+# component forces it). Hardening is applied inline instead: non-root uid/gid
+# 1000, no privilege escalation, all capabilities dropped, tmp emptyDirs via
+# the app-tmp-dirs component.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        # RomM runs migrations immediately on start and exits if the DB is not
+        # reachable yet, so wait for MariaDB to accept connections first.
+        - name: wait-for-db
+          image: docker.io/library/busybox:1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+          command:
+            - sh
+            - -c
+            - until nc -z romm-mariadb-service 3306; do echo "waiting for mariadb"; sleep 2; done
+          resources:
+            requests:
+              memory: 16M
+            limits:
+              memory: 64M
+      volumes:
+        - name: library
+          persistentVolumeClaim:
+            claimName: library
+        - name: resources
+          persistentVolumeClaim:
+            claimName: resources
+        - name: assets
+          persistentVolumeClaim:
+            claimName: assets
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data
+      containers:
+        - name: app
+          image: docker.io/rommapp/romm:5.4.0@sha256:03295f95a6290e752641f9553ac4198b0e5b71b879d57f7b2371b98f608feb54
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: ROMM_BASE_URL
+              value: https://romm.beaver-cloud.ts.net
+            - name: ROMM_DB_DRIVER
+              value: mariadb
+            - name: DB_HOST
+              value: romm-mariadb-service
+            - name: DB_PORT
+              value: '3306'
+            - name: DB_NAME
+              value: romm
+            - name: DB_USER
+              value: romm-user
+            - name: DB_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: romm-mariadb-secret
+                  key: PASSWD
+            - name: ROMM_AUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secret
+                  key: ROMM_AUTH_SECRET_KEY
+            - name: SCAN_WORKERS
+              value: '4'
+            - name: WEB_SERVER_CONCURRENCY
+              value: '4'
+            - name: HASHEOUS_API_ENABLED
+              value: 'true'
+            # OIDC against tsidp (client registered via tsidp dynamic client registration).
+            - name: OIDC_ENABLED
+              value: 'true'
+            - name: OIDC_PROVIDER
+              value: generic
+            - name: OIDC_CLIENT_ID
+              value: '620f3922c86bbc8b83cfaeb414769289'
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secret
+                  key: OIDC_CLIENT_SECRET
+            - name: OIDC_REDIRECT_URI
+              value: https://romm.beaver-cloud.ts.net/api/oauth/openid
+            - name: OIDC_SERVER_APPLICATION_URL
+              value: https://idp.beaver-cloud.ts.net
+            - name: OIDC_SERVER_METADATA_URL
+              value: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
+          volumeMounts:
+            - name: library
+              mountPath: /romm/library
+            - name: resources
+              mountPath: /romm/resources
+            - name: assets
+              mountPath: /romm/assets
+            - name: config
+              mountPath: /romm/config
+            - name: redis-data
+              mountPath: /redis-data
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 5
+          resources:
+            requests:
+              memory: 512M
+            limits:
+              memory: 4G
+          ports:
+            - name: http
+              containerPort: 8080
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: resources
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: assets
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:k8s,tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [romm]

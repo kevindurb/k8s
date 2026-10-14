@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: romm
+    group: apps
+    url: https://romm.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'
