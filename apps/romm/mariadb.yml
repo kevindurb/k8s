@@ -26,7 +26,10 @@ spec:
             claimName: mariadb-volume
         - name: tmp
           emptyDir: {}
-        - name: run
+        # Mount the socket dir itself: with a read-only rootfs the image's
+        # /run/mysqld is not writable, and its entrypoint only recreates it
+        # when running as root.
+        - name: run-mysqld
           emptyDir: {}
         - name: var-log
           emptyDir: {}
@@ -62,8 +65,8 @@ spec:
               mountPath: /var/lib/mysql
             - name: tmp
               mountPath: /tmp
-            - name: run
-              mountPath: /run
+            - name: run-mysqld
+              mountPath: /run/mysqld
             - name: var-log
               mountPath: /var/log
           readinessProbe:
