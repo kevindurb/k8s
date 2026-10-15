@@ -59,6 +59,10 @@ spec:
         - name: redis-data
           persistentVolumeClaim:
             claimName: redis-data
+        # LaunchBox keeps its downloaded metadata DB under /romm/launchbox.
+        - name: launchbox
+          persistentVolumeClaim:
+            claimName: launchbox
         - name: tmp
           emptyDir: {}
       containers:
@@ -103,6 +107,25 @@ spec:
               value: '4'
             - name: HASHEOUS_API_ENABLED
               value: 'true'
+            # Additional metadata providers. Playmatch (extra hash DB) and
+            # LaunchBox (local, filename-matched DB) need no credentials;
+            # ScreenScraper needs a free account.
+            - name: PLAYMATCH_API_ENABLED
+              value: 'true'
+            - name: LAUNCHBOX_API_ENABLED
+              value: 'true'
+            - name: ENABLE_SCHEDULED_UPDATE_LAUNCHBOX_METADATA
+              value: 'true'
+            - name: SCREENSCRAPER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secret
+                  key: SCREENSCRAPER_USER
+            - name: SCREENSCRAPER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secret
+                  key: SCREENSCRAPER_PASSWORD
             # OIDC against tsidp (client registered via tsidp dynamic client registration).
             - name: OIDC_ENABLED
               value: 'true'
@@ -134,6 +157,8 @@ spec:
               mountPath: /romm/config
             - name: redis-data
               mountPath: /redis-data
+            - name: launchbox
+              mountPath: /romm/launchbox
             - name: tmp
               mountPath: /tmp
           readinessProbe:
@@ -207,6 +232,20 @@ spec:
   resources:
     requests:
       storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: launchbox
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 10Gi
 
 ---
 apiVersion: v1
