@@ -172,7 +172,7 @@ spec:
             requests:
               memory: 512M
             limits:
-              memory: 4G
+              memory: 6G
           ports:
             - name: http
               containerPort: 8080
@@ -231,7 +231,7 @@ spec:
   storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
-      storage: 1Gi
+      storage: 5Gi
 
 ---
 apiVersion: v1
