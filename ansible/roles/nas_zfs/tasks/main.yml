@@ -4,9 +4,17 @@
   community.general.zpool:
     name: rust
     mountpoint: /var/mnt/rust
+    pool_properties:
+      autotrim: 'on'
     vdevs:
       - type: mirror
         disks: [/dev/sdb, /dev/sdc]
+      # Longhorn's old NVMe (/var/lib/longhorn) repurposed as L2ARC read cache.
+      # Purely a cache vdev: no redundancy needed, losing it never harms the pool.
+      # Use the plain device node: the module normalises whole-disk -> partition
+      # (it records ...p1), but not a /dev/disk/by-id path.
+      - role: cache
+        disks: [/dev/nvme0n1]
 
 - name: Configure rust pool as NFSv4 pseudo-root
   community.general.zfs:
@@ -22,15 +30,12 @@
     state: present
     extra_zfs_properties:
       sharenfs: rw,sync,no_subtree_check,mountpoint,crossmnt,insecure,no_root_squash
-  notify: [Restart NFS]
-
-- name: Create longhorn backup dataset
-  community.general.zfs:
-    name: rust/longhorn
-    state: present
-    extra_zfs_properties:
-      sharenfs: rw,sync,no_subtree_check,mountpoint,crossmnt,insecure,no_root_squash
-      quota: 2T
+      # atime=off: reads must not trigger atime COW writes (read-heavy share).
+      # recordsize=1048576 == 1M. Written in bytes because the module compares the
+      # raw `zfs get -p` value, and "1M" would always read back as a change.
+      # (recordsize only affects newly written data.)
+      atime: 'off'
+      recordsize: '1048576'
   notify: [Restart NFS]
 
 - name: Start NFS
