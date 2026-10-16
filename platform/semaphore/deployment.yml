@@ -26,7 +26,7 @@ spec:
           emptyDir: {}
       containers:
         - name: app
-          image: docker.io/semaphoreui/semaphore:v2.19.16@sha256:3707a971a57fdc5ac99a184bf83f2efb7d00cbeec8fb08a16a8028f77229e141
+          image: docker.io/semaphoreui/semaphore:v2.20.0-alpha4@sha256:19b8769d95849418104bf51eca0dfd4559f76eab7b89030bf88c7531465b27f1
           env:
             - name: TZ
               value: America/Denver
