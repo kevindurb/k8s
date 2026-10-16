@@ -16,7 +16,7 @@ spec:
   nfs:
     server: 192.168.42.24
     path: /media/romm
-  mountOptions: [nfsvers=4.2, nconnect=8]
+  mountOptions: [nfsvers=4.2, nconnect=8, noatime]
 
 ---
 apiVersion: v1
