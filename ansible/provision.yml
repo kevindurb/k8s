@@ -1,6 +1,7 @@
 ---
 # vim: set ft=yaml.ansible
 - name: Base provision
+  remote_user: core
   tags: base
   hosts: all
   become: true
@@ -53,6 +54,7 @@
       changed_when: false
 
 - name: Setup k3s
+  remote_user: core
   tags: k3s
   hosts: all
   become: true
@@ -68,12 +70,14 @@
       check_mode: false
 
 - name: Setup drone-04 as NAS
+  remote_user: core
   tags: zfs
   hosts: drone-04
   become: true
   roles: [nas_zfs]
 
 - name: Setup tailscale
+  remote_user: core
   tags: tailscale
   hosts: all
   become: true
