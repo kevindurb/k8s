@@ -135,7 +135,7 @@
           loop_control:
             label: '{{ item.namespace }}/{{ item.name }}'
 
-        - name: Wait for every pod using a {{ csi_storage_class }} PVC to be gone
+        - name: Wait for every pod using a PVC to be gone {{ csi_storage_class }}
           delegate_to: localhost
           kubernetes.core.k8s_info:
             api_version: v1
