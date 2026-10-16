@@ -52,8 +52,6 @@ spec:
               value: kevindurb@github.idp.beaver-cloud.ts.net
             - name: SEMAPHORE_TOTP_ENABLED
               value: 'true'
-            - name: SEMAPHORE_METRICS_ENABLED
-              value: 'true'
             # Stop Python from trying to write __pycache__ into the read-only venv.
             - name: PYTHONDONTWRITEBYTECODE
               value: '1'
