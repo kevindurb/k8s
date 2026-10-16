@@ -21,6 +21,7 @@
 		"tag:golink":          ["autogroup:admin"],
 		"tag:router":          ["autogroup:admin"],
 		"tag:travel-router":   ["autogroup:admin"],
+		"tag:travel-lab":      ["autogroup:admin"],
 		"tag:media":           ["autogroup:admin", "tag:k8s-operator"],
 		"tag:monitoring":      ["autogroup:admin", "tag:k8s-operator"],
 		"tag:apps":            ["autogroup:admin", "tag:k8s-operator"],
