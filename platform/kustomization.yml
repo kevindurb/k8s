@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./mosquitto/app.yml
   - ./sealed-secrets/app.yml
+  - ./semaphore/app.yml
   - ./smtp-relay/app.yml
   - ./tsidp/app.yml
   - ./zigbee2mqtt/app.yml

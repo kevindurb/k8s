@@ -110,6 +110,10 @@ services:
         url: https://argocd.beaver-cloud.ts.net
         icon: fas fa-ship
 
+      - name: Semaphore
+        url: https://semaphore.beaver-cloud.ts.net
+        icon: fas fa-terminal
+
       - name: Prometheus
         url: https://prometheus.beaver-cloud.ts.net
         icon: fas fa-chart-line
