@@ -66,7 +66,7 @@ These are `kind: Component` (not plain kustomizations) mixed into apps via each 
 
 - `app-pod-hardening` / `pod-hardening` — JSON-patch adds a restrictive `securityContext` (runAsNonRoot, uid/gid 1000, readOnlyRootFilesystem, drop ALL caps) to Deployments/CronJobs selected by `app.kubernetes.io/component=app`.
 - `app-tmp-dirs` / `tmpdirs` — emptyDir tmp mounts (paired with the read-only-root-fs hardening above).
-- `nas-media` / `nas` — patches in a shared NAS-backed PVC volume/mount (`nas-media` claim mounted at `/media`) for media apps like jellyfin/radarr/sonarr.
+- `nas-media` — patches in a shared NAS-backed PVC volume/mount (`nas-media` claim mounted at `/media`) for media apps like jellyfin/radarr/sonarr.
 - `app-env`, `app-http-service`/`service`, `app-volume`, `host-networking`, `prometheus-scrape-app-service` — smaller composable patches/resources for env vars, extra Services, extra volumes, hostNetwork pods, and Prometheus scrape annotations respectively.
 
 Components are additive/patch-only; always check whether an existing component covers what you need before writing new inline patches in an app's `kustomization.yml`.
