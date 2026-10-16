@@ -44,12 +44,16 @@ spec:
               value: /tmp/semaphore
             - name: SEMAPHORE_WEB_ROOT
               value: https://semaphore.beaver-cloud.ts.net
+            # Bootstrap-only (runs when the DB is empty). Keep this address
+            # different from any tsidp identity's email: Semaphore matches an
+            # OIDC login to an existing user by email and refuses to link a
+            # local password account, so a shared address breaks SSO.
             - name: SEMAPHORE_ADMIN
               value: admin
             - name: SEMAPHORE_ADMIN_NAME
               value: Kevin
             - name: SEMAPHORE_ADMIN_EMAIL
-              value: kevindurb@github.idp.beaver-cloud.ts.net
+              value: admin@beaver-cloud.ts.net
             - name: SEMAPHORE_TOTP_ENABLED
               value: 'true'
             # Stop Python from trying to write __pycache__ into the read-only venv.
