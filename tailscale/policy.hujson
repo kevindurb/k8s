@@ -39,10 +39,14 @@
 			"target": ["autogroup:member", "autogroup:tagged"],
 			"attr":   ["drive:share", "drive:access"],
 		},
-    {
-      "target": ["autogroup:admin"],
-      "attr": ["mullvad"],
-    },
+		{
+			"target": ["autogroup:admin"],
+			"attr":   ["mullvad"],
+		},
+		{
+			"target": ["autogroup:member", "autogroup:tagged"],
+			"attr":   ["cache-network-maps"],
+		},
 	],
 
 	"ssh": [
