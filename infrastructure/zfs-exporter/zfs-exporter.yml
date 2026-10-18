@@ -51,6 +51,17 @@ spec:
             - name: http
               containerPort: 9134
               protocol: TCP
+          # No health endpoint; /metrics runs zpool/zfs in the host mount
+          # namespace (cached, but slow), so only probe the listener.
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
           securityContext:
             privileged: true
             runAsUser: 0

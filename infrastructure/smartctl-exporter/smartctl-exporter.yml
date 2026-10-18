@@ -13,8 +13,21 @@ spec:
         - name: smartctl-exporter
           image: quay.io/prometheuscommunity/smartctl-exporter:v0.14.0@sha256:cfe22c36d7d2fac48ebf619707305acb65eb0fb670656eb80f356e606d782bc1
           ports:
-            - containerPort: 9633
+            - name: http
+              containerPort: 9633
               protocol: TCP
+          # No health endpoint, and /metrics shells out to smartctl per device
+          # (well past the 1s default probe timeout), so only prove the
+          # listener is up.
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
           securityContext:
             # smartctl needs raw device ioctls; the v0.14.0 image defaults to
             # nobody, so root must be forced explicitly

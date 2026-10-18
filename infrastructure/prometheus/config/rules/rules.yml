@@ -654,6 +654,24 @@ groups:
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
 
+      # Catches what KubernetesPodNotHealthy misses: pods that are Running but
+      # whose readiness probe never goes green.
+      - alert: KubernetesContainerNotReady
+        expr: |
+          kube_pod_container_status_ready == 0
+            and on (namespace, pod) kube_pod_status_phase{phase="Running"} == 1
+            and on (namespace, pod) kube_pod_owner{owner_kind!~"Job|Node"} == 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Kubernetes container not ready ({{ $labels.namespace }}/{{ $labels.pod }})
+          description: |-
+            Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }}
+            has been Running but not Ready for more than 15 minutes.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
   - name: Prometheus
     rules:
       - alert: PrometheusTargetMissing

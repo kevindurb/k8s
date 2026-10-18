@@ -21,8 +21,22 @@ spec:
             - --collector.ethtool
             - --collector.ethtool.device-include=^en.*
           ports:
-            - containerPort: 9100
+            - name: http
+              containerPort: 9100
               protocol: TCP
+          # node_exporter has no /-/healthy; / is the cheap landing page, while
+          # /metrics runs every collector and must not be probed.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
           resources:
             limits:
               cpu: 250m

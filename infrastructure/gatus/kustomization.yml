@@ -14,6 +14,9 @@ components:
   - ../../components/app-http-service
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
+  # Gatus exposes /metrics (gatus_results_total and friends); without the
+  # scrape annotation the GatusTargetUnsuccessful rule has no data.
+  - ../../components/prometheus-scrape-app-service
 
 configMapGenerator:
   - name: config

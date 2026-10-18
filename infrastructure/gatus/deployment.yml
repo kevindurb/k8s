@@ -44,6 +44,19 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          # Gatus reports 200 on /health as soon as the HTTP server is up,
+          # whether or not the individual endpoint checks are passing.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
         - image: ghcr.io/kiwigrid/k8s-sidecar:2.5.5@sha256:8009f14fb715e1d2a4b732b9e43888d34219f813af302cd7a300d85585667fc4
           name: config-sync
           env:
@@ -57,8 +70,24 @@ spec:
               value: ALL
             - name: RESOURCE
               value: both
+            # /healthz: 503 until the initial ConfigMap sync completes (readiness)
+            # and when the K8s API has not been contacted for 60s (liveness).
+            # The image binds AF_INET6 on "": bindv6only=0 in the pod netns, so
+            # kubelet's IPv4 probe reaches it. Port 8081 because gatus owns 8080
+            # in the same pod network namespace.
             - name: HEALTH_PORT
-              value: '0'
+              value: '8081'
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            periodSeconds: 10
+            failureThreshold: 3
           volumeMounts:
             - name: volume
               mountPath: /config
