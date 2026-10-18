@@ -39,6 +39,9 @@ data:
       overdue_job: 3h
       pre_due_job: 3h
     oauth2:
+      # tsidp client registered via dynamic client registration
+      # (POST https://idp.beaver-cloud.ts.net/register); the secret comes from
+      # DT_OAUTH2_CLIENT_SECRET in the donetick-secrets SealedSecret.
       client_id: "0673c0710ba61992fc7bdad76378d3ae"
       client_secret: ""
       pkce: false
