@@ -8,7 +8,7 @@ data:
     name: "selfhosted"
     is_done_tick_dot_com: false
     is_user_creation_disabled: false
-    disable_password_auth: false
+    disable_password_auth: true
     database:
       type: "sqlite"
       migration: true
