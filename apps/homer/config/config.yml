@@ -40,6 +40,10 @@ services:
         url: https://linkding.beaver-cloud.ts.net
         icon: fas fa-bookmark
 
+      - name: Donetick
+        url: https://donetick.beaver-cloud.ts.net
+        icon: fas fa-list-check
+
       - name: SearXNG
         url: https://searxng.beaver-cloud.ts.net
         icon: fas fa-search

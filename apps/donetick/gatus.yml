@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: donetick
+    group: apps
+    url: https://donetick.beaver-cloud.ts.net/api/v1/health
+    conditions:
+      - '[STATUS] == 200'

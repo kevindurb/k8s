@@ -1,0 +1,117 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: config
+          configMap:
+            name: config
+      containers:
+        - name: app
+          image: docker.io/donetick/donetick:v0.1.83@sha256:a4f41fc67942eeec1016ab1025f98382ff9179c1d366d2f7856d99073c98582e
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: DT_ENV
+              value: selfhosted
+            - name: DT_SQLITE_PATH
+              value: /donetick-data/donetick.db
+            - name: DT_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: donetick-secrets
+                  key: DT_JWT_SECRET
+            - name: DT_OAUTH2_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: donetick-secrets
+                  key: DT_OAUTH2_CLIENT_SECRET
+          volumeMounts:
+            - name: data
+              mountPath: /donetick-data
+            - name: config
+              mountPath: /config/selfhosted.yaml
+              subPath: selfhosted.yaml
+              readOnly: true
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 512M
+          ports:
+            - name: http
+              containerPort: 2021
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 5G
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:k8s,tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [donetick]
