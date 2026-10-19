@@ -28,7 +28,6 @@
 		"tag:home":            ["autogroup:admin", "tag:k8s-operator"],
 		"tag:border0-managed": ["autogroup:admin"],
 		"tag:tsidp":           ["autogroup:admin"],
-		"tag:work":           ["autogroup:admin"],
 	},
 
 	"nodeAttrs": [
