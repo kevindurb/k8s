@@ -1,6 +1,7 @@
 ---
 endpoints:
   - name: qbittorrent
+    enabled: false
     group: apps
     url: https://qbittorrent.beaver-cloud.ts.net
     conditions:
