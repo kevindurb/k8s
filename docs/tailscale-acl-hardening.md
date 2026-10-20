@@ -379,7 +379,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 6. ~~Which non-node tagged devices (pve, routers, travel-lab) do you still SSH into?~~ **Decided:** routers (`tag:router`, `tag:travel-router`) and the travel lab keep admin SSH; `tag:pve` is removed entirely.
 7. ~~Should a future `group:home-users` member also get `tag:bridges` (e.g. to pair a Zigbee device), or does that stay admin-only?~~ **Decided:** stays admin-only.
 8. ~~Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?~~ **Decided:** yes, `tag:travel-router` is a source for `tag:travel-lab` on tcp:443.
-9. Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.
+9. ~~Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.~~ **Decided:** no. The lab's services all run on one Pi and talk locally, so `tag:travel-lab` gets no grant to itself.
 
 ## Related cleanup (done 2026-10-20 unless noted)
 
