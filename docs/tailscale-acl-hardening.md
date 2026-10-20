@@ -251,7 +251,7 @@ Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s
 
 ### nodeAttrs / ssh / autoApprovers
 
-- Funnel only for `tag:funnel`.
+- Funnel only for `tag:funnel`; consignment-app is deliberately public, nothing else is.
 - Drive share/access and Mullvad only for `group:admins`, and Drive sharing only between an admin's own devices. The `autogroup:admin -> autogroup:tagged` and `tag:travel-router -> *` Drive grants are dropped.
 - `cache-network-maps` for `*`.
 - SSH: `group:admins` -> `tag:k8s-node`, `tag:router`, `tag:travel-router`, `tag:travel-lab`, and their own devices. The blanket "admins -> all tagged devices" rule is removed, which ends SSH to `tag:golink` and `tag:tsidp` (neither advertises SSH). Optional: `"action": "check", "checkPeriod": "12h"`.
@@ -352,13 +352,13 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 
 ## Risks and things to check
 
-- **Host-networked pods** (`home-assistant`, `scrypted`, `syncthing`, `omada`) speak to the tailnet as `tag:k8s-node`. If any of them calls a tailnet device (e.g. home-assistant -> `ender3`), it needs its own egress Service, or a narrow `tag:k8s-node` grant for that one target.
+- **Host-networked pods** (`home-assistant`, `scrypted`, `syncthing`, `omada`) speak to the tailnet as `tag:k8s-node`. Accepted for now: no known calls, and Home Assistant's config is in a PVC so a hidden `*.ts.net` integration would only surface after lockdown. If one does, it needs its own egress Service, or a narrow `tag:k8s-node` grant for that one target.
 - **Other app-to-app calls over `*.ts.net`** that live in app UIs/databases rather than git (like the miniflux one) only show up after lockdown. Before Step 4, check the tailnet logs or the admin console for `tag:k8s-node` source connections.
 - **Egress port mapping**: the operator maps each `ExternalName` port to a random port on the proxy pods; the ClusterIP Service keeps port 443. Confirm with `kubectl -n tailscale get svc` after Step 3.
 - **`tag:ci` -> `svc:argocd`**: `tailscale ping` needs argocd in CI's netmap, which the grant provides. If `ping: argocd` fails while the webhook works, drop the `ping` input rather than widening the grant.
 - **Tests and `svc:`**: the ACL tester's support for `svc:` destinations is unverified, so the tests only deny tags for `tag:ci` and rely on the CI job for the positive check.
 - **`autogroup:self` with group sources** in the SSH and Drive rules: if the tester rejects it, the Step 4 PR fails before apply. Fall back to listing users.
-- **`tag:work` / `tag:personal`**: a tagged laptop is not in any group, so it loses app access. Add the tag to the relevant grant sources if that is wanted.
+- **`tag:work` / `tag:personal`**: a tagged laptop is not in any group, so it loses app access. Intended for now (both tags are unused); add the tag to a grant's sources if that changes.
 - **Router LANs are trusted wholesale**: every client on the home router's or travel router's LAN, including guests and IoT, gets regular-user access. If either LAN has guest/IoT segments, masquerade only the trusted one.
 - **Subnet routes**: `tag:router` / `tag:travel-router` advertise routes; those are approved separately (`autoApprovers.routes` is intentionally not added). Only admins can use them under `*`.
 - **`tag:travel-lab` is both device and service tag** (same pattern this plan removes from `tag:k8s`): `group:travel-users` reaches the lab devices themselves on 443, not just their services. Fine for a standalone lab; split off a `tag:travel-lab-svc` if that changes.
@@ -371,13 +371,13 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 
 ## Open decisions
 
-1. Is `consignment-app` intentionally public? If not, drop `tailscale.com/funnel: 'true'` and `tag:funnel`.
-2. Should `tag:work` / `tag:personal` devices reach `tag:apps` / `tag:media` / `tag:home`?
+1. ~~Is `consignment-app` intentionally public?~~ **Decided:** yes, it stays public. Keep `tailscale.com/funnel: 'true'` and `tag:funnel`; no other tag gets the funnel attribute.
+2. ~~Should `tag:work` / `tag:personal` devices reach `tag:apps` / `tag:media` / `tag:home`?~~ **Decided:** keep the tags in `tagOwners` for now, but they are unused and get no grants - they stay locked out.
 3. Is `extraClaims.isAdmin` consumed by any app outside this repo? Nothing under `apps/` reads it.
-4. Does any host-networked pod call a tailnet device?
+4. ~~Does any host-networked pod call a tailnet device?~~ **Decided:** no known calls, accept the risk. Home Assistant's config lives in a PVC, so if an integration silently points at a `*.ts.net` name it will only show up after lockdown; add a narrow `tag:k8s-node` grant or egress Service for that one target if so.
 5. Was the `tag:travel-router -> *` Drive grant used? It is dropped in the proposal.
 6. ~~Which non-node tagged devices (pve, routers, travel-lab) do you still SSH into?~~ **Decided:** routers (`tag:router`, `tag:travel-router`) and the travel lab keep admin SSH; `tag:pve` is removed entirely.
-7. Should a future `group:home-users` member also get `tag:bridges` (e.g. to pair a Zigbee device), or does that stay admin-only?
+7. ~~Should a future `group:home-users` member also get `tag:bridges` (e.g. to pair a Zigbee device), or does that stay admin-only?~~ **Decided:** stays admin-only.
 8. Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?
 9. Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.
 
