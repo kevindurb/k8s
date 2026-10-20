@@ -17,6 +17,7 @@
 		"tag:work":            ["group:admins"],
 		"tag:personal":        ["group:admins"],
 		"tag:k8s-node":        ["group:admins"],
+		"tag:bastion":         ["group:admins"],
 		"tag:golink":          ["group:admins"],
 		"tag:router":          ["group:admins"],
 		"tag:travel-router":   ["group:admins"],
@@ -56,6 +57,21 @@
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
+			// bastion: admins get in with a short check, and the box can SSH onward
+			"action":      "check",
+			"checkPeriod": "1h",
+			"src":         ["group:admins"],
+			"dst":         ["tag:bastion"],
+			"users":       ["root", "autogroup:nonroot"],
+		},
+		{
+			// check mode cannot apply to a tagged source, so the hop out is accept
+			"action": "accept",
+			"src":    ["tag:bastion"],
+			"dst":    ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
 			"action": "accept",
 			"src":    ["group:admins"],
 			"dst":    ["autogroup:self"],
@@ -75,6 +91,9 @@
 		// travel-lab devices and the services they host may reach each other
 		{"src": ["tag:travel-lab"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
 		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab", "svc:travel-jellyfin"], "ip": ["tcp:443"]},
+
+		// a tagged bastion is its own identity: it needs a network path for the SSH hops
+		{"src": ["tag:bastion"], "dst": ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab"], "ip": ["tcp:22"]},
 
 		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
 		{"src": ["tag:k8s-oidc"], "dst": ["tag:tsidp"], "ip": ["tcp:443"]},
@@ -192,6 +211,11 @@
 			"src":    "tag:travel-lab",
 			"accept": ["tag:travel-lab:443"],
 			"deny":   ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
+		},
+		{
+			"src":    "tag:bastion",
+			"accept": ["tag:k8s-node:22"],
+			"deny":   ["tag:apps:443", "tag:infra:443", "tag:monitoring:443", "tag:tsidp:443"],
 		},
 		{
 			"src":  "tag:work",
