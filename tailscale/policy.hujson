@@ -72,6 +72,8 @@
 		{"src": ["group:home-users",   "tag:router", "tag:travel-router"], "dst": ["tag:home"],  "ip": ["tcp:443"]},
 		{"src": ["group:game-players", "tag:router", "tag:travel-router"], "dst": ["tag:games"], "ip": ["tcp:25565", "udp:19132"]},
 
+		// travel-lab devices and the services they host may reach each other
+		{"src": ["tag:travel-lab"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
 		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab", "svc:travel-jellyfin"], "ip": ["tcp:443"]},
 
 		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
@@ -187,8 +189,9 @@
 			           "tag:k8s:443"],
 		},
 		{
-			"src":  "tag:travel-lab",
-			"deny": ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
+			"src":    "tag:travel-lab",
+			"accept": ["tag:travel-lab:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:work",

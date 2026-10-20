@@ -238,12 +238,13 @@ The full file is in the [Appendix](#appendix-proposed-policy). The important pie
 | `group:home-users`, `tag:router`, `tag:travel-router` | `tag:home` | tcp:443 |
 | `group:game-players`, `tag:router`, `tag:travel-router` | `tag:games` | tcp:25565, udp:19132 |
 | `group:travel-users`, `tag:travel-router` | `tag:travel-lab`, `svc:travel-jellyfin` | tcp:443 |
+| `tag:travel-lab` | `tag:travel-lab` | tcp:443 |
 | app/media/home users | `tag:tsidp` | tcp:443 + tsidp login cap |
 | `group:admins` | `tag:tsidp` | tsidp admin cap |
 | `tag:k8s-oidc` | `tag:tsidp` | tcp:443 |
 | `tag:ci` | `svc:argocd` | tcp:443 |
 
-Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s`, `tag:k8s-node`, or the operator. `tag:k8s-node`, `tag:work`, `tag:personal`, `tag:travel-lab` and `tag:golink` get no network grants as sources (see [Open decisions](#open-decisions)).
+Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s`, `tag:k8s-node`, or the operator. `tag:k8s-node`, `tag:work`, `tag:personal` and `tag:golink` get no network grants as sources (see [Open decisions](#open-decisions)).
 
 `svc:travel-jellyfin` is listed by name because that service was defined without a tag (its six siblings on the travel-lab Pi all carry `tag:travel-lab`), so a tag grant never matched it and only admins (who have `* -> *`) could reach it. Assign `tag:travel-lab` to the service in the admin console and the explicit destination can be dropped. The operator's OAuth client cannot do it: it is not an owner of `tag:travel-lab`, so the API update is rejected.
 
@@ -373,7 +374,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 - **`tag:work` / `tag:personal`**: a tagged laptop is not in any group, so it loses app access. Intended for now (both tags are unused); add the tag to a grant's sources if that changes.
 - **Router LANs are trusted wholesale**: every client on the home router's or travel router's LAN, including guests and IoT, gets regular-user access. If either LAN has guest/IoT segments, masquerade only the trusted one.
 - **Subnet routes**: `tag:router` / `tag:travel-router` advertise routes; those are approved separately (`autoApprovers.routes` is intentionally not added). Only admins can use them under `*`.
-- **`tag:travel-lab` is both device and service tag** (same pattern this plan removes from `tag:k8s`): `group:travel-users` reaches the lab devices themselves on 443, not just their services. Fine for a standalone lab; split off a `tag:travel-lab-svc` if that changes.
+- **`tag:travel-lab` is both device and service tag** (same pattern this plan removes from `tag:k8s`): `group:travel-users` reaches the lab devices themselves on 443, not just their services, and the lab devices can reach each other on 443 (explicit self-grant). Fine for a standalone lab; split off a `tag:travel-lab-svc` if that changes.
 - **The egress `ExternalName` Service drifts from git.** The operator rewrites `spec.externalName`; without `ignoreDifferences` Argo CD self-heals it back on every sync (`infrastructure/tailscale/app.yml`).
 - **Stale gatus ConfigMaps.** `prune: false` keeps every previous hashed `gatus.io/enabled` ConfigMap, and the config-sync sidecar writes files for all of them, so gatus may run old URLs. Delete superseded ones after changing a `gatus.yml`.
 - **golink has no health check** while it stays a tsnet-only app. It is only visible on `go.beaver-cloud.ts.net`; monitoring it again needs an egress proxy.
@@ -391,7 +392,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 6. ~~Which non-node tagged devices (pve, routers, travel-lab) do you still SSH into?~~ **Decided:** routers (`tag:router`, `tag:travel-router`) and the travel lab keep admin SSH; `tag:pve` is removed entirely.
 7. ~~Should a future `group:home-users` member also get `tag:bridges` (e.g. to pair a Zigbee device), or does that stay admin-only?~~ **Decided:** stays admin-only.
 8. ~~Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?~~ **Decided:** yes, `tag:travel-router` is a source for `tag:travel-lab` on tcp:443.
-9. ~~Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.~~ **Decided:** no. The lab's services all run on one Pi and talk locally, so `tag:travel-lab` gets no grant to itself.
+9. ~~Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.~~ **Reversed 2026-10-20 on request:** the lab gets `tag:travel-lab -> tag:travel-lab` on tcp:443. The services are all on one Pi and talk locally, but the devices also need to reach each other's HTTPS endpoints.
 
 ## Related cleanup (done 2026-10-20 unless noted)
 
@@ -479,6 +480,8 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		{"src": ["group:home-users",   "tag:router", "tag:travel-router"], "dst": ["tag:home"],  "ip": ["tcp:443"]},
 		{"src": ["group:game-players", "tag:router", "tag:travel-router"], "dst": ["tag:games"], "ip": ["tcp:25565", "udp:19132"]},
 
+		// travel-lab devices and the services they host may reach each other
+		{"src": ["tag:travel-lab"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
 		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab", "svc:travel-jellyfin"], "ip": ["tcp:443"]},
 
 		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
@@ -594,8 +597,9 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 			           "tag:k8s:443"],
 		},
 		{
-			"src":  "tag:travel-lab",
-			"deny": ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
+			"src":    "tag:travel-lab",
+			"accept": ["tag:travel-lab:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:work",
