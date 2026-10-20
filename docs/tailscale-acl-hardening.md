@@ -237,13 +237,15 @@ The full file is in the [Appendix](#appendix-proposed-policy). The important pie
 | `group:media-users`, `tag:router`, `tag:travel-router` | `tag:media` | tcp:443 |
 | `group:home-users`, `tag:router`, `tag:travel-router` | `tag:home` | tcp:443 |
 | `group:game-players`, `tag:router`, `tag:travel-router` | `tag:games` | tcp:25565, udp:19132 |
-| `group:travel-users`, `tag:travel-router` | `tag:travel-lab` | tcp:443 |
+| `group:travel-users`, `tag:travel-router` | `tag:travel-lab`, `svc:travel-jellyfin` | tcp:443 |
 | app/media/home users | `tag:tsidp` | tcp:443 + tsidp login cap |
 | `group:admins` | `tag:tsidp` | tsidp admin cap |
 | `tag:k8s-oidc` | `tag:tsidp` | tcp:443 |
 | `tag:ci` | `svc:argocd` | tcp:443 |
 
 Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s`, `tag:k8s-node`, or the operator. `tag:k8s-node`, `tag:work`, `tag:personal`, `tag:travel-lab` and `tag:golink` get no network grants as sources (see [Open decisions](#open-decisions)).
+
+`svc:travel-jellyfin` is listed by name because that service was defined without a tag (its six siblings on the travel-lab Pi all carry `tag:travel-lab`), so a tag grant never matched it and only admins (who have `* -> *`) could reach it. Assign `tag:travel-lab` to the service in the admin console and the explicit destination can be dropped. The operator's OAuth client cannot do it: it is not an owner of `tag:travel-lab`, so the API update is rejected.
 
 ### tsidp capabilities
 
@@ -477,7 +479,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		{"src": ["group:home-users",   "tag:router", "tag:travel-router"], "dst": ["tag:home"],  "ip": ["tcp:443"]},
 		{"src": ["group:game-players", "tag:router", "tag:travel-router"], "dst": ["tag:games"], "ip": ["tcp:25565", "udp:19132"]},
 
-		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
+		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab", "svc:travel-jellyfin"], "ip": ["tcp:443"]},
 
 		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
 		{"src": ["tag:k8s-oidc"], "dst": ["tag:tsidp"], "ip": ["tcp:443"]},
