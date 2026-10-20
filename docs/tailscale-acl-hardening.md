@@ -1,6 +1,6 @@
 # Tailscale ACL hardening
 
-Status: **steps 1-3 applied (2026-10-20), step 4 pending**. This document describes the state of `tailscale/policy.hujson` and the ingress tags before the work, the problems found, and a staged plan to move from a flat tailnet to a tag- and group-scoped one. Access is still wide open: the allow-all grant stays until step 4.
+Status: **applied (2026-10-20)**. All four steps are live: the tailnet is tag- and group-scoped, the allow-all grant is gone. This document records the state before the work, the problems found, and what was done.
 
 The policy file is GitOps-applied by `.github/workflows/tailscale.yml` (`tailscale/gitops-acl-action`): PRs run `action: test`, pushes to `main` run `action: apply`. There is no in-cluster controller; the repo is the source of truth.
 
@@ -321,18 +321,28 @@ Applied notes:
 - The `tailscale` kustomization now uses `includeSelectors: false`, because the common label would otherwise be injected into the egress Service's (meaningless) selector.
 - Verified: `idp.beaver-cloud.ts.net` resolves to the egress ClusterIP, `https://idp.beaver-cloud.ts.net/.well-known/openid-configuration` returns 200 with a valid certificate from a pod, the egress proxy logs the connection to idp, an OIDC login to linkding/donetick works, and gatus is all green with only tsidp (via the rewrite) and the disabled golink check left on tailnet names.
 
-### Step 4 - lock down (pending)
+### Step 4 - lock down - applied 2026-10-20 (PR [#524](https://github.com/kevindurb/k8s/pull/524), `e0f99bde`)
 
-PR replacing `policy.hujson` with the Appendix. CI runs `action: test` on the PR, so the matrix is validated before merge; the push applies it.
+PR replacing `policy.hujson` with the Appendix. CI ran `action: test` on the PR, so the matrix was validated before merge; the push applied it.
+
+Applied notes (what was checked after the apply):
+
+- Admin: `https://argocd.beaver-cloud.ts.net` 200, `https://gatus.beaver-cloud.ts.net` 200, jellyfin 302.
+- SSH: `root@drone-01` and `core@drone-01` work, `root@router` works. `kevindurb@drone-01` is permitted by policy (`autogroup:nonroot`) but fails because the node has no such OS user - use `core@` (bootc) or `root@`.
+- Nodes are cut off: from `drone-01`, `curl -m8 https://jellyfin.beaver-cloud.ts.net` returns 000 (curl exit 28, timeout).
+- Router LAN path: from the OpenWrt box (`tag:router`), a TCP connect to jellyfin:443 succeeds while argocd:443 and gatus:443 hang (silently dropped, no RST).
+- CI: a `workflow_dispatch` run of `ci.yml` passed `Connect to tailnet` (tags `tag:ci`, `ping: argocd`) and the Argo CD webhook, so the `svc:argocd` grant works.
+- `gatus` was all green after the apply, including the `tsidp` check, so `tag:k8s-oidc -> tag:tsidp` still carries the OIDC back-channel.
+- The travel lab was offline (last seen two days earlier) during verification, so admin SSH to it is rule-verified only. Recheck with `tailscale ssh root@travel-lab uptime` once it is back.
 
 ### Verification
 
 From an admin device:
 
 ```sh
-tailscale ssh drone-01 'uptime'
-tailscale ssh router 'uptime'
-tailscale ssh travel-lab 'uptime'
+tailscale ssh core@drone-01 'uptime'     # nodes are bootc: core, or root
+tailscale ssh root@router 'uptime'
+tailscale ssh root@travel-lab 'uptime'
 curl -fsS -o /dev/null -w '%{http_code}\n' https://argocd.beaver-cloud.ts.net
 curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 ```
@@ -348,7 +358,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 
 ### Rollback
 
-`git revert` the Step 4 policy commit; the next push re-applies the previous policy. That alone restores access. Steps 1-3 are access-neutral and only need reverting if you want the old tags or DNS back; reverting Step 2 also requires recreating the affected Ingresses.
+`git revert e0f99bde` (the Step 4 policy commit); the next push re-applies the previous policy. That alone restores access. Steps 1-3 are access-neutral and only need reverting if you want the old tags or DNS back; reverting Step 2 also requires recreating the affected Ingresses.
 
 ## Risks and things to check
 
