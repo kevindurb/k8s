@@ -124,11 +124,11 @@ The only autogroups left are ones with no group equivalent: `autogroup:self` ("t
 | `tag:games` | minecraft (`loadBalancerClass: tailscale`; TCP 25565 + UDP 19132) |
 | `tag:apps` + `tag:funnel` | consignment-app (dedicated tag so Funnel can be narrowed to one device) |
 | `tag:k8s-oidc` | `oidc-egress` ProxyGroup pods: the in-cluster identity for calls to tsidp |
-| `tag:bastion` | the jump host: admins get in with an hourly check, and it can SSH out to the nodes, both routers and the travel lab on 22 |
+| `tag:bastion` | the jump host: admins get in through check mode, and it can SSH out to the nodes, both routers and the travel lab on 22 |
 | `tag:travel-lab` | the standalone travel lab's devices and the Tailscale Services they publish (self-approved; no tsidp, no cluster access) |
-| `tag:bastion` | the jump host: admins get in with an hourly check, and it can SSH out to the nodes, both routers and the travel lab on 22 |
+| `tag:bastion` | the jump host: admins get in through check mode, and it can SSH out to the nodes, both routers and the travel lab on 22 |
 
-The bastion (`tag:bastion`) is an admin-only jump host. Admins reach it through the `* -> *` grant plus an inbound SSH rule in check mode (`checkPeriod: "1h"`, valid range 1m-168h or `"always"`), so entering it re-authenticates at most hourly. The hop out is its own rule: `src: ["tag:bastion"]` over tcp:22 to the cluster nodes, both routers and the travel lab. Tailscale does not allow check mode when the SSH source is a tagged device, so that rule is `accept` - the TTL lives on the inbound check. Tagging the device removes it from `autogroup:self`, and the tag is now its only identity: anything else it must reach needs an explicit grant.
+The bastion (`tag:bastion`) is an admin-only jump host. Admins reach it through the `* -> *` grant plus an inbound SSH rule in check mode, so entering it prompts a re-authentication. The hop out is its own rule: `src: ["tag:bastion"]` over tcp:22 to the cluster nodes, both routers and the travel lab. Two limits apply: Tailscale does not allow check mode when the SSH source is a tagged device, so the hop out is `accept`, and a custom `checkPeriod` (anything other than the default 12h) is a premium-plan feature, so the inbound check uses the 12h default. Tagging the device removes it from `autogroup:self`, and the tag is now its only identity: anything else it must reach needs an explicit grant.
 
 Exact annotation changes. Every line drops `tag:k8s`; jellyfin, navidrome, home-assistant and omada also drop `tag:apps`:
 
@@ -262,7 +262,7 @@ Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:bas
 - Funnel only for `tag:funnel`; consignment-app is deliberately public, nothing else is.
 - Drive share/access and Mullvad only for `group:admins`, and Drive sharing only between an admin's own devices. The `autogroup:admin -> autogroup:tagged` and `tag:travel-router -> *` Drive grants are dropped.
 - `cache-network-maps` for `*`.
-- SSH: `group:admins` -> `tag:k8s-node`, `tag:router`, `tag:travel-router`, `tag:travel-lab`, `tag:bastion`, and their own devices. All are `accept` except the bastion, which is `check` with `checkPeriod: "1h"`. `tag:bastion` itself is also a source: tcp:22 to the nodes, both routers and the travel lab, as an `accept` rule - Tailscale rejects check mode for tagged sources, so the hourly re-authentication happens on entry to the bastion. The blanket "admins -> all tagged devices" rule is removed, which ends SSH to `tag:golink` and `tag:tsidp` (neither advertises SSH).
+- SSH: `group:admins` -> `tag:k8s-node`, `tag:router`, `tag:travel-router`, `tag:travel-lab`, `tag:bastion`, and their own devices. All are `accept` except the bastion, which is `check` (12h default; custom `checkPeriod` needs a premium plan). `tag:bastion` itself is also a source: tcp:22 to the nodes, both routers and the travel lab, as an `accept` rule - Tailscale rejects check mode for tagged sources, so the re-authentication happens on entry to the bastion. The blanket "admins -> all tagged devices" rule is removed, which ends SSH to `tag:golink` and `tag:tsidp` (neither advertises SSH).
 - `tag:pve` is dropped from `tagOwners`: the host is gone and no device carries the tag (checked 2026-10-20).
 - `autoApprovers.services` maps each cluster service tag to `tag:k8s` (the ingress proxy devices). `tag:k8s -> tag:k8s` is removed. `tag:travel-lab -> tag:travel-lab` lets the lab publish its own services.
 - `tests` asserts the matrix so PRs fail if it regresses.
@@ -470,12 +470,11 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
-			// bastion: admins get in with a short check, and the box can SSH onward
-			"action":      "check",
-			"checkPeriod": "1h",
-			"src":         ["group:admins"],
-			"dst":         ["tag:bastion"],
-			"users":       ["root", "autogroup:nonroot"],
+			// bastion: check mode (default 12h; a custom checkPeriod is a premium feature)
+			"action": "check",
+			"src":    ["group:admins"],
+			"dst":    ["tag:bastion"],
+			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
 			// check mode cannot apply to a tagged source, so the hop out is accept
