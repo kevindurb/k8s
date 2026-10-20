@@ -27,3 +27,11 @@ spec:
       enabled: true
       prune: false
       selfHeal: true
+  ignoreDifferences:
+    # The operator rewrites the egress ExternalName Service to point at the
+    # ClusterIP it creates for the ProxyGroup.
+    - group: ""
+      kind: Service
+      name: idp
+      jsonPointers:
+        - /spec/externalName
