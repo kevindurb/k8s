@@ -2,8 +2,12 @@
 
 {
 	"groups": {
-		"group:k8s-admins":    ["kevindurb@github"],
-		"group:dev-pod-users": ["kevindurb@github"],
+		"group:admins":        ["kevindurb@github"],
+		"group:app-users":     ["kevindurb@github"],
+		"group:media-users":   ["kevindurb@github"],
+		"group:home-users":    ["kevindurb@github"],
+		"group:game-players":  ["kevindurb@github"],
+		"group:travel-users":  ["kevindurb@github"],
 	},
 
 	"hosts": {},
@@ -16,7 +20,7 @@
 		"tag:personal":        ["autogroup:admin"],
 		"tag:k8s-operator":    ["autogroup:admin"],
 		"tag:k8s":             ["tag:k8s-operator"],
-		"tag:dev-pod":         ["autogroup:admin"],
+		"tag:k8s-oidc":        ["group:admins", "tag:k8s-operator"],
 		"tag:k8s-node":        ["autogroup:admin"],
 		"tag:golink":          ["autogroup:admin"],
 		"tag:router":          ["autogroup:admin"],
@@ -26,6 +30,9 @@
 		"tag:monitoring":      ["autogroup:admin", "tag:k8s-operator"],
 		"tag:apps":            ["autogroup:admin", "tag:k8s-operator"],
 		"tag:home":            ["autogroup:admin", "tag:k8s-operator"],
+		"tag:bridges":         ["group:admins", "tag:k8s-operator"],
+		"tag:games":           ["group:admins", "tag:k8s-operator"],
+		"tag:funnel":          ["group:admins", "tag:k8s-operator"],
 		"tag:border0-managed": ["autogroup:admin"],
 		"tag:tsidp":           ["autogroup:admin"],
 	},
@@ -64,14 +71,8 @@
 		},
 		{
 			"action": "accept",
-			"src":    ["group:k8s-admins"],
+			"src":    ["group:admins"],
 			"dst":    ["tag:k8s-node"],
-			"users":  ["root", "autogroup:nonroot"],
-		},
-		{
-			"action": "accept",
-			"src":    ["group:dev-pod-users"],
-			"dst":    ["tag:dev-pod"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
 	],
@@ -183,6 +184,15 @@
 	"autoApprovers": {
 		"services": {
 			"tag:k8s":             ["tag:k8s"],
+			"tag:apps":            ["tag:k8s"],
+			"tag:media":           ["tag:k8s"],
+			"tag:home":            ["tag:k8s"],
+			"tag:bridges":         ["tag:k8s"],
+			"tag:infra":           ["tag:k8s"],
+			"tag:monitoring":      ["tag:k8s"],
+			"tag:games":           ["tag:k8s"],
+			"tag:funnel":          ["tag:k8s"],
+			"tag:travel-lab":      ["tag:travel-lab"],
 			"tag:border0-managed": ["tag:border0-managed"],
 		},
 	},
