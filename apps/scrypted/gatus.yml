@@ -2,6 +2,6 @@
 endpoints:
   - name: scrypted
     group: apps
-    url: https://scrypted.beaver-cloud.ts.net
+    url: http://scrypted-app-service.scrypted
     conditions:
       - '[STATUS] == 200'

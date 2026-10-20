@@ -19,6 +19,37 @@ spec:
     mode: auth
 
 ---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: oidc-egress
+spec:
+  type: egress
+  replicas: 2
+  tags:
+    - tag:k8s-oidc
+
+---
+# In-cluster identity for the OIDC back-channel. Pods resolve
+# idp.beaver-cloud.ts.net to this Service (see infrastructure/coredns) and
+# reach tsidp through the oidc-egress proxy devices (tag:k8s-oidc) instead of
+# speaking to the tailnet as the node (tag:k8s-node).
+apiVersion: v1
+kind: Service
+metadata:
+  name: idp
+  annotations:
+    tailscale.com/tailnet-fqdn: idp.beaver-cloud.ts.net
+    tailscale.com/proxy-group: oidc-egress
+spec:
+  type: ExternalName
+  externalName: placeholder   # rewritten by the operator
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

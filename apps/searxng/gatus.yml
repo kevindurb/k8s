@@ -2,6 +2,6 @@
 endpoints:
   - name: searxng
     group: apps
-    url: https://searxng.beaver-cloud.ts.net
+    url: http://searxng-app-service.searxng
     conditions:
       - '[STATUS] == 200'

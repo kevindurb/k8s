@@ -2,6 +2,6 @@
 endpoints:
   - name: home-assistant
     group: apps
-    url: https://home-assistant.beaver-cloud.ts.net
+    url: http://home-assistant-app-service.home-assistant
     conditions:
       - '[STATUS] == 200'

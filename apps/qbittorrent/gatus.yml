@@ -3,6 +3,6 @@ endpoints:
   - name: qbittorrent
     enabled: false
     group: apps
-    url: https://qbittorrent.beaver-cloud.ts.net
+    url: http://qbittorrent-app-service.qbittorrent
     conditions:
       - '[STATUS] == 200'

@@ -2,6 +2,6 @@
 endpoints:
   - name: navidrome
     group: apps
-    url: https://navidrome.beaver-cloud.ts.net
+    url: http://navidrome-app-service.navidrome
     conditions:
       - '[STATUS] == 200'

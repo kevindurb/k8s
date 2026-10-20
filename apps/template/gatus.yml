@@ -2,6 +2,6 @@
 endpoints:
   - name: template
     group: apps
-    url: https://template.beaver-cloud.ts.net
+    url: http://template-app-service.template
     conditions:
       - '[STATUS] == 200'

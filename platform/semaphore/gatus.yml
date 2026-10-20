@@ -2,6 +2,6 @@
 endpoints:
   - name: semaphore
     group: platform
-    url: https://semaphore.beaver-cloud.ts.net/api/ping
+    url: http://semaphore-app-service.semaphore/api/ping
     conditions:
       - '[STATUS] == 200'

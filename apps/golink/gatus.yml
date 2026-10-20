@@ -1,6 +1,10 @@
 ---
 endpoints:
   - name: golink
+    # golink runs as a tsnet app: it listens only on its own tailnet device
+    # (tag:golink), so there is no in-cluster URL to check. Re-enable if a
+    # monitoring egress ProxyGroup is added later.
+    enabled: false
     group: apps
     url: https://go.beaver-cloud.ts.net
     conditions:

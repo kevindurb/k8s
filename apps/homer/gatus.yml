@@ -2,6 +2,6 @@
 endpoints:
   - name: homer
     group: apps
-    url: https://home.beaver-cloud.ts.net
+    url: http://homer-app-service.homer
     conditions:
       - '[STATUS] == 200'

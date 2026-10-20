@@ -2,6 +2,6 @@
 endpoints:
   - name: makemkv
     group: apps
-    url: https://makemkv.beaver-cloud.ts.net
+    url: http://makemkv-app-service.makemkv
     conditions:
       - '[STATUS] == 200'
