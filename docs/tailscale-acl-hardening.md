@@ -98,7 +98,7 @@ Grants name groups, never `autogroup:member` / `autogroup:admin`. Adding someone
 
 | Group | Reaches |
 | --- | --- |
-| `group:admins` | everything; SSH to nodes; tsidp admin UI / DCR / `isAdmin`; Drive; Mullvad |
+| `group:admins` | everything; SSH to nodes, both routers and the travel lab; tsidp admin UI / DCR / `isAdmin`; Drive; Mullvad |
 | `group:app-users` | `tag:apps` on 443, tsidp login |
 | `group:media-users` | `tag:media` on 443, tsidp login |
 | `group:home-users` | `tag:home` (home-assistant) on 443, tsidp login |
@@ -243,7 +243,7 @@ The full file is in the [Appendix](#appendix-proposed-policy). The important pie
 | `tag:k8s-oidc` | `tag:tsidp` | tcp:443 |
 | `tag:ci` | `svc:argocd` | tcp:443 |
 
-Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s`, `tag:k8s-node`, or the operator. `tag:k8s-node`, `tag:work`, `tag:personal`, `tag:travel-lab`, `tag:golink` and `tag:pve` get no network grants as sources (see [Open decisions](#open-decisions)).
+Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s`, `tag:k8s-node`, or the operator. `tag:k8s-node`, `tag:work`, `tag:personal`, `tag:travel-lab` and `tag:golink` get no network grants as sources (see [Open decisions](#open-decisions)).
 
 ### tsidp capabilities
 
@@ -254,7 +254,8 @@ Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s
 - Funnel only for `tag:funnel`.
 - Drive share/access and Mullvad only for `group:admins`, and Drive sharing only between an admin's own devices. The `autogroup:admin -> autogroup:tagged` and `tag:travel-router -> *` Drive grants are dropped.
 - `cache-network-maps` for `*`.
-- SSH: `group:admins` -> `tag:k8s-node` and their own devices. The blanket "admins -> all tagged devices" rule is removed, which also ends SSH to `tag:pve`, `tag:router`, `tag:travel-router`, `tag:travel-lab`, `tag:golink`, `tag:tsidp`. Add explicit rules for any of those you still use. Optional: `"action": "check", "checkPeriod": "12h"`.
+- SSH: `group:admins` -> `tag:k8s-node`, `tag:router`, `tag:travel-router`, `tag:travel-lab`, and their own devices. The blanket "admins -> all tagged devices" rule is removed, which ends SSH to `tag:golink` and `tag:tsidp` (neither advertises SSH). Optional: `"action": "check", "checkPeriod": "12h"`.
+- `tag:pve` is dropped from `tagOwners`: the host is gone and no device carries the tag (checked 2026-10-20).
 - `autoApprovers.services` maps each cluster service tag to `tag:k8s` (the ingress proxy devices). `tag:k8s -> tag:k8s` is removed. `tag:travel-lab -> tag:travel-lab` lets the lab publish its own services.
 - `tests` asserts the matrix so PRs fail if it regresses.
 - All dev-pod entries are removed.
@@ -330,11 +331,14 @@ From an admin device:
 
 ```sh
 tailscale ssh drone-01 'uptime'
+tailscale ssh router 'uptime'
+tailscale ssh travel-lab 'uptime'
 curl -fsS -o /dev/null -w '%{http_code}\n' https://argocd.beaver-cloud.ts.net
 curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 ```
 
 - OIDC login to linkding, miniflux, romm, donetick still works. (Covered during step 3: linkding and donetick logins work through the egress identity.)
+- SSH still works to cluster nodes, `router`, `travel-router` and `travel-lab` (all four advertise SSH today); it no longer works to any other tagged device.
 - Gatus is all green, including the tsidp check. golink has no check (see step 3).
 - miniflux "save to linkding" still works.
 - From a client behind the home router and one behind the travel router, jellyfin loads; argocd, gatus and the travel lab's services time out.
@@ -372,7 +376,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 3. Is `extraClaims.isAdmin` consumed by any app outside this repo? Nothing under `apps/` reads it.
 4. Does any host-networked pod call a tailnet device?
 5. Was the `tag:travel-router -> *` Drive grant used? It is dropped in the proposal.
-6. Which non-node tagged devices (pve, routers, travel-lab) do you still SSH into?
+6. ~~Which non-node tagged devices (pve, routers, travel-lab) do you still SSH into?~~ **Decided:** routers (`tag:router`, `tag:travel-router`) and the travel lab keep admin SSH; `tag:pve` is removed entirely.
 7. Should a future `group:home-users` member also get `tag:bridges` (e.g. to pair a Zigbee device), or does that stay admin-only?
 8. Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?
 9. Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.
@@ -381,7 +385,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 
 - Root `null.yml`: deleted (`ed7caf04`). It was an unreferenced, invalid duplicate of the zigbee2mqtt Ingress (`kind+:`).
 - Duplicate minecraft Service: the leftover was **`minecraft/app-service`**, not `minecraft-app-service`. It had no Argo tracking-id and no `namePrefix`, so its hostname collided into `minecraft-1`; `minecraft-app-service` is the GitOps-managed one and was left alone. After deleting `app-service` the operator garbage-collected `ts-app-service-vhthc` and `tailscale status` shows a single `minecraft` device.
-- `tag:pve` is defined but unused; `tag:router` is used by step 4's grants. Keep or remove deliberately.
+- `tag:pve` is gone from `tagOwners` in step 4: the host no longer exists and no device carries the tag. `tag:router`, `tag:travel-router` and `tag:travel-lab` keep admin SSH and get their grants from step 4.
 - `qbittorrent` has a Service and Ingress but no pods; its gatus check is disabled. Worth deciding whether the app should still be deployed.
 
 ## Appendix: proposed policy
@@ -404,7 +408,6 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 	"hosts": {},
 
 	"tagOwners": {
-		"tag:pve":             ["group:admins"],
 		"tag:ci":              ["group:admins"],
 		"tag:work":            ["group:admins"],
 		"tag:personal":        ["group:admins"],
@@ -439,6 +442,12 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 			"action": "accept",
 			"src":    ["group:admins"],
 			"dst":    ["tag:k8s-node"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			"action": "accept",
+			"src":    ["group:admins"],
+			"dst":    ["tag:router", "tag:travel-router", "tag:travel-lab"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
