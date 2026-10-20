@@ -81,7 +81,7 @@ kind: Ingress
 metadata:
   name: funnel-ingress
   annotations:
-    tailscale.com/tags: tag:k8s,tag:apps
+    tailscale.com/tags: tag:apps,tag:funnel
     tailscale.com/funnel: 'true'
 spec:
   defaultBackend:

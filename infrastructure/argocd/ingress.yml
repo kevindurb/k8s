@@ -5,7 +5,7 @@ metadata:
   name: ingress
   annotations:
     tailscale.com/proxy-group: ingress-proxy-group
-    tailscale.com/tags: tag:k8s,tag:ci
+    tailscale.com/tags: tag:infra
 spec:
   defaultBackend:
     service:

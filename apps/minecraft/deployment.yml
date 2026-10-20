@@ -72,7 +72,7 @@ metadata:
     app.kubernetes.io/component: app
   annotations:
     tailscale.com/hostname: minecraft
-    tailscale.com/tags: tag:k8s,tag:apps
+    tailscale.com/tags: tag:games
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
