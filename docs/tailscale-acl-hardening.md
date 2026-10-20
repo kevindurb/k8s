@@ -105,7 +105,7 @@ Grants name groups, never `autogroup:member` / `autogroup:admin`. Adding someone
 | `group:game-players` | `tag:games` on the Minecraft ports |
 | `group:travel-users` | `tag:travel-lab` on 443 |
 
-**Masquerading routers.** `tag:router` (home) and `tag:travel-router` SNAT LAN clients that cannot run Tailscale into the tailnet, so those clients show up as the router's tag. Groups cannot contain tags, so both tags are listed next to the groups in the regular-user grants (apps, media, home, games). They are not travel users and not admins. tsidp's `/authorize` rejects tagged sources, so clients behind a router reach tsidp-backed apps (linkding, miniflux, romm, donetick) on the network but cannot log in through tsidp. They get no tsidp grant, and need an app-local login.
+**Masquerading routers.** `tag:router` (home) and `tag:travel-router` SNAT LAN clients that cannot run Tailscale into the tailnet, so those clients show up as the router's tag. Groups cannot contain tags, so both tags are listed next to the groups in the regular-user grants (apps, media, home, games; the travel router also gets the travel lab). They are not travel users and not admins. tsidp's `/authorize` rejects tagged sources, so clients behind a router reach tsidp-backed apps (linkding, miniflux, romm, donetick) on the network but cannot log in through tsidp. They get no tsidp grant, and need an app-local login.
 
 The only autogroups left are ones with no group equivalent: `autogroup:self` ("the requester's own devices", for SSH and Drive) and `autogroup:nonroot` (an SSH login-user selector).
 
@@ -237,7 +237,7 @@ The full file is in the [Appendix](#appendix-proposed-policy). The important pie
 | `group:media-users`, `tag:router`, `tag:travel-router` | `tag:media` | tcp:443 |
 | `group:home-users`, `tag:router`, `tag:travel-router` | `tag:home` | tcp:443 |
 | `group:game-players`, `tag:router`, `tag:travel-router` | `tag:games` | tcp:25565, udp:19132 |
-| `group:travel-users` | `tag:travel-lab` | tcp:443 |
+| `group:travel-users`, `tag:travel-router` | `tag:travel-lab` | tcp:443 |
 | app/media/home users | `tag:tsidp` | tcp:443 + tsidp login cap |
 | `group:admins` | `tag:tsidp` | tsidp admin cap |
 | `tag:k8s-oidc` | `tag:tsidp` | tcp:443 |
@@ -342,7 +342,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 - Gatus is all green, including the tsidp check. golink has no check (see step 3).
 - miniflux "save to linkding" still works.
 - From a client behind the home router and one behind the travel router, jellyfin loads; argocd, gatus and the travel lab's services time out.
-- From a travel-users device, the travel lab's services load.
+- From a travel-users device, the travel lab's services load. From a client behind the travel router, a travel-lab service also loads on 443.
 - From a node (`ssh core@drone-01`), `curl -m5 https://jellyfin.beaver-cloud.ts.net` times out.
 - GitHub Actions: the `Deploy` job in `.github/workflows/ci.yml` must still reach `argocd`. Push to `main` and confirm the `ping: argocd` and the webhook POST succeed.
 
@@ -373,12 +373,12 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 
 1. ~~Is `consignment-app` intentionally public?~~ **Decided:** yes, it stays public. Keep `tailscale.com/funnel: 'true'` and `tag:funnel`; no other tag gets the funnel attribute.
 2. ~~Should `tag:work` / `tag:personal` devices reach `tag:apps` / `tag:media` / `tag:home`?~~ **Decided:** keep the tags in `tagOwners` for now, but they are unused and get no grants - they stay locked out.
-3. Is `extraClaims.isAdmin` consumed by any app outside this repo? Nothing under `apps/` reads it.
+3. ~~Is `extraClaims.isAdmin` consumed by any app outside this repo?~~ **Decided:** nothing consumes it. It stays confined to the `group:admins` tsidp cap (harmless if unused) and is not granted to anyone else.
 4. ~~Does any host-networked pod call a tailnet device?~~ **Decided:** no known calls, accept the risk. Home Assistant's config lives in a PVC, so if an integration silently points at a `*.ts.net` name it will only show up after lockdown; add a narrow `tag:k8s-node` grant or egress Service for that one target if so.
 5. Was the `tag:travel-router -> *` Drive grant used? It is dropped in the proposal.
 6. ~~Which non-node tagged devices (pve, routers, travel-lab) do you still SSH into?~~ **Decided:** routers (`tag:router`, `tag:travel-router`) and the travel lab keep admin SSH; `tag:pve` is removed entirely.
 7. ~~Should a future `group:home-users` member also get `tag:bridges` (e.g. to pair a Zigbee device), or does that stay admin-only?~~ **Decided:** stays admin-only.
-8. Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?
+8. ~~Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?~~ **Decided:** yes, `tag:travel-router` is a source for `tag:travel-lab` on tcp:443.
 9. Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.
 
 ## Related cleanup (done 2026-10-20 unless noted)
@@ -467,7 +467,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		{"src": ["group:home-users",   "tag:router", "tag:travel-router"], "dst": ["tag:home"],  "ip": ["tcp:443"]},
 		{"src": ["group:game-players", "tag:router", "tag:travel-router"], "dst": ["tag:games"], "ip": ["tcp:25565", "udp:19132"]},
 
-		{"src": ["group:travel-users"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
+		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
 
 		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
 		{"src": ["tag:k8s-oidc"], "dst": ["tag:tsidp"], "ip": ["tcp:443"]},
@@ -577,9 +577,9 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		},
 		{
 			"src":    "tag:travel-router",
-			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565"],
+			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565", "tag:travel-lab:443"],
 			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:tsidp:443",
-			           "tag:travel-lab:443", "tag:k8s:443"],
+			           "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:travel-lab",
