@@ -57,12 +57,11 @@
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
-			// bastion: admins get in with a short check, and the box can SSH onward
-			"action":      "check",
-			"checkPeriod": "1h",
-			"src":         ["group:admins"],
-			"dst":         ["tag:bastion"],
-			"users":       ["root", "autogroup:nonroot"],
+			// bastion: check mode (default 12h; a custom checkPeriod is a premium feature)
+			"action": "check",
+			"src":    ["group:admins"],
+			"dst":    ["tag:bastion"],
+			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
 			// check mode cannot apply to a tagged source, so the hop out is accept
