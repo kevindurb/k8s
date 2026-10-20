@@ -1,10 +1,10 @@
 # Tailscale ACL hardening
 
-Status: **proposal, not applied**. This document describes the current state of `tailscale/policy.hujson` and the ingress tags, the problems found, and a staged plan to move from a flat tailnet to a tag- and group-scoped one.
+Status: **steps 1-3 applied (2026-10-20), step 4 pending**. This document describes the state of `tailscale/policy.hujson` and the ingress tags before the work, the problems found, and a staged plan to move from a flat tailnet to a tag- and group-scoped one. Access is still wide open: the allow-all grant stays until step 4.
 
 The policy file is GitOps-applied by `.github/workflows/tailscale.yml` (`tailscale/gitops-acl-action`): PRs run `action: test`, pushes to `main` run `action: apply`. There is no in-cluster controller; the repo is the source of truth.
 
-## Current state
+## State before the work
 
 ### The tailnet is flat
 
@@ -30,7 +30,7 @@ Every user device and every tagged device can reach every other device, every Ta
 
 Every ingress currently carries `tag:k8s` in addition to a semantic tag, and `tag:k8s` is also the identity of the operator's proxy pods (including the `borg-cluster` kube-apiserver proxy). One grant to `tag:k8s` therefore opens all ~28 apps plus the proxy devices.
 
-### In-cluster traffic to the tailnet is `tag:k8s-node`
+### In-cluster traffic to the tailnet was `tag:k8s-node` (fixed in step 3)
 
 CoreDNS forwards to the node's `/etc/resolv.conf`, so a pod that calls `https://<x>.beaver-cloud.ts.net` leaves through the node's `tailscale0` and the peer sees the node (`tag:k8s-node`), not the app. Two things depend on this today:
 
@@ -58,6 +58,8 @@ A node has one tailnet identity, so per-pod identity has to come from a separate
 | 12 | In-cluster callers of tailnet names all appear as `tag:k8s-node` | see above |
 | 13 | dev-pod is dead but still has a tag, group, SSH rule, and a `cluster-admin` binding for `dev-pod.beaver-cloud.ts.net` | `policy.hujson:6,19,72-76`, `infrastructure/tailscale/resources.yml` |
 | 14 | Access is granted to `autogroup:member` / `autogroup:admin` directly, so there is no way to give someone app access without admin | `policy.hujson` |
+
+Findings 1, 2, 4, 8-11 and 14 describe the policy before step 4 and are fixed by the step 4 swap. Fixed already: 3 and 7 (step 2 tags), 5 (gatus is now `tag:monitoring`), 12 (step 3 egress identity), 13 (step 1); 6 is split (argocd is `tag:infra` since step 2, `tag:ci` stops being mintable by the operator in step 4).
 
 ### How tsidp caps actually resolve
 
@@ -213,7 +215,12 @@ The ConfigMap needs its own kustomization root, because `infrastructure/tailscal
 
 **Gatus -> in-cluster URLs.** Routing 30 health checks through egress would need one `ExternalName` + rewrite per FQDN and would give gatus reach into every service tag. Instead, point each `gatus.yml` at `http://<name>-app-service.<name>`, as `apps/template/gatus.yml` already does, keeping existing paths (e.g. donetick `/api/v1/health`). Gatus then needs no tailnet access at all. What you lose is the end-to-end check through the Tailscale ingress. If you want that back, add a `monitoring-egress` ProxyGroup (`tag:k8s-probe`) for a handful of canary FQDNs later.
 
-**miniflux -> linkding -> in-cluster URL.** Linkding's API authenticates with a token, so the caller's tailnet identity adds nothing. Change the integration URL in miniflux (Settings -> Integrations -> Linkding) to `http://linkding-app-service.linkding`. No egress, no grant.
+Two exceptions were found when this was applied:
+
+- **pokesim** rejects requests whose `Host` is not in its trusted-host allowlist (it derives them from `PUBLIC_URL`). The in-cluster check needs `headers: {Host: pokesim.beaver-cloud.ts.net}`; Gatus sets `request.Host` for a `Host` header, so no app change is needed.
+- **golink** is a tsnet app: it listens only on its own tailnet device (`go`, `tag:golink`) and nothing listens on its pod IP or Service. There is no in-cluster URL to check, so `apps/golink/gatus.yml` is `enabled: false`. Re-enable it only together with a `monitoring-egress` proxy (or check it from a device on the tailnet).
+
+**miniflux -> linkding -> in-cluster URL.** Linkding's API authenticates with a token, so the caller's tailnet identity adds nothing. The integration URL in miniflux (Settings -> Integrations -> Linkding) was already `http://linkding-app-service.linkding` when step 3 was applied, so no change was needed. No egress, no grant.
 
 After these, nothing legitimate uses `tag:k8s-node` as a source, and the policy gives it no grants.
 
@@ -256,7 +263,7 @@ Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:k8s
 
 Order matters. Tags and approvals must exist before access is removed. Service tags must be in `autoApprovers` before annotation changes take effect, or the VIPServices go unapproved. The egress path must work before the node identity loses access.
 
-### Step 1 - policy prerequisites (no access change)
+### Step 1 - policy prerequisites (no access change) - applied 2026-10-20 (`15482bc6`)
 
 PR to `tailscale/policy.hujson`:
 
@@ -267,7 +274,9 @@ PR to `tailscale/policy.hujson`:
 
 Leave the allow-all grant in place. In the same PR, drop the `dev-pod.beaver-cloud.ts.net` subject from the `kevindurb-masters` ClusterRoleBinding in `infrastructure/tailscale/resources.yml`.
 
-### Step 2 - ingress tags (no access change, allow-all still on)
+Applied differently: `group:k8s-admins` was renamed to `group:admins` (same member, and its only reference was the `tag:k8s-node` SSH rule) instead of keeping two identical admin groups until step 4.
+
+### Step 2 - ingress tags (no access change, allow-all still on) - applied 2026-10-20 (`915b2688`)
 
 PR changing every annotation per the table above.
 
@@ -292,7 +301,7 @@ kubectl get ingress -A -o custom-columns=\
 tailscale status --json | jq -r '.Peer[]? | [.HostName, (.Tags // [] | join(","))] | @tsv'
 ```
 
-### Step 3 - in-cluster identity (no access change, allow-all still on)
+### Step 3 - in-cluster identity (no access change, allow-all still on) - applied 2026-10-20 (`7cbb1a73`, `1777b4d1`)
 
 PR adding the `oidc-egress` ProxyGroup, the `idp` ExternalName Service and `coredns-custom`, and switching `gatus.yml` URLs to in-cluster Services. Separately (not in git), change miniflux's linkding integration URL to `http://linkding-app-service.linkding` and save an article to confirm.
 
@@ -304,7 +313,14 @@ kubectl run -it --rm dnstest --image=busybox --restart=Never -- \
 
 Then log in to linkding and donetick. The tsidp device's peer list (or `tailscale whois` on tsidp) should show the token call coming from an `oidc-egress-*` device.
 
-### Step 4 - lock down
+Applied notes:
+
+- The egress `ExternalName` Service's `externalName` is rewritten by the operator to `ts-idp-<hash>.tailscale.svc.cluster.local`, so Argo CD sees perpetual drift and self-heals the placeholder back. `infrastructure/tailscale/app.yml` carries an `ignoreDifferences` block for `/spec/externalName` on that Service; without it the OIDC path flaps every sync.
+- `prune: false` means every `gatus.yml` edit leaves the previous hashed ConfigMap behind. The config-sync sidecar writes both, so gatus can end up running stale tailnet URLs. 29 superseded ConfigMaps were deleted when this step was applied; check for duplicates (`kubectl get cm -A -l gatus.io/enabled=true`) after any future gatus change.
+- The `tailscale` kustomization now uses `includeSelectors: false`, because the common label would otherwise be injected into the egress Service's (meaningless) selector.
+- Verified: `idp.beaver-cloud.ts.net` resolves to the egress ClusterIP, `https://idp.beaver-cloud.ts.net/.well-known/openid-configuration` returns 200 with a valid certificate from a pod, the egress proxy logs the connection to idp, an OIDC login to linkding/donetick works, and gatus is all green with only tsidp (via the rewrite) and the disabled golink check left on tailnet names.
+
+### Step 4 - lock down (pending)
 
 PR replacing `policy.hujson` with the Appendix. CI runs `action: test` on the PR, so the matrix is validated before merge; the push applies it.
 
@@ -318,8 +334,8 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://argocd.beaver-cloud.ts.net
 curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 ```
 
-- OIDC login to linkding, miniflux, romm, donetick still works.
-- Gatus is all green, including the tsidp check.
+- OIDC login to linkding, miniflux, romm, donetick still works. (Covered during step 3: linkding and donetick logins work through the egress identity.)
+- Gatus is all green, including the tsidp check. golink has no check (see step 3).
 - miniflux "save to linkding" still works.
 - From a client behind the home router and one behind the travel router, jellyfin loads; argocd, gatus and the travel lab's services time out.
 - From a travel-users device, the travel lab's services load.
@@ -342,6 +358,9 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 - **Router LANs are trusted wholesale**: every client on the home router's or travel router's LAN, including guests and IoT, gets regular-user access. If either LAN has guest/IoT segments, masquerade only the trusted one.
 - **Subnet routes**: `tag:router` / `tag:travel-router` advertise routes; those are approved separately (`autoApprovers.routes` is intentionally not added). Only admins can use them under `*`.
 - **`tag:travel-lab` is both device and service tag** (same pattern this plan removes from `tag:k8s`): `group:travel-users` reaches the lab devices themselves on 443, not just their services. Fine for a standalone lab; split off a `tag:travel-lab-svc` if that changes.
+- **The egress `ExternalName` Service drifts from git.** The operator rewrites `spec.externalName`; without `ignoreDifferences` Argo CD self-heals it back on every sync (`infrastructure/tailscale/app.yml`).
+- **Stale gatus ConfigMaps.** `prune: false` keeps every previous hashed `gatus.io/enabled` ConfigMap, and the config-sync sidecar writes files for all of them, so gatus may run old URLs. Delete superseded ones after changing a `gatus.yml`.
+- **golink has no health check** while it stays a tsnet-only app. It is only visible on `go.beaver-cloud.ts.net`; monitoring it again needs an egress proxy.
 - **ProxyGroup device tags** are immutable. Splitting the ingress proxies off `tag:k8s` into `tag:k8s-proxy` requires recreating `ingress-proxy-group` (short outage on every ingress) - optional, not part of this plan.
 - **API server proxy** runs in `mode: auth`; a future non-admin kubectl user needs a `tailscale.com/cap/kubernetes` grant plus RBAC.
 - **Ansible role**: `ansible/roles/tailscale/tasks/main.yml` runs `tailscale up --accept-dns=false --ssh` without `--advertise-tags`. On a tagged node, `tailscale up` with partial flags can error; add `--advertise-tags=tag:k8s-node` if you re-provision.
@@ -358,11 +377,12 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 8. Should clients behind the travel router also reach the travel lab (add `tag:travel-router` to that grant)?
 9. Do travel-lab devices talk to each other over the tailnet? If so, add `tag:travel-lab -> tag:travel-lab`.
 
-## Related cleanup (not required for the ACL change)
+## Related cleanup (done 2026-10-20 unless noted)
 
-- Root `null.yml` is an unreferenced, invalid duplicate of the zigbee2mqtt Ingress (`kind+:`). Delete it.
-- The cluster has both `minecraft/app-service` and a leftover `minecraft/minecraft-app-service` (plus `ts-app-service-vhthc-0` in the `tailscale` namespace), which produces the duplicate `minecraft` device in `tailscale status`. Delete the stale Service.
-- `tag:pve` and `tag:router` are defined but unused (`tag:golink` is used by the `go` device). Keep them deliberately or remove them.
+- Root `null.yml`: deleted (`ed7caf04`). It was an unreferenced, invalid duplicate of the zigbee2mqtt Ingress (`kind+:`).
+- Duplicate minecraft Service: the leftover was **`minecraft/app-service`**, not `minecraft-app-service`. It had no Argo tracking-id and no `namePrefix`, so its hostname collided into `minecraft-1`; `minecraft-app-service` is the GitOps-managed one and was left alone. After deleting `app-service` the operator garbage-collected `ts-app-service-vhthc` and `tailscale status` shows a single `minecraft` device.
+- `tag:pve` is defined but unused; `tag:router` is used by step 4's grants. Keep or remove deliberately.
+- `qbittorrent` has a Service and Ingress but no pods; its gatus check is disabled. Worth deciding whether the app should still be deployed.
 
 ## Appendix: proposed policy
 
