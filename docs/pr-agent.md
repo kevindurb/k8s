@@ -40,7 +40,17 @@ Also in `policy.hujson`:
    - `autogroup:self` no longer matches it (nothing depends on that - `group:admins -> *` still covers you);
    - Serve/cert for `ai.beaver-cloud.ts.net` is unaffected, and key expiry is disabled for tagged devices by default.
 
-2. **Settings -> OAuth clients -> the client behind `TS_OAUTH_ID` -> add `tag:pr-agent`.** It already has the `auth_keys` scope the Tailscale action needs, so no new GitHub secret is required. (If you prefer per-purpose credentials, create a second OAuth/OIDC client, give it only `tag:pr-agent`, and store its ID/audience as `TS_PR_AGENT_OAUTH_ID`/`TS_PR_AGENT_AUDIENCE`.)
+2. **Settings -> Trust credentials -> Credential -> OpenID Connect**, and create a dedicated federated identity for this workflow:
+
+   - Issuer: GitHub Actions (`https://token.actions.githubusercontent.com`).
+   - Subject: `repo:kevindurb/k8s:*` - this workflow authenticates from three event shapes, so a narrower subject breaks some of them (`pull_request` presents `repo:kevindurb/k8s:pull_request`; `issue_comment` and `workflow_dispatch` present `repo:kevindurb/k8s:ref:refs/heads/main`).
+   - Scopes: `auth_keys` (write), nothing else.
+   - Tags: `tag:pr-agent` only.
+   - Copy the generated **Client ID** and **Audience** into repository secrets `TS_PR_AGENT_OAUTH_ID` and `TS_PR_AGENT_AUDIENCE`.
+
+   A dedicated credential keeps the deploy identity (`tag:ci` -> `svc:argocd`) from being able to mint the review tag. Reusing the shared one also works - add `tag:pr-agent` to *that* credential's tag list and the workflow's `||` fallback to `TS_OAUTH_ID`/`TS_AUDIENCE` picks it up - but then one credential mints both tags.
+
+   If the action fails with `requested tags [tag:pr-agent] are invalid or not permitted`, the credential in use is not the one carrying the tag. That error comes from auth key creation, not from the token exchange, so the console's per-identity error panel does not show it, and propagation is not the cause.
 
 ## Aperture config change (on `ai`)
 

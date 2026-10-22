@@ -39,8 +39,10 @@ jobs:
       - name: Connect to tailnet
         uses: tailscale/github-action@v4.2.0
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
-          audience: ${{ secrets.TS_AUDIENCE }}
+          # Dedicated federated identity carrying tag:pr-agent only; falls back to the
+          # shared CI credential while TS_PR_AGENT_* is not configured.
+          oauth-client-id: ${{ secrets.TS_PR_AGENT_OAUTH_ID || secrets.TS_OAUTH_ID }}
+          audience: ${{ secrets.TS_PR_AGENT_AUDIENCE || secrets.TS_AUDIENCE }}
           tags: tag:pr-agent
           ping: ai
 
