@@ -181,3 +181,9 @@ Residual risks:
 - Prompt injection inside a reviewed diff can steer the wording of the review comment ("this is safe, approve it"). It cannot execute code, change ACLs, or reach Aperture's admin API. Do not give PR-Agent approval authority: `auto_improve` stays off and the job has no `contents: write`.
 - Optional extra: repository setting *Actions -> "Require approval for all outside collaborators"*. It does not grant secrets, but it stops drive-by runs and CI-minute spam.
 - Do not switch the review job to `pull_request_target` to "support forks": that hands the tailnet credential to PR-triggered runs and defeats everything above.
+
+## Verification
+
+- **2026-10-22, `workflow_dispatch`**: the runner joined as `tag:pr-agent` on the first attempt, `tailscale status --json` reported `["tag:pr-agent"]`, and Aperture answered both `GET /v1/models` and a `deepseek-v4.1-flash` chat completion. The first attempt at this failed with `requested tags [tag:pr-agent] are invalid or not permitted` while the workflow still used the shared `TS_OAUTH_ID` credential; a dedicated federated identity carrying only `tag:pr-agent` fixed it.
+- **First real review**: see the comments on this PR.
+
