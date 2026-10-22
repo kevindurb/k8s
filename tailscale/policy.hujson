@@ -8,6 +8,8 @@
 		"group:home-users":   ["kevindurb@github"],
 		"group:game-players": ["kevindurb@github"],
 		"group:travel-users": ["kevindurb@github"],
+		"group:ai-users":     ["kevindurb@github"],
+		"group:ai-admins":    ["kevindurb@github"],
 	},
 
 	"hosts": {},
@@ -35,12 +37,16 @@
 		"tag:monitoring":      ["group:admins", "tag:k8s-operator"],
 		"tag:games":           ["group:admins", "tag:k8s-operator"],
 		"tag:funnel":          ["group:admins", "tag:k8s-operator"],
+		"tag:ai":              ["group:admins"],
+		"tag:pr-agent":        ["group:admins"],
 	},
 
 	"nodeAttrs": [
 		{"target": ["tag:funnel"],   "attr": ["funnel"]},
 		{"target": ["group:admins"], "attr": ["drive:share", "drive:access", "mullvad"]},
 		{"target": ["*"],            "attr": ["cache-network-maps"]},
+		// Aperture resolves group: grant sources from this device's view of the tailnet
+		{"target": ["tag:ai"],       "app": {"tailscale.com/visible-groups": [{"groups": ["*"]}]}},
 	],
 
 	"ssh": [
@@ -54,6 +60,13 @@
 			"action": "accept",
 			"src":    ["group:admins"],
 			"dst":    ["tag:router", "tag:travel-router", "tag:travel-lab"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			// the Aperture box is tagged, so it no longer matches the user-owned-device rule
+			"action": "accept",
+			"src":    ["group:admins"],
+			"dst":    ["tag:ai"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
@@ -99,6 +112,44 @@
 
 		// GitHub Actions -> Argo CD webhook
 		{"src": ["tag:ci"], "dst": ["svc:argocd"], "ip": ["tcp:443"]},
+
+		// Aperture (ai): network and application access. Roles and models live here
+		// rather than in the gateway config so they are reviewable in git; Aperture
+		// combines both sources, so the gateway's stock "*" grants are removed.
+		{
+			"src": ["group:ai-users"],
+			"dst": ["tag:ai"],
+			"ip":  ["tcp:443"],
+			"app": {
+				"tailscale.com/cap/aperture": [
+					{"role": "user"},
+					{"models": "**"},
+				],
+			},
+		},
+		{
+			"src": ["group:ai-admins"],
+			"dst": ["tag:ai"],
+			"ip":  ["tcp:443"],
+			"app": {
+				"tailscale.com/cap/aperture": [
+					{"role": "admin"},
+					{"connectors": ["**"]},
+				],
+			},
+		},
+		// PR review bot: one model, one host, nothing else
+		{
+			"src": ["tag:pr-agent"],
+			"dst": ["tag:ai"],
+			"ip":  ["tcp:443"],
+			"app": {
+				"tailscale.com/cap/aperture": [
+					{"role": "user", "enable_portal": false},
+					{"models": "*/deepseek-v4.1-flash", "quotas": [{"bucket": "pr-agent-daily"}]},
+				],
+			},
+		},
 
 		// caps must target tag:tsidp: tsidp reads them from WhoIs on the browser's connection to itself
 		{
@@ -179,7 +230,7 @@
 			"src":    "kevindurb@github",
 			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:bridges:443", "tag:infra:443",
 			           "tag:monitoring:443", "tag:k8s:443", "tag:tsidp:443", "tag:games:25565",
-			           "tag:travel-lab:443"],
+			           "tag:travel-lab:443", "tag:ai:443"],
 		},
 		{
 			"src":    "tag:k8s-oidc",
@@ -192,7 +243,15 @@
 		},
 		{
 			"src":  "tag:ci",
-			"deny": ["tag:apps:443", "tag:monitoring:443", "tag:tsidp:443"],
+			"deny": ["tag:apps:443", "tag:monitoring:443", "tag:tsidp:443", "tag:ai:443"],
+		},
+		{
+			// the PR review bot reaches Aperture and nothing else
+			"src":    "tag:pr-agent",
+			"accept": ["tag:ai:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:bridges:443",
+			           "tag:infra:443", "tag:monitoring:443", "tag:tsidp:443", "tag:k8s:443",
+			           "tag:travel-lab:443", "tag:games:25565", "tag:k8s-node:22"],
 		},
 		{
 			"src":    "tag:router",

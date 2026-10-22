@@ -1,0 +1,70 @@
+---
+name: PR Agent
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-agent-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Review
+    runs-on: ubuntu-latest
+    # Fork PRs get neither repository secrets nor an OIDC token, so skip them outright.
+    # Comment triggers do hold secrets, so only trusted commenters may start one.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.sender.type != 'Bot' &&
+       (github.event_name != 'pull_request' ||
+        github.event.pull_request.head.repo.full_name == github.repository) &&
+       (github.event_name != 'issue_comment' ||
+        (github.event.issue.pull_request &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))))
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Connect to tailnet
+        uses: tailscale/github-action@v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:pr-agent
+          ping: ai
+
+      - name: Smoke test Aperture
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          tailscale status --json | jq -r '.Self.Tags'
+          curl -fsS -o /dev/null https://ai.beaver-cloud.ts.net/v1/models
+          curl -fsS -o /dev/null https://ai.beaver-cloud.ts.net/v1/chat/completions \
+            -H 'Content-Type: application/json' \
+            -d '{"model":"deepseek-v4.1-flash","messages":[{"role":"user","content":"ping"}],"max_tokens":8}'
+
+      # Pinned by digest; Renovate's github-actions manager keeps the docker:// ref current.
+      - name: Review
+        if: github.event_name != 'workflow_dispatch'
+        uses: docker://pragent/pr-agent:0.48.0-github_action@sha256:80edef71baa3df28c129d858d4b53784abfc14704c235efb32b6c461d5399a6d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Aperture authorizes by tailnet identity, so this is a placeholder, not a secret.
+          OPENAI__API_BASE: https://ai.beaver-cloud.ts.net/v1
+          OPENAI__KEY: aperture-identity
+          config.model: openai/deepseek-v4.1-flash
+          config.fallback_models: '[]'
+          config.custom_model_max_tokens: "131072"
+          github_action_config.auto_review: "true"
+          github_action_config.auto_describe: "true"
+          github_action_config.auto_improve: "false"
