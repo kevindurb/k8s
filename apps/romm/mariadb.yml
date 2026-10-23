@@ -77,7 +77,6 @@ spec:
           readinessProbe:
             tcpSocket:
               port: mysql
-            initialDelaySeconds: 20
             periodSeconds: 10
             failureThreshold: 5
           livenessProbe:

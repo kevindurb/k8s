@@ -46,6 +46,8 @@ spec:
               containerPort: 8043
           # The controller serves a self-signed certificate; the kubelet does
           # not verify probe certificates, so HTTPS works without trust setup.
+          # Verified on a live controller: GET https://<podIP>:8043/ returns 200
+          # (not a redirect to another scheme/port).
           # First boot (embedded DB/mongo provisioning) is slow — allow 10 min.
           startupProbe:
             httpGet:
