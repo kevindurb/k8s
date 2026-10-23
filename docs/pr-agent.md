@@ -148,6 +148,8 @@ The review runs `pragent/pr-agent:0.48.0-github_action`, pinned by digest (`sha2
 
 There is **no LLM secret**: the `Authorization` header is ignored for shared-key providers, and PR-Agent still needs a non-empty key, hence the placeholder.
 
+`config.reasoning_effort = "none"` (with the model listed in `config.additional_reasoning_effort_models`) is load-bearing. The `ollama`-hosted models are reasoning models, and on a real PR-sized prompt they spend the entire completion budget on the reasoning trace and return an **empty `content`** - after which PR-Agent retries, hits the LiteLLM timeout, and fails the job with `Tool reported success but recorded a failure`. Reasoning is also what made a run take five minutes. With it disabled the same prompt returns in seconds, and LiteLLM must be told the model accepts the parameter or it silently drops it (custom OpenAI-compatible model IDs are not in its metadata). `config.ai_timeout` is raised to 300s for headroom.
+
 The job has `contents: read`, `id-token: write`, `issues: write` and `pull-requests: write`, and performs no checkout, so PR code never executes in the runner.
 
 `workflow_dispatch` joins the tailnet and smoke-tests instead of reviewing:
