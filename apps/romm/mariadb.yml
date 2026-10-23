@@ -69,11 +69,21 @@ spec:
               mountPath: /run/mysqld
             - name: var-log
               mountPath: /var/log
+          startupProbe:
+            tcpSocket:
+              port: mysql
+            periodSeconds: 10
+            failureThreshold: 60
           readinessProbe:
             tcpSocket:
               port: mysql
-            initialDelaySeconds: 20
             periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            tcpSocket:
+              port: mysql
+            periodSeconds: 30
+            timeoutSeconds: 5
             failureThreshold: 5
           resources:
             requests:
