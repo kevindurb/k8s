@@ -67,10 +67,11 @@ jobs:
           config.model: openai/deepseek-v4.1-flash
           config.fallback_models: '[]'
           config.custom_model_max_tokens: "131072"
-          # deepseek-v4.1-flash spends its whole completion budget on the reasoning
-          # trace and then returns empty content (or times out). Turn reasoning off
-          # and list the model so PR-Agent and LiteLLM actually forward the option.
-          config.reasoning_effort: "none"
+          # These are reasoning models. Without an explicit output cap the provider's
+          # small default is consumed by the reasoning trace and content comes back
+          # empty; with one, "low" effort reviews a PR-sized diff in ~10s.
+          config.max_output_tokens: "8192"
+          config.reasoning_effort: "low"
           config.additional_reasoning_effort_models: '["deepseek-v4.1-flash", "openai/deepseek-v4.1-flash"]'
           config.ai_timeout: "300"
           github_action_config.auto_review: "true"

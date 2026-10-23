@@ -148,7 +148,11 @@ The review runs `pragent/pr-agent:0.48.0-github_action`, pinned by digest (`sha2
 
 There is **no LLM secret**: the `Authorization` header is ignored for shared-key providers, and PR-Agent still needs a non-empty key, hence the placeholder.
 
-`config.reasoning_effort = "none"` (with the model listed in `config.additional_reasoning_effort_models`) is load-bearing. The `ollama`-hosted models are reasoning models, and on a real PR-sized prompt they spend the entire completion budget on the reasoning trace and return an **empty `content`** - after which PR-Agent retries, hits the LiteLLM timeout, and fails the job with `Tool reported success but recorded a failure`. Reasoning is also what made a run take five minutes. With it disabled the same prompt returns in seconds, and LiteLLM must be told the model accepts the parameter or it silently drops it (custom OpenAI-compatible model IDs are not in its metadata). `config.ai_timeout` is raised to 300s for headroom.
+`config.max_output_tokens` + `config.reasoning_effort` are load-bearing. The `ollama`-hosted models are reasoning models, and PR-Agent sends **no `max_tokens` at all** when `max_output_tokens` is unset (its default is 0), so the provider's small service-side default is consumed entirely by the reasoning trace: the message comes back with empty `content` after minutes, PR-Agent retries, hits the LiteLLM timeout, and fails the job with `Tool reported success but recorded a failure`.
+
+With an explicit 8192-token cap and `reasoning_effort = "low"`, a 12.9k-token prompt returns a review in ~9s (1.8k completion tokens), and a 100k-token prompt in ~13s. `medium` costs roughly 2x the output tokens for no measured gain on the same diffs. `config.additional_reasoning_effort_models` is required because the model ID is not in LiteLLM's metadata: without it, `reasoning_effort` is silently dropped (and PR-Agent will not send it for a model it does not consider reasoning-capable).
+
+`config.ai_timeout` is raised to 300s for headroom; PR-Agent reserves `max_output_tokens` out of the model budget when fitting a diff, so very large PRs compress sooner.
 
 The job has `contents: read`, `id-token: write`, `issues: write` and `pull-requests: write`, and performs no checkout, so PR code never executes in the runner.
 
