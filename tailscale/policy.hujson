@@ -44,7 +44,7 @@
 	"nodeAttrs": [
 		{"target": ["tag:funnel"],     "attr": ["funnel"]},
 		{"target": ["group:admins"],   "attr": ["drive:share", "drive:access", "mullvad"]},
-		{"target": ["tag:travel-lab"], "attr": ["drive:share"]},
+		{"target": ["tag:travel-lab", "tag:travel-router"], "attr": ["drive:share"]},
 		{"target": ["*"],              "attr": ["cache-network-maps"]},
 		// Aperture resolves group: grant sources from this device's view of the tailnet
 		{"target": ["tag:ai"],       "app": {"tailscale.com/visible-groups": [{"groups": ["*"]}]}},
