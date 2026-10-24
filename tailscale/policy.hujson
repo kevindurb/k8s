@@ -185,6 +185,14 @@
 				"tailscale.com/cap/drive": [{"shares": ["*"], "access": "rw"}],
 			},
 		},
+		// the travel lab's USB-attached NVMe, shared from tag:travel-lab
+		{
+			"src": ["group:admins"],
+			"dst": ["tag:travel-lab"],
+			"app": {
+				"tailscale.com/cap/drive": [{"shares": ["nvme"], "access": "rw"}],
+			},
+		},
 
 		// Automatically added by enabling PAM.
 		{
