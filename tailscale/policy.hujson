@@ -190,7 +190,7 @@
 			"src": ["group:admins"],
 			"dst": ["tag:travel-lab"],
 			"app": {
-				"tailscale.com/cap/drive": [{"shares": ["nvme"], "access": "rw"}],
+				"tailscale.com/cap/drive": [{"shares": ["storage"], "access": "rw"}],
 			},
 		},
 

@@ -260,7 +260,7 @@ Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:bas
 ### nodeAttrs / ssh / autoApprovers
 
 - Funnel only for `tag:funnel`; consignment-app is deliberately public, nothing else is.
-- Drive share/access and Mullvad only for `group:admins`, plus `drive:share` for `tag:travel-lab` so the lab can publish the USB-attached NVMe mounted at `/mnt/storage` (share `nvme`); admins can read/write that share, the lab still cannot access other shares. The `autogroup:admin -> autogroup:tagged` and `tag:travel-router -> *` Drive grants are dropped.
+- Drive share/access and Mullvad only for `group:admins`, plus `drive:share` for `tag:travel-lab` so the lab can publish the USB-attached NVMe mounted at `/mnt/storage` (share `storage`); admins can read/write that share, the lab still cannot access other shares. The `autogroup:admin -> autogroup:tagged` and `tag:travel-router -> *` Drive grants are dropped.
 - `cache-network-maps` for `*`.
 - SSH: `group:admins` -> `tag:k8s-node`, `tag:router`, `tag:travel-router`, `tag:travel-lab`, `tag:bastion`, and their own devices. All are `accept` except the bastion, which is `check` (12h default; custom `checkPeriod` needs a premium plan). `tag:bastion` itself is also a source: tcp:22 to the nodes, both routers and the travel lab, as an `accept` rule - Tailscale rejects check mode for tagged sources, so the re-authentication happens on entry to the bastion. The blanket "admins -> all tagged devices" rule is removed, which ends SSH to `tag:golink` and `tag:tsidp` (neither advertises SSH).
 - `tag:pve` is dropped from `tagOwners`: the host is gone and no device carries the tag (checked 2026-10-20).
