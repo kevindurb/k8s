@@ -19,7 +19,9 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
-        fsGroup: 1000
+        # No fsGroup on purpose: kubelet re-applies group ownership on every
+        # container start, which resets PGDATA to root-owned and breaks initdb.
+        # The pgdata-perms init container sets ownership explicitly instead.
       volumes:
         - name: data
           persistentVolumeClaim:
