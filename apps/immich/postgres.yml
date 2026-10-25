@@ -19,8 +19,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
-        # No fsGroup on purpose: kubelet re-applies group ownership on every
-        # container start, which resets PGDATA to root-owned and breaks initdb.
+        # No fsGroup on purpose: the fsGroup ownership pass leaves PGDATA owned by
+        # root with mode 2775, which the non-root initdb then cannot chmod.
         # The pgdata-perms init container sets ownership explicitly instead.
       volumes:
         - name: data
@@ -48,9 +48,10 @@ spec:
         - name: var-log
           emptyDir: {}
       initContainers:
-        # The zvol arrives with a root-owned lost+found, and kubelet's fsGroup only
-        # adds group ownership, so PGDATA has to be handed to uid 1000 explicitly.
-        # Without this initdb (non-root) fails with EPERM on chmod of PGDATA.
+        # The image declares /var/lib/postgresql/data as a VOLUME, so the runtime
+        # gives that path an anonymous empty directory and it has to be shadowed
+        # by mounting the PVC exactly there (done below). The zvol's root is also
+        # root-owned, so hand PGDATA to uid 1000 before the non-root initdb runs.
         - name: pgdata-perms
           image: ghcr.io/immich-app/postgres:17-vectorchord0.4.3-pgvector0.8.1@sha256:79b95b795f0911e95ffa4d092a2162c4d81a984d5629bc8f786afe0bc0657671
           command: ['sh', '-c', 'mkdir -p "$PGDATA" && chown 1000:1000 "$PGDATA" && chmod 700 "$PGDATA"']
@@ -64,7 +65,7 @@ spec:
               add: [CHOWN, DAC_OVERRIDE, FOWNER]
           volumeMounts:
             - name: data
-              mountPath: /var/lib/postgresql
+              mountPath: /var/lib/postgresql/data
       containers:
         - name: postgres
           image: ghcr.io/immich-app/postgres:17-vectorchord0.4.3-pgvector0.8.1@sha256:79b95b795f0911e95ffa4d092a2162c4d81a984d5629bc8f786afe0bc0657671
@@ -92,10 +93,8 @@ spec:
             - name: DB_STORAGE_TYPE
               value: SSD
           volumeMounts:
-            # Mount the parent, not PGDATA itself: initdb refuses a mount point
-            # containing lost+found, and PGDATA is /var/lib/postgresql/data.
             - name: data
-              mountPath: /var/lib/postgresql
+              mountPath: /var/lib/postgresql/data
             - name: etc-postgresql
               mountPath: /etc/postgresql
             - name: shm
