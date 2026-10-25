@@ -1,0 +1,12 @@
+---
+endpoints:
+  - name: ente
+    group: apps
+    url: http://ente-web-service.ente
+    conditions:
+      - '[STATUS] == 200'
+  - name: ente-api
+    group: apps
+    url: http://ente-museum-service.ente/ping
+    conditions:
+      - '[STATUS] == 200'

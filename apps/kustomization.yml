@@ -10,6 +10,7 @@ resources:
   - ./consignment-app/app.yml
   - ./donetick/app.yml
   - ./dufs/app.yml
+  - ./ente/app.yml
   - ./golink/app.yml
   - ./home-assistant/app.yml
   - ./homer/app.yml

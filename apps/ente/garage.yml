@@ -1,0 +1,134 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garage-deployment
+  labels: &labels
+    app.kubernetes.io/component: garage
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: garage-volume
+        - name: config
+          secret:
+            secretName: ente-secret
+            defaultMode: 0o440
+        - name: tmp
+          emptyDir: {}
+      containers:
+        - name: garage
+          image: docker.io/dxflrs/garage:v2.5.0@sha256:677e5b758e4425a325b811c425c026bf35a4bf42f7ddbaa773de3f4fd779a5a5
+          # --single-node applies the layout (requires replication_factor = 1),
+          # --default-bucket imports the key pair from the secret and creates +
+          # grants the bucket. Both are idempotent across restarts.
+          # The image is FROM scratch with no ENTRYPOINT, and k8s `args` would
+          # otherwise replace the image's CMD, so the binary must be named.
+          command: ['/garage']
+          args: ['server', '--single-node', '--default-bucket']
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: GARAGE_DEFAULT_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ente-secret
+                  key: GARAGE_DEFAULT_ACCESS_KEY
+            - name: GARAGE_DEFAULT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ente-secret
+                  key: GARAGE_DEFAULT_SECRET_KEY
+            - name: GARAGE_DEFAULT_BUCKET
+              value: b2-eu-cen
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/garage
+            - name: config
+              mountPath: /etc/garage.toml
+              subPath: garage.toml
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 1G
+          ports:
+            - name: http
+              containerPort: 3900
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: garage-volume
+  labels:
+    app.kubernetes.io/component: garage
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 200Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-service
+  labels: &labels
+    app.kubernetes.io/component: garage
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 3900
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: s3-ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: garage-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [ente-s3]
