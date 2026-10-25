@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: immich
+    group: apps
+    url: http://immich-server-service.immich/api/server/ping
+    conditions:
+      - '[STATUS] == 200'

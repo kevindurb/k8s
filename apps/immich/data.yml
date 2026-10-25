@@ -1,0 +1,16 @@
+---
+# Uploads, thumbs, encoded video, profile images and Immich's own nightly DB
+# dumps (UPLOAD_LOCATION). The originals in here are the irreplaceable part, so
+# they get a zvol on the ZFS pool rather than the NFS media share.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  labels:
+    app.kubernetes.io/component: server
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 200Gi

@@ -14,6 +14,7 @@ resources:
   - ./golink/app.yml
   - ./home-assistant/app.yml
   - ./homer/app.yml
+  - ./immich/app.yml
   - ./jellyfin/app.yml
   - ./kiwix/app.yml
   - ./linkding/app.yml

@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: machine-learning-deployment
+  labels: &labels
+    app.kubernetes.io/component: machine-learning
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      volumes:
+        - name: cache
+          persistentVolumeClaim:
+            claimName: machine-learning-cache
+        - name: tmp
+          emptyDir: {}
+      containers:
+        - name: machine-learning
+          # CPU image on purpose: the two Pascal cards in the cluster are either
+          # time-sliced 2 GB (drone-01/-02, shared with jellyfin+scrypted) or on
+          # the tainted storage node (drone-04).
+          image: ghcr.io/immich-app/immich-machine-learning:v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: MACHINE_LEARNING_CACHE_FOLDER
+              value: /cache
+            - name: TRANSFORMERS_CACHE
+              value: /cache
+            - name: HF_XET_CACHE
+              value: /cache/huggingface-xet
+            - name: MPLCONFIGDIR
+              value: /cache/matplotlib-config
+          volumeMounts:
+            - name: cache
+              mountPath: /cache
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+          ports:
+            - name: http
+              containerPort: 3003
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: machine-learning-cache
+  labels:
+    app.kubernetes.io/component: machine-learning
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: machine-learning-service
+  labels: &labels
+    app.kubernetes.io/component: machine-learning
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 3003
+      targetPort: http
