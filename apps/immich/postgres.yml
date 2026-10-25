@@ -72,8 +72,10 @@ spec:
             - name: DB_STORAGE_TYPE
               value: SSD
           volumeMounts:
+            # Mount the parent, not PGDATA itself: initdb refuses a mount point
+            # containing lost+found, and PGDATA is /var/lib/postgresql/data.
             - name: data
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
             - name: etc-postgresql
               mountPath: /etc/postgresql
             - name: shm
