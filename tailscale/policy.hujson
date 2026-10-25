@@ -172,7 +172,9 @@
 						"users":             ["*"],
 						"resources":         ["*"],
 						"includeInUserInfo": true,
-						"extraClaims":       {"isAdmin": true},
+						// Immich reads roleClaim=immich_role ("user"/"admin"); without
+						// it the first SSO user is registered as a normal user.
+						"extraClaims": {"isAdmin": true, "immich_role": "admin"},
 					},
 				],
 			},
