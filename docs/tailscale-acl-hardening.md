@@ -4,6 +4,23 @@ Status: **applied (2026-10-20)**. All four steps are live: the tailnet is tag- a
 
 The policy file is GitOps-applied by `.github/workflows/tailscale.yml` (`tailscale/gitops-acl-action`): PRs run `action: test`, pushes to `main` run `action: apply`. There is no in-cluster controller; the repo is the source of truth.
 
+## Update 2026-10-25: `tag:travel-router` may reach tsidp
+
+On request, `tag:travel-router` was added to the regular-user tsidp grant (the `src` of the `dst: ["tag:tsidp"]` rule, with `includeInUserInfo`), and its ACL test now expects `accept` on `tag:tsidp:443` instead of `deny`.
+
+Scope, recorded so this does not get re-debugged later:
+
+- `idp.beaver-cloud.ts.net` now resolves on that LAN (unreachable peers are dropped from the netmap), TCP 443 connects, and `/.well-known/openid-configuration`, `/token` and `/userinfo` answer - so gatus-style checks and any STS/workload caller behind the router work.
+- An interactive browser login still cannot complete. The LAN clients are SNAT'd to the router, `server/authorize.go` rejects tagged sources with `error=access_denied` (`tailscale/tsidp#160`; the deployed image, built 2026-08-20, includes it), and the browser lands back on the app with `tagged node doesn't have a user identity`.
+- Making that login work needs the connection to arrive from a user-owned node: either Tailscale on the device itself, or the travel router registered as a user instead of a tag (which makes everyone on that LAN admin-equivalent - see the masquerading-router note under [Target model](#target-model)).
+
+Verify from the router (`tailscale ssh root@travel-router`):
+
+```sh
+nslookup idp.beaver-cloud.ts.net   # expect 100.114.245.48, not NXDOMAIN
+curl -sS -o /dev/null -w '%{http_code}\n' https://idp.beaver-cloud.ts.net/.well-known/openid-configuration   # 200
+```
+
 ## State before the work
 
 ### The tailnet is flat
@@ -105,7 +122,7 @@ Grants name groups, never `autogroup:member` / `autogroup:admin`. Adding someone
 | `group:game-players` | `tag:games` on the Minecraft ports |
 | `group:travel-users` | `tag:travel-lab` on 443 |
 
-**Masquerading routers.** `tag:router` (home) and `tag:travel-router` SNAT LAN clients that cannot run Tailscale into the tailnet, so those clients show up as the router's tag. Groups cannot contain tags, so both tags are listed next to the groups in the regular-user grants (apps, media, home, games; the travel router also gets the travel lab). They are not travel users and not admins. tsidp's `/authorize` rejects tagged sources, so clients behind a router reach tsidp-backed apps (linkding, miniflux, romm, donetick) on the network but cannot log in through tsidp. They get no tsidp grant, and need an app-local login.
+**Masquerading routers.** `tag:router` (home) and `tag:travel-router` SNAT LAN clients that cannot run Tailscale into the tailnet, so those clients show up as the router's tag. Groups cannot contain tags, so both tags are listed next to the groups in the regular-user grants (apps, media, home, games; the travel router also gets the travel lab). They are not travel users and not admins. tsidp's `/authorize` rejects tagged sources, so clients behind a router reach tsidp-backed apps (linkding, miniflux, romm, donetick) on the network but cannot log in through tsidp. They get no tsidp grant, and need an app-local login. The travel router is the exception: it holds a tsidp grant as of 2026-10-25, but its clients still cannot complete a login - see [the update at the top](#update-2026-10-25-tagtravel-router-may-reach-tsidp).
 
 The only autogroups left are ones with no group equivalent: `autogroup:self` ("the requester's own devices", for SSH and Drive) and `autogroup:nonroot` (an SSH login-user selector).
 

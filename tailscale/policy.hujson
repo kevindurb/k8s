@@ -153,8 +153,11 @@
 		},
 
 		// caps must target tag:tsidp: tsidp reads them from WhoIs on the browser's connection to itself
+		// tag:travel-router is here because its LAN clients are SNAT'd to it; note that
+		// tsidp's /authorize still rejects tagged sources, so this buys reachability and the
+		// STS back-channel, not an interactive login (see docs/tailscale-acl-hardening.md).
 		{
-			"src": ["group:app-users", "group:media-users", "group:home-users"],
+			"src": ["group:app-users", "group:media-users", "group:home-users", "tag:travel-router"],
 			"dst": ["tag:tsidp"],
 			"ip":  ["tcp:443"],
 			"app": {
@@ -272,9 +275,9 @@
 		},
 		{
 			"src":    "tag:travel-router",
-			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565", "tag:travel-lab:443"],
-			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:tsidp:443",
-			           "tag:k8s:443"],
+			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
+			           "tag:travel-lab:443", "tag:tsidp:443"],
+			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:k8s:443"],
 		},
 		{
 			"src":    "tag:travel-lab",
