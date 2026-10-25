@@ -45,6 +45,24 @@ spec:
           emptyDir: {}
         - name: var-log
           emptyDir: {}
+      initContainers:
+        # The zvol arrives with a root-owned lost+found, and kubelet's fsGroup only
+        # adds group ownership, so PGDATA has to be handed to uid 1000 explicitly.
+        # Without this initdb (non-root) fails with EPERM on chmod of PGDATA.
+        - name: pgdata-perms
+          image: ghcr.io/immich-app/postgres:17-vectorchord0.4.3-pgvector0.8.1@sha256:79b95b795f0911e95ffa4d092a2162c4d81a984d5629bc8f786afe0bc0657671
+          command: ['sh', '-c', 'mkdir -p "$PGDATA" && chown 1000:1000 "$PGDATA" && chmod 700 "$PGDATA"']
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+              add: [CHOWN, DAC_OVERRIDE, FOWNER]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
       containers:
         - name: postgres
           image: ghcr.io/immich-app/postgres:17-vectorchord0.4.3-pgvector0.8.1@sha256:79b95b795f0911e95ffa4d092a2162c4d81a984d5629bc8f786afe0bc0657671
