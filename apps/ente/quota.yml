@@ -1,0 +1,77 @@
+---
+# Museum hardcodes the self-hosted default plan: every new user gets a
+# subscription row with product_id "free" and ente.FreePlanStorage (10 GiB).
+# There is no config knob for it, and /billing/plans always reports those
+# 10 GiB as the "free plan". The enforced upload limit, however, is
+# subscriptions.storage, which is what this job keeps in line with the
+# Garage volume size (200Gi -> 180GiB to leave headroom for metadata).
+#
+# Keep the number in sync with the garage-volume PVC in garage.yml.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: subscription-quota
+  labels:
+    app.kubernetes.io/component: subscription-quota
+spec:
+  schedule: '17 * * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: subscription-quota
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          volumes:
+            - name: tmp
+              emptyDir: {}
+          containers:
+            - name: psql
+              image: docker.io/library/postgres:18.1-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
+              securityContext:
+                privileged: false
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              env:
+                - name: PGHOST
+                  value: ente-postgres-service.ente
+                - name: PGUSER
+                  value: ente
+                - name: PGDATABASE
+                  value: ente_db
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ente-secret
+                      key: POSTGRES_PASSWORD
+                - name: HOME
+                  value: /tmp
+              command: ['psql']
+              args:
+                - '-v'
+                - 'ON_ERROR_STOP=1'
+                - '-c'
+                - "UPDATE subscriptions SET storage = 193273528320 WHERE product_id = 'free' AND storage < 193273528320;"
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  memory: 32M
+                limits:
+                  memory: 128M
