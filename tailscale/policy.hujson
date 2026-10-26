@@ -13,13 +13,7 @@
 		"group:dev-users":    ["kevindurb@github"],
 	},
 
-	"hosts": {
-		// The dev workstation stays user-owned: a tag would strip the user identity that
-		// tsidp interactive logins from it need, and the ssh section cannot target a
-		// user-owned device from a group anyway. Address it by its Tailscale IPv4; update
-		// this if dev is ever re-registered.
-		"dev": "100.84.100.101",
-	},
+	"hosts": {},
 
 	"tagOwners": {
 		"tag:ci":              ["group:admins"],
@@ -45,6 +39,7 @@
 		"tag:games":           ["group:admins", "tag:k8s-operator"],
 		"tag:funnel":          ["group:admins", "tag:k8s-operator"],
 		"tag:ai":              ["group:admins"],
+		"tag:dev":             ["group:admins"],
 		"tag:pr-agent":        ["group:admins"],
 	},
 
@@ -75,6 +70,22 @@
 			"action": "accept",
 			"src":    ["group:admins"],
 			"dst":    ["tag:ai"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			// dev: tagged, because a user-owned destination only matches the source user's
+			// own devices - a group or the tagged Aperture box could never SSH into it
+			"action": "accept",
+			"src":    ["group:dev-users", "tag:ai"],
+			"dst":    ["tag:dev"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			// the workstation is a tagged source now, so ansible/ssh from dev no longer
+			// matches group:admins and needs its own hops (checked on entry to the bastion)
+			"action": "accept",
+			"src":    ["tag:dev"],
+			"dst":    ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab", "tag:bastion", "tag:ai"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
@@ -112,11 +123,16 @@
 		{"src": ["tag:travel-lab"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
 		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab", "svc:travel-jellyfin"], "ip": ["tcp:443"]},
 
-		// dev is the workstation, reached by its hosts alias because it is user-owned:
-		// sshd serves 22 (Tailscale SSH cannot, sshd owns the port) and `tailscale serve`
-		// serves 443 tailnet-only. Aperture (tag:ai) only needs the SSH path.
-		{"src": ["group:dev-users", "tag:ai"], "dst": ["dev"], "ip": ["tcp:22"]},
-		{"src": ["group:dev-users"],           "dst": ["dev"], "ip": ["tcp:443"]},
+		// dev is the workstation and is tagged, so Aperture (tag:ai) and dev-users can use
+		// Tailscale SSH to it: a user-owned device can only be an SSH destination for its
+		// own user, and the ssh section cannot name a host alias or IP.
+		{"src": ["group:dev-users", "tag:ai"], "dst": ["tag:dev"], "ip": ["tcp:22"]},
+		{"src": ["group:dev-users"],           "dst": ["tag:dev"], "ip": ["tcp:443"]},
+
+		// all of the workstation's own traffic now leaves as tag:dev instead of
+		// kevindurb@github, so it keeps the reach its admin user device had:
+		// kubectl/argocd (tag:k8s, tag:infra), ansible to the nodes (tcp:22), Aperture.
+		{"src": ["tag:dev"], "dst": ["*"], "ip": ["*"]},
 
 		// a tagged bastion is its own identity: it needs a network path for the SSH hops
 		{"src": ["tag:bastion"], "dst": ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab"], "ip": ["tcp:22"]},
@@ -130,8 +146,10 @@
 		// Aperture (ai): network and application access. Roles and models live here
 		// rather than in the gateway config so they are reviewable in git; Aperture
 		// combines both sources, so the gateway's stock "*" grants are removed.
+		// tag:dev is here because the workstation calls Aperture too, and it now
+		// presents its tag rather than kevindurb@github.
 		{
-			"src": ["group:ai-users"],
+			"src": ["group:ai-users", "tag:dev"],
 			"dst": ["tag:ai"],
 			"ip":  ["tcp:443"],
 			"app": {
@@ -142,7 +160,7 @@
 			},
 		},
 		{
-			"src": ["group:ai-admins"],
+			"src": ["group:ai-admins", "tag:dev"],
 			"dst": ["tag:ai"],
 			"ip":  ["tcp:443"],
 			"app": {
@@ -298,14 +316,20 @@
 			"deny":   ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
 		},
 		{
-			// dev is targeted by its hosts alias: it is user-owned, not tagged
+			// dev is tagged now, so it is a normal tag destination
 			"src":    "group:dev-users",
-			"accept": ["dev:22", "dev:443"],
+			"accept": ["tag:dev:22", "tag:dev:443"],
 		},
 		{
 			"src":    "tag:ai",
-			"accept": ["dev:22"],
-			"deny":   ["dev:443", "tag:apps:443", "tag:tsidp:443", "tag:k8s:443"],
+			"accept": ["tag:dev:22"],
+			"deny":   ["tag:dev:443", "tag:apps:443", "tag:tsidp:443", "tag:k8s:443"],
+		},
+		{
+			// the workstation keeps the admin reach it had as a user device
+			"src":    "tag:dev",
+			"accept": ["tag:k8s:443", "tag:infra:443", "tag:apps:443", "tag:tsidp:443", "tag:ai:443",
+			           "tag:k8s-node:22", "tag:router:22", "tag:bastion:22"],
 		},
 		{
 			"src":    "tag:bastion",
@@ -315,6 +339,19 @@
 		{
 			"src":  "tag:work",
 			"deny": ["tag:apps:443", "tag:infra:443"],
+		},
+	],
+
+	"sshTests": [
+		{
+			"src":    "group:dev-users",
+			"dst":    ["tag:dev"],
+			"accept": ["kevindurb", "root"],
+		},
+		{
+			"src":    "tag:ai",
+			"dst":    ["tag:dev"],
+			"accept": ["kevindurb", "root"],
 		},
 	],
 }

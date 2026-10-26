@@ -21,24 +21,34 @@ nslookup idp.beaver-cloud.ts.net   # expect 100.114.245.48, not NXDOMAIN
 curl -sS -o /dev/null -w '%{http_code}\n' https://idp.beaver-cloud.ts.net/.well-known/openid-configuration   # 200
 ```
 
-## Update 2026-10-26: `group:dev-users` and the `dev` workstation
+## Update 2026-10-26: `tag:dev`, `group:dev-users` and the `dev` workstation
 
-`dev` (the workstation, `100.84.100.101`) is **not** tagged, so the policy addresses it with a `hosts` alias. Tagging it was rejected for two reasons:
+Aperture (`tag:ai`) lost its Tailscale SSH path to the workstation when the 2026-10-20 hardening removed the allow-all grant. Re-granting the network path was not enough: the connection then reached the SSH server and the SSH policy rejected it.
 
-- a tag replaces the user identity, and tsidp `/authorize` rejects tagged sources - interactive logins from `dev` to the SSO apps would stop working (same constraint as the 2026-10-25 note);
-- the `ssh` section cannot express "this group may SSH to that user-owned device": a user-owned `dst` only matches the source user's own devices, and hosts/IPs are not valid `ssh` `dst` values.
+```
+ssh-conn...: handling conn: 100.78.234.88:29638->kevindurb@100.84.100.101:22
+ssh-conn...: tailnet policy does not permit you to SSH to this node: failed to evaluate policy, result: rejected
+```
 
-What changed in `tailscale/policy.hujson`:
+`dev` was user-owned, and Tailscale only permits the source user's own devices to SSH into a user-owned destination (the `ssh` section cannot name a host alias or an IP either), so `dev` is now tagged `tag:dev` (owner `group:admins`) and reached like any other tagged device. `hosts` stays empty.
 
 | Source | Destination | Ports |
 | --- | --- | --- |
-| `group:dev-users` (new, kevindurb) | `dev` | tcp:22, tcp:443 |
-| `tag:ai` (Aperture) | `dev` | tcp:22 |
+| `group:dev-users` (new, kevindurb), `tag:ai` | `tag:dev` | tcp:22 |
+| `group:dev-users` | `tag:dev` | tcp:443 (the tailnet-only `tailscale serve`) |
+| `tag:dev` | `*` | all |
 
-- The `tag:ai` rule is the actual regression fix. The 2026-10-20 hardening removed the allow-all grant and `tag:ai` had no grant of its own, so the agent sessions on the Aperture box lost their SSH path to `dev`. It gets port 22 only.
-- Port 443 is needed because `dev` runs a tailnet-only `tailscale serve` (`https://dev.beaver-cloud.ts.net` -> `127.0.0.1:49374`).
-- SSH into `dev` is the system `sshd` with keys, not Tailscale SSH: `sshd` already owns `:22`, so tailscaled does not serve SSH there and no `ssh` rule applies. ACLs only gate `tcp:22` / `tcp:443`, which is why the grant is enough.
-- If `dev` is ever re-registered it gets a new address; the `hosts` alias is a literal IP and has to be updated by hand.
+Tailscale SSH needs **both** layers, which is why the port-22 grant is not redundant: without it the packets are dropped (`no rules matched`) before the SSH policy is consulted. The rule is `ssh: src [group:dev-users, tag:ai] -> dst tag:dev`, and `sshTests` asserts both accepted identities.
+
+Costs of tagging the workstation, recorded so they are not re-debugged:
+
+- interactive tsidp logins **from `dev`** stop working (tsidp rejects tagged sources - see the 2026-10-25 note), so browser SSO to the apps has to happen from a user-owned device;
+- `dev` is a source of its own now, so `{"src": ["tag:dev"], "dst": ["*"], "ip": ["*"]}` keeps kubectl (`borg-cluster`), the argocd CLI, ansible to `tag:k8s-node`, and the Aperture calls the agent on `dev` makes; `tag:dev` was added to both `tailscale.com/cap/aperture` grants for the same reason;
+- `ansible`/`ssh` **from** `dev` needs its own `ssh` hops, because a tagged source no longer matches `group:admins` (and tagged sources cannot use `check`, so the bastion hop is `accept`);
+- `dev` can no longer SSH into user-owned devices (Mac, steamdeck, tablet): a tagged source is not "the same user";
+- Taildrop with your own devices no longer includes `dev`, and `tailscale up` on it must pass `--advertise-tags=tag:dev` from now on, or the tag is dropped.
+
+Apply order matters: land the policy first, then tag the machine (Machines -> `dev` -> edit tags -> `tag:dev`). Reverting means removing the tag and replacing the `dst: tag:dev` rules with a `hosts` alias again.
 
 ## State before the work
 
