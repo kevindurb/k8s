@@ -21,6 +21,25 @@ nslookup idp.beaver-cloud.ts.net   # expect 100.114.245.48, not NXDOMAIN
 curl -sS -o /dev/null -w '%{http_code}\n' https://idp.beaver-cloud.ts.net/.well-known/openid-configuration   # 200
 ```
 
+## Update 2026-10-26: `group:dev-users` and the `dev` workstation
+
+`dev` (the workstation, `100.84.100.101`) is **not** tagged, so the policy addresses it with a `hosts` alias. Tagging it was rejected for two reasons:
+
+- a tag replaces the user identity, and tsidp `/authorize` rejects tagged sources - interactive logins from `dev` to the SSO apps would stop working (same constraint as the 2026-10-25 note);
+- the `ssh` section cannot express "this group may SSH to that user-owned device": a user-owned `dst` only matches the source user's own devices, and hosts/IPs are not valid `ssh` `dst` values.
+
+What changed in `tailscale/policy.hujson`:
+
+| Source | Destination | Ports |
+| --- | --- | --- |
+| `group:dev-users` (new, kevindurb) | `dev` | tcp:22, tcp:443 |
+| `tag:ai` (Aperture) | `dev` | tcp:22 |
+
+- The `tag:ai` rule is the actual regression fix. The 2026-10-20 hardening removed the allow-all grant and `tag:ai` had no grant of its own, so the agent sessions on the Aperture box lost their SSH path to `dev`. It gets port 22 only.
+- Port 443 is needed because `dev` runs a tailnet-only `tailscale serve` (`https://dev.beaver-cloud.ts.net` -> `127.0.0.1:49374`).
+- SSH into `dev` is the system `sshd` with keys, not Tailscale SSH: `sshd` already owns `:22`, so tailscaled does not serve SSH there and no `ssh` rule applies. ACLs only gate `tcp:22` / `tcp:443`, which is why the grant is enough.
+- If `dev` is ever re-registered it gets a new address; the `hosts` alias is a literal IP and has to be updated by hand.
+
 ## State before the work
 
 ### The tailnet is flat
