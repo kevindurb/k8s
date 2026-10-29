@@ -1,6 +1,6 @@
 ---
 endpoints:
-  - name: tsidp
+  - name: pocket-id
     group: apps
     url: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
     conditions:
