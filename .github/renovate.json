@@ -15,6 +15,23 @@
   "automergeStrategy": "merge-commit",
   "packageRules": [
     {
+      "description": "Label every PR by update type so they can be filtered in GitHub",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["minor"]
+    },
+    {
+      "matchUpdateTypes": ["patch", "pin"],
+      "addLabels": ["patch"]
+    },
+    {
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "addLabels": ["digest"]
+    },
+    {
       "description": "Group digest bumps: a branch that automerges aborts the rest of the run (max 2 per run), so individual digest PRs would starve every version update",
       "matchUpdateTypes": ["digest"],
       "matchFileNames": ["apps/**", "infrastructure/**", "platform/**", "bootc/**"],
