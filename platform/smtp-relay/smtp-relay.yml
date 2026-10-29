@@ -23,7 +23,7 @@ spec:
           emptyDir: {}
       containers:
         - name: smtp-relay
-          image: ghcr.io/foxcpp/maddy:0.7.1@sha256:6ab538e2f28baf2324f7cb418c7f9476fd9c7e9fa9b14bc3aecf51a9f6962064
+          image: ghcr.io/foxcpp/maddy:0.9.6@sha256:e1074e92a452b84d1135ebe8ab831c5f541d33dcbd39e38fab740a53bbf2f97c
           resources:
             requests:
               memory: 50M

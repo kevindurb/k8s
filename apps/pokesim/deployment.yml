@@ -21,7 +21,7 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: ghcr.io/afk-sapien/pokesim:0.4.20@sha256:a4dc7c6e231dd21e134707f1a97d1412203ddbddd85481e6e3d07282b910955f
+          image: ghcr.io/afk-sapien/pokesim:0.5.3@sha256:5c61bad3d4405da3b58244d5c6c7c094ef0da18aa9a0560aba86863e78bc895d
           command:
             - python
             - -m
