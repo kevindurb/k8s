@@ -17,21 +17,24 @@
     {
       "description": "Group digest bumps: a branch that automerges aborts the rest of the run (max 2 per run), so individual digest PRs would starve every version update",
       "matchUpdateTypes": ["digest"],
+      "matchFileNames": ["apps/**", "infrastructure/**", "platform/**", "bootc/**"],
       "groupName": "docker digest updates"
     },
     {
       "description": "Group patch/pin bumps so the 2-automerges-per-run budget covers everything (still automerged via :automergePatch)",
       "matchUpdateTypes": ["patch", "pin"],
+      "matchFileNames": ["apps/**", "infrastructure/**", "platform/**", "bootc/**"],
       "groupName": "patch updates"
     },
     {
       "description": "Minor bumps are reviewed, not automerged. Kept in their own group so they don't block the automerged patch/digest branches",
       "matchUpdateTypes": ["minor"],
+      "matchFileNames": ["apps/**", "infrastructure/**", "platform/**", "bootc/**"],
       "groupName": "minor updates",
       "automerge": false
     },
     {
-      "description": "Keep .github/workflows updates out of the groups above: RENOVATE_TOKEN has no 'workflow' scope, so any branch touching those files is rejected wholesale and would take the app updates down with it",
+      "description": "Last so it overrides the rules above for .github/workflows deps. RENOVATE_TOKEN has no 'workflow' scope, so a branch touching those files is rejected wholesale and would take every app/image update in the group down with it",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"
     }
