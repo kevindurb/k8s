@@ -29,6 +29,11 @@
       "matchUpdateTypes": ["minor"],
       "groupName": "minor updates",
       "automerge": false
+    },
+    {
+      "description": "Keep .github/workflows updates out of the groups above: RENOVATE_TOKEN has no 'workflow' scope, so any branch touching those files is rejected wholesale and would take the app updates down with it",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
     }
   ],
   "dockerfile": {
