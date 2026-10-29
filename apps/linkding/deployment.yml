@@ -28,9 +28,9 @@ spec:
             - name: OIDC_OP_AUTHORIZATION_ENDPOINT
               value: https://idp.beaver-cloud.ts.net/authorize
             - name: OIDC_OP_TOKEN_ENDPOINT
-              value: https://idp.beaver-cloud.ts.net/token
+              value: https://idp.beaver-cloud.ts.net/api/oidc/token
             - name: OIDC_OP_USER_ENDPOINT
-              value: https://idp.beaver-cloud.ts.net/userinfo
+              value: https://idp.beaver-cloud.ts.net/api/oidc/userinfo
             - name: OIDC_OP_JWKS_ENDPOINT
               value: https://idp.beaver-cloud.ts.net/.well-known/jwks.json
             - name: LD_ENABLE_OIDC
@@ -39,7 +39,7 @@ spec:
               value: "1"
           envFrom:
             - secretRef:
-                name: linkding-tsidp
+                name: linkding-oidc
           volumeMounts:
             - name: data
               mountPath: /etc/linkding/data

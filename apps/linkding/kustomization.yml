@@ -5,7 +5,7 @@ namespace: linkding
 namePrefix: linkding-
 resources:
   - ./deployment.yml
-  - ./tsidp-sealed-secret.yml
+  - ./oidc-sealed-secret.yml
 
 components:
   - ../../components/app-pod-hardening

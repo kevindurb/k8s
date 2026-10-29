@@ -45,7 +45,7 @@ spec:
             - name: SEMAPHORE_WEB_ROOT
               value: https://semaphore.beaver-cloud.ts.net
             # Bootstrap-only (runs when the DB is empty). Keep this address
-            # different from any tsidp identity's email: Semaphore matches an
+            # different from the Pocket ID user's email: Semaphore matches an
             # OIDC login to an existing user by email and refuses to link a
             # local password account, so a shared address breaks SSO.
             - name: SEMAPHORE_ADMIN

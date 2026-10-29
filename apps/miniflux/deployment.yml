@@ -38,7 +38,7 @@ spec:
             - name: OAUTH2_OIDC_DISCOVERY_ENDPOINT
               value: https://idp.beaver-cloud.ts.net
             - name: OAUTH2_OIDC_PROVIDER_NAME
-              value: tsidp
+              value: Pocket ID
             - name: OAUTH2_PROVIDER
               value: oidc
             - name: OAUTH2_REDIRECT_URL
@@ -49,7 +49,7 @@ spec:
               value: '1'
           envFrom:
             - secretRef:
-                name: miniflux-tsidp
+                name: miniflux-oidc
           volumeMounts: []
           resources:
             requests:
