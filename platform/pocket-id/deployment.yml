@@ -1,0 +1,146 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+      containers:
+        - name: app
+          image: ghcr.io/pocket-id/pocket-id:v2.19.1-distroless@sha256:d035c9c229304cfd25f97a79b2da00bde9cf942abbd70430d452a95420e2836b
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: APP_URL
+              value: https://idp.beaver-cloud.ts.net
+            - name: APP_NAME
+              value: Beaver Cloud ID
+            # SQLite + uploads live on the PVC: the image's defaults are relative paths
+            # under /app, which is read-only under the hardening component.
+            - name: DB_CONNECTION_STRING
+              value: /app/data/pocket-id.db
+            - name: UPLOAD_PATH
+              value: /app/data/uploads
+            # Application configuration comes from here, not from Pocket ID's own DB.
+            - name: UI_CONFIG_DISABLED
+              value: 'true'
+            - name: TRUST_PROXY
+              value: 'true'
+            # Only reachable through the ingress / egress proxies, never directly.
+            - name: ALLOW_USER_SIGNUPS
+              value: 'disabled'
+            - name: REQUIRE_USER_EMAIL
+              value: 'true'
+            - name: EMAILS_VERIFIED
+              value: 'true'
+            # The bootstrap script supplies client secrets; Pocket ID must not mint its own.
+            - name: AUTO_CREATE_OIDC_CLIENT_SECRET
+              value: 'false'
+            - name: ALLOW_INSECURE_CALLBACK_URLS
+              value: 'false'
+            - name: ANALYTICS_DISABLED
+              value: 'true'
+            - name: VERSION_CHECK_DISABLED
+              value: 'true'
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pocket-id-secret
+                  key: ENCRYPTION_KEY
+            - name: STATIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pocket-id-secret
+                  key: STATIC_API_KEY
+            # Admin-initiated login codes only; delivery goes through smtp-relay.
+            - name: SMTP_HOST
+              value: smtp-relay-app-service.smtp-relay
+            - name: SMTP_PORT
+              value: '25'
+            - name: SMTP_TLS
+              value: none
+            - name: SMTP_FROM
+              value: beavercloud@fastmail.com
+            - name: EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED
+              value: 'true'
+          ports:
+            - name: http
+              containerPort: 1411
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:idp
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [idp]

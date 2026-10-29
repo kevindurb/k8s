@@ -1,10 +1,11 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: tsidp
-namePrefix: tsidp-
+namespace: pocket-id
+namePrefix: pocket-id-
 resources:
   - ./deployment.yml
+  - ./pocket-id-sealed-secret.yml
 components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
@@ -14,9 +15,9 @@ configMapGenerator:
       labels:
         gatus.io/enabled: 'true'
     files:
-      - tsidp.yml=gatus.yml
+      - pocket-id.yml=gatus.yml
 labels:
   - includeSelectors: true
     includeTemplates: true
     pairs:
-      app.kubernetes.io/name: tsidp
+      app.kubernetes.io/name: pocket-id

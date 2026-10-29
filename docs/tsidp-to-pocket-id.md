@@ -1,6 +1,6 @@
 # tsidp -> Pocket ID
 
-Status: **planned, not applied** (written 2026-10-28). Nothing here is in the cluster yet; `platform/tsidp` is still the live IdP.
+Status: **planned, not applied** (written 2026-10-28; Phase 1 policy edited in the working tree on 2026-10-29, Phase 2 manifests drafted but not wired in). Nothing here is in the cluster yet; `platform/tsidp` is still the live IdP.
 
 This replaces the tailnet identity provider at `idp.beaver-cloud.ts.net` with [Pocket ID](https://pocket-id.org): passkeys instead of Tailscale `WhoIs`, admin-registered OIDC clients instead of dynamic client registration. The hostname stays, so app configs, the CoreDNS rewrite, the egress `ExternalName` Service and the gatus canary all stay.
 
@@ -82,7 +82,7 @@ Land first: the Ingress/VIPService is unapproved and untaggable until these exis
 3. Replace the two `tailscale.com/cap/tsidp` grants with plain network grants (Pocket ID has no `WhoIs` caps):
 
    ```json
-   {"src": ["group:app-users", "group:media-users", "group:home-users", "tag:travel-router"],
+   {"src": ["group:app-users", "group:media-users", "group:home-users", "tag:router", "tag:travel-router"],
     "dst": ["tag:idp"], "ip": ["tcp:443"]},
 
    {"src": ["tag:k8s-oidc"], "dst": ["tag:idp"], "ip": ["tcp:443"]},
@@ -90,11 +90,17 @@ Land first: the Ingress/VIPService is unapproved and untaggable until these exis
 
    `group:admins` is already covered by `{"src": ["group:admins"], "dst": ["*"], "ip": ["*"]}`.
 
-4. `tests`: rename every `tag:tsidp:443` to `tag:idp:443`, in accepts and denies.
+   **`tag:router` is included, which is a change from the first draft of this plan** (2026-10-29). The original only listed `tag:travel-router`, copied from the tsidp grant, whose exclusion of `tag:router` was justified by "`/authorize` rejects tagged sources" — an exemption that no longer exists. Home-LAN clients behind `tag:router` already reach `tag:apps` (`linkding`, `romm`, `donetick`), so without this they would be redirected to the IdP and blocked, losing a login they never had to lose. The `tag:router` test entry therefore moves `tag:idp:443` from `deny` to `accept`.
+
+   Dropping the caps also drops Immich's `extraClaims: {"isAdmin": true, "immich_role": "admin"}`. Nothing replaces it: the existing admin row in Immich is already `admin`, so the migration is unaffected, but the first *new* SSO user would register as a normal user. If that ever matters, set Immich's own role claim in Administration -> Settings -> OAuth rather than reintroducing a cap.
+
+4. `tests`: rename every `tag:tsidp:443` to `tag:idp:443`, in accepts and denies — except the `tag:router` entry, which flips to `accept` (see step 3).
 
 5. Delete the comment block about caps resolving through `WhoIs`; note instead that Pocket ID needs plain reachability only.
 
 Not a policy change but worth recording: tagged sources now work. `tag:dev`, home-router LAN clients (`tag:router`) and travel-router LAN clients can complete a browser login, which tsidp refused with `tagged node doesn't have a user identity`.
+
+The policy and the old device must not cross: `tag:tsidp` leaves `tagOwners` in this change, so the policy only makes sense once the `idp` device is deleted. That is why the PR opens first (CI runs `action: test`) and merges only after the device is gone.
 
 ## Phase 2 - `platform/pocket-id`
 

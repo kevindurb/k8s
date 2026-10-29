@@ -26,7 +26,7 @@
 		"tag:travel-router":   ["group:admins"],
 		"tag:travel-lab":      ["group:admins"],
 		"tag:border0-managed": ["group:admins"],
-		"tag:tsidp":           ["group:admins"],
+		"tag:idp":             ["group:admins", "tag:k8s-operator"],
 		"tag:k8s-operator":    ["group:admins"],
 		"tag:k8s":             ["tag:k8s-operator"],
 		"tag:k8s-oidc":        ["group:admins", "tag:k8s-operator"],
@@ -137,8 +137,8 @@
 		// a tagged bastion is its own identity: it needs a network path for the SSH hops
 		{"src": ["tag:bastion"], "dst": ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab"], "ip": ["tcp:22"]},
 
-		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
-		{"src": ["tag:k8s-oidc"], "dst": ["tag:tsidp"], "ip": ["tcp:443"]},
+		// Pocket ID back-channel from in-cluster apps via the oidc-egress ProxyGroup
+		{"src": ["tag:k8s-oidc"], "dst": ["tag:idp"], "ip": ["tcp:443"]},
 
 		// GitHub Actions -> Argo CD webhook
 		{"src": ["tag:ci"], "dst": ["svc:argocd"], "ip": ["tcp:443"]},
@@ -183,35 +183,13 @@
 			},
 		},
 
-		// caps must target tag:tsidp: tsidp reads them from WhoIs on the browser's connection to itself
-		// tag:travel-router is here because its LAN clients are SNAT'd to it; note that
-		// tsidp's /authorize still rejects tagged sources, so this buys reachability and the
-		// STS back-channel, not an interactive login (see docs/tailscale-acl-hardening.md).
+		// Pocket ID needs plain reachability only (no WhoIs caps): the browser login is
+		// handled by Pocket ID itself. Both routers are here because their LAN clients are
+		// SNAT'd to them; tagged sources can complete a login now, unlike tsidp.
 		{
-			"src": ["group:app-users", "group:media-users", "group:home-users", "tag:travel-router"],
-			"dst": ["tag:tsidp"],
+			"src": ["group:app-users", "group:media-users", "group:home-users", "tag:router", "tag:travel-router"],
+			"dst": ["tag:idp"],
 			"ip":  ["tcp:443"],
-			"app": {
-				"tailscale.com/cap/tsidp": [{"includeInUserInfo": true}],
-			},
-		},
-		{
-			"src": ["group:admins"],
-			"dst": ["tag:tsidp"],
-			"app": {
-				"tailscale.com/cap/tsidp": [
-					{
-						"allow_admin_ui":    true,
-						"allow_dcr":         true,
-						"users":             ["*"],
-						"resources":         ["*"],
-						"includeInUserInfo": true,
-						// Immich reads roleClaim=immich_role ("user"/"admin"); without
-						// it the first SSO user is registered as a normal user.
-						"extraClaims": {"isAdmin": true, "immich_role": "admin"},
-					},
-				],
-			},
 		},
 
 		{
@@ -265,6 +243,7 @@
 			"tag:monitoring":      ["tag:k8s"],
 			"tag:games":           ["tag:k8s"],
 			"tag:funnel":          ["tag:k8s"],
+			"tag:idp":             ["tag:k8s"],
 			"tag:travel-lab":      ["tag:travel-lab"],
 			"tag:border0-managed": ["tag:border0-managed"],
 		},
@@ -274,46 +253,47 @@
 		{
 			"src":    "kevindurb@github",
 			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:bridges:443", "tag:infra:443",
-			           "tag:monitoring:443", "tag:k8s:443", "tag:tsidp:443", "tag:games:25565",
+			           "tag:monitoring:443", "tag:k8s:443", "tag:idp:443", "tag:games:25565",
 			           "tag:travel-lab:443", "tag:ai:443"],
 		},
 		{
 			"src":    "tag:k8s-oidc",
-			"accept": ["tag:tsidp:443"],
+			"accept": ["tag:idp:443"],
 			"deny":   ["tag:apps:443", "tag:media:443", "tag:bridges:443", "tag:infra:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:k8s-node",
-			"deny": ["tag:apps:443", "tag:bridges:443", "tag:tsidp:443", "tag:monitoring:443", "tag:k8s:443"],
+			"deny": ["tag:apps:443", "tag:bridges:443", "tag:idp:443", "tag:monitoring:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:ci",
-			"deny": ["tag:apps:443", "tag:monitoring:443", "tag:tsidp:443", "tag:ai:443"],
+			"deny": ["tag:apps:443", "tag:monitoring:443", "tag:idp:443", "tag:ai:443"],
 		},
 		{
 			// the PR review bot reaches Aperture and nothing else
 			"src":    "tag:pr-agent",
 			"accept": ["tag:ai:443"],
 			"deny":   ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:bridges:443",
-			           "tag:infra:443", "tag:monitoring:443", "tag:tsidp:443", "tag:k8s:443",
+			           "tag:infra:443", "tag:monitoring:443", "tag:idp:443", "tag:k8s:443",
 			           "tag:travel-lab:443", "tag:games:25565", "tag:k8s-node:22"],
 		},
 		{
 			"src":    "tag:router",
-			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565"],
-			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:tsidp:443",
+			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
+			           "tag:idp:443"],
+			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443",
 			           "tag:travel-lab:443", "tag:k8s:443"],
 		},
 		{
 			"src":    "tag:travel-router",
 			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
-			           "tag:travel-lab:443", "tag:tsidp:443"],
+			           "tag:travel-lab:443", "tag:idp:443"],
 			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:k8s:443"],
 		},
 		{
 			"src":    "tag:travel-lab",
 			"accept": ["tag:travel-lab:443"],
-			"deny":   ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:idp:443", "tag:k8s:443"],
 		},
 		{
 			// dev is tagged now, so it is a normal tag destination
@@ -323,18 +303,18 @@
 		{
 			"src":    "tag:ai",
 			"accept": ["tag:dev:22"],
-			"deny":   ["tag:dev:443", "tag:apps:443", "tag:tsidp:443", "tag:k8s:443"],
+			"deny":   ["tag:dev:443", "tag:apps:443", "tag:idp:443", "tag:k8s:443"],
 		},
 		{
 			// the workstation keeps the admin reach it had as a user device
 			"src":    "tag:dev",
-			"accept": ["tag:k8s:443", "tag:infra:443", "tag:apps:443", "tag:tsidp:443", "tag:ai:443",
+			"accept": ["tag:k8s:443", "tag:infra:443", "tag:apps:443", "tag:idp:443", "tag:ai:443",
 			           "tag:k8s-node:22", "tag:router:22", "tag:bastion:22"],
 		},
 		{
 			"src":    "tag:bastion",
 			"accept": ["tag:k8s-node:22"],
-			"deny":   ["tag:apps:443", "tag:infra:443", "tag:monitoring:443", "tag:tsidp:443"],
+			"deny":   ["tag:apps:443", "tag:infra:443", "tag:monitoring:443", "tag:idp:443"],
 		},
 		{
 			"src":  "tag:work",
