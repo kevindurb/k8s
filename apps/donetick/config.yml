@@ -39,10 +39,9 @@ data:
       overdue_job: 3h
       pre_due_job: 3h
     oauth2:
-      # tsidp client registered via dynamic client registration
-      # (POST https://idp.beaver-cloud.ts.net/register); the secret comes from
+      # Pocket ID client "donetick"; the secret comes from
       # DT_OAUTH2_CLIENT_SECRET in the donetick-secrets SealedSecret.
-      client_id: "0673c0710ba61992fc7bdad76378d3ae"
+      client_id: "donetick"
       client_secret: ""
       pkce: false
       scopes:
@@ -50,10 +49,10 @@ data:
         - "profile"
         - "email"
       auth_url: "https://idp.beaver-cloud.ts.net/authorize"
-      token_url: "https://idp.beaver-cloud.ts.net/token"
-      user_info_url: "https://idp.beaver-cloud.ts.net/userinfo"
+      token_url: "https://idp.beaver-cloud.ts.net/api/oidc/token"
+      user_info_url: "https://idp.beaver-cloud.ts.net/api/oidc/userinfo"
       redirect_url: "https://donetick.beaver-cloud.ts.net/auth/oauth2"
-      name: "tsidp"
+      name: "Pocket ID"
     storage:
       storage_type: "local"
       base_path: "/donetick-data/uploads"

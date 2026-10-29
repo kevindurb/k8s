@@ -1,6 +1,6 @@
 # tsidp -> Pocket ID
 
-Status: **planned, not applied** (written 2026-10-28; Phase 1 policy edited in the working tree on 2026-10-29, Phase 2 manifests drafted but not wired in). Nothing here is in the cluster yet; `platform/tsidp` is still the live IdP.
+Status: **phases 1-3 applied 2026-10-29** (#545 policy + `platform/pocket-id`, #546 sealed-secret fix). Pocket ID is the live IdP at `idp.beaver-cloud.ts.net` and tsidp is gone. Phases 4-6 (clients, app manifests, relink) are still outstanding, so app SSO stays down until they land.
 
 This replaces the tailnet identity provider at `idp.beaver-cloud.ts.net` with [Pocket ID](https://pocket-id.org): passkeys instead of Tailscale `WhoIs`, admin-registered OIDC clients instead of dynamic client registration. The hostname stays, so app configs, the CoreDNS rewrite, the egress `ExternalName` Service and the gatus canary all stay.
 
@@ -179,9 +179,19 @@ Deployment notes:
 
 5. Merge the PR. The policy workflow applies, then Argo creates the Pocket ID app and the operator provisions the `idp` VIPService.
 
-6. Browser -> `https://idp.beaver-cloud.ts.net/setup`: username `kevindurb`, email `kevindurb@fastmail.com`, name `Kevin Durbin`. Then **add two passkeys** (one synced in a password manager, one hardware key). `/setup` is unauthenticated until the first user exists and closes itself afterwards; do this immediately. Optionally keep the idp grant admin-only until this step is done.
+6. **Restart the `oidc-egress` ProxyGroup**, or in-cluster OIDC stays broken while the browser path works:
 
-7. Create the user group(s) you want for client access (e.g. `users`, containing `kevindurb`) or use *All Users* per client.
+   ```sh
+   kubectl -n tailscale delete pod -l tailscale.com/proxy-group=oidc-egress
+   ```
+
+   The egress proxies resolve an egress Service's `tailnet-fqdn` **once, at pod start**, and install per-IP DNAT rules for whatever that name resolved to. Both pods came up 14h before the cutover, so they still pointed at the deleted device (`ensureRulesAdded svc tailscale-idp tailnetTarget 100.114.245.48 ... 443` in their logs) and every in-cluster token/userinfo/gatus request timed out (`context deadline exceeded`) while `curl` from a workstation returned 200. After the restart the rules name the VIP (`100.73.234.252`, `fd7a:115c:a1e0::3a3a:eafd`). Check with `nc -z <idp egress ClusterIP> 443` from a pod, or by watching for the `ensureRulesAdded ... tailnetTarget <VIP>` line.
+
+   Related: `kubectl delete application tsidp` and `kubectl delete namespace tsidp` are not enough on their own if the PR is still unmerged. `platform` is itself managed by `borg`, which restores its `syncPolicy`, so disabling that app's automated sync does not stick: `platform` re-creates the `tsidp` Application from the pre-merge git tree within a minute, and it re-creates the namespace and a pod with it. That pod does **not** re-register (the PVC is fresh, so tsidp blocks on an interactive login and logs `restart with TS_AUTHKEY set`), so no device comes back and the `idp` name is not re-taken - but with `prune: false` the resurrected Application is orphaned after the merge ("Unknown" sync status) and has to be deleted again. Either merge first and delete after, or delete both the Application and the namespace a second time after the merge and confirm `kubectl -n argocd get applications | grep tsidp` is empty.
+
+7. Browser -> `https://idp.beaver-cloud.ts.net/setup`: username `kevindurb`, email `kevindurb@fastmail.com`, name `Kevin Durbin`. Then **add two passkeys** (one synced in a password manager, one hardware key). `/setup` is unauthenticated until the first user exists and closes itself afterwards; do this immediately. Optionally keep the idp grant admin-only until this step is done.
+
+8. Create the user group(s) you want for client access (e.g. `users`, containing `kevindurb`) or use *All Users* per client.
 
 ## Phase 4 - clients and secrets
 
@@ -223,6 +233,8 @@ Seal with the workflow from `docs/secrets.md`:
 | `apps/romm/secret-sealed-secret.yml` | re-seal the live `romm-secret` with `OIDC_CLIENT_SECRET` replaced, keeping `ROMM_AUTH_SECRET_KEY`, `SCREENSCRAPER_USER`, `SCREENSCRAPER_PASSWORD` |
 | `apps/donetick/secrets-sealed-secret.yml` | re-seal with `DT_OAUTH2_CLIENT_SECRET` replaced, keeping `DT_JWT_SECRET` |
 | `platform/semaphore/secret-sealed-secret.yml` | re-seal with the new `SEMAPHORE_OIDC_PROVIDERS`, keeping `SEMAPHORE_ADMIN_PASSWORD` and `SEMAPHORE_ACCESS_KEY_ENCRYPTION` |
+
+**Seal against the post-prefix name.** Strict scope binds the ciphertext to namespace + name, and kustomize applies the file as `<namePrefix><metadata.name>`. Sealing Pocket ID's secret as `secret` produced an object the controller refused (`no key could decrypt secret (ENCRYPTION_KEY, STATIC_API_KEY)`, pod stuck in `CreateContainerConfigError`); it has to be sealed for `pocket-id-secret` while `metadata.name` stays unprefixed. Same rule for every app below.
 
 Re-sealing a multi-key secret without touching plaintext on disk:
 
@@ -447,7 +459,8 @@ Pocket ID admin UI: allowed user groups per client
 - **`prune: false`.** Dropping `platform/tsidp/app.yml` leaves the `tsidp` Argo Application behind; delete it manually (Phase 3).
 - **Secret-less clients.** `AUTO_CREATE_OIDC_CLIENT_SECRET=false` means a client created without the script has no secret and fails at the token exchange. Check each client's Credentials tab.
 - **`externalName` drift** (unchanged): the operator rewrites the `idp` Service; `infrastructure/tailscale/app.yml` keeps the `ignoreDifferences` entry. If the Service is renamed, update it.
-- **Stale gatus ConfigMaps** (`prune: false`): deleting the `tsidp` namespace removes its old check; if Pocket ID's gatus config is later edited, delete the superseded hashed ConfigMap.
+- **Stale gatus ConfigMaps** (`prune: false`): deleting the `tsidp` namespace removes its old check; if Pocket ID's gatus config is later edited, delete the superseded hashed ConfigMap. A removed check also survives in gatus's in-memory endpoint list, so the phantom `tsidp` row kept reporting green until gatus was restarted (`kubectl -n gatus rollout restart deploy/gatus-app-deployment`).
+- **Egress proxies pin resolved IPs.** Every egress Service is re-resolved by its proxy pods only at pod start, so anything whose tailnet address changes (a name moving from a device to a VIPService, or a VIP being recreated) needs the `oidc-egress` pods restarted, otherwise the in-cluster path silently times out while the browser path works.
 - **SQLite edits need downtime** for donetick and semaphore (scale to 0, copy, edit, copy back) — do not copy a live WAL-mode database.
 - **`UI_CONFIG_DISABLED=true`** moves every application setting to env. If a setting is only available in the UI, either add its env var or drop the flag and configure it there.
 

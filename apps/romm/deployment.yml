@@ -126,13 +126,13 @@ spec:
                 secretKeyRef:
                   name: romm-secret
                   key: SCREENSCRAPER_PASSWORD
-            # OIDC against tsidp (client registered via tsidp dynamic client registration).
+            # OIDC against Pocket ID (the client is created in the admin UI/API).
             - name: OIDC_ENABLED
               value: 'true'
             - name: OIDC_PROVIDER
               value: generic
             - name: OIDC_CLIENT_ID
-              value: '620f3922c86bbc8b83cfaeb414769289'
+              value: 'romm'
             - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
