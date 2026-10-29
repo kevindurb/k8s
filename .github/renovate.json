@@ -6,7 +6,6 @@
     ":automergeDigest",
     ":automergeLinters",
     ":automergePatch",
-    ":automergeMinor",
     ":disableRateLimiting"
   ],
   "ignoreTests": true,
@@ -14,8 +13,24 @@
   "prConcurrentLimit": 0,
   "automergeType": "pr",
   "automergeStrategy": "merge-commit",
-  "platform": "github",
-  "repositories": ["kevindurb/k8s"],
+  "packageRules": [
+    {
+      "description": "Group digest bumps: a branch that automerges aborts the rest of the run (max 2 per run), so individual digest PRs would starve every version update",
+      "matchUpdateTypes": ["digest"],
+      "groupName": "docker digest updates"
+    },
+    {
+      "description": "Group patch/pin bumps so the 2-automerges-per-run budget covers everything (still automerged via :automergePatch)",
+      "matchUpdateTypes": ["patch", "pin"],
+      "groupName": "patch updates"
+    },
+    {
+      "description": "Minor bumps are reviewed, not automerged. Kept in their own group so they don't block the automerged patch/digest branches",
+      "matchUpdateTypes": ["minor"],
+      "groupName": "minor updates",
+      "automerge": false
+    }
+  ],
   "dockerfile": {
     "enabled": false
   },

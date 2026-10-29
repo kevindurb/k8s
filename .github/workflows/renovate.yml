@@ -4,7 +4,14 @@ name: Renovate
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 14 * * 1'
+    # Hourly: Renovate restarts the repo job after an automerge, but only once, so a single
+    # run merges at most 2 branches. Weekly meant the queue never drained.
+    - cron: '0 * * * *'
+
+# Don't let an over-running job overlap with the next scheduled run
+concurrency:
+  group: renovate
+  cancel-in-progress: false
 
 jobs:
   renovate:
