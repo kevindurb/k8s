@@ -23,7 +23,7 @@ spec:
           emptyDir: {}
       containers:
         - name: app
-          image: docker.io/searxng/searxng:latest@sha256:ddd642cae6eac75412938fd846ddbf440a2df029cfeae8a562b8b205f4e35e25
+          image: docker.io/searxng/searxng:latest@sha256:dc2f7ed8a215b2f8244eaed083acdd50406f0de18bf43410cc460a4b511b7424
           env:
             - name: TZ
               value: America/Denver
