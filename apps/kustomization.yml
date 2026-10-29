@@ -33,3 +33,4 @@ resources:
   - ./searxng/app.yml
   - ./minecraft/app.yml
   - ./pokesim/app.yml
+  - ./f1timing/app.yml

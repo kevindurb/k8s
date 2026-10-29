@@ -1,0 +1,9 @@
+---
+endpoints:
+  - name: f1timing
+    group: apps
+    url: http://f1timing-app-service.f1timing/api/health
+    headers:
+      Host: f1timing.beaver-cloud.ts.net
+    conditions:
+      - '[STATUS] == 200'

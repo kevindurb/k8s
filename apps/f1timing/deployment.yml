@@ -1,0 +1,114 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+      containers:
+        - name: app
+          image: ghcr.io/adn8naiagent/f1replaytiming:latest@sha256:de2d20c2c7ad8e879f28f2a272950d42a20ba740fcee07f212690adaaff03bf3
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: PORT
+              value: '8000'
+            # The image defaults DATA_DIR to /app/data and FASTF1_CACHE_DIR to
+            # /app/.fastf1-cache; both are inside the read-only root filesystem.
+            - name: DATA_DIR
+              value: /data
+            - name: FASTF1_CACHE_DIR
+              value: /data/fastf1-cache
+            - name: HOME
+              value: /data/home
+            - name: STORAGE_MODE
+              value: local
+            - name: AUTO_PRECOMPUTE
+              value: race+qual
+            - name: PYTHONDONTWRITEBYTECODE
+              value: '1'
+            - name: F1TV_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: f1timing-secrets
+                  key: F1TV_SECRET_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 512M
+            limits:
+              memory: 4G
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [f1timing]
