@@ -29,3 +29,6 @@ jobs:
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
           LOG_LEVEL: 'debug'
+          # The config file is passed as Renovate's *global* config, so the repo list has to
+          # live here (or use autodiscover) - Renovate will not infer it from the checkout.
+          RENOVATE_REPOSITORIES: kevindurb/k8s
