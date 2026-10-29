@@ -28,7 +28,7 @@ spec:
             secretName: alertmanager-secret
       containers:
         - name: alertmanager
-          image: docker.io/prom/alertmanager@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a
+          image: docker.io/prom/alertmanager@sha256:39d8bb3966c694a124428a3a88fbcffd40bd069129ecd47c059f8a3f17c55f3b
           resources:
             requests:
               memory: 50M
