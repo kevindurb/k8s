@@ -46,7 +46,7 @@ spec:
             path: /dev/sr1
       containers:
         - name: app
-          image: jlesage/makemkv:v26.03.1@sha256:e2ab2c71f748cd504042706ec6323e22a34879eb9580a066dbcdf388f650feb0
+          image: jlesage/makemkv:v26.09.2@sha256:bfdddd29c5a9958da3003df1e673de7ad6915c846723449c76196d4ef6ca1ca2
           securityContext:
             privileged: true
           env:
