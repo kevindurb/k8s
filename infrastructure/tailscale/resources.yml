@@ -32,7 +32,7 @@ spec:
 ---
 # In-cluster identity for the OIDC back-channel. Pods resolve
 # idp.beaver-cloud.ts.net to this Service (see infrastructure/coredns) and
-# reach tsidp through the oidc-egress proxy devices (tag:k8s-oidc) instead of
+# reach the IdP through the oidc-egress proxy devices (tag:k8s-oidc) instead of
 # speaking to the tailnet as the node (tag:k8s-node).
 apiVersion: v1
 kind: Service

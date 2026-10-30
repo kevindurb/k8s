@@ -50,6 +50,31 @@ Costs of tagging the workstation, recorded so they are not re-debugged:
 
 Apply order matters: land the policy first, then tag the machine (Machines -> `dev` -> edit tags -> `tag:dev`). Reverting means removing the tag and replacing the `dst: tag:dev` rules with a `hosts` alias again.
 
+## Update 2026-10-29: tsidp -> Pocket ID
+
+The IdP at `idp.beaver-cloud.ts.net` is now Pocket ID, not tsidp. The hostname, the CoreDNS rewrite, the `oidc-egress` back-channel and the egress `ExternalName` Service are unchanged; the identity model is not. Plan and per-app detail: [`docs/tsidp-to-pocket-id.md`](tsidp-to-pocket-id.md).
+
+What changed in `tailscale/policy.hujson`:
+
+- **`tag:tsidp` -> `tag:idp`.** `tagOwners` is `["group:admins", "tag:k8s-operator"]`; without the operator as an owner it cannot tag the VIPService and the Ingress never serves (`requested tags [tag:idp] are invalid or not permitted (400)`). `autoApprovers.services` gained `"tag:idp": ["tag:k8s"]`, or the service is never approved.
+- **The two `tailscale.com/cap/tsidp` grants are gone**, replaced by one plain grant:
+
+  ```json
+  {"src": ["group:app-users", "group:media-users", "group:home-users", "tag:router", "tag:travel-router"],
+   "dst": ["tag:idp"], "ip": ["tcp:443"]},
+  {"src": ["tag:k8s-oidc"], "dst": ["tag:idp"], "ip": ["tcp:443"]},
+  ```
+
+- **`tag:router` is now a source.** The old exclusion was justified only by tsidp rejecting tagged sources, which no longer applies: Pocket ID has no `WhoIs` dependency, so home-LAN clients behind the router can complete a browser login where they previously could not. `tag:travel-router` was already there from 2026-10-25.
+- `tests`: every `tag:tsidp:443` is now `tag:idp:443`, and the `tag:router` test entry moved from `deny` to `accept`.
+
+Two operational notes that cost time during the cutover:
+
+- **The `idp` device and the VIPService share the MagicDNS namespace.** The tsidp pod's own tsnet node (`tag:tsidp`, non-ephemeral) has to be deleted in the admin console before the operator can publish a service of the same name. Stopping the pod is not enough - the device stays registered as `offline`.
+- **Egress proxies pin resolved IPs.** Each `oidc-egress` pod resolves an egress Service's `tailnet-fqdn` once, at start, and installs per-IP DNAT rules. They had been up for 14h pointing at the deleted device's address, so every in-cluster token/userinfo call timed out (`context deadline exceeded`, visible in gatus) while a browser on the tailnet got 200. Restart the ProxyGroup (`kubectl -n tailscale delete pod -l tailscale.com/proxy-group=oidc-egress`) whenever a name moves between a device and a service.
+
+Identity changed with the product, which is the part applications feel: Pocket ID's `sub` is the user's UUID (`userid:63232476793795202` -> `13ab2f1d-…`), and the address moved from `kevindurb@github.idp.beaver-cloud.ts.net` to `kevindurb@fastmail.com`. Every app that stored either had to be relinked before the first post-migration login.
+
 ## State before the work
 
 ### The tailnet is flat
@@ -107,7 +132,9 @@ A node has one tailnet identity, so per-pod identity has to come from a separate
 
 Findings 1, 2, 4, 8-11 and 14 describe the policy before step 4 and are fixed by the step 4 swap. Fixed already: 3 and 7 (step 2 tags), 5 (gatus is now `tag:monitoring`), 12 (step 3 egress identity), 13 (step 1); 6 is split (argocd is `tag:infra` since step 2, `tag:ci` stops being mintable by the operator in step 4).
 
-### How tsidp caps actually resolve
+### How tsidp caps used to resolve (historical)
+
+Superseded 2026-10-29: tsidp is gone and the caps with it (see [the Pocket ID update](#update-2026-10-29-tsidp---pocket-id)). Kept because the reasoning explains why the old grants were shaped the way they were.
 
 This matters because the per-app `dst` idea does not work. tsidp calls `WhoIs` on the **browser -> tsidp** connection and stores that response on the auth request:
 
@@ -299,9 +326,9 @@ Nobody but admins reaches `tag:infra`, `tag:monitoring`, `tag:bridges`, `tag:bas
 
 `svc:travel-jellyfin` is listed by name because that service was defined without a tag (its six siblings on the travel-lab Pi all carry `tag:travel-lab`), so a tag grant never matched it and only admins (who have `* -> *`) could reach it. Assign `tag:travel-lab` to the service in the admin console and the explicit destination can be dropped. The operator's OAuth client cannot do it: it is not an owner of `tag:travel-lab`, so the API update is rejected.
 
-### tsidp capabilities
+### tsidp capabilities (removed 2026-10-29)
 
-`includeInUserInfo` for every login group. `allow_admin_ui`, `allow_dcr`, `users: ["*"]`, `resources: ["*"]` and `extraClaims.isAdmin` for `group:admins` only. Both grants have `dst: ["tag:tsidp"]` (see above for why).
+`includeInUserInfo` for every login group. `allow_admin_ui`, `allow_dcr`, `users: ["*"]`, `resources: ["*"]` and `extraClaims.isAdmin` for `group:admins` only. Both grants have `dst: ["tag:tsidp"]` (see above for why). Pocket ID has no use for any of this - a login is handled by Pocket ID itself - so the caps were dropped for a plain `tcp:443` grant.
 
 ### nodeAttrs / ssh / autoApprovers
 
@@ -452,7 +479,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 - `tag:pve` is gone from `tagOwners` in step 4: the host no longer exists and no device carries the tag. `tag:router`, `tag:travel-router` and `tag:travel-lab` keep admin SSH and get their grants from step 4.
 - `qbittorrent` has a Service and Ingress but no pods; its gatus check is disabled. Worth deciding whether the app should still be deployed.
 
-## Appendix: proposed policy
+## Appendix: policy file (regenerated 2026-10-29)
 
 `tailscale/policy.hujson` (hujson; comments and trailing commas allowed):
 
@@ -467,6 +494,9 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		"group:home-users":   ["kevindurb@github"],
 		"group:game-players": ["kevindurb@github"],
 		"group:travel-users": ["kevindurb@github"],
+		"group:ai-users":     ["kevindurb@github"],
+		"group:ai-admins":    ["kevindurb@github"],
+		"group:dev-users":    ["kevindurb@github"],
 	},
 
 	"hosts": {},
@@ -482,7 +512,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		"tag:travel-router":   ["group:admins"],
 		"tag:travel-lab":      ["group:admins"],
 		"tag:border0-managed": ["group:admins"],
-		"tag:tsidp":           ["group:admins"],
+		"tag:idp":             ["group:admins", "tag:k8s-operator"],
 		"tag:k8s-operator":    ["group:admins"],
 		"tag:k8s":             ["tag:k8s-operator"],
 		"tag:k8s-oidc":        ["group:admins", "tag:k8s-operator"],
@@ -494,12 +524,18 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		"tag:monitoring":      ["group:admins", "tag:k8s-operator"],
 		"tag:games":           ["group:admins", "tag:k8s-operator"],
 		"tag:funnel":          ["group:admins", "tag:k8s-operator"],
+		"tag:ai":              ["group:admins"],
+		"tag:dev":             ["group:admins"],
+		"tag:pr-agent":        ["group:admins"],
 	},
 
 	"nodeAttrs": [
-		{"target": ["tag:funnel"],   "attr": ["funnel"]},
-		{"target": ["group:admins"], "attr": ["drive:share", "drive:access", "mullvad"]},
-		{"target": ["*"],            "attr": ["cache-network-maps"]},
+		{"target": ["tag:funnel"],     "attr": ["funnel"]},
+		{"target": ["group:admins"],   "attr": ["drive:share", "drive:access", "mullvad"]},
+		{"target": ["tag:travel-lab"], "attr": ["drive:share"]},
+		{"target": ["*"],              "attr": ["cache-network-maps"]},
+		// Aperture resolves group: grant sources from this device's view of the tailnet
+		{"target": ["tag:ai"],       "app": {"tailscale.com/visible-groups": [{"groups": ["*"]}]}},
 	],
 
 	"ssh": [
@@ -513,6 +549,29 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 			"action": "accept",
 			"src":    ["group:admins"],
 			"dst":    ["tag:router", "tag:travel-router", "tag:travel-lab"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			// the Aperture box is tagged, so it no longer matches the user-owned-device rule
+			"action": "accept",
+			"src":    ["group:admins"],
+			"dst":    ["tag:ai"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			// dev: tagged, because a user-owned destination only matches the source user's
+			// own devices - a group or the tagged Aperture box could never SSH into it
+			"action": "accept",
+			"src":    ["group:dev-users", "tag:ai"],
+			"dst":    ["tag:dev"],
+			"users":  ["root", "autogroup:nonroot"],
+		},
+		{
+			// the workstation is a tagged source now, so ansible/ssh from dev no longer
+			// matches group:admins and needs its own hops (checked on entry to the bastion)
+			"action": "accept",
+			"src":    ["tag:dev"],
+			"dst":    ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab", "tag:bastion", "tag:ai"],
 			"users":  ["root", "autogroup:nonroot"],
 		},
 		{
@@ -550,39 +609,73 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		{"src": ["tag:travel-lab"], "dst": ["tag:travel-lab"], "ip": ["tcp:443"]},
 		{"src": ["group:travel-users", "tag:travel-router"], "dst": ["tag:travel-lab", "svc:travel-jellyfin"], "ip": ["tcp:443"]},
 
+		// dev is the workstation and is tagged, so Aperture (tag:ai) and dev-users can use
+		// Tailscale SSH to it: a user-owned device can only be an SSH destination for its
+		// own user, and the ssh section cannot name a host alias or IP.
+		{"src": ["group:dev-users", "tag:ai"], "dst": ["tag:dev"], "ip": ["tcp:22"]},
+		{"src": ["group:dev-users"],           "dst": ["tag:dev"], "ip": ["tcp:443"]},
+
+		// all of the workstation's own traffic now leaves as tag:dev instead of
+		// kevindurb@github, so it keeps the reach its admin user device had:
+		// kubectl/argocd (tag:k8s, tag:infra), ansible to the nodes (tcp:22), Aperture.
+		{"src": ["tag:dev"], "dst": ["*"], "ip": ["*"]},
+
 		// a tagged bastion is its own identity: it needs a network path for the SSH hops
 		{"src": ["tag:bastion"], "dst": ["tag:k8s-node", "tag:router", "tag:travel-router", "tag:travel-lab"], "ip": ["tcp:22"]},
 
-		// tsidp back-channel from in-cluster apps via the oidc-egress ProxyGroup
-		{"src": ["tag:k8s-oidc"], "dst": ["tag:tsidp"], "ip": ["tcp:443"]},
+		// Pocket ID back-channel from in-cluster apps via the oidc-egress ProxyGroup
+		{"src": ["tag:k8s-oidc"], "dst": ["tag:idp"], "ip": ["tcp:443"]},
 
 		// GitHub Actions -> Argo CD webhook
 		{"src": ["tag:ci"], "dst": ["svc:argocd"], "ip": ["tcp:443"]},
 
-		// caps must target tag:tsidp: tsidp reads them from WhoIs on the browser's connection to itself
+		// Aperture (ai): network and application access. Roles and models live here
+		// rather than in the gateway config so they are reviewable in git; Aperture
+		// combines both sources, so the gateway's stock "*" grants are removed.
+		// tag:dev is here because the workstation calls Aperture too, and it now
+		// presents its tag rather than kevindurb@github.
 		{
-			"src": ["group:app-users", "group:media-users", "group:home-users"],
-			"dst": ["tag:tsidp"],
+			"src": ["group:ai-users", "tag:dev"],
+			"dst": ["tag:ai"],
 			"ip":  ["tcp:443"],
 			"app": {
-				"tailscale.com/cap/tsidp": [{"includeInUserInfo": true}],
+				"tailscale.com/cap/aperture": [
+					{"role": "user"},
+					{"models": "**"},
+				],
 			},
 		},
 		{
-			"src": ["group:admins"],
-			"dst": ["tag:tsidp"],
+			"src": ["group:ai-admins", "tag:dev"],
+			"dst": ["tag:ai"],
+			"ip":  ["tcp:443"],
 			"app": {
-				"tailscale.com/cap/tsidp": [
-					{
-						"allow_admin_ui":    true,
-						"allow_dcr":         true,
-						"users":             ["*"],
-						"resources":         ["*"],
-						"includeInUserInfo": true,
-						"extraClaims":       {"isAdmin": true},
-					},
+				"tailscale.com/cap/aperture": [
+					{"role": "admin"},
+					{"connectors": ["**"]},
 				],
 			},
+		},
+		// PR review bot: one model, one host, nothing else
+		{
+			"src": ["tag:pr-agent"],
+			"dst": ["tag:ai"],
+			"ip":  ["tcp:443"],
+			"app": {
+				"tailscale.com/cap/aperture": [
+					{"role": "user", "enable_portal": false},
+					{"models": "*/deepseek-v4.1-flash", "quotas": [{"bucket": "pr-agent-daily"}]},
+				],
+			},
+		},
+
+		// Pocket ID needs plain reachability only (no WhoIs caps): the browser login is
+		// handled by Pocket ID itself. Both routers are here because their LAN clients are
+		// SNAT'd to them; tagged sources can complete a login now, unlike tsidp.
+		{
+			"src": ["group:app-users", "group:media-users", "group:home-users", "tag:router", "tag:travel-router"],
+			"dst": ["tag:idp"],
+			"ip":  ["tcp:443"],
 		},
 
 		{
@@ -590,6 +683,14 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 			"dst": ["autogroup:self"],
 			"app": {
 				"tailscale.com/cap/drive": [{"shares": ["*"], "access": "rw"}],
+			},
+		},
+		// the travel lab's USB-attached NVMe, shared from tag:travel-lab
+		{
+			"src": ["group:admins"],
+			"dst": ["tag:travel-lab"],
+			"app": {
+				"tailscale.com/cap/drive": [{"shares": ["storage"], "access": "rw"}],
 			},
 		},
 
@@ -628,6 +729,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 			"tag:monitoring":      ["tag:k8s"],
 			"tag:games":           ["tag:k8s"],
 			"tag:funnel":          ["tag:k8s"],
+			"tag:idp":             ["tag:k8s"],
 			"tag:travel-lab":      ["tag:travel-lab"],
 			"tag:border0-managed": ["tag:border0-managed"],
 		},
@@ -637,47 +739,85 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://jellyfin.beaver-cloud.ts.net
 		{
 			"src":    "kevindurb@github",
 			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:bridges:443", "tag:infra:443",
-			           "tag:monitoring:443", "tag:k8s:443", "tag:tsidp:443", "tag:games:25565",
-			           "tag:travel-lab:443"],
+			           "tag:monitoring:443", "tag:k8s:443", "tag:idp:443", "tag:games:25565",
+			           "tag:travel-lab:443", "tag:ai:443"],
 		},
 		{
 			"src":    "tag:k8s-oidc",
-			"accept": ["tag:tsidp:443"],
+			"accept": ["tag:idp:443"],
 			"deny":   ["tag:apps:443", "tag:media:443", "tag:bridges:443", "tag:infra:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:k8s-node",
-			"deny": ["tag:apps:443", "tag:bridges:443", "tag:tsidp:443", "tag:monitoring:443", "tag:k8s:443"],
+			"deny": ["tag:apps:443", "tag:bridges:443", "tag:idp:443", "tag:monitoring:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:ci",
-			"deny": ["tag:apps:443", "tag:monitoring:443", "tag:tsidp:443"],
+			"deny": ["tag:apps:443", "tag:monitoring:443", "tag:idp:443", "tag:ai:443"],
+		},
+		{
+			// the PR review bot reaches Aperture and nothing else
+			"src":    "tag:pr-agent",
+			"accept": ["tag:ai:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:bridges:443",
+			           "tag:infra:443", "tag:monitoring:443", "tag:idp:443", "tag:k8s:443",
+			           "tag:travel-lab:443", "tag:games:25565", "tag:k8s-node:22"],
 		},
 		{
 			"src":    "tag:router",
-			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565"],
-			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:tsidp:443",
+			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
+			           "tag:idp:443"],
+			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443",
 			           "tag:travel-lab:443", "tag:k8s:443"],
 		},
 		{
 			"src":    "tag:travel-router",
-			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565", "tag:travel-lab:443"],
-			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:tsidp:443",
-			           "tag:k8s:443"],
+			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
+			           "tag:travel-lab:443", "tag:idp:443"],
+			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:k8s:443"],
 		},
 		{
 			"src":    "tag:travel-lab",
 			"accept": ["tag:travel-lab:443"],
-			"deny":   ["tag:apps:443", "tag:media:443", "tag:tsidp:443", "tag:k8s:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:idp:443", "tag:k8s:443"],
+		},
+		{
+			// dev is tagged now, so it is a normal tag destination
+			"src":    "group:dev-users",
+			"accept": ["tag:dev:22", "tag:dev:443"],
+		},
+		{
+			"src":    "tag:ai",
+			"accept": ["tag:dev:22"],
+			"deny":   ["tag:dev:443", "tag:apps:443", "tag:idp:443", "tag:k8s:443"],
+		},
+		{
+			// the workstation keeps the admin reach it had as a user device
+			"src":    "tag:dev",
+			"accept": ["tag:k8s:443", "tag:infra:443", "tag:apps:443", "tag:idp:443", "tag:ai:443",
+			           "tag:k8s-node:22", "tag:router:22", "tag:bastion:22"],
 		},
 		{
 			"src":    "tag:bastion",
 			"accept": ["tag:k8s-node:22"],
-			"deny":   ["tag:apps:443", "tag:infra:443", "tag:monitoring:443", "tag:tsidp:443"],
+			"deny":   ["tag:apps:443", "tag:infra:443", "tag:monitoring:443", "tag:idp:443"],
 		},
 		{
 			"src":  "tag:work",
 			"deny": ["tag:apps:443", "tag:infra:443"],
+		},
+	],
+
+	"sshTests": [
+		{
+			"src":    "group:dev-users",
+			"dst":    ["tag:dev"],
+			"accept": ["kevindurb", "root"],
+		},
+		{
+			"src":    "tag:ai",
+			"dst":    ["tag:dev"],
+			"accept": ["kevindurb", "root"],
 		},
 	],
 }
