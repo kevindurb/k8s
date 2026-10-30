@@ -77,6 +77,21 @@ spec:
           ports:
             - name: postgres
               containerPort: 5432
+          startupProbe:
+            exec:
+              command: ['pg_isready', '--dbname=ente_db', '--username=ente']
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ['pg_isready', '--dbname=ente_db', '--username=ente']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ['pg_isready', '--dbname=ente_db', '--username=ente']
+            initialDelaySeconds: 60
+            periodSeconds: 30
 
 ---
 apiVersion: v1

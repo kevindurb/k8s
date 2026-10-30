@@ -56,11 +56,21 @@ spec:
           ports:
             - name: redis
               containerPort: 6379
+          startupProbe:
+            exec:
+              command: ['valkey-cli', '-p', '6379', 'ping']
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: redis
             initialDelaySeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ['valkey-cli', '-p', '6379', 'ping']
+            initialDelaySeconds: 20
+            periodSeconds: 30
 
 ---
 apiVersion: v1

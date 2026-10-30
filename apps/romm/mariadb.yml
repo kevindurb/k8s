@@ -75,6 +75,16 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
             failureThreshold: 5
+          startupProbe:
+            exec:
+              command: ['healthcheck.sh', '--connect', '--innodb_initialized']
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command: ['healthcheck.sh', '--connect', '--innodb_initialized']
+            initialDelaySeconds: 60
+            periodSeconds: 30
           resources:
             requests:
               memory: 256M

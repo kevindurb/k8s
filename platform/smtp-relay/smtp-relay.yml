@@ -47,6 +47,16 @@ spec:
           ports:
             - name: smtp
               containerPort: 25
+          readinessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 20
+            periodSeconds: 30
 
 ---
 apiVersion: v1

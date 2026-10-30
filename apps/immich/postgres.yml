@@ -120,6 +120,11 @@ spec:
           ports:
             - name: postgres
               containerPort: 5432
+          startupProbe:
+            exec:
+              command: ['pg_isready', '--dbname=immich', '--username=immich']
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             exec:
               command: ['pg_isready', '--dbname=immich', '--username=immich']
