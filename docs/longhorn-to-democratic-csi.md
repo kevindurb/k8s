@@ -53,7 +53,7 @@ Then delete `components/app-volume/`, run `just check-kustomize`, commit, push, 
 | qbittorrent config + ts-state | **Migrated 2026-10-03** (`006abf33`). The deployment is at 0 replicas, so it hasn't been run on the new volumes yet |
 | sonarr/volume | **Migrated 2026-10-03** (`e5cc6fcb`) |
 | radarr/volume | **Migrated 2026-10-03** (`83f4b76b`) |
-| tsidp/data | **Migrated 2026-10-03** (`b3cf12cc`). Old PV `pvc-e8404b9e…` kept `Retain`/`Released`. Parent Argo app is `platform`, so run the scripts with `PARENT=platform` (or `infrastructure` for that tree) |
+| tsidp/data | **Migrated 2026-10-03** (`b3cf12cc`). Old PV `pvc-e8404b9e…` kept `Retain`/`Released`. Parent Argo app is `platform`, so run the scripts with `PARENT=platform` (or `infrastructure` for that tree). **Historical**: the tsidp app and this PVC were deleted on 2026-10-29 when Pocket ID replaced it (`platform/pocket-id` has its own `pocket-id-data` zvol, also `zfs-generic-nvmeof-csi`) |
 | calibre-web/config | **Migrated 2026-10-03** (`2d9bf6a5`). Old PV `pvc-b1ea29ae…` kept `Retain`/`Released` |
 | calibre/config | **Migrated 2026-10-03** (`5bf6d1e7`). Old PV `pvc-04b41406…` kept `Retain`/`Released` |
 | linkding/data | **Migrated 2026-10-03** (`c113f8da`). Old PV `pvc-f29dd1b7…` kept `Retain`/`Released` |

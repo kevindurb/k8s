@@ -1,6 +1,6 @@
 ---
 # k3s CoreDNS imports /etc/coredns/custom/*.override from this optional
-# ConfigMap. Sending the tsidp name to the in-cluster egress Service means
+# ConfigMap. Sending the IdP name to the in-cluster egress Service means
 # pods keep their configs unchanged, while the tailnet sees the oidc-egress
 # ProxyGroup (tag:k8s-oidc) as the caller instead of tag:k8s-node.
 apiVersion: v1

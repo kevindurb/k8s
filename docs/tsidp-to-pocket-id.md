@@ -1,6 +1,6 @@
 # tsidp -> Pocket ID
 
-Status: **phases 1-3 applied 2026-10-29** (#545 policy + `platform/pocket-id`, #546 sealed-secret fix). Pocket ID is the live IdP at `idp.beaver-cloud.ts.net` and tsidp is gone. Phases 4-6 (clients, app manifests, relink) are still outstanding, so app SSO stays down until they land.
+Status: **phases 1-6 applied 2026-10-29** (#545 policy + `platform/pocket-id`, #546 sealed-secret fix, #547 app clients + secrets). Pocket ID is the live IdP at `idp.beaver-cloud.ts.net`, tsidp is gone, and every app account is relinked to the new subject/address. Phases 7-8 (login verification, docs cleanup) are what is left.
 
 This replaces the tailnet identity provider at `idp.beaver-cloud.ts.net` with [Pocket ID](https://pocket-id.org): passkeys instead of Tailscale `WhoIs`, admin-registered OIDC clients instead of dynamic client registration. The hostname stays, so app configs, the CoreDNS rewrite, the egress `ExternalName` Service and the gatus canary all stay.
 
@@ -364,6 +364,13 @@ kubectl -n donetick scale deploy/donetick-app-deployment --replicas=1
 
 Semaphore is the same recipe against `semaphore-data`, `/data/database.sqlite`, and the SQL above.
 
+**What actually worked (2026-10-29):**
+
+- **Semaphore needs no downtime.** Its image has `python3`, so the two updates can run against the live WAL database from inside the pod; SQLite serialises the writer and the app picks the rows up on its next read. Restart the pod afterwards only to clear any caches.
+- **Argo fights the scale-down.** `spec.replicas` is in git, so `selfHeal` scales donetick back to 1 within a few minutes of `kubectl scale --replicas=0`, and a pod comes back holding the old file while it is being replaced. The app then reads fine and cannot write: SQLite reports `attempt to write a readonly database (1032)` (`SQLITE_READONLY_DBMOVED`), which surfaces in the UI as a sign-in that redirects back with nothing happening after a *successful* token exchange. Either edit the DB before the replacement is visible to a running pod (scale down, delete the pod, confirm no pod, then edit), or restart the pod afterwards — restarting is what clears `1032`, since nothing has been written to the new file.
+- **Pin the helper pod to the node that still holds the volume.** A fresh helper scheduled elsewhere fails with `Multi-Attach error for volume ... exclusively attached to one node`; `kubectl get volumeattachment | grep <pvc>` shows the node, and `nodeName:` in the helper pod avoids waiting for the detach.
+- **Check where a copy came from.** A `donetick.db` lying in a scratch directory from an earlier session looks plausible (same schema, same size) and will silently overwrite live data. Copy from the mounted PVC, confirm a row you expect to change, then edit.
+
 If donetick's UI lets you edit the account address, use that instead and skip the copy. Semaphore matches an OIDC login to an existing user by email, so the `user__external_identity` row is optional cleanup; the email update is not.
 
 Immich is configured outside git. After the SQL update, in **Administration -> Settings -> OAuth**:
@@ -390,6 +397,13 @@ kubectl run --rm -it dnstest --image=busybox --restart=Never -- nslookup idp.bea
 - From a tagged device (`dev`) and from a LAN client behind `tag:travel-router`, an app login now completes (new behaviour).
 - Admin login code: as an admin, request a login code for `kevindurb` in the admin UI; it arrives at `kevindurb@fastmail.com` through smtp-relay. (The unauthenticated "request a code" option stays disabled.)
 - Immich shows the Pocket ID button and logs in.
+
+**Outcome (2026-10-29):** all six apps log in to the existing accounts. Two things the check list did not anticipate:
+
+- **RomM refused with `Email is not verified.`** The `/setup` admin user is created with `emailVerified: false` even under `EMAILS_VERIFIED=true` (that setting covers signups and address changes), and RomM reads `email_verified` from the token. Fixed in the IdP, not in RomM: `PUT /api/users/<id>` with `emailVerified: true`.
+- **donetick bounced back to the login page with no error.** Pocket ID logged a 200 on `/api/oidc/token`, donetick logged `attempt to write a readonly database (1032)` (`SQLITE_READONLY_DBMOVED`, the file replaced under a running pod). Restarting the pod was the whole fix; see the phase 6 note about Argo re-scaling.
+
+Immich was configured and linked by hand before phase 6 ran, so its `oauthId` already held the new subject; only the email needed the SQL update.
 
 ## Phase 8 - docs and cleanup
 

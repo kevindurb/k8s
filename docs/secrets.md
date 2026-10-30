@@ -31,7 +31,7 @@ kubectl -n { NS } get secret { NAME } -o yaml \
   > { NAME }-sealed-secret.yml
 ```
 
-3. Commit the `SealedSecret` (see `apps/linkding/tsidp-sealed-secret.yml` for an example) and reference the generated `Secret` by name as usual.
+3. Commit the `SealedSecret` (see `apps/linkding/oidc-sealed-secret.yml` for an example) and reference the generated `Secret` by name as usual.
 
 ### Naming vs. kustomize `namePrefix`
 

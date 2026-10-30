@@ -40,7 +40,7 @@ Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just
 `clusters/borg/kustomization.yml` is the entrypoint applied to the (single) cluster and includes three Argo CD `Application` manifests, each pointing at a top-level directory in this repo via `sources[].path`:
 
 - `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (democratic-csi), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, gpu-operator, node-feature-discovery.
-- `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, tsidp, mosquitto, zigbee2mqtt.
+- `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, pocket-id, mosquitto, zigbee2mqtt.
 - `apps/` — user-facing applications (jellyfin, nextcloud, radarr/sonarr, syncthing, home-assistant, etc.), plus an `AppProject` (`apps/project.yml`) and one Argo CD `Application` per app (each app dir has its own `app.yml`).
 
 Each subdirectory under these three trees is a Kustomize root with its own `kustomization.yml`; the parent dir's `kustomization.yml` just lists them as resources (see `apps/kustomization.yml`). Argo CD auto-syncs everything (`automated.enabled: true`, `selfHeal: true`, `prune: false`) — pruning is intentionally off, so removing an app requires deleting its resource line from the parent kustomization _and_ removing the Argo CD Application manually (or letting it go orphaned) rather than relying on prune.
@@ -73,7 +73,7 @@ Components are additive/patch-only; always check whether an existing component c
 
 ### Secrets
 
-Secrets are managed via sealed secrets (`platform/sealed-secrets`, Bitnami's `sealed-secrets` controller deployed in `kube-system`): commit `SealedSecret` CRs encrypted with the cluster key (e.g. `apps/linkding/tsidp-sealed-secret.yml`) and the controller unseals them into native k8s `Secret`s, consumed via normal `env[].valueFrom.secretKeyRef` or `envFrom.secretRef`. Workflow documented in `docs/secrets.md`: `kubectl create secret ... --dry-run=client -o yaml` piped through `kubeseal`, then commit the `SealedSecret`. The controller's private key is the root of trust — back it up (`just -f platform/sealed-secrets/justfile export-secrets`). Never commit raw secret values.
+Secrets are managed via sealed secrets (`platform/sealed-secrets`, Bitnami's `sealed-secrets` controller deployed in `kube-system`): commit `SealedSecret` CRs encrypted with the cluster key (e.g. `apps/linkding/oidc-sealed-secret.yml`) and the controller unseals them into native k8s `Secret`s, consumed via normal `env[].valueFrom.secretKeyRef` or `envFrom.secretRef`. Workflow documented in `docs/secrets.md`: `kubectl create secret ... --dry-run=client -o yaml` piped through `kubeseal`, then commit the `SealedSecret`. The controller's private key is the root of trust — back it up (`just -f platform/sealed-secrets/justfile export-secrets`). Never commit raw secret values.
 
 Note the app `namePrefix` interaction: the generated `Secret` takes the `SealedSecret`'s own (post-`namePrefix`) name, so name it accordingly and reference that name — see `docs/secrets.md`.
 
