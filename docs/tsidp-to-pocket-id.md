@@ -1,6 +1,6 @@
 # tsidp -> Pocket ID
 
-Status: **phases 1-6 applied 2026-10-29** (#545 policy + `platform/pocket-id`, #546 sealed-secret fix, #547 app clients + secrets). Pocket ID is the live IdP at `idp.beaver-cloud.ts.net`, tsidp is gone, and every app account is relinked to the new subject/address. Phases 7-8 (login verification, docs cleanup) are what is left.
+Status: **done (2026-10-29)** - phases 1-8 applied (#545, #546, #547, #548). Pocket ID is the live IdP at `idp.beaver-cloud.ts.net`, tsidp is gone, every app account is relinked to the new subject/address, and all six apps log in. What is left is optional: back up the sealing key (`just -f platform/sealed-secrets/justfile export-secrets`).
 
 This replaces the tailnet identity provider at `idp.beaver-cloud.ts.net` with [Pocket ID](https://pocket-id.org): passkeys instead of Tailscale `WhoIs`, admin-registered OIDC clients instead of dynamic client registration. The hostname stays, so app configs, the CoreDNS rewrite, the egress `ExternalName` Service and the gatus canary all stay.
 
@@ -373,12 +373,14 @@ Semaphore is the same recipe against `semaphore-data`, `/data/database.sqlite`, 
 
 If donetick's UI lets you edit the account address, use that instead and skip the copy. Semaphore matches an OIDC login to an existing user by email, so the `user__external_identity` row is optional cleanup; the email update is not.
 
-Immich is configured outside git. After the SQL update, in **Administration -> Settings -> OAuth**:
+Immich is configured outside git. In **Administration -> Settings -> OAuth** (done 2026-10-29):
 
 - issuer `https://idp.beaver-cloud.ts.net` (unchanged)
-- client ID `immich`, new client secret from `/tmp/opencode/immich.cred`
-- keep `autoLaunch`, set the button text to "Sign in with Pocket ID"
+- client ID `immich`, client secret from the Immich credential in the password manager (the temporary `/tmp/opencode/immich.cred` was shredded once the button was fixed)
+- `autoLaunch` kept on, button text "Sign in with Pocket ID"
 - the four callback URLs above must stay registered on the client
+
+Because this one lives only in Immich's database and in the password manager, a lost secret means minting a new one in Pocket ID and re-pasting it - there is no sealed copy in git the way there is for the other five clients.
 
 ## Phase 7 - verification
 
@@ -454,13 +456,13 @@ docs/tailscale-acl-hardening.md
 docs/longhorn-to-democratic-csi.md             (historical note)
 ```
 
-Not in git, applied by hand:
+Not in git, applied by hand (all done 2026-10-29):
 
 ```
 Immich OAuth settings (issuer unchanged, client id/secret, button text)
 Tailscale admin console: delete the `idp` device
-Pocket ID /setup: admin user + two passkeys
-Pocket ID admin UI: allowed user groups per client
+Pocket ID `/setup`: admin user + two passkeys
+Pocket ID admin UI: allowed user groups per client (left unrestricted; no groups exist)
 ```
 
 ## Risks
