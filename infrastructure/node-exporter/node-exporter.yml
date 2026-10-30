@@ -26,6 +26,12 @@ spec:
               protocol: TCP
           # node_exporter has no /-/healthy; / is the cheap landing page, while
           # /metrics runs every collector and must not be probed.
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /

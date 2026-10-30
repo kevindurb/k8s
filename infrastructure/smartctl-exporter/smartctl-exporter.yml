@@ -19,6 +19,11 @@ spec:
           # No health endpoint, and /metrics shells out to smartctl per device
           # (well past the 1s default probe timeout), so only prove the
           # listener is up.
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: http

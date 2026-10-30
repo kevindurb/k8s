@@ -53,6 +53,11 @@ spec:
               protocol: TCP
           # No health endpoint; /metrics runs zpool/zfs in the host mount
           # namespace (cached, but slow), so only probe the listener.
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: http
