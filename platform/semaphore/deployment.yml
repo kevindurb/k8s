@@ -79,6 +79,12 @@ spec:
               mountPath: /var/lib/semaphore
             - name: home
               mountPath: /home/semaphore
+          startupProbe:
+            httpGet:
+              path: /api/ping
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /api/ping

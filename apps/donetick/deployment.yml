@@ -57,6 +57,12 @@ spec:
           ports:
             - name: http
               containerPort: 2021
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /api/v1/health

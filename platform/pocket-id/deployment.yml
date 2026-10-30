@@ -88,6 +88,12 @@ spec:
               memory: 128M
             limits:
               memory: 256M
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /healthz

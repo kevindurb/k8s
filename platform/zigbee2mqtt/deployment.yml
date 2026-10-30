@@ -55,6 +55,26 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          # The frontend on / is the only HTTP surface; /api/health, /health
+          # and /api/ all 404.
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
 
 ---
 apiVersion: networking.k8s.io/v1
