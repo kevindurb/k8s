@@ -43,7 +43,11 @@ data:
       # DT_OAUTH2_CLIENT_SECRET in the donetick-secrets SealedSecret.
       client_id: "donetick"
       client_secret: ""
-      pkce: false
+      # PKCE (S256) on the OIDC flow; donetick >= 0.1.83 generates the
+      # challenge in its frontend when this is set. The Pocket ID client
+      # "donetick" must have PKCE enabled too, otherwise it silently accepts
+      # the challenge without requiring one.
+      pkce: true
       scopes:
         - "openid"
         - "profile"
