@@ -44,6 +44,12 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
           # Gatus reports 200 on /health as soon as the HTTP server is up,
           # whether or not the individual endpoint checks are passing.
           readinessProbe:
@@ -77,6 +83,12 @@ spec:
             # in the same pod network namespace.
             - name: HEALTH_PORT
               value: '8081'
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /healthz

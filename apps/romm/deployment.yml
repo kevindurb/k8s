@@ -161,13 +161,6 @@ spec:
               mountPath: /romm/launchbox
             - name: tmp
               mountPath: /tmp
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 20
-            periodSeconds: 20
-            failureThreshold: 5
           resources:
             requests:
               memory: 512M
@@ -176,6 +169,25 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
 
 ---
 apiVersion: v1
