@@ -52,6 +52,7 @@ Measured from the live cluster, from `gatus.yml`/`kustomization.yml`, and from t
 | `pocket-id` | `smtp-relay` | 25 | admin login codes |
 | `miniflux` | `linkding` | 9090 | "save to linkding", configured in the miniflux database |
 | every OIDC app | `tailscale/ts-idp-swkld` via the `idp` ExternalName | 443 | token/userinfo back-channel through `oidc-egress` |
+| `mealie` | `tailscale/ts-ai-*` via the `ai` ExternalName | 443 | recipe AI providers, configured in the app; leaves as `tag:k8s-ai` through `ai-egress` |
 | `prometheus` | kubelet/cadvisor on node IPs, apiserver, exporters | 10250 / 443 / 9100+ | metrics |
 | `argocd`, `gatus`, `semaphore`, `healthchecks` | `kubernetes.default.svc` | 443 | API access |
 | workloads that leave the cluster | internet | various | qbittorrent, syncthing, searxng, indexers, HA cloud, Immich push, Minecraft |

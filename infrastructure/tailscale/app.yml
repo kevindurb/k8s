@@ -35,10 +35,15 @@ spec:
       prune: false
       selfHeal: true
   ignoreDifferences:
-    # The operator rewrites the egress ExternalName Service to point at the
-    # ClusterIP it creates for the ProxyGroup.
+    # The operator rewrites the egress ExternalName Services to point at the
+    # ClusterIP it creates for each ProxyGroup.
     - group: ""
       kind: Service
       name: idp
+      jsonPointers:
+        - /spec/externalName
+    - group: ""
+      kind: Service
+      name: ai
       jsonPointers:
         - /spec/externalName

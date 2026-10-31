@@ -197,6 +197,7 @@ The only autogroups left are ones with no group equivalent: `autogroup:self` ("t
 | `tag:games` | minecraft (`loadBalancerClass: tailscale`; TCP 25565 + UDP 19132) |
 | `tag:apps` + `tag:funnel` | consignment-app (dedicated tag so Funnel can be narrowed to one device) |
 | `tag:k8s-oidc` | `oidc-egress` ProxyGroup pods: the in-cluster identity for calls to tsidp |
+| `tag:k8s-ai` | `ai-egress` ProxyGroup pods: the in-cluster identity for calls to the Aperture gateway |
 | `tag:bastion` | the jump host: admins get in through check mode, and it can SSH out to the nodes, both routers and the travel lab on 22 |
 | `tag:travel-lab` | the standalone travel lab's devices and the Tailscale Services they publish (self-approved; no tsidp, no cluster access) |
 | `tag:bastion` | the jump host: admins get in through check mode, and it can SSH out to the nodes, both routers and the travel lab on 22 |
@@ -238,7 +239,7 @@ apps/{donetick,dufs,homer,kiwix,linkding,makemkv,miniflux,
 
 ### In-cluster identity
 
-Rule: app-to-app calls use in-cluster Services; only calls that need a tailnet identity, or a target only reachable on the tailnet, go through an egress ProxyGroup. tsidp is the only such target today (it listens only on tsnet).
+Rule: app-to-app calls use in-cluster Services; only calls that need a tailnet identity, or a target only reachable on the tailnet, go through an egress ProxyGroup. Targets today are the IdP (tsnet only) and the Aperture gateway (`ai.beaver-cloud.ts.net`), each with its own ProxyGroup and tag.
 
 **OIDC back-channel -> egress ProxyGroup.** An egress ProxyGroup is a tailnet device with its own tag; pods reach a tailnet target through an `ExternalName` Service that the operator wires to it. A CoreDNS rewrite points the existing `idp.beaver-cloud.ts.net` name at that Service, so app configs do not change and TLS still validates (the proxy forwards TCP; the cert and SNI are tsidp's). The tsidp gatus check rides the same path.
 
