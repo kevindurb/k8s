@@ -30,6 +30,7 @@
 		"tag:k8s-operator":    ["group:admins"],
 		"tag:k8s":             ["tag:k8s-operator"],
 		"tag:k8s-oidc":        ["group:admins", "tag:k8s-operator"],
+		"tag:k8s-ai":          ["group:admins", "tag:k8s-operator"],
 		"tag:apps":            ["group:admins", "tag:k8s-operator"],
 		"tag:media":           ["group:admins", "tag:k8s-operator"],
 		"tag:home":            ["group:admins", "tag:k8s-operator"],
@@ -139,6 +140,21 @@
 
 		// Pocket ID back-channel from in-cluster apps via the oidc-egress ProxyGroup
 		{"src": ["tag:k8s-oidc"], "dst": ["tag:idp"], "ip": ["tcp:443"]},
+
+		// Aperture gateway for in-cluster apps via the ai-egress ProxyGroup (mealie's
+		// recipe AI). Aperture authorizes on the caller's tag, so the role/models
+		// capability is required alongside the network grant (see docs/pr-agent.md).
+		{
+			"src": ["tag:k8s-ai"],
+			"dst": ["tag:ai"],
+			"ip":  ["tcp:443"],
+			"app": {
+				"tailscale.com/cap/aperture": [
+					{"role": "user", "enable_portal": false},
+					{"models": "**"},
+				],
+			},
+		},
 
 		// GitHub Actions -> Argo CD webhook
 		{"src": ["tag:ci"], "dst": ["svc:argocd"], "ip": ["tcp:443"]},
@@ -260,6 +276,12 @@
 			"src":    "tag:k8s-oidc",
 			"accept": ["tag:idp:443"],
 			"deny":   ["tag:apps:443", "tag:media:443", "tag:bridges:443", "tag:infra:443", "tag:k8s:443"],
+		},
+		{
+			// the Aperture egress proxies reach the gateway and nothing else
+			"src":    "tag:k8s-ai",
+			"accept": ["tag:ai:443"],
+			"deny":   ["tag:apps:443", "tag:media:443", "tag:idp:443", "tag:infra:443", "tag:k8s:443"],
 		},
 		{
 			"src":  "tag:k8s-node",
