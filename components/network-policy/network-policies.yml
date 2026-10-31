@@ -1,0 +1,57 @@
+---
+# Ingress default-deny for one namespace, plus the two in-cluster sources that
+# legitimately reach application pods. NetworkPolicy ingress rules are additive,
+# so the effective policy is the union of the four objects below.
+#
+# Deliberately ingress-only: egress stays open until a later phase, because
+# several apps have real internet dependencies that are not worth enumerating.
+# See docs/network-segmentation.md.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+---
+# Gatus checks the in-cluster ClusterIP Service, not the ingress
+# (every gatus.yml targets http://<app>-app-service.<namespace>).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gatus
+---
+# Every external path terminates in the tailscale namespace: the HA ingress
+# ProxyGroup, the Funnel proxy and the per-Service proxies for
+# loadBalancerClass: tailscale (minecraft).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-proxies
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
