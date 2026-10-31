@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: mealie
+    group: apps
+    url: http://mealie-app-service.mealie/api/app/about
+    conditions:
+      - '[STATUS] == 200'

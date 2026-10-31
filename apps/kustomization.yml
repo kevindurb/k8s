@@ -19,6 +19,7 @@ resources:
   - ./kiwix/app.yml
   - ./linkding/app.yml
   - ./makemkv/app.yml
+  - ./mealie/app.yml
   - ./miniflux/app.yml
   - ./navidrome/app.yml
   - ./omada/app.yml

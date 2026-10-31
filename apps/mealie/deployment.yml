@@ -1,0 +1,138 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+      containers:
+        - name: app
+          image: ghcr.io/mealie-recipes/mealie:v3.29.0@sha256:78eb28b8776d0bad40c5e605c72b3f4f5976793e491558c7dcbdfc04c835d4bc
+          env:
+            - name: TZ
+              value: America/Denver
+            # Mealie builds the OIDC redirect URI and invitation links from this.
+            - name: BASE_URL
+              value: https://mealie.beaver-cloud.ts.net
+            - name: ALLOW_SIGNUP
+              value: 'false'
+            # The shared app-pod-hardening component runs the pod as 1000:1000.
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
+            - name: OIDC_AUTH_ENABLED
+              value: 'true'
+            - name: OIDC_AUTO_REDIRECT
+              value: 'false'
+            - name: OIDC_CLIENT_ID
+              value: mealie
+            - name: OIDC_CONFIGURATION_URL
+              value: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
+            - name: OIDC_PROVIDER_NAME
+              value: Pocket ID
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc
+                  key: OIDC_CLIENT_SECRET
+            - name: SMTP_HOST
+              value: smtp-relay-app-service.smtp-relay
+            - name: SMTP_PORT
+              value: '25'
+            - name: SMTP_AUTH_STRATEGY
+              value: NONE
+            - name: SMTP_FROM_EMAIL
+              value: beavercloud@fastmail.com
+            - name: SMTP_FROM_NAME
+              value: Mealie
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              memory: 256M
+            limits:
+              memory: 1G
+          ports:
+            - name: http
+              containerPort: 9000
+          # First boot runs migrations and seeds the food/unit data, which takes a while.
+          startupProbe:
+            httpGet:
+              path: /api/app/about
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/app/about
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/app/about
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [mealie]
