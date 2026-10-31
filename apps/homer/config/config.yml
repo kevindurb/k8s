@@ -24,6 +24,14 @@ services:
         url: https://audiobookshelf.beaver-cloud.ts.net
         icon: fas fa-headphones
 
+      - name: Immich
+        url: https://immich.beaver-cloud.ts.net
+        icon: fas fa-photo-video
+
+      - name: Ente
+        url: https://ente.beaver-cloud.ts.net
+        icon: fas fa-images
+
       - name: Aperture
         url: https://ai.beaver-cloud.ts.net
         icon: fas fa-robot
@@ -56,6 +64,10 @@ services:
         url: https://home-assistant.beaver-cloud.ts.net
         icon: fas fa-house-user
 
+      - name: Mealie
+        url: https://mealie.beaver-cloud.ts.net
+        icon: fas fa-utensils
+
       - name: Ender 3
         url: https://ender3.beaver-cloud.ts.net
         icon: fas fa-cubes
@@ -67,6 +79,24 @@ services:
       - name: PokeSim
         url: https://pokesim.beaver-cloud.ts.net
         icon: fas fa-gamepad
+
+      - name: RomM
+        url: https://romm.beaver-cloud.ts.net
+        icon: fas fa-dice
+
+      - name: F1 Timing
+        url: https://f1timing.beaver-cloud.ts.net
+        icon: fas fa-flag-checkered
+
+      - name: Consignment
+        url: https://consignment.beaver-cloud.ts.net
+        icon: fas fa-boxes-stacked
+
+      - name: Minecraft
+        subtitle: minecraft.beaver-cloud.ts.net:25565
+        icon: fas fa-cube
+        tag: game
+        url: "#"
 
   - name: Admin
     icon: fas fa-gear
@@ -133,6 +163,10 @@ services:
       - name: Omada
         url: https://omada.beaver-cloud.ts.net
         icon: fas fa-wifi
+
+      - name: Pocket ID
+        url: https://idp.beaver-cloud.ts.net
+        icon: fas fa-fingerprint
 
   - name: External
     icon: fas fa-globe
