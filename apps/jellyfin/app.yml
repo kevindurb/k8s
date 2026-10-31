@@ -14,6 +14,13 @@ spec:
     server: 'https://kubernetes.default.svc'
     namespace: jellyfin
   syncPolicy:
+    # exemption: privileged container for VAAPI/NVENC hardware transcoding
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
     syncOptions:
       - CreateNamespace=true
     automated:

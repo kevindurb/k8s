@@ -22,6 +22,13 @@ spec:
     server: https://kubernetes.default.svc
     namespace: node-feature-discovery
   syncPolicy:
+    # exemption: hostPath for /sys and /proc scanning
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
     syncOptions:
       - CreateNamespace=true
     automated:
