@@ -38,17 +38,19 @@ No lateral step is required for any of these. `curl` is enough.
 
 ## Traffic that has to keep working
 
-Measured from the live cluster and from `gatus.yml`/`kustomization.yml`, not assumed.
+Measured from the live cluster, from `gatus.yml`/`kustomization.yml`, and from the apps' own config stores (PVCs, databases, UIs) — see [Flows that exist only at runtime](#flows-that-exist-only-at-runtime).
 
-| Source | Destination | Port | Why |
+| Source | Destination | Container port | Why |
 | --- | --- | --- | --- |
 | namespace `tailscale` (`ingress-proxy-group-*`, `ts-consignment-app-funnel-ingress-*`, `ts-minecraft-app-service-*`) | every app pod | Service port | all tailnet, Funnel and `loadBalancerClass: tailscale` access |
 | namespace `gatus` | `<app>-app-service.<ns>` | http | in-cluster health checks (`gatus.yml` uses ClusterIP DNS, not tailnet names) |
 | app pod | its own datastore in the same namespace | 5432 / 6379 / 3900 | immich, ente, miniflux, linkding |
 | `zigbee2mqtt` | `mosquitto` | 1883 | `mosquitto-app-service.mosquitto:1883` |
-| home-assistant | `mosquitto` | 1883 | broker is configured in HA's UI, not in git |
+| home-assistant | `mosquitto` | 1883 | broker is configured in HA's UI, and HA is `hostNetwork`, so the source is a node IP |
 | `prometheus` | `alertmanager` | 9093 | alert delivery |
+| `alertmanager` | `smtp-relay` | 25 | `smtp_smarthost` in `alertmanager.yml` |
 | `pocket-id` | `smtp-relay` | 25 | admin login codes |
+| `miniflux` | `linkding` | 9090 | "save to linkding", configured in the miniflux database |
 | every OIDC app | `tailscale/ts-idp-swkld` via the `idp` ExternalName | 443 | token/userinfo back-channel through `oidc-egress` |
 | `prometheus` | kubelet/cadvisor on node IPs, apiserver, exporters | 10250 / 443 / 9100+ | metrics |
 | `argocd`, `gatus`, `semaphore`, `healthchecks` | `kubernetes.default.svc` | 443 | API access |
@@ -59,6 +61,42 @@ Two consequences worth stating up front:
 - **Gatus is an in-cluster source, not a tailnet one.** Every `gatus.yml` in the repo targets `http://<app>-app-service.<ns>`, so `gatus` must be in the allow-list or the status page goes red.
 - **OIDC does not go pod-to-pod.** Apps resolve `idp.beaver-cloud.ts.net` through the CoreDNS rewrite to the `idp` ExternalName, which the operator points at `ts-idp-swkld` (the `oidc-egress` proxy pods in `tailscale`). So an egress rule to the `tailscale` namespace on 443 covers every OIDC caller; `pocket-id` itself only receives from the ingress proxies.
 
+### Flows that exist only at runtime
+
+Several cross-namespace calls are configured in PVCs, databases or web UIs and never appear in a manifest, so a traffic map built from git alone is wrong. These were read out of the apps' own config stores on 2026-10-31:
+
+| Source | Destination | Container port | Where it is configured |
+| --- | --- | --- | --- |
+| `miniflux` | `linkding` | 9090 | miniflux `integrations` table: `http://linkding-app-service.linkding` |
+| `home-assistant` | `mosquitto` | 1883 | HA `mqtt` config entry: `mosquitto-app-service.mosquitto:1883` |
+| `alertmanager` | `smtp-relay` | 25 | `smtp_smarthost` in `alertmanager.yml` (in git, but not obvious) |
+
+Two details decide whether the resulting policy actually works:
+
+- **NetworkPolicy ports are container ports, not Service ports.** `linkding-app-service` is port 80 but the pod listens on 9090. A rule written against the Service port applies cleanly and silently does nothing.
+- **A `hostNetwork` source is not a pod source.** Home Assistant sends to mosquitto from the node IP (192.168.42.22), so `namespaceSelector: home-assistant` never matches. Allow it with an `ipBlock` for the node subnet, or accept losing MQTT.
+
+Worth knowing why miniflux calls the ClusterIP at all: it sets `INTEGRATION_ALLOW_PRIVATE_NETWORKS=1`. Without that flag the integration would have to use a public hostname and would leave through the ingress proxies like the OIDC callers, with no exception needed.
+
+Finding these before segmenting a namespace:
+
+```sh
+# apps that keep config in SQLite/LevelDB: copy it out and look
+kubectl -n <ns> cp <pod>:/config/<app>.db /tmp/<app>.db -c <container>
+sqlite3 /tmp/<app>.db "select * from <settings table>;"
+
+# Home Assistant
+kubectl -n home-assistant exec deploy/home-assistant-app-deployment -c home-assistant -- \
+  cat /config/.storage/core.config_entries \
+  | jq -r '.data.entries[] | "\(.domain) \(.data.host // .data.broker // .data.url // "")"'
+
+# miniflux
+kubectl -n miniflux exec deploy/miniflux-postgres-deployment -c postgres -- \
+  psql -U miniflux -d miniflux -Atc "select linkding_enabled, linkding_url from integrations;"
+```
+
+Gatus catches none of these. A broken "save to linkding" still shows a green `linkding` check; only the button fails, which is why phase 2 needs this pass per app rather than a status page.
+
 ## Findings
 
 | # | Finding | Impact |
@@ -68,7 +106,7 @@ Two consequences worth stating up front:
 | 3 | `home-assistant`, `omada`, `scrypted`, `syncthing` run `hostNetwork` with a `hostPort` | NetworkPolicy does not constrain a `hostNetwork` pod; these are node-level listeners |
 | 4 | `jellyfin`, `makemkv` are `privileged` and mount host paths | A compromise is a node compromise, not a namespace one |
 | 5 | Argo CD's own policies are the only ones, so the pattern exists but was never generalised | — |
-| 6 | No security-oriented alerts (no policy-denial visibility) | Phase 1 breakage would be noticed only via Gatus |
+| 6 | No security-oriented alerts (no policy-denial visibility) | Phase 1 breakage is noticed only via Gatus, and not at all for runtime-configured flows |
 
 Findings 3 and 4 are why those six app namespaces carry `enforce: privileged` in their own `app.yml` (the infrastructure components with the same problem are exempted the same way). Segmentation does not help them; their fix is separate (move `hostNetwork` services behind the ingress proxies).
 
@@ -157,11 +195,12 @@ components:
 
 | Destination namespace | Extra ingress rule |
 | --- | --- |
-| `mosquitto` | from `zigbee2mqtt` and `home-assistant`, port 1883 |
-| `alertmanager` | from `prometheus`, port 9093 |
-| `smtp-relay` | from `pocket-id`, port 25 |
+| `mosquitto` | 1883 from `zigbee2mqtt`, plus the node subnet via `ipBlock` for `home-assistant` (`hostNetwork`) |
+| `linkding` | 9090 from `miniflux` |
+| `alertmanager` | 9093 from `prometheus` |
+| `smtp-relay` | 25 from `pocket-id` and `alertmanager` |
 
-These live in the destination app's `kustomization.yml` as a small `NetworkPolicy` resource, not in the shared component.
+These live in the destination app's `kustomization.yml` as a small `NetworkPolicy` resource, not in the shared component. The `ipBlock` rule for Home Assistant cannot be a `namespaceSelector`, so it is the one exception that names an address range (`192.168.42.0/24`, the node subnet).
 
 ### Egress (phase 4 only)
 
@@ -179,12 +218,15 @@ Application namespaces with a genuine internet dependency are **not** in phase 4
 | Phase | Change | Risk | Failure signature |
 | --- | --- | --- | --- |
 | 0 | This document, plus `components/network-policy` committed but unused | none | — |
-| 1 | Component on `donetick` (single service, OIDC, in-cluster Postgres) and `linkding` (Postgres + OIDC) | low | Gatus `donetick`/`linkding` red; app login fails; Postgres unreachable |
-| 2 | Component on the remaining `apps/*` namespaces | low | a Gatus check red, or an app that calls another app directly |
-| 3 | Component on `platform/*` and `infrastructure/*`, with the exception policies above | medium | `zigbee2mqtt` stops publishing, alerts stop arriving, Pocket ID cannot send mail |
+| 1 | Component on `donetick` (single service, OIDC, in-cluster Postgres) and `linkding` (Postgres + OIDC), **with the `miniflux` -> `linkding:9090` rule in the same commit** | low | Gatus `donetick`/`linkding` red; app login fails; Postgres unreachable; "save to linkding" fails |
+| 2 | Component on the remaining `apps/*` namespaces, after the runtime-config pass for each | low | a Gatus check red, or a feature that silently does nothing |
+| 3 | Component on `platform/*` and `infrastructure/*`, with the exception policies above | medium | `zigbee2mqtt` stops publishing, MQTT in Home Assistant drops, alerts stop arriving, Pocket ID or alertmanager cannot send mail |
 | 4 | Egress deny on the datastore and control-plane namespaces | medium | OIDC token calls time out; `sealed-secrets` cannot reach the API |
 
-Order matters in phase 3: apply the exception policy in the same commit as the default-deny, otherwise `mosquitto`/`alertmanager`/`smtp-relay` go dark between syncs.
+Two rules for the rollout:
+
+- **Add the destination-side rule in the same commit as the default-deny**, or the caller breaks between syncs. Phase 1 is the first case: `linkding` is somebody else's dependency.
+- **Do not trust Gatus to catch a segmentation mistake.** Every runtime-configured flow above keeps its health check green while the feature is broken. The check is the app's own UI, or the config grep from the previous section.
 
 Rollback for any phase: remove the `- ../../components/network-policy` line, let Argo sync. No cluster state is created outside git.
 
@@ -204,7 +246,7 @@ Then confirm the legitimate paths still work: every Gatus check green, `zigbee2m
 
 ## Caveats and open questions
 
-- **`hostNetwork` pods are not segmented.** `home-assistant`, `omada`, `scrypted`, `syncthing` listen on node ports and are reachable from anywhere in the cluster regardless of policy. Either accept it or move them behind the ingress proxies (a separate project).
+- **`hostNetwork` pods are not segmented, in either direction.** `home-assistant`, `omada`, `scrypted`, `syncthing` listen on node ports and are reachable from anywhere in the cluster regardless of policy; when they *send* traffic it appears to come from the node IP, so they cannot be named as a `namespaceSelector` source (see the `mosquitto` `ipBlock` rule). Either accept it or move them behind the ingress proxies (a separate project).
 - **DNS is not denied in phases 1-3.** Ingress-only policies do not affect egress, so CoreDNS still resolves every Service in the cluster. Information disclosure via DNS is not addressed.
 - **The kube-apiserver stays reachable in phases 1-3** for the same reason. Pods hold only default ServiceAccount tokens (no `automountServiceAccountToken: false`), so the exposure is discovery-level until phase 4.
 - **Minecraft uses UDP 19132 and TCP 25565** via a `loadBalancerClass: tailscale` Service; its proxy pod is in `tailscale`, so `allow-ingress-proxies` covers it. Verify after phase 2.
