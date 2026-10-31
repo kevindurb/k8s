@@ -19,7 +19,7 @@ spec:
           persistentVolumeClaim: {claimName: nas-media}
       containers:
         - name: handbrake
-          image: ghcr.io/kevindurb/handbrake-cli:latest@sha256:1335ddcfa830ddd1134b8a381ac85d1825e2c613ea87a8304545de5226550ada
+          image: ghcr.io/kevindurb/handbrake-cli:latest@sha256:cad0a99955841175d2b79f9e16a89c328a5649ee766541334152ca90b4540c00
           command: ["sh", "-c"]
           args: ["PLACEHOLDER"]
           volumeMounts:
