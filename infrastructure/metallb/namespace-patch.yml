@@ -1,0 +1,10 @@
+---
+# Upstream metallb-native.yaml already labels its Namespace
+# pod-security.kubernetes.io/{enforce,warn,audit}: privileged, but without a
+# pinned version. Add it here so this namespace matches every other one.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metallb-system
+  labels:
+    pod-security.kubernetes.io/enforce-version: v1.35

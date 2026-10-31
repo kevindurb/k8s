@@ -14,13 +14,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: metallb-system
   syncPolicy:
-    # exemption: speakers are hostNetwork with hostPorts
-    managedNamespaceMetadata:
-      labels:
-        pod-security.kubernetes.io/enforce: privileged
-        pod-security.kubernetes.io/enforce-version: v1.35
-        pod-security.kubernetes.io/warn: privileged
-        pod-security.kubernetes.io/audit: privileged
+    # The metallb manifests ship their own Namespace (upstream metallb-native.yaml),
+    # and a Namespace manifest takes precedence over managedNamespaceMetadata, so the
+    # PSS labels are patched in kustomization.yml instead.
     automated:
       enabled: true
       prune: false
