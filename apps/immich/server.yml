@@ -72,7 +72,7 @@ spec:
             requests:
               memory: 1Gi
             limits:
-              memory: 3Gi
+              memory: 6Gi
           ports:
             - name: http
               containerPort: 2283

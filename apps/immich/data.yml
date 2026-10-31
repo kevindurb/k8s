@@ -13,4 +13,4 @@ spec:
   storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
-      storage: 200Gi
+      storage: 600Gi

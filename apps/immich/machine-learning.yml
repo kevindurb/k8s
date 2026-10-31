@@ -61,7 +61,7 @@ spec:
             requests:
               memory: 1Gi
             limits:
-              memory: 2Gi
+              memory: 4Gi
           ports:
             - name: http
               containerPort: 3003
