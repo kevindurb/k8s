@@ -8,7 +8,8 @@
 #
 # One single-line rule on purpose: plugin/rewrite rejects a block holding more
 # than one `name exact` rule ("exceeded the number of arguments"), which
-# crash-loops CoreDNS.
+# crash-loops CoreDNS. No `$` anchor either: the request name carries a
+# trailing dot, so `\.net$` never matches.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,4 +17,4 @@ metadata:
   namespace: kube-system
 data:
   tailnet.override: |
-    rewrite stop name regex ^(idp|ai)\.beaver-cloud\.ts\.net$ {1}.tailscale.svc.cluster.local answer auto
+    rewrite stop name regex ^(idp|ai)\.beaver-cloud\.ts\.net\.?$ {1}.tailscale.svc.cluster.local answer auto
