@@ -1,8 +1,10 @@
 ---
 # k3s CoreDNS imports /etc/coredns/custom/*.override from this optional
-# ConfigMap. Sending the IdP name to the in-cluster egress Service means
-# pods keep their configs unchanged, while the tailnet sees the oidc-egress
-# ProxyGroup (tag:k8s-oidc) as the caller instead of tag:k8s-node.
+# ConfigMap. Sending a tailnet name to an in-cluster egress Service means pods
+# keep their configs unchanged, while the tailnet sees the egress ProxyGroup as
+# the caller instead of tag:k8s-node:
+#   idp.beaver-cloud.ts.net -> ProxyGroup oidc-egress (tag:k8s-oidc)
+#   ai.beaver-cloud.ts.net  -> ProxyGroup ai-egress   (tag:k8s-ai)
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,5 +14,6 @@ data:
   tailnet.override: |
     rewrite stop {
       name exact idp.beaver-cloud.ts.net idp.tailscale.svc.cluster.local
+      name exact ai.beaver-cloud.ts.net ai.tailscale.svc.cluster.local
       answer auto
     }

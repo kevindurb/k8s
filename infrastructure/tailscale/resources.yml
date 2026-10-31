@@ -30,6 +30,37 @@ spec:
     - tag:k8s-oidc
 
 ---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: ai-egress
+spec:
+  type: egress
+  replicas: 2
+  tags:
+    - tag:k8s-ai
+
+---
+# In-cluster path to the Aperture LLM gateway for apps that call it (mealie's
+# recipe AI). Pods resolve ai.beaver-cloud.ts.net to this Service (see
+# infrastructure/coredns) and leave the cluster as tag:k8s-ai instead of the
+# node's tag:k8s-node, which has no grant to tag:ai.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai
+  annotations:
+    tailscale.com/tailnet-fqdn: ai.beaver-cloud.ts.net
+    tailscale.com/proxy-group: ai-egress
+spec:
+  type: ExternalName
+  externalName: placeholder   # rewritten by the operator
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+
+---
 # In-cluster identity for the OIDC back-channel. Pods resolve
 # idp.beaver-cloud.ts.net to this Service (see infrastructure/coredns) and
 # reach the IdP through the oidc-egress proxy devices (tag:k8s-oidc) instead of
