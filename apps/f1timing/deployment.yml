@@ -21,7 +21,7 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: ghcr.io/adn8naiagent/f1replaytiming:latest@sha256:de2d20c2c7ad8e879f28f2a272950d42a20ba740fcee07f212690adaaff03bf3
+          image: ghcr.io/adn8naiagent/f1replaytiming:latest@sha256:009ef2c49ce82f06a5780468836f3b26258f00eb0fcb0565537de8a89944b08a
           env:
             - name: TZ
               value: America/Denver
