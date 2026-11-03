@@ -68,13 +68,14 @@ K8up was considered and rejected: it mounts live PVCs and has no CSI snapshot su
 
 43 PVCs use `zfs-generic-nvmeof-csi`. The other 13 are static NFS PVs for the media share — `*-nas-media`, `dufs-nas`, `romm-library`, `transcoding/nas-media` — all backed by `192.168.42.24:/media`.
 
-**Included** (39 objects, one `ReplicationSource` per PVC):
+**Included** (40 objects, one `ReplicationSource` per PVC):
 
 | Namespace | Volumes |
 | --- | --- |
 | `immich` | `immich-postgres-volume`, `immich-data` |
 | `romm` | `romm-mariadb-volume`, `romm-config`, `romm-assets`, `romm-launchbox`, `romm-resources` |
 | `audiobookshelf` | `config`, `metadata`, `books`, `audiobooks`, `podcasts` |
+| `mealie` | `mealie-data` |
 | `jellyfin` | `jellyfin-config-pvc` |
 | `home-assistant` | `home-assistant-volume` |
 | `syncthing` | `syncthing-volume` |
@@ -226,7 +227,7 @@ Checked against the running Deployments on 2026-10-30:
 
 | UID | Apps |
 | --- | --- |
-| `1000:1000` | immich (both), romm, audiobookshelf, jellyfin (`fsGroup` only; container uid 1000), home-assistant, syncthing, miniflux, navidrome, minecraft, qbittorrent, radarr, sonarr, gatus, golink, linkding, donetick, pokesim, f1timing, semaphore, pocket-id, mosquitto, consignment-app, alertmanager |
+| `1000:1000` | immich (both), romm, audiobookshelf, mealie, jellyfin (`fsGroup` only; container uid 1000), home-assistant, syncthing, miniflux, navidrome, minecraft, qbittorrent, radarr, sonarr, gatus, golink, linkding, donetick, pokesim, f1timing, semaphore, pocket-id, mosquitto, consignment-app, alertmanager |
 | needs a check | `calibre`, `calibre-web`, `omada`, `scrypted` — no explicit `securityContext`, so the image default applies. Verify with `ls -ln` before setting. |
 | `immich-postgres-volume` | uid 1000, **no `fsGroup`** in the Deployment; the mover still needs `runAsUser: 1000` at minimum |
 
@@ -291,7 +292,7 @@ Optional hardening, deliberately deferred: B2 Object Lock (governance mode) make
 
 **Phase 1 — one namespace end to end.** `infrastructure/volsync` + B2 bucket + bucket-scoped key + `apps/miniflux/backup.yml` and its sealed secret. Acceptance: one successful run visible in `kubectl -n miniflux get replicationsource backup -o yaml` (`.status.lastSyncTime`, `.status.conditions`), a second run that only uploads new chunks, and a full restore drill into a scratch PVC (see runbook).
 
-**Phase 2 — roll out.** The remaining 38 sources, in this order: small config volumes first (calibre, gatus, golink, linkding, donetick, mosquitto, zigbee2mqtt, pocket-id), then databases (romm, immich), then the big ones (jellyfin 17 GB, syncthing 0.8 GB, home-assistant 0.7 GB). Resolve the UID unknowns before each app lands.
+**Phase 2 — roll out.** The remaining 39 sources, in this order: small config volumes first (calibre, gatus, golink, linkding, donetick, mosquitto, zigbee2mqtt, pocket-id), then databases (romm, immich), then the big ones (jellyfin 17 GB, syncthing 0.8 GB, home-assistant 0.7 GB). Resolve the UID unknowns before each app lands.
 
 **Phase 3 — monitoring and retention.** Prometheus rule group, `prometheus.io/scrape` annotation on the metrics Service, confirm `volsync_*` appears in Prometheus, tune retention after two weeks of real data (the 6-month monthly tier is the one to reconsider if B2 grows).
 
