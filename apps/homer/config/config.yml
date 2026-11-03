@@ -28,10 +28,6 @@ services:
         url: https://immich.beaver-cloud.ts.net
         icon: fas fa-photo-video
 
-      - name: Ente
-        url: https://ente.beaver-cloud.ts.net
-        icon: fas fa-images
-
       - name: Aperture
         url: https://ai.beaver-cloud.ts.net
         icon: fas fa-robot

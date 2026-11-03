@@ -28,7 +28,7 @@ Policy enforcement itself is available: k3s runs kube-router's network policy co
 
 ### What a compromised pod can reach today
 
-- Every datastore: `immich-postgres-service:5432`, `immich-valkey-service:6379`, `ente-postgres-service:5432`, `ente-garage-service:3900`, `miniflux-postgres-service:5432`, the linkding Postgres, every PVC-backed volume another pod has mounted.
+- Every datastore: `immich-postgres-service:5432`, `immich-valkey-service:6379`, `miniflux-postgres-service:5432`, the linkding Postgres, every PVC-backed volume another pod has mounted.
 - The identity provider: `pocket-id-app-service:80` (admin API included).
 - The deployment system: `argocd-repo-server:8081` and `argocd-server:443`. `apps/project.yml` is `sourceRepos: ['*']`, `destinations: ['*']`, `clusterResourceWhitelist: ['*']`, and Argo CD is cluster-admin — so "write to the repo server" or "read its credentials" is equivalent to cluster ownership.
 - Monitoring: `prometheus:9090` and `alertmanager:9093`, i.e. the evidence.
@@ -44,7 +44,7 @@ Measured from the live cluster, from `gatus.yml`/`kustomization.yml`, and from t
 | --- | --- | --- | --- |
 | namespace `tailscale` (`ingress-proxy-group-*`, `ts-consignment-app-funnel-ingress-*`, `ts-minecraft-app-service-*`) | every app pod | Service port | all tailnet, Funnel and `loadBalancerClass: tailscale` access |
 | namespace `gatus` | `<app>-app-service.<ns>` | http | in-cluster health checks (`gatus.yml` uses ClusterIP DNS, not tailnet names) |
-| app pod | its own datastore in the same namespace | 5432 / 6379 / 3900 | immich, ente, miniflux, linkding |
+| app pod | its own datastore in the same namespace | 5432 / 6379 | immich, miniflux, linkding |
 | `zigbee2mqtt` | `mosquitto` | 1883 | `mosquitto-app-service.mosquitto:1883` |
 | home-assistant | `mosquitto` | 1883 | broker is configured in HA's UI, and HA is `hostNetwork`, so the source is a node IP |
 | `prometheus` | `alertmanager` | 9093 | alert delivery |
@@ -205,7 +205,7 @@ These live in the destination app's `kustomization.yml` as a small `NetworkPolic
 
 ### Egress (phase 4 only)
 
-Egress stays open until phase 4. When it lands, the high-value namespaces (`immich`, `ente`, `linkding`, `miniflux`, `pocket-id`, `sealed-secrets`, `argocd`, `prometheus`, `gatus`) get:
+Egress stays open until phase 4. When it lands, the high-value namespaces (`immich`, `linkding`, `miniflux`, `pocket-id`, `sealed-secrets`, `argocd`, `prometheus`, `gatus`) get:
 
 - UDP/TCP 53 to `kube-system` (CoreDNS),
 - TCP 443 to `tailscale` (the OIDC egress proxies),

@@ -2,7 +2,7 @@
 
 Status: researched 2026-11-03. Not started.
 Target pool: `tank` — 2× 500 GB NVMe mirror on drone-04, ~465 GiB usable.
-Source: `rust/k8s/volumes` — 45 zvols, **497 GiB used**, 1,296 GiB declared, on the 12 TB HDD mirror exported over NVMe-oF/TCP.
+Source: `rust/k8s/volumes` — 43 zvols, **496 GiB used**, 1,086 GiB declared, on the 12 TB HDD mirror exported over NVMe-oF/TCP.
 
 ---
 
@@ -15,7 +15,7 @@ Source: `rust/k8s/volumes` — 45 zvols, **497 GiB used**, 1,296 GiB declared, o
    (`/dev/zvol/<pool>/<datasetParentName>/<volumeHandle>`) is derived at attach time from the
    **driver config**, not stored in the PV. So the pool is not baked into any PV object.
 
-2. **No clones, no driver-managed snapshots.** Verified: `origin` is `-` on all 47 zvols, and
+2. **No clones, no driver-managed snapshots.** Verified: `origin` is `-` on all 45 zvols, and
    `rust/k8s/snapshots` holds 0 snapshots. The `zfs send | recv` hazard from upstream issue #391
    (clone bookkeeping, `zfs receive -F` refusing) does not apply.
 
@@ -67,7 +67,7 @@ Granularity, but pays for it. A second Helm release with a distinct `csiDriver.n
 `datasetParentName: tank/k8s/volumes`, plus a new StorageClass. Because `spec.csi.driver` on a PV is
 immutable, every migrated volume needs a **new PV object**: create temp PVC on the new class →
 `CopyVolumeData` rsync → set new PV `Retain` → delete temp PVC → re-point the app's claim →
-`DeleteVolume`. That is the Longhorn runbook in `docs/longhorn-to-democratic-csi.md` repeated 44 times.
+`DeleteVolume`. That is the Longhorn runbook in `docs/longhorn-to-democratic-csi.md` repeated 42 times.
 
 Extra risks Path B introduces that Path A does not:
 - Two node DaemonSets × 4 nodes and two controllers running permanently.
@@ -118,8 +118,8 @@ kubectl delete pv pvc-547e4f81-f286-46be-afc3-bd33f6b9eb93 pvc-80a0a381-5d7e-4b7
 ```
 
 Both are sanoid-snapshotted (`pvc-547e4f81…` had 42), so without `-r` the delete fails with
-`filesystem has dependent snapshots` — the documented gotcha. Leave `tank` with exactly 44 zvols
-after the migration, not 47.
+`filesystem has dependent snapshots` — the documented gotcha. Leave `tank` with exactly 42 zvols
+after the migration, not 45.
 
 ## Phase 1 — retire the L2ARC and build `tank`
 
@@ -167,7 +167,7 @@ of declared capacity lands on a 465 GiB pool without failing.
 Sanity check before continuing:
 
 ```bash
-zfs list -H -o name -d1 tank/k8s/volumes | grep -c pvc-      # expect 44
+zfs list -H -o name -d1 tank/k8s/volumes | grep -c pvc-      # expect 42
 zfs get -H -o value volblocksize -r tank/k8s/volumes | sort -u  # expect 16K
 ```
 
@@ -214,9 +214,9 @@ The apps come up against the same `volumeHandle`s, so the driver derives
 
 ```bash
 # backend
-zfs list -H -o name -d1 tank/k8s/volumes | grep -c pvc-            # 44
+zfs list -H -o name -d1 tank/k8s/volumes | grep -c pvc-            # 42
 grep -o "/dev/zvol/[^\"]*" /etc/nvmet/config.json | grep -vc "/dev/zvol/tank/"   # 0
-grep -o "/dev/zvol/[^\"]*" /etc/nvmet/config.json | wc -l          # 44
+grep -o "/dev/zvol/[^\"]*" /etc/nvmet/config.json | wc -l          # 42
 cat /sys/kernel/config/nvmet/ports/1/param_mdts                    # 8  <- must survive
 nvmetcli save /etc/nvmet/config.json    # persist the *new* paths for boot restore
 
@@ -243,7 +243,7 @@ read on drone-02 → expand → delete, confirm cleanup) before trusting it.
 ## Traps specific to this setup
 
 1. **Blast radius inversion.** The Longhorn migration was one app at a time under Argo with a
-   rollback net. This one is 44 volumes and a driver-config change in a single window. Treat it as
+   rollback net. This one is 42 volumes and a driver-config change in a single window. Treat it as
    a cluster-wide storage outage and schedule it like the drone-04 reboot runbook says to.
 
 2. **`nvmetcli clear` is now doubly dangerous** if any `rust` subsystems survive into Phase 3 — it
