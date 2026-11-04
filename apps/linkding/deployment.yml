@@ -21,7 +21,7 @@ spec:
             claimName: data
       containers:
         - name: app
-          image: ghcr.io/sissbruecker/linkding@sha256:e35cb50e0581178f245125ffaa909c565416c94c9f22ace305a7d234a4345522
+          image: &linkding-image ghcr.io/sissbruecker/linkding@sha256:e35cb50e0581178f245125ffaa909c565416c94c9f22ace305a7d234a4345522
           env:
             - name: TZ
               value: America/Denver
@@ -63,6 +63,36 @@ spec:
               port: http
             initialDelaySeconds: 20
             periodSeconds: 30
+        # linkding's background task consumer (Huey) can't start under the
+        # image's supervisord as a non-root pod, so run it here (#896, #1249).
+        - name: worker
+          image: *linkding-image
+          command:
+            - /bin/bash
+            - -c
+            - until [ -s /etc/linkding/data/db.sqlite3 ]; do sleep 2; done; exec python manage.py run_huey -f
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: data
+              mountPath: /etc/linkding/data
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
 
 ---
 apiVersion: v1
