@@ -1,0 +1,61 @@
+---
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Repo: Kevin's homelab GitOps repository. No application source code — changes
+  take effect by editing YAML and letting Argo CD sync from git.
+
+  Tech stack: Kubernetes manifests (Kustomize), Argo CD app-of-apps, Helm for
+  some infrastructure components, Ansible playbooks, a bootc/butane node image,
+  GitHub Actions CI, Renovate.
+
+  Layout: `clusters/borg/kustomization.yml` is the entrypoint and includes
+  three Argo CD Applications pointing at `infrastructure/`, `platform/` and
+  `apps/`. Each subdirectory is a Kustomize root with its own
+  `kustomization.yml`; the parent lists them as resources. App-of-apps has
+  `selfHeal: true` and `prune: false` (removing an app means deleting its
+  parent kustomization line plus the Argo CD Application).
+
+  Conventions:
+  - Container name is always `app`, HTTP container port always `http`.
+  - Namespace/namePrefix match the app directory name.
+  - Shared Kustomize `components/*` (pod hardening, tmpdirs, nas-media,
+    app-env, service, host-networking, prometheus scrape) before writing
+    inline patches.
+  - Routing is plain `Ingress` with `ingressClassName: tailscale` served by the
+    Tailscale operator (no HTTPRoute/Gateway API).
+  - Secrets are `SealedSecret`s (kubeseal); never commit raw secret values.
+  - Every app has a `gatus.yml` check wired in via the gatus ConfigMap
+    generator.
+
+  Validation: `just check-kustomize` (mirrors CI) or
+  `kustomize build apps/<name>` for a single app. Pre-commit runs yamllint
+  (document-start required, 150-char lines), ansible-lint and a kustomize
+  check scoped to changed `apps|platform|infrastructure|clusters` files.
+
+  Never reboot drone-04 with `roles/node_reboot`/`upgrade.yml`/`just reboot` —
+  use `just playbook reboot-drone-04.yml` (see AGENTS.md).
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
