@@ -82,7 +82,7 @@ Note the app `namePrefix` interaction: the generated `Secret` takes the `SealedS
 - `bootc/` — Containerfile + `overlay/` building the bootc (rpm-ostree/bootc) image used for cluster nodes (`ghcr.io/kevindurb/k8s-node`), including k3s systemd units, sysctl/module config for k8s and ZFS/NVMe-oF, and a tuned profile. Built/pushed/signed (cosign) by `.github/workflows/build-bootc.yml` on changes under `bootc/**`.
 - `butane/node.bu.j2` — Jinja2-templated Butane config (Ignition) for node first-boot config, rendered per-host presumably via the ansible inventory.
 - `ansible/` — provisioning/upgrade playbooks (`provision.yml`, `upgrade.yml`, `pull-upgrade.yml`, `check-zfs.yml`, `reboot-drone-04.yml`) run against `inventory/prod.yml`; also has its own `Containerfile` building `ghcr.io/kevindurb/k8s-ansible`, built by `.github/workflows/build-ansible.yml` on changes under `ansible/**`.
-- `tailscale/policy.hujson` — Tailscale ACL policy for the tailnet the cluster/ingress sits on.
+- Tailnet policy (`policy.hujson`) lives in `kevindurb/infra` under `tailnet/`, managed by Terraform (`tailscale_acl`) and applied by that repo's CI. Nothing here applies it, but every `tailscale.com/tags` annotation in this repo must exist in that file's `tagOwners` (and every `svc:` name in `autoApprovers.services`), or the Ingress silently never serves.
 
 
 #### Rebooting drone-04 (storage node)

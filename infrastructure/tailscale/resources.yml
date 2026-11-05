@@ -94,7 +94,7 @@ subjects:
     kind: User
     name: kevindurb@github
   # tagged devices authenticate as <node>.<tailnet> with their tags as groups;
-  # tag:dev is the workstation (see tailscale/policy.hujson)
+  # tag:dev is the workstation (see kevindurb/infra tailnet/policy.hujson)
   - apiGroup: rbac.authorization.k8s.io
     kind: Group
     name: tag:dev

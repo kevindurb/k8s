@@ -8,12 +8,12 @@ Aperture authorizes by Tailscale identity: on every request it calls `WhoIs` on 
 
 Aperture combines capabilities from its own configuration with those in the tailnet policy file, and Tailscale grants are additive: a narrow grant never overrides a broad one. Both layers therefore have to be right.
 
-- Tailnet (`tailscale/policy.hujson`): `tag:ai` (the gateway) and `tag:pr-agent` (CI), the network grant `tag:pr-agent -> tag:ai tcp:443`, and the Aperture role/model capabilities.
+- Tailnet (`kevindurb/infra`, `tailnet/policy.hujson`): `tag:ai` (the gateway) and `tag:pr-agent` (CI), the network grant `tag:pr-agent -> tag:ai tcp:443`, and the Aperture role/model capabilities.
 - Aperture config (on `ai`): providers, connectors and the `pr-agent-daily` quota bucket; its stock `src: ["*"]` grants are **removed**.
 
 ## Tailnet changes
 
-Applied by `.github/workflows/tailscale.yml`: `action: test` on the PR, `action: apply` on `main`.
+Applied by `.github/workflows/terraform.yml` in `kevindurb/infra` (the policy moved there 2026-11-05, managed as `tailscale_acl` in `tailnet/`): PRs run `terraform plan`, merges apply under the `production` environment. The policy's `tests` block is validated at plan time.
 
 | Source | Destination | Ports | Aperture capability |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Applied by `.github/workflows/tailscale.yml`: `action: test` on the PR, `action:
 | `group:ai-admins` | `tag:ai` | tcp:443 | `{"role": "admin"}`, `{"connectors": ["**"]}` |
 | `tag:pr-agent` | `tag:ai` | tcp:443 | `{"role": "user", "enable_portal": false}`, `{"models": "*/deepseek-v4.1-flash", "quotas": [{"bucket": "pr-agent-daily"}]}` |
 
-Also in `policy.hujson`:
+Also in `kevindurb/infra`'s `tailnet/policy.hujson`:
 
 - `group:ai-users` / `group:ai-admins`, so no grant hardcodes a login name.
 - `tag:ai` and `tag:pr-agent` in `tagOwners`, both owned by `group:admins`.

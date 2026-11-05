@@ -4,6 +4,8 @@ Status: **done (2026-10-29)** - phases 1-8 applied (#545, #546, #547, #548). Poc
 
 This replaces the tailnet identity provider at `idp.beaver-cloud.ts.net` with [Pocket ID](https://pocket-id.org): passkeys instead of Tailscale `WhoIs`, admin-registered OIDC clients instead of dynamic client registration. The hostname stays, so app configs, the CoreDNS rewrite, the egress `ExternalName` Service and the gatus canary all stay.
 
+> **Note (2026-11-05):** the tailnet policy file moved to `kevindurb/infra` (`tailnet/policy.hujson`, applied by Terraform). Paths and PR references below describe the change as it happened in this repo and are kept as a record; edit the policy in `infra` now.
+
 Two things change at once on purpose, because both force the same one-time login outage and the same app-account touch:
 
 1. the IdP itself, and
@@ -67,7 +69,7 @@ gatus   ── same egress path (canary)
 
 Land first: the Ingress/VIPService is unapproved and untaggable until these exist.
 
-`tailscale/policy.hujson` (applied by `.github/workflows/tailscale.yml`; PRs run `action: test`):
+`kevindurb/infra`'s `tailnet/policy.hujson` (applied by that repo's `terraform.yml`; PRs run `terraform plan`, which validates the `tests` block):
 
 1. `tagOwners`: replace `tag:tsidp` with
 
@@ -483,4 +485,4 @@ Pocket ID admin UI: allowed user groups per client (left unrestricted; no groups
 ## Open items
 
 1. `SMTP_FROM` stays `beavercloud@fastmail.com`: that is the identity `smtp-relay` (maddy) authenticates as against Fastmail, proven by Alertmanager. Switching it to `kevindurb@fastmail.com` requires adding that address as a send-as identity at Fastmail, otherwise maddy's `auth plain` sender is rejected. Delivery to `kevindurb@fastmail.com` is unaffected.
-2. The **Tailscale login is a separate identity** from this app email. `tailscale/policy.hujson` group members and the `kevindurb-masters` ClusterRoleBinding subject (`infrastructure/tailscale/resources.yml`) are `kevindurb@github`. If the tailnet login also moves to Fastmail, that is its own small PR (groups, `tests` `src`, the ClusterRoleBinding) and should land *after* this one, not with it.
+2. The **Tailscale login is a separate identity** from this app email. `kevindurb/infra`'s `tailnet/policy.hujson` group members and the `kevindurb-masters` ClusterRoleBinding subject (`infrastructure/tailscale/resources.yml`) are `kevindurb@github`. If the tailnet login also moves to Fastmail, that is its own small PR against `infra` (plus the ClusterRoleBinding here) and should land *after* this one, not with it.
