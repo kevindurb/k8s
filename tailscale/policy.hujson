@@ -128,7 +128,9 @@
 		// Tailscale SSH to it: a user-owned device can only be an SSH destination for its
 		// own user, and the ssh section cannot name a host alias or IP.
 		{"src": ["group:dev-users", "tag:ai"], "dst": ["tag:dev"], "ip": ["tcp:22"]},
-		{"src": ["group:dev-users"],           "dst": ["tag:dev"], "ip": ["tcp:443"]},
+		// the masquerading routers' LAN clients reach the tailnet-only `tailscale serve`;
+		// tcp:22 is deliberately not granted - the workstation is not a jump host for a LAN
+		{"src": ["group:dev-users", "tag:router", "tag:travel-router"], "dst": ["tag:dev"], "ip": ["tcp:443"]},
 
 		// all of the workstation's own traffic now leaves as tag:dev instead of
 		// kevindurb@github, so it keeps the reach its admin user device had:
@@ -302,15 +304,16 @@
 		{
 			"src":    "tag:router",
 			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
-			           "tag:idp:443"],
+			           "tag:idp:443", "tag:dev:443"],
 			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443",
-			           "tag:travel-lab:443", "tag:k8s:443"],
+			           "tag:travel-lab:443", "tag:k8s:443", "tag:dev:22"],
 		},
 		{
 			"src":    "tag:travel-router",
 			"accept": ["tag:apps:443", "tag:media:443", "tag:home:443", "tag:games:25565",
-			           "tag:travel-lab:443", "tag:idp:443"],
-			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:k8s:443"],
+			           "tag:travel-lab:443", "tag:idp:443", "tag:dev:443"],
+			"deny":   ["tag:infra:443", "tag:monitoring:443", "tag:bridges:443", "tag:k8s:443",
+			           "tag:dev:22"],
 		},
 		{
 			"src":    "tag:travel-lab",
