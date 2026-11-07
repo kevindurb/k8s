@@ -1,0 +1,25 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tsgit
+namePrefix: tsgit-
+
+resources:
+  - ./deployment.yml
+  - ./auth-sealed-secret.yml
+
+# Deliberately no app-pod-hardening / app-tmp-dirs:
+# the image runs as 10001:10001 and its state directory is 0700 for that user,
+# while app-pod-hardening hardcodes uid/gid 1000. deployment.yml carries an
+# explicit securityContext instead and mounts only the tmp emptyDir it needs.
+#
+# Deliberately no gatus ConfigMap:
+# tsgit listens inside tsnet's userspace stack, so no cluster-reachable socket
+# exists for Gatus to check.
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: tsgit
