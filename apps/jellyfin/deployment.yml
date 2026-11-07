@@ -37,39 +37,108 @@ spec:
       # Note: --mode only exists from 12.0 on. Revert this container together
       # with the image below.
       initContainers:
-        # One-off repair. BaseItems has a row whose ChannelId is
-        # '00000000-0000-0000-0000-00000000000\x10' (35 hex chars, not a GUID),
-        # which aborts the 12.x 20260610120000_RefreshCleanNamesAndValues
-        # migration with "Guid string should only contain hexadecimal
-        # characters". Idempotent; drop it once the upgrade is through.
+        # One-off repair of scattered single-byte corruption in the library DB
+        # (a control character where a separator belongs), which aborts the 12.x
+        # migrations:
+        #   BaseItems.ChannelId        '00000000-0000-0000-0000-00000000000\x10'
+        #                              -> "Guid string should only contain
+        #                                 hexadecimal characters"
+        #   BaseItems.DateLastRefreshed '2025-11-17 03:51\x1a00.4737642'
+        #                              -> "String ... was not recognized as a
+        #                                 valid DateTime"
+        # and two corrupt Guid foreign keys in BaseItemProviders/PeopleBaseItemMap.
+        # Idempotent; drop it once the upgrade is through.
         - name: repair-db
           image: python:3.12-alpine@sha256:e064671ca452259bab50e8e2c7bd896e39e9a343bb06ca25234adf6fe18d0fc7
           command: ["python", "-c"]
           args:
             - |
-              import os, sqlite3, sys
+              import os, re, sqlite3, sys
+
               db = "/config/data/jellyfin.db"
               if not os.path.exists(db) or os.path.getsize(db) == 0:
                   print("no database yet, nothing to repair")
                   sys.exit(0)
+
               con = sqlite3.connect(db)
-              try:
-                  cur = con.execute(
-                      "UPDATE BaseItems"
-                      " SET ChannelId = '00000000-0000-0000-0000-000000000000'"
-                      " WHERE ChannelId IS NOT NULL AND ChannelId <> ''"
-                      " AND NOT (length(ChannelId) = 36"
-                      "   AND substr(ChannelId, 9, 1) = '-'"
-                      "   AND substr(ChannelId, 14, 1) = '-'"
-                      "   AND substr(ChannelId, 19, 1) = '-'"
-                      "   AND substr(ChannelId, 24, 1) = '-'"
-                      "   AND ChannelId NOT GLOB '*[^0-9a-fA-F-]*')"
-                  )
-                  print("rows repaired:", cur.rowcount)
-              except sqlite3.OperationalError as exc:
-                  print("skipping:", exc)
+              cur = con.cursor()
+              CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+              DATE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,7})?$")
+              EMPTY = "00000000-0000-0000-0000-000000000000"
+              repaired = 0
+
+              def tables():
+                  return [r[0] for r in cur.execute(
+                      "select name from sqlite_master where type='table' and name not like 'sqlite_%'")]
+
+              def cols(t):
+                  return [r[1] for r in cur.execute('pragma table_info("%s")' % t)]
+
+              def has_rowid(t):
+                  try:
+                      cur.execute('select rowid from "%s" limit 0' % t)
+                      return True
+                  except sqlite3.OperationalError:
+                      return False
+
+              cur.execute(
+                  "UPDATE BaseItems SET ChannelId = ?"
+                  " WHERE ChannelId IS NOT NULL AND ChannelId <> ''"
+                  " AND NOT (length(ChannelId) = 36"
+                  "   AND substr(ChannelId, 9, 1) = '-' AND substr(ChannelId, 14, 1) = '-'"
+                  "   AND substr(ChannelId, 19, 1) = '-' AND substr(ChannelId, 24, 1) = '-'"
+                  "   AND ChannelId NOT GLOB '*[^0-9a-fA-F-]*')", (EMPTY,))
+              print("channelid repaired:", cur.rowcount)
+              repaired += cur.rowcount
+
+              for t in tables():
+                  if not has_rowid(t):
+                      continue
+                  for c in cols(t):
+                      if "Date" not in c:
+                          continue
+                      rows = cur.execute('select rowid, "%s" from "%s"'
+                                          ' where typeof("%s")="text"' % (c, t, c)).fetchall()
+                      for rid, v in rows:
+                          if not v or not CTRL.search(v):
+                              continue
+                          fixed = CTRL.sub(":", v)
+                          if DATE.match(fixed):
+                              cur.execute('update "%s" set "%s" = ? where rowid = ?' % (t, c), (fixed, rid))
+                              print("date repaired:", t, c, rid, repr(v), "->", fixed)
+                              repaired += 1
+
+              for t in tables():
+                  if t == "BaseItems" or not has_rowid(t):
+                      continue
+                  for c in cols(t):
+                      if not c.endswith("Id"):
+                          continue
+                      rows = cur.execute('select rowid, "%s" from "%s"'
+                                          ' where typeof("%s")="text"' % (c, t, c)).fetchall()
+                      for rid, v in rows:
+                          if not v or v == EMPTY or not CTRL.search(v):
+                              continue
+                          matches = cur.execute("select Id from BaseItems where Id glob ?",
+                                                (CTRL.sub("?", v),)).fetchall()
+                          fixed = False
+                          if len(matches) == 1:
+                              try:
+                                  cur.execute('update "%s" set "%s" = ? where rowid = ?' % (t, c),
+                                              (matches[0][0], rid))
+                                  print("guid repaired:", t, c, rid, repr(v), "->", matches[0][0])
+                                  fixed = True
+                              except sqlite3.IntegrityError:
+                                  pass
+                          if not fixed:
+                              cur.execute('delete from "%s" where rowid = ?' % t, (rid,))
+                              print("guid dropped:", t, c, rid, repr(v), "matches:", len(matches))
+                          repaired += 1
+
               con.commit()
               con.close()
+              print("total repaired:", repaired)
+
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
