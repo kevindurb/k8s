@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide a git forge that is reachable only from the Tailscale tailnet, authorizes peers from their tailnet identity, and durably stores bare git repositories on cluster storage.
+Provide a git forge that serves the Tailscale tailnet, authorizes peers from their tailnet identity, durably stores bare git repositories on cluster storage, and can publish a policy-selected, read-only subset of those repositories through Tailscale Funnel.
 
 ## Requirements
 

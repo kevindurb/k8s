@@ -40,7 +40,7 @@ spec:
           emptyDir: {}
       containers:
         - name: app
-          image: ghcr.io/kevindurb/tsgit:main@sha256:973d24ec6909763f5f4a0120161c68980161e91d820b54012d412ad17c0c9be4
+          image: ghcr.io/kevindurb/tsgit:main@sha256:e34206b9c9d94bd61b04ff10886576cf7053fe95c32b321f7ebcf46232bf1641
           env:
             - name: TZ
               value: America/Denver
@@ -48,6 +48,14 @@ spec:
               value: tsgit
             - name: TS_ADVERTISE_TAGS
               value: tag:tsgit
+            # Funnel publishes only the repositories the node's
+            # github.com/kevindurb/tsgit/cap/funnel payload selects (public/*),
+            # read-only, and only when the node also has the tailnet `funnel`
+            # attribute and an HTTPS certificate domain. Removing this variable
+            # closes the public listener on the next pod start; the tailnet
+            # listeners are unaffected either way.
+            - name: TSGIT_FUNNEL
+              value: "true"
             # Only needed until the node key lands in the state volume; the
             # SealedSecret unseals into the tsgit-auth Secret (namePrefix aware).
             - name: TS_AUTHKEY
