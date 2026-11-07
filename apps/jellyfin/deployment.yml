@@ -37,6 +37,50 @@ spec:
       # Note: --mode only exists from 12.0 on. Revert this container together
       # with the image below.
       initContainers:
+        # One-off repair. BaseItems has a row whose ChannelId is
+        # '00000000-0000-0000-0000-00000000000\x10' (35 hex chars, not a GUID),
+        # which aborts the 12.x 20260610120000_RefreshCleanNamesAndValues
+        # migration with "Guid string should only contain hexadecimal
+        # characters". Idempotent; drop it once the upgrade is through.
+        - name: repair-db
+          image: python:3.12-alpine@sha256:e064671ca452259bab50e8e2c7bd896e39e9a343bb06ca25234adf6fe18d0fc7
+          command: ["python", "-c"]
+          args:
+            - |
+              import os, sqlite3, sys
+              db = "/config/data/jellyfin.db"
+              if not os.path.exists(db) or os.path.getsize(db) == 0:
+                  print("no database yet, nothing to repair")
+                  sys.exit(0)
+              con = sqlite3.connect(db)
+              try:
+                  cur = con.execute(
+                      "UPDATE BaseItems"
+                      " SET ChannelId = '00000000-0000-0000-0000-000000000000'"
+                      " WHERE ChannelId IS NOT NULL AND ChannelId <> ''"
+                      " AND NOT (length(ChannelId) = 36"
+                      "   AND substr(ChannelId, 9, 1) = '-'"
+                      "   AND substr(ChannelId, 14, 1) = '-'"
+                      "   AND substr(ChannelId, 19, 1) = '-'"
+                      "   AND substr(ChannelId, 24, 1) = '-'"
+                      "   AND ChannelId NOT GLOB '*[^0-9a-fA-F-]*')"
+                  )
+                  print("rows repaired:", cur.rowcount)
+              except sqlite3.OperationalError as exc:
+                  print("skipping:", exc)
+              con.commit()
+              con.close()
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              memory: 32Mi
+            limits:
+              memory: 128Mi
         - name: migrate
           image: jellyfin/jellyfin:12.4@sha256:fea863d0cd9ec445985d9c75fc6ed64e38a1d2766cf0c250a33d553f4fc1b771
           args: ["--mode", "MigrateSystem"]
