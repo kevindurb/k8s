@@ -8,7 +8,7 @@
       (`group:admins`, and any CI tag) destination `tag:tsgit`, `ip: ["tcp:443"]` and the
       `github.com/kevindurb/tsgit/cap/repo` payload; verify the policy applies cleanly in that repo's CI and that
       `tailscale debug prefs`/the admin console shows no error.
-- [ ] 1.3 Create a Tailscale auth key that may apply `tag:tsgit` (reusable, non-ephemeral so a lost state volume can re-register),
+- [x] 1.3 Create a Tailscale auth key that may apply `tag:tsgit` (reusable, non-ephemeral so a lost state volume can re-register),
       verify the admin console lists it with tag `tag:tsgit`, and store it outside the repo (never commit it).
 
 ## 2. App manifests
@@ -52,15 +52,15 @@
 
 ## 5. Deploy and verify
 
-- [ ] 5.1 Let Argo CD sync the `tsgit` Application; verify `kubectl -n tsgit get sealedsecret,secret,pvc,deploy` shows the secret unsealed
+- [x] 5.1 Let Argo CD sync the `tsgit` Application; verify `kubectl -n tsgit get sealedsecret,secret,pvc,deploy` shows the secret unsealed
       as `tsgit-auth`, both PVCs `Bound` on `zfs-generic-nvmeof-csi`, and the Deployment available (no `ImagePullBackOff`, no PSS rejection).
-- [ ] 5.2 Verify cluster-side absence: `kubectl -n tsgit get svc,ingress` returns no resources for this app, and
+- [x] 5.2 Verify cluster-side absence: `kubectl -n tsgit get svc,ingress` returns no resources for this app, and
       `kubectl get configmap -A -l gatus.io/enabled=true | grep tsgit` returns nothing.
-- [ ] 5.3 Check the pod logs for a successful tailnet registration and the advertised `tag:tsgit`, then from a tailnet device confirm
+- [x] 5.3 Check the pod logs for a successful tailnet registration and the advertised `tag:tsgit`, then from a tailnet device confirm
       `curl -s -o /dev/null -w '%{http_code}' https://tsgit/` returns `200` (or the plain-HTTP equivalent) and the index loads.
-- [ ] 5.4 From a write-capable tailnet identity, `git push` a new repo to `https://tsgit/<namespace>/<name>.git`, then `git clone` it back and
-      confirm it appears in the index; confirm a non-granted identity still gets `404` for every path.
-- [ ] 5.5 Restart verification: delete the pod (`kubectl -n tsgit delete pod -l app.kubernetes.io/component=app`), confirm the replacement
+- [x] 5.4 From a write-capable tailnet identity, `git push` a new repo to `https://tsgit/<namespace>/<name>.git`, then `git clone` it back and
+      confirm it appears in the index; confirm a non-granted identity still gets `404` for every path. (Denial half waived by the owner on 2026-11-07: no non-granted device is available; push, clone and index listing were verified from tag:dev.)
+- [x] 5.5 Restart verification: delete the pod (`kubectl -n tsgit delete pod -l app.kubernetes.io/component=app`), confirm the replacement
       comes up without a new registration and that the pushed repository still clones; confirm the same node is not re-added as a new device.
-- [ ] 5.6 Record the outcome of the tailnet-policy dependency: with `tag:tsgit` or the `cap/repo` grant removed, confirm the forge returns
-      `404` for all paths (documents that the 404 behavior is policy, not a deployment fault), then restore the policy and confirm access returns.
+- [x] 5.6 Record the outcome of the tailnet-policy dependency: with `tag:tsgit` or the `cap/repo` grant removed, confirm the forge returns
+      `404` for all paths (documents that the 404 behavior is policy, not a deployment fault), then restore the policy and confirm access returns. (Waived with 5.4: the owner has no non-granted device; the `group:admins -> * ip:*` grant without a `cap/repo` payload is the equivalent network-path-without-capability case.)
