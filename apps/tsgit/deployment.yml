@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  # Recreate, never RollingUpdate: the pod is its own tailnet node and owns two
+  # ReadWriteOnce volumes, so a second instance must never exist alongside it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      # The image runs as 10001:10001 and creates its state directory 0700 for
+      # that user. components/app-pod-hardening hardcodes 1000, so this app
+      # carries its own explicit context instead.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: state
+        - name: repos
+          persistentVolumeClaim:
+            claimName: repos
+        # The image sets TMPDIR=/var/lib/tsgit/tmp on the read-only rootfs;
+        # this is the only writable scratch path the app needs.
+        - name: tmp
+          emptyDir: {}
+      containers:
+        - name: app
+          image: ghcr.io/kevindurb/tsgit:main@sha256:dc24b4d839178187f883a69a0f1b1381fbe8bf8793dd7f3112de9a4d71d3b446
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: TSGIT_HOSTNAME
+              value: tsgit
+            - name: TS_ADVERTISE_TAGS
+              value: tag:tsgit
+            # Only needed until the node key lands in the state volume; the
+            # SealedSecret unseals into the tsgit-auth Secret (namePrefix aware).
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: tsgit-auth
+                  key: TS_AUTHKEY
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/tsgit/state
+            - name: repos
+              mountPath: /var/lib/tsgit/repos
+            - name: tmp
+              mountPath: /var/lib/tsgit/tmp
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              memory: 64M
+            limits:
+              memory: 256M
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: state
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: repos
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 20Gi

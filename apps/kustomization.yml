@@ -34,3 +34,4 @@ resources:
   - ./minecraft/app.yml
   - ./pokesim/app.yml
   - ./f1timing/app.yml
+  - ./tsgit/app.yml
