@@ -48,14 +48,6 @@ spec:
               value: tsgit
             - name: TS_ADVERTISE_TAGS
               value: tag:tsgit
-            # Funnel publishes only the repositories the node's
-            # github.com/kevindurb/tsgit/cap/funnel payload selects (public/*),
-            # read-only, and only when the node also has the tailnet `funnel`
-            # attribute and an HTTPS certificate domain. Removing this variable
-            # closes the public listener on the next pod start; the tailnet
-            # listeners are unaffected either way.
-            - name: TSGIT_FUNNEL
-              value: "true"
             # Only needed until the node key lands in the state volume; the
             # SealedSecret unseals into the tsgit-auth Secret (namePrefix aware).
             - name: TS_AUTHKEY
