@@ -156,25 +156,28 @@ spec:
             - name: gunicorn
               containerPort: 8000
           # First boot runs migrations, fixtures and collectstatic, so allow up
-          # to five minutes before the startup probe starts failing.
+          # to ten minutes before the startup probe starts failing.
           startupProbe:
             httpGet:
               path: /api/v2/version/
               port: 8000
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /api/v2/version/
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /api/v2/version/
               port: 8000
             initialDelaySeconds: 60
             periodSeconds: 30
+            timeoutSeconds: 5
         - name: nginx
           image: docker.io/nginxinc/nginx-unprivileged:1.31-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
           securityContext:
@@ -219,6 +222,7 @@ spec:
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             tcpSocket:
               port: http
@@ -309,19 +313,22 @@ spec:
               memory: 2G
           startupProbe:
             exec:
-              command: ['celery', '-A', 'wger', 'inspect', 'ping']
+              command: ['celery', '-A', 'wger', 'inspect', 'ping', '--timeout', '5']
             periodSeconds: 20
             failureThreshold: 15
+            timeoutSeconds: 20
           readinessProbe:
             exec:
-              command: ['celery', '-A', 'wger', 'inspect', 'ping']
+              command: ['celery', '-A', 'wger', 'inspect', 'ping', '--timeout', '5']
             initialDelaySeconds: 30
             periodSeconds: 30
+            timeoutSeconds: 20
           livenessProbe:
             exec:
-              command: ['celery', '-A', 'wger', 'inspect', 'ping']
+              command: ['celery', '-A', 'wger', 'inspect', 'ping', '--timeout', '5']
             initialDelaySeconds: 120
             periodSeconds: 60
+            timeoutSeconds: 20
 
 ---
 apiVersion: v1
