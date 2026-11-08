@@ -44,8 +44,8 @@
 
 - [x] 7.1 Sync the app and wait for the web, postgres, redis, worker and beat pods to become Ready. Verify `kubectl -n wger get pods` shows all five Running/Ready and that the bootstrap logs show migrations, `collectstatic` and `Set site URL to wger.beaver-cloud.ts.net`.
 - [x] 7.2 Verify static and media serving: `curl` through the tailnet URL returns 200 for a hashed CSS/JS asset and for `/static/`, and an image request under `/media/` returns 200 after the library seed.
-- [ ] 7.3 Run the one-time library seed in order: `sync-exercises`, `download-exercise-images`, `download-exercise-videos`. Verify the exercise list is populated, an exercise page shows its image or video, and the media PVC usage is under ~4 GiB (`kubectl -n wger exec deploy/wger-postgres-deployment -- df -h` is not applicable; check `kubectl -n wger exec deploy/wger-app-deployment -c app -- du -sh /home/wger/media`).
-- [ ] 7.4 Confirm the weekly sync remains scheduled after the seed: the worker reports the sync tasks as registered and beat logs no errors, and a second manual `download-exercise-videos` run reports videos already present rather than re-downloading.
+- [x] 7.3 Run the one-time library seed in order: `sync-exercises`, `download-exercise-images`, `download-exercise-videos`. Verify the exercise list is populated, an exercise page shows its image or video, and the media PVC usage is under ~4 GiB (`kubectl -n wger exec deploy/wger-postgres-deployment -- df -h` is not applicable; check `kubectl -n wger exec deploy/wger-app-deployment -c app -- du -sh /home/wger/media`).
+- [x] 7.4 Confirm the weekly sync remains scheduled after the seed: the worker reports the sync tasks as registered and beat logs no errors, and a second manual `download-exercise-videos` run reports videos already present rather than re-downloading.
 
 ## 8. Integration checks
 
@@ -53,4 +53,4 @@
 - [x] 8.2 Confirm Pod Security admission: `kubectl -n wger get pod -o jsonpath` shows `runAsNonRoot: true`, `readOnlyRootFilesystem: true` for the app and nginx containers, and no pod has a privileged container; there are no `restricted` warnings in the namespace events.
 - [x] 8.3 Confirm self-healing: scale a deployment away from git, wait for Argo to reconcile, and verify it is restored to the git-defined replica count.
 - [x] 8.4 Run `just check-kustomize` and the pre-commit hooks over the changed files; verify both pass with no yamllint findings and no trailing whitespace.
-- [ ] 8.5 Smoke-test the full path end to end: log in through Pocket ID, open a workout, load an exercise with video, and confirm the Gatus check stays green.
+- [x] 8.5 Smoke-test the full path end to end: log in through Pocket ID, open a workout, load an exercise with video, and confirm the Gatus check stays green.
