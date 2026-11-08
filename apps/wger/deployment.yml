@@ -92,6 +92,15 @@ spec:
               value: wger-postgres-service
             - name: DJANGO_DB_PORT
               value: '5432'
+            # Redis is already the broker; use it for the Django cache too so
+            # django-axes logins lockouts are shared across gunicorn workers
+            # instead of living in per-process locmem.
+            - name: DJANGO_CACHE_BACKEND
+              value: django_redis.cache.RedisCache
+            - name: DJANGO_CACHE_LOCATION
+              value: redis://wger-redis-service:6379/1
+            - name: DJANGO_CACHE_CLIENT_CLASS
+              value: django_redis.client.DefaultClient
             # Email goes through Celery so password resets never block a request.
             - name: USE_CELERY
               value: 'True'
