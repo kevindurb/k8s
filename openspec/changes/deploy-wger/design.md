@@ -94,9 +94,9 @@ is a pre-release of the next minor.
 ### 4. Celery and Redis
 
 Valkey runs without persistence (no PVC, `--save '' --appendonly no`) and serves
-only as broker/result backend at `redis://wger-redis-service.wger:6379/2`.
-Django's own cache is left at its default locmem backend: with one web replica
-there is nothing to share, and it removes a failure mode from every request.
+as broker/result backend at `redis://wger-redis-service.wger:6379/2`, and as the
+Django cache at db 1. Putting the cache in Redis rather than locmem lets
+django-axes share login lockout state across gunicorn workers.
 
 The worker runs as a sidecar of the web pod with `CELERY_WORKER_CONCURRENCY=2`;
 the beat runs as one separate replica. Multiple beats would double-fire every
