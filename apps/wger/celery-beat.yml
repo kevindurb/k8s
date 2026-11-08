@@ -1,0 +1,99 @@
+---
+# Exactly one scheduler: a second beat would fire every periodic task twice.
+# wger's start-beat removes ./celerybeat.pid before starting, so the working
+# directory must be writable even though the root filesystem is not.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat-deployment
+  labels: &labels
+    app.kubernetes.io/component: celery-beat
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      volumes:
+        - name: beat
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: var-tmp
+          emptyDir: {}
+      containers:
+        - name: app
+          image: docker.io/wger/server:2.7.0@sha256:1c5789b93bfe5eed0b7287255782d9177027b255de2b22b59f511a693a48db04
+          command: ['/start-beat']
+          workingDir: /home/wger/beat
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: TIME_ZONE
+              value: America/Denver
+            - name: DJANGO_DEBUG
+              value: 'False'
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wger-secrets
+                  key: SECRET_KEY
+            - name: DJANGO_DB_ENGINE
+              value: django.db.backends.postgresql
+            - name: DJANGO_DB_DATABASE
+              value: wger
+            - name: DJANGO_DB_USER
+              value: wger
+            - name: DJANGO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wger-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DJANGO_DB_HOST
+              value: wger-postgres-service
+            - name: DJANGO_DB_PORT
+              value: '5432'
+            - name: USE_CELERY
+              value: 'True'
+            - name: CELERY_BROKER
+              value: redis://wger-redis-service:6379/2
+            - name: CELERY_BACKEND
+              value: redis://wger-redis-service:6379/2
+            - name: SYNC_EXERCISES_CELERY
+              value: 'True'
+            - name: SYNC_EXERCISE_IMAGES_CELERY
+              value: 'True'
+            - name: SYNC_EXERCISE_VIDEOS_CELERY
+              value: 'True'
+            - name: SYNC_INGREDIENTS_CELERY
+              value: 'True'
+          volumeMounts:
+            - name: beat
+              mountPath: /home/wger/beat
+            - name: tmp
+              mountPath: /tmp
+            - name: var-tmp
+              mountPath: /var/tmp
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 256M

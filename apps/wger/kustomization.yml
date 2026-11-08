@@ -1,0 +1,57 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wger
+namePrefix: wger-
+# One-time setup after the first Argo CD sync (nothing here is automated):
+#
+#   1. Set the bootstrap local-admin password from the sealed secret (wger
+#      creates `admin`/`adminadmin` on an empty database; this replaces it).
+#      Retrieve the value with:
+#        kubectl -n wger get secret wger-secrets -o jsonpath='{.data.ADMIN_PASSWORD}' | base64 -d
+#      Then apply it:
+#        kubectl -n wger exec deploy/wger-app-deployment -c app -- python3 manage.py shell -c \
+#          "import os; from django.contrib.auth.models import User; \
+#           u = User.objects.get(username='admin'); u.set_password(os.environ['ADMIN_PASSWORD']); u.save()"
+#      Changing the password in the UI later makes ADMIN_PASSWORD stale; re-seal
+#      it if the break-glass copy should stay current.
+#
+#   2. Seed the exercise library (Celery keeps it fresh weekly afterwards):
+#        kubectl -n wger exec deploy/wger-app-deployment -c app -- python3 manage.py sync-exercises
+#        kubectl -n wger exec deploy/wger-app-deployment -c app -- python3 manage.py download-exercise-images
+#        kubectl -n wger exec deploy/wger-app-deployment -c app -- python3 manage.py download-exercise-videos
+#
+#   3. Seed the OpenID Connect provider row. The Pocket ID client is `wger`; its
+#      secret lives in the sealed secret and callback URL is
+#      https://wger.beaver-cloud.ts.net/account/oidc/pocket-id/login/callback/
+#        kubectl -n wger exec deploy/wger-app-deployment -c app -- python3 manage.py shell -c \
+#          "import os; from allauth.socialaccount.models import SocialApp; from django.contrib.sites.models import Site; \
+#           app, _ = SocialApp.objects.update_or_create(provider='openid_connect', provider_id='pocket-id', \
+#           defaults=dict(name='Pocket ID', client_id=os.environ['OIDC_CLIENT_ID'], \
+#           secret=os.environ['OIDC_CLIENT_SECRET'], settings={'server_url': 'https://idp.beaver-cloud.ts.net'})); \
+#           app.sites.set([Site.objects.get(id=1)])"
+resources:
+  - ./deployment.yml
+  - ./postgres.yml
+  - ./redis.yml
+  - ./celery-beat.yml
+  - ./secrets-sealed-secret.yml
+components:
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - wger.yml=gatus.yml
+  - name: nginx-config
+    files:
+      - default.conf=nginx.conf
+      - nginx.conf=nginx-main.conf
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: wger
