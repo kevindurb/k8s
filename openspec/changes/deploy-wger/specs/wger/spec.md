@@ -31,8 +31,9 @@ and MUST NOT be exposed on the LAN, a node port, or a public load balancer.
 
 Users SHALL authenticate through Pocket ID using OpenID Connect, and the
 instance SHALL keep a local password login for the `admin` account as
-break-glass access. Self-registration and automatic guest-user creation SHALL
-be disabled.
+break-glass access. Account registration SHALL be open because wger uses the
+same setting to gate OpenID Connect auto-signup; automatic guest-user creation
+SHALL be disabled.
 
 #### Scenario: Pocket ID user signs in
 
@@ -40,16 +41,22 @@ be disabled.
 - **THEN** the redirect URI used is `https://wger.beaver-cloud.ts.net/account/oidc/pocket-id/login/callback/`
 - **AND** the user lands in wger authenticated with an account bound to that identity
 
+#### Scenario: First Pocket ID login creates the account
+
+- **WHEN** a Pocket ID user who does not exist in wger completes the OIDC flow
+- **THEN** allauth creates the account with an unusable local password
+- **AND** the user is signed in rather than shown a "sign up is closed" error
+
 #### Scenario: Local admin signs in when the identity provider is unavailable
 
 - **WHEN** Pocket ID is unreachable and the `admin` user submits valid local credentials
 - **THEN** the login succeeds through wger's local password form
 
-#### Scenario: Unknown visitor cannot self-register
+#### Scenario: Anonymous visitor does not get a guest account
 
-- **WHEN** an unauthenticated visitor reaches the login or registration pages
-- **THEN** no self-service account creation is offered
-- **AND** no guest user is created for anonymous requests
+- **WHEN** an unauthenticated visitor requests a protected page
+- **THEN** no guest user is created automatically
+- **AND** the visitor is asked to sign in
 
 ### Requirement: Exercise library available with images and videos
 

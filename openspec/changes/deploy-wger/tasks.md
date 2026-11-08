@@ -8,7 +8,7 @@
 
 ## 2. Web pod and static/media serving
 
-- [x] 2.1 Configure the `app` container on `docker.io/wger/server:2.7@<digest>`: environment for `TZ`, `SITE_URL=https://wger.beaver-cloud.ts.net`, `CSRF_TRUSTED_ORIGINS`, `X_FORWARDED_PROTO_HEADER_SET=True`, `DJANGO_DEBUG=False`, `ALLOW_REGISTRATION=False`, `ALLOW_GUEST_USERS=False`, database variables, and the database password from `wger-secrets`. Verify `kustomize build apps/wger` renders the env and the `secretKeyRef`.
+- [x] 2.1 Configure the `app` container on `docker.io/wger/server:2.7@<digest>`: environment for `TZ`, `SITE_URL=https://wger.beaver-cloud.ts.net`, `CSRF_TRUSTED_ORIGINS`, `X_FORWARDED_PROTO_HEADER_SET=True`, `DJANGO_DEBUG=False`, `ALLOW_REGISTRATION=True`, `ALLOW_GUEST_USERS=False`, database variables, and the database password from `wger-secrets`. Verify `kustomize build apps/wger` renders the env and the `secretKeyRef`.
 - [x] 2.2 Add the `media` PVC (10 GiB, `storageClassName: zfs-generic-nvmeof-csi`, `ReadWriteOnce`) and mount it at `/home/wger/media`; mount an `emptyDir` at `/home/wger/static`. Verify the built Deployment has both volumes and that `media` is a PVC, not an emptyDir.
 - [x] 2.3 Add the `wait-for-db` initContainer using the busybox image already pinned in `apps/romm` to wait for `wger-postgres-service:5432`. Verify the built pod spec has the initContainer and that it has no volume mounts.
 - [x] 2.4 Add readiness/liveness probes and a `startupProbe` on `/api/v2/version/` (numeric port 8000, failure threshold covering ~5 minutes). Verify the built container has all three probes and that no probe targets a port name that another container also uses.

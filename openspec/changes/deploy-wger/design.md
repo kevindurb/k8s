@@ -158,7 +158,11 @@ client credentials from the sealed secret, `settings={'server_url':
 - `SITE_URL=https://wger.beaver-cloud.ts.net`,
   `CSRF_TRUSTED_ORIGINS=https://wger.beaver-cloud.ts.net`,
   `X_FORWARDED_PROTO_HEADER_SET=True` so Django trusts the proxy's scheme.
-- `ALLOW_REGISTRATION=False` and `ALLOW_GUEST_USERS=False`.
+- `ALLOW_REGISTRATION=True` and `ALLOW_GUEST_USERS=False`. Registration has to
+  stay open: wger's account adapter answers allauth's social-signup check with
+  this same setting, so closing it also rejects the first Pocket ID login. The
+  service is tailnet-only, and allauth gives OIDC-created users an unusable
+  local password.
 - `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` are exposed as environment variables on
   the app container so the one-time seeding command can read them without
   printing secrets into shell history.
