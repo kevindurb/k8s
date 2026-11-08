@@ -40,7 +40,7 @@ spec:
           emptyDir: {}
       containers:
         - name: app
-          image: ghcr.io/kevindurb/tsgit:main@sha256:42d3c18e2210c594c32ef1ceb0a9b32c8b9a0fbe9381d699fc24b1e6800d289e
+          image: ghcr.io/kevindurb/tsgit:v0.2.0@sha256:41946f3464ace271323ccf5c12178481ea4b9c00de5accc03e57e0c0488fee55
           env:
             - name: TZ
               value: America/Denver
