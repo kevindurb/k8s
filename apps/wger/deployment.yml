@@ -69,7 +69,7 @@ spec:
             - name: WGER_USE_GUNICORN
               value: 'True'
             - name: ALLOW_REGISTRATION
-              value: 'False'
+              value: 'True'
             - name: ALLOW_GUEST_USERS
               value: 'False'
             - name: SECRET_KEY
