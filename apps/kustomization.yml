@@ -35,4 +35,3 @@ resources:
   - ./pokesim/app.yml
   - ./f1timing/app.yml
   - ./tsgit/app.yml
-  - ./wger/app.yml

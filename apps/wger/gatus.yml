@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: wger
-    group: apps
-    url: http://wger-app-service.wger/api/v2/version/
-    conditions:
-      - '[STATUS] == 200'
