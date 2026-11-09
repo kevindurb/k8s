@@ -25,6 +25,18 @@ scrape_configs:
     tls_config:
       ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
     bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    metric_relabel_configs:
+      # In k3s the kubelet /metrics endpoint also exposes the control-plane
+      # (apiserver/etcd) metrics, so this job re-scrapes everything the
+      # k8apiserver job already collects. Drop those duplicates here.
+      - source_labels: [__name__]
+        regex: '(apiserver|etcd)_.*'
+        action: drop
+      # No alert/dashboard queries kubelet histogram buckets, and they are
+      # high cardinality; keep _sum/_count/gauges/counters instead.
+      - source_labels: [__name__]
+        regex: '.*_bucket'
+        action: drop
 
   - job_name: cadvisor
     kubernetes_sd_configs:
@@ -49,6 +61,14 @@ scrape_configs:
           - __meta_kubernetes_endpoint_port_name
         action: keep
         regex: default;kubernetes;https
+    metric_relabel_configs:
+      # Drop the apiserver/etcd histogram buckets. Their label combinations
+      # (verb x resource x scope x instance) dominate the TSDB and make
+      # compaction very expensive; nothing here queries the buckets. _sum and
+      # _count stay, so request rates and average latency still work.
+      - source_labels: [__name__]
+        regex: '.*_bucket'
+        action: drop
 
   - job_name: kubernetes-service-endpoints
     kubernetes_sd_configs:

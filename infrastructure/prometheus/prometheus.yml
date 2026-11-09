@@ -37,10 +37,13 @@ spec:
             - --storage.tsdb.retention.size=20GB
             - --web.external-url=https://prometheus.beaver-cloud.ts.net
           resources:
+            # Enough headroom for TSDB compaction of the block files; at 2G
+            # the page cache kept getting reclaimed and compaction re-read
+            # blocks over NVMe-oF, saturating the 1GbE link.
             limits:
-              memory: 2G
+              memory: 4G
             requests:
-              memory: 1G
+              memory: 2G
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus
