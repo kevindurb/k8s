@@ -479,18 +479,20 @@ groups:
       - alert: NvmeofInitiatorHighLatency
         expr: |
           rate(node_disk_read_time_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m])
-            / (rate(node_disk_reads_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.05
+            / (rate(node_disk_reads_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.2
           or
           rate(node_disk_write_time_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m])
-            / (rate(node_disk_writes_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.05
+            / (rate(node_disk_writes_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.2
         for: 10m
         labels:
           severity: warning
         annotations:
-          summary: NVMe device {{ $labels.device }} on {{ $labels.instance }} average I/O latency > 50ms
+          summary: NVMe device {{ $labels.device }} on {{ $labels.instance }} average I/O latency > 200ms
           description: >-
             Includes the local NVMe boot disk on drone-01..03, but is dominated
-            by NVMe-oF volumes when they are slow.
+            by NVMe-oF volumes when they are slow. The 200ms threshold keeps
+            bulk-read jobs (Prometheus compaction, the nightly Immich integrity
+            check) from paging while still catching real device problems.
 
       - alert: NvmeofInitiatorQueueBacklog
         expr: rate(node_disk_io_time_weighted_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 8
