@@ -28,7 +28,7 @@ Read from the live cluster, not from HARDWARE.md. Re-checked live **2026-11-12**
 
 - **Actual node CPUs** (`/proc/cpuinfo` via privileged pods): drone-01/02/03 = `Intel Core i5-4590 @ 3.30GHz`; drone-04 = `AMD Ryzen 7 2700`; unimatrix-01..03 = `Intel Core i5-3210M`.
 - **Boot mode**: drone-01/02/03 boot **legacy BIOS**; drone-04 boots UEFI. These minis must be UEFI-only.
-- **GPU placement** ⚠️: two Quadro P620s — one in drone-01, one in drone-02, each reported as 4 slices by the device plugin (MPS) and **both** labelled `nvidia.com/gpu.product: Quadro-P620-SHARED`, so a GPU pod can land on either node. As of 2026-11-12 `jellyfin` runs on **drone-01** — it moved there when drone-02 rebooted around 2026-11-10 — and `scrypted` also holds a slice on drone-01. Two pods are stale `Unknown` leftovers from those reboots: `scrypted-…-4k2qt` (13d, drone-01) and `jellyfin-…-xzm8p` (2d, drone-02). Delete them before the first drain.
+- **GPU placement** ⚠️: two Quadro P620s — one in drone-01, one in drone-02, each reported as 4 slices by the device plugin (MPS) and **both** labelled `nvidia.com/gpu.product: Quadro-P620-SHARED`, so a GPU pod can land on either node. As of 2026-11-12 `jellyfin` runs on **drone-01** — it moved there when drone-02 rebooted around 2026-11-10. The two stale `Unknown` leftovers from those reboots (`scrypted-…-4k2qt` on drone-01, `jellyfin-…-xzm8p` on drone-02) were ✅ **force-deleted 2026-11-12**; no replacement pods spawned and the cluster had no non-Running pods left. Jellyfin is now the only pod holding an `nvidia.com/gpu` limit. Note that `--field-selector status.phase=Unknown` does **not** match these — list `kubectl get pods -A` and filter, or you will think they are already gone.
 - **Jellyfin is portable.** `jellyfin-nas-media` is plain NFS from `192.168.42.24:/media` with **no node affinity**, and `jellyfin-config-pvc` is `zfs-generic-nvmeof-csi` (NVMe-oF TCP). Neither ties Jellyfin to a node, so it can move to any node without touching storage.
 - **Stale local PVs** ⚠️: nine `Released` PVs carry node affinity, not two. drone-03 has the two originally noted (`mayastor-etcd-localpv`, `openebs-minio-localpv`), **drone-02 has two more**, and drone-04 plus unimatrix-01/02/03 account for the rest. None blocks a drain; delete all nine at cleanup.
 - **The NIC rename cannot break the join.** `enp0s25` appears only in this doc, `HARDWARE.md`, and the inventory's informational `static_iface`; `ansible/roles/k3s/templates/agent.yaml.j2` sets no `node-ip` or `flannel-iface`. Only the docs need updating, never the k3s config.
@@ -391,7 +391,8 @@ just build-iso drone-03 /dev/nvme0n1
 ### Step 3 — Retire the old node
 
 ```sh
-# 1. clear pods left Unknown by earlier reboots
+# 1. clear pods left Unknown by earlier reboots (already empty on 2026-11-12)
+#    note: --field-selector status.phase=Unknown does not match them; filter the list
 kubectl get pods -A --field-selector status.phase=Unknown
 
 # 2. drain and retire
@@ -485,7 +486,7 @@ Keep all three Haswell SSDs — and their RAM, if it was pulled — until the wh
 | `--dest-device /dev/sda` against an NVMe disk | Fixed — `build-iso` takes the disk as an explicit argument; `lsblk` in Step 1 tells you which |
 | Legacy/CSM boot | UEFI-only, Secure Boot off — otherwise no `amdgpu` firmware, so 18 W idle and no transcoding |
 | Assuming Jellyfin is pinned to drone-02 | It floats between the two P620 nodes and currently runs on drone-01. Re-check `kubectl get pod -n jellyfin -o wide` before every drain |
-| Stale `Unknown` pods masking a reschedule problem | Delete them before draining (Step 3) and check for none again in Step 6 |
+| Stale `Unknown` pods masking a reschedule problem | Cleared 2026-11-12, but re-check before every drain — list all pods and filter, since `--field-selector status.phase=Unknown` misses them |
 | Jellyfin left on `runtimeClassName: nvidia` | Remove it with the selector, or the pod will not start on drone-03 |
 | Losing HEVC 10-bit encode | Accepted — Vega 11 cannot do it. Test an HDR title first |
 | Vega 11 Vulkan tone-mapping crash (`error 139`) | Leave Vulkan tone-mapping off for 10-bit HDR, or transcode to H.264 |
