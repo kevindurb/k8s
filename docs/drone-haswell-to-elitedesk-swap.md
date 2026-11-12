@@ -153,6 +153,23 @@ Consequence for the swap: the Ryzen 5 PRO 2400GE is 4C/8T, so with `nosmt` these
 
 **Read the thread count with `nproc`, not `lscpu`.** `lscpu` prints `CPU(s): 8` on these boxes while only four are online, because that line counts *present* CPUs from ACPI; the giveaway is `Thread(s) per core: 1` next to `Core(s) per socket: 4`. `nproc`, `/sys/devices/system/cpu/smt/active` and `/sys/devices/system/cpu/online` are the trustworthy readings, and this artefact caused a false "this unit has SMT disabled" call on unit 2.
 
+#### BIOS updates are not available over LVFS
+
+fwupd is in the live image and does identify the HP BIOS as an updateable device — `System Firmware`, vendor `HP (DMI:HP)`, GUID `3c21dbd6-d562-459f-92ed-b5cf8e73d35e`, version `133376` = `0x020900` = **02.09.00** (unit 3's). That is as far as it goes:
+
+```
+$ sudo fwupdmgr get-updates 5e9f4648…      # the System Firmware device id
+Devices with no available firmware updates:
+ • System Firmware
+$ sudo fwupdmgr get-releases 5e9f4648…
+No releases found
+$ https://fwupd.org/lvfs/component/3c21dbd6-d562-459f-92ed-b5cf8e73d35e  → 404
+```
+
+HP publishes no capsule for board `83E9`, and the firmware could not accept one anyway — `OsIndicationsSupported` = `0x1` (BOOT_TO_FW_UI only; the FMP capsule bits `0x4`/`0x8` are absent), which is also why fwupd reports `System firmware cannot accept DBX updates` for the dbx device.
+
+So a BIOS update means HP's Windows SoftPaq, or **F10 → Update System BIOS** with the `.bin` on a FAT32 stick — both require hands on the machine. **Not worth it:** the OS loads microcode at boot (`microcode: Current revision: 0x08101016` at 0.68 s, from `amd-ucode-firmware` in the image), and `0x08101016` is the family 17h/11h revision that carries the Zenbleed fix. A 2019 BIOS therefore does not leave a known microcode hole open on the 2019-firmware unit.
+
 #### Secure Boot must be off
 
 The image is `ghcr.io/ublue-os/ucore:stable-nvidia-lts`. Its out-of-tree modules are signed with **Universal Blue's own key**, not one the HP firmware trusts:
