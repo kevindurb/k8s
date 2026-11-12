@@ -17,9 +17,13 @@ download-iso:
   quay.io/coreos/coreos-installer:release \
   download -s stable -p metal -f iso -a x86_64 -C /data
 
-build-iso hostname:
+build-iso hostname device:
   #! /usr/bin/env bash
   set -euxo pipefail
+  # `device` is the whole destination disk (e.g. /dev/sda for SATA, /dev/nvme0n1
+  # for NVMe). It has no default on purpose: it is overwritten without
+  # confirmation, and the EliteDesk 705 G4 exists in both flavours. Get it from
+  # `lsblk` on the live USB first.
   ISO=$(ls {{dist}}/fedora-coreos-*.iso | tail -1 | xargs basename)
   rm -f {{dist}}/{{hostname}}.iso
 
@@ -27,7 +31,7 @@ build-iso hostname:
   -v {{dist}}:/data
   quay.io/coreos/coreos-installer:release
   iso customize
-  --dest-device /dev/sda
+  --dest-device {{device}}
   --dest-ignition /data/{{hostname}}.ign
   --output /data/{{hostname}}.iso
   "/data/$ISO"
