@@ -568,6 +568,8 @@ Wait for the pods that were on drone-03 to reschedule elsewhere and reach Ready 
 
 Boot the generated ISO on the EliteDesk and let it complete. The ISO produces a **bare FCOS install** — not a cluster node. Finish it with the `bootc switch` from 0.3:
 
+> ⚠️ **It will reinstall in a loop if you leave the stick in.** The USB is first in `BootOrder`, so after the unattended install finishes and the machine reboots it boots the installer again and wipes the disk again. Two options: sit and watch for the reboot and pull the stick (what we did, and it is easy to miss), or — better — **put the internal NVMe first in `BootOrder` and pick the USB with `F9` at power-on**. Then the post-install reboot lands on the installed system by itself.
+
 ```sh
 sudo bootc switch ghcr.io/kevindurb/k8s-node:latest
 sudo systemctl reboot
