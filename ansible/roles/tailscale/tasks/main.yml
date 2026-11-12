@@ -6,6 +6,17 @@
     state: started
     enabled: true
 
+# `tailscale up` fails on an already-authenticated node whose settings are
+# non-default (e.g. a node tagged by its auth key): "changing settings via
+# 'tailscale up' requires mentioning all non-default flags". Joining the tailnet
+# is manual, so only run it when the node is not logged in.
+- name: Read tailscale state
+  ansible.builtin.command: tailscale status --json
+  register: tailscale_state
+  changed_when: false
+  failed_when: false
+
 - name: Up tailscale
   ansible.builtin.command: tailscale up --accept-dns=false --ssh
-  changed_when: false
+  when: (tailscale_state.stdout | from_json).BackendState | default('') != 'Running'
+  changed_when: true

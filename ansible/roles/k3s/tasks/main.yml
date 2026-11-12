@@ -12,6 +12,12 @@
     k3s_token: '{{ k3s_token_encoded.content | b64decode | trim }}'
   when: k3s_role != 'init'
 
+- name: Ensure k3s config directory exists
+  ansible.builtin.file:
+    path: '{{ k3s_config_dir }}'
+    state: directory
+    mode: '0755'
+
 - name: Update k3s config
   ansible.builtin.template:
     src: templates/{{ k3s_role }}.yaml.j2
