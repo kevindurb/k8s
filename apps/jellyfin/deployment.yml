@@ -17,9 +17,11 @@ spec:
     metadata:
       labels: *labels
     spec:
-      runtimeClassName: nvidia
+      # Jellyfin transcodes on drone-03's Vega 11 (VA-API). There is no NVIDIA
+      # runtime to request and no `nvidia.com/gpu` resource for a hostPath
+      # device, so placement is a plain label and the node appears as /dev/dri.
       nodeSelector:
-        nvidia.com/gpu.product: Quadro-P620-SHARED
+        media/gpu: amd-vega
       securityContext:
         fsGroup: 1000
       volumes:
@@ -29,6 +31,13 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: config-pvc
+        # The render nodes. /dev/dri is a hostPath, not a device plugin, so the
+        # scheduler cannot enforce it: without this mount the pod starts fine and
+        # silently falls back to software transcoding.
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
         # Jellyfin's transcodes and image cache default to /cache; without a
         # volume they land on the container's writable layer, i.e. the node's
         # root filesystem. Pod-scoped here, and counted as ephemeral storage.
@@ -74,12 +83,13 @@ spec:
               mountPath: /config
             - name: cache
               mountPath: /cache
+            - name: dri
+              mountPath: /dev/dri
           resources:
             requests:
               memory: 1G
             limits:
               memory: 4G
-              nvidia.com/gpu: "1"
           ports:
             - name: http
               containerPort: 8096
