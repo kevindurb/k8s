@@ -240,7 +240,7 @@ Transcode results on real files, beyond the synthetic 0.4 checks:
 | hw decode + soft tone map + hw encode | ✅ same ~0.1× |
 | Vulkan/libplacebo tone map (`error 139` path) | inconclusive — no Vulkan ICD in `linuxserver/ffmpeg`; must be settled in Jellyfin's own image |
 
-**Operational takeaway:** HDR→SDR transcoding on Vega 11 is not realtime. HDR titles must direct-play; everything else is fine. Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated).
+**Operational takeaway:** HDR→SDR transcoding on Vega 11 is not realtime. HDR titles must direct-play; everything else is fine. Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated). **Update 2026-11-12:** the ~0.1× here is the *software* tone-map path. rusticl OpenCL tone mapping of a real 4K HDR remux to 960×540 runs at **3.18× realtime** — the hardware is fine, the stock Jellyfin image simply has no AMD OpenCL driver. See [HDR playback fails, and why](#hdr-playback-fails-and-why-2026-11-12).
 
 ### 0.5 — Rehearse the join under a throwaway hostname
 
@@ -395,7 +395,7 @@ The transcode hardware is stored in Jellyfin's **config, not in git** — switch
 - [x] Pod running on drone-03, not CrashLooping on runtime class
 - [x] VA-API decode **and** encode on `renderD128` — proven from the real ffmpeg invocation (the `jellyfin/jellyfin` image has no `vainfo`)
 - [x] A forced transcode plays instead of erroring — `FFmpeg exited with code 0`, `play_method = Transcode (v:hevc a:aac)`
-- [ ] One 10-bit HEVC title transcoded deliberately, to confirm it falls back rather than crashing — **still open**, see the results below
+- [x] One 10-bit HEVC title transcoded deliberately — **it fails** on the stock image rather than falling back; tone mapping is off until that is fixed (see below)
 - [x] Playback over Tailscale still works
 
 If this fails, Jellyfin may go back to drone-01 temporarily — but drone-01 cannot be drained until it works, so treat this as the real gate on step 4. After drone-01 and drone-02 are gone there is no discrete GPU anywhere in the cluster: the only fallback is software transcode on a 4C/8T node, which is not viable for 4K or HEVC-heavy sources. That is why Phase 0 requires a 4K HDR title to be tested before any swap begins.
@@ -415,11 +415,37 @@ Landed as `61a0eb46`. drone-03 was labelled `media/gpu=amd-vega` **before** the 
 
 Three things worth keeping:
 
-1. **`tonemap_vaapi` does not work on this GPU.** A direct probe (`Project Hail Mary` remux, HDR10) fails with `Failed to configure output pad on Parsed_tonemap_vaapi_0` / EINVAL — AMD's VPP path has no tone mapping on VCN1. That confirms Phase 0's **~0.1× "hw decode + soft tone map + hw encode"** number: HDR→SDR here is OpenCL or software tone mapping, never VPP. **HDR titles must direct-play**, and that is a hardware limit, not a setting.
-2. **There is no "HEVC 10-bit encoding" toggle to leave off.** 12.4 has `AllowHevcEncoding` (on) and the observed encode is `-profile:v:0 main`, i.e. 8-bit — the encoder only offers profiles the GPU can do. The dashboard instruction above is satisfied by VA-API plus default settings, minus tonemapping if the HDR test fails.
+1. **`tonemap_vaapi` does not work on this GPU.** A direct probe against the `Project Hail Mary` remux fails with `Failed to configure output pad on Parsed_tonemap_vaapi_0` / EINVAL — AMD's VPP path has no tone mapping on VCN1. So the VAAPI tone-map path always goes through **OpenCL**, never VPP.
+2. **There is no "HEVC 10-bit encoding" toggle to leave off.** 12.4 has `AllowHevcEncoding` (on) and the observed encode is `-profile:v:0 main`, i.e. 8-bit — the encoder only offers profiles the GPU can do.
 3. **`media/gpu=amd-vega` is a node label, not a git resource.** Re-apply it after any drone-03 rebuild, or Jellyfin sits Pending with an unschedulable warning — nothing in Argo will complain.
 
-Still open: **one real HDR10 playback.** The library's three 2160p titles (`Project Hail Mary`, `Casino Royale`, `PAW Patrol`) are all `Main 10` / `smpte2084` / `bt2020`, so 30 s of any one of them settles it. Expect *slow*, and watch for the Ryzen `error 139` rather than an obvious failure.
+#### HDR playback fails, and why (2026-11-12)
+
+Playing `Project Hail Mary` (4K HDR10 remux) **fails outright** — `FFmpeg exited with code 237` on every attempt, retried in a loop. Disabling hardware *decoding* does not help: Jellyfin still builds an OpenCL tone-map chain.
+
+The container has no AMD OpenCL driver:
+
+```
+/etc/OpenCL/vendors/        intel.icd  intel_legacy1.icd      (Intel only)
+ffmpeg -init_hw_device opencl=ocl:0.0
+  Failed to get number of OpenCL platforms: -1001
+  Device creation failed: -19 → No such device
+```
+
+No Vulkan ICD either (`/usr/share/vulkan/icd.d` does not exist), so libplacebo is not an alternative. This is not a settings problem: **no Jellyfin configuration can tone-map on Vega 11 with the stock image.**
+
+The fix was proven in a throwaway container on drone-03, not applied:
+
+| Platform | Result |
+|---|---|
+| Clover (`mesa.icd`, OpenCL 1.1) | `Failed to create image for plane 0: -59` — cannot do 10-bit |
+| **rusticl** (`rusticl.icd`, OpenCL 3.0) | works; **3.18× realtime** on the real remux at 960×540 out (`utime=3.09s` for 30 s of video) |
+
+Note it needs **both** `apt-get install mesa-opencl-icd` *and* deleting `/etc/OpenCL/vendors/mesa.icd` — the package installs Clover as well, and ffmpeg picks platform 0, which is Clover and fails. `RUSTICL_ENABLE=radeonsi` is also required on Mesa 25.
+
+**Decision 2026-11-12: tone mapping is off for now.** HDR titles therefore transcode fast but with washed-out colours. The custom image (`FROM jellyfin/jellyfin:12.4`, mesa-opencl-icd, clover ICD removed, `RUSTICL_ENABLE=radeonsi`) is the way to get correct colours, and the 3.18× measurement says the hardware is comfortably up to it — revisit before drone-01 is swapped, or accept the colour shift permanently.
+
+⚠️ **The setting cannot be changed by editing `encoding.xml`.** Jellyfin holds its config in memory and rewrites the file at shutdown, so a `sed` plus `rollout restart` silently reverts (observed). Change it in the dashboard, or stop the server first.
 
 ## Scrypted — no GPU, and none needed
 
