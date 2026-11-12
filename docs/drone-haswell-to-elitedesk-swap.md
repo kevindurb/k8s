@@ -136,6 +136,7 @@ The ignition for this unit therefore needs `interface-name=eno1` and `--dest-dev
 |---|---|---|---|---|---|---|---|
 | 1 | `50026B7683E965AF` | `80:e8:2c:25:93:d0` | `02.18.01` (2022-04-07) | 22 GiB | 4 (nosmt) | Kingston SNV… 931.5 G, 21,284 h, 2 % used | clean |
 | 2 | `50026B7683E9659C` | `80:e8:2c:22:87:a3` | `02.16.00` (2021-04-15) | 22 GiB | 4 (nosmt) | Kingston SNV… 931.5 G, 5,901 h, 1 % used | clean |
+| 3 | `50026B7683E96680` | `80:e8:2c:25:95:26` | `02.09.00` (2019-10-22) | 22 GiB | 4 (nosmt) | Kingston SNV… 931.5 G, **56 h**, 0 % used, 2.0 GB/s | clean |
 
 The serials differ only in the last three characters — **always pass the full serial to the wipe, never a prefix.** `unit-prep.sh wipe <ip> <serial-suffix>` reads the disk serial first and refuses on mismatch, and refuses a serial already recorded in `/tmp/opencode/wiped-serials.txt`.
 
