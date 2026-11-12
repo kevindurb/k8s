@@ -153,6 +153,15 @@ Platform is in Setup Mode
 
 Keeping Secure Boot on would mean enrolling the ublue public key into MOK on every machine (physical console, one-time password, `mokutil --import`), and re-doing it whenever that key changes. That is per-machine manual work at exactly the point we want hands-off installs, buying nothing here: the nodes are single-purpose and reachable only over the tailnet. **Decision: Secure Boot off on all three.**
 
+Confirmed from the OS on the first unit after the BIOS change — the efivar is the reading the firmware cannot fake:
+
+```
+$ mokutil --sb-state
+SecureBoot disabled
+$ od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-…   → 0
+$ od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SetupMode-…   → 0
+```
+
 Worth knowing: the three Haswells being replaced are **legacy-booting** (`/sys/firmware/efi` absent on drone-01/02/03), so UEFI is a deliberate change, not a continuation — drone-04 proves the image handles it.
 
 #### Wipe and health check — first unit, 2026-11-12
