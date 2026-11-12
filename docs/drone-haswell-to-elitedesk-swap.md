@@ -248,6 +248,32 @@ All three swaps depend on install → switch → join → Ready, and that cannot
 
 This is the cheapest place to catch a wrong interface name in the ignition, a forgotten manual `tailscale up` (or a key that came back untagged), or a version mismatch — an evening's work instead of a production node.
 
+#### 0.5 results — 2026-11-12
+
+Run on the unit with disk `50026B7683E96680`. It worked, and it caught four things that would each have failed the first real swap.
+
+| Stage | Result |
+|---|---|
+| ignition → install | bare FCOS 44 on NVMe, hostname `test-node`, static `192.168.42.30/16`, `default via 192.168.1.1`, ghcr reachable |
+| `bootc switch ghcr.io/kevindurb/k8s-node:latest` | **6 s** (66 layers already on disk, 3 needed / 1.4 GB), no prompt |
+| reboot into the node image | `Fedora CoreOS 44 (uCore)`, k3s `v1.37.2+k3s1` — exact cluster version, tailscale 1.104.6, `amdgpu` + `/dev/dri/renderD128` |
+| manual `tailscale up` with a tagged key | `Running`, `tags: ['tag:k8s-node']` |
+| `provision.yml --limit test-node` | `ok=19 changed=0 failed=0` on the second run |
+| cluster | `test-node Ready v1.37.2+k3s1`, allocatable **4 CPU / 20.4 Gi** |
+| NFD labels | `feature.node.kubernetes.io/pci-1002.present=true` — **the Phase 4 gate passes on Vega 11** |
+
+What it caught:
+
+1. **The installer reinstalled in a loop.** USB was first in `BootOrder`, so the unattended install finished, rebooted, and booted the installer again. Caught only by watching for the reboot. Fix is in Step 4: put the NVMe first and pick the USB with `F9`.
+2. **`provision.yml` failed at `tuned-adm profile {{ tuned_profile }}`** — `tuned_profile` is per-host in `host_vars`, and a new host has no `host_vars`. Fixed by adding `tuned_profile: k8s-node` to the new host.
+3. **`/etc/rancher/k3s` does not exist on a fresh node**, so `Update k3s config` died with `Destination directory /etc/rancher/k3s does not exist`. Nothing creates it: `k3s-agent.service` ships disabled and has never run, and the bootc overlay has no `/etc/rancher`. The existing drones only have it because it was made by hand in 2025. Fixed with a `file: state=directory` task in `roles/k3s`.
+4. **`tailscale up --accept-dns=false --ssh` fails on a tagged node** — `changing settings via 'tailscale up' requires mentioning all non-default flags ... --advertise-tags=tag:k8s-node`. The role assumed pre-tag behaviour. Fixed by reading `tailscale status --json` and only running `tailscale up` when `BackendState != Running`, which also keeps the join manual as intended.
+
+Two notes for the real swap:
+
+- **A `NoSchedule` taint blocks DaemonSets too**, so a tainted rehearsal node gets no NFD worker and no `feature.node.*` labels at all. The `pci-1002.present` check above required removing the taint for 30 s. Don't read "no labels" as "NFD is broken" on a tainted node.
+- **`--limit test-node` still runs four plays**; the `drone-04` ZFS play matches no hosts, which is expected and quiet.
+
 ### 0.6 — Git-only changes that are safe now
 
 **Scrypted** — ✅ **landed 2026-11-12** (`apps/scrypted/deployment.yml`): `v0.147.0-noble-amd`, no `runtimeClassName`, no GPU selector, no `nvidia.com/gpu` limit. It does not use the GPU (see the Scrypted section). Its HomeKit path is a remux, not a transcode, and `nvidia-smi` on drone-01 showed no processes, so this landed while the P620 was still installed as a revert:
