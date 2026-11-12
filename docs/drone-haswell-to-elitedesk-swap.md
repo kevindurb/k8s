@@ -130,6 +130,17 @@ Bench stick booted on a unit whose internal disk still held Windows. Read-only o
 
 The ignition for this unit therefore needs `interface-name=eno1` and `--dest-device /dev/nvme0n1`; a wrong interface name here would have been the expensive failure the bench stick exists to catch.
 
+#### Units processed
+
+| # | disk sn (identity) | NIC MAC | BIOS | RAM | CPU threads | Disk | Health |
+|---|---|---|---|---|---|---|---|
+| 1 | `50026B7683E965AF` | `80:e8:2c:25:93:d0` | `02.18.01` (2022-04-07) | 22 GiB | 8 | Kingston SNV… 931.5 G, 21,284 h, 2 % used | clean |
+| 2 | `50026B7683E9659C` | `80:e8:2c:22:87:a3` | `02.16.00` (2021-04-15) | 22 GiB | **4** ⚠️ SMT off in BIOS | Kingston SNV… 931.5 G, 5,901 h, 1 % used | clean |
+
+The serials differ only in the last three characters — **always pass the full serial to the wipe, never a prefix.** `unit-prep.sh wipe <ip> <serial-suffix>` reads the disk serial first and refuses on mismatch, and refuses a serial already recorded in `/tmp/opencode/wiped-serials.txt`.
+
+⚠️ **Unit 2 arrived with SMT disabled** (`/sys/devices/system/cpu/smt/active` = 0, only CPUs 0,2,4,6 online) — half the CPU. Check it on every unit at the same time as Secure Boot: `/sys/devices/system/cpu/smt/active` must read `1`, and `nproc` must be **8**. In the HP BIOS it is `Advanced → SMT` / *Simultaneous Multithreading* → Enabled.
+
 #### Secure Boot must be off
 
 The image is `ghcr.io/ublue-os/ucore:stable-nvidia-lts`. Its out-of-tree modules are signed with **Universal Blue's own key**, not one the HP firmware trusts:
