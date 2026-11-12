@@ -292,7 +292,7 @@ Two notes for the real swap:
 
 Phase 0 comes first; nothing here starts until 0.4–0.6 are done (0.1, 0.2 and the git half of 0.3/0.6 have already landed — what is left of 0.3 is the two manual commands each install runs).
 
-1. **Swap drone-03**, validate. Jellyfin keeps running on **drone-01's** P620, which this step does not touch.
+1. **Swap drone-03**, validate. ✅ **done 2026-11-12** — see [Step 1 results](#step-1-results--drone-03-swapped-2026-11-12). Jellyfin keeps running on **drone-01's** P620, which this step does not touch.
 2. **Move Jellyfin to drone-03's Vega 11**, validate transcoding.
 3. **Swap drone-02** — GPU-free, and it has not hosted Jellyfin since its 2026-11-10 reboot.
 4. **Swap drone-01** — the last P620 retires with the chassis. By then nothing runs on it: Scrypted came off its GPU back in Phase 0, Jellyfin is on the Vega.
@@ -301,6 +301,35 @@ Phase 0 comes first; nothing here starts until 0.4–0.6 are done (0.1, 0.2 and 
 This ordering proves the replacement transcode path before the only node Jellyfin can fall back to is touched, and keeps the operator teardown single-variable at the end. **One node in flight at a time**, and one Jellyfin move, with validation between each.
 
 Note the placement correction: drone-01 is not a bystander — it is the node transcoding right now, and its P620 is the rollback target. That is why it goes last, not because a GPU leaves with it.
+
+### Step 1 results — drone-03 swapped (2026-11-12)
+
+Run on **unit 3** — NIC `80:e8:2c:25:95:26`, disk `…96680`, BIOS `02.09.00`. The cluster stayed healthy throughout; the only pod that ever went Pending was the pinned `healthchecks-cronjob-drone-03`, by design.
+
+| Stage | Result |
+|---|---|
+| `kubectl drain drone-03` | **42 pods → 5 DaemonSets**; the 26 CSI volumes detached and reattached on their new nodes |
+| `VolumeAttachment`s on drone-03 | 5 → **0** within 30 s |
+| stop `k3s-agent`, then `kubectl delete node` | node gone; `Haswell-*`, `vendor_id: Intel`, `openebs.io/*` and `pci-8086` went with the object |
+| `tailscale logout` | old device out of the netmap — `drone-03` **and** the `test-node` ghost both gone, so the MagicDNS name was free |
+| power off | old chassis down in **~1.5 min** |
+| installer | bare FCOS 44, hostname `drone-03`, `eno1` at `192.168.42.23/16` via `192.168.1.1`, UEFI, `SecureBoot disabled`, 4 CPUs, `/dev/dri/renderD128` |
+| `bootc switch …:latest` | **6 s**, staged `sha256:2c83247a…` — the build carrying the shutdown fix |
+| reboot into the node image | 45 s → uCore, k3s `v1.37.2+k3s1`, amdgpu loaded |
+| shutdown fix, read **from the running node** | `DefaultTimeoutStopSec=15s`, `nvmet.service TimeoutStopUSec=2min` |
+| manual tagged `tailscale up` | `drone-03` — **no `-1` suffix** — `100.70.66.88`, `tags: ['tag:k8s-node']` |
+| `provision.yml --limit drone-03` | `ok=20 changed=4 failed=0` |
+| cluster | `Ready v1.37.2+k3s1`, **4 CPU / 20.4 Gi**, no taints, `tuned` profile `k8s-node` |
+| NFD | `pci-1002.present=true`, `cpu-model.vendor_id=AMD`; `pci-10de`, `pci-8086`, `openebs.io/*` and `Haswell-*` all **absent** |
+| final | 7 nodes Ready, 0 pods down, 58/58 Argo apps Synced, `healthchecks-cronjob-drone-03` ran |
+
+Five things worth carrying into the next two nodes:
+
+1. **A retired node that still has an install on disk rejoins if it boots.** The mini's *first* power-on booted its internal NVMe (the leftover rehearsal install) instead of the stick, came up as `test-node` at `.30`, and its `k3s-agent` re-registered at 21:21:29Z — it only stopped heartbeating when the installer wiped the disk at 21:30:55Z. The stale `NotReady` Node object then had to be deleted by hand after the new node joined. After each install, check `kubectl get nodes` for a ghost under the rehearsal/previous name.
+2. **Stop `k3s-agent` before `kubectl delete node`.** `kubectl delete node` does not stop a running kubelet from re-registering, and kubelet only ever *adds* labels — reusing the object would have left `Haswell-*`/`Intel`/`pci-8086`/`openebs` on an AMD node. Step 3 now says so.
+3. **drone-02 is the slow node now**, and it has to carry what the drain hands it: `/var` at **45G/56G (80 %)** on the 56 GB OCZ Vertex Plus, kubelet image GC thrashing (`wanted to free 6723136716 bytes, but freed 1990933213 bytes`). Two pods that landed there sat in `ContainerCreating` for ~15 min pulling images; deleting one reschedules it elsewhere (Scrypted went to drone-01). Not a blocker, but it is the case for swapping drone-02 next.
+4. **Rollback for drone-03 is no longer "put the SSD back".** `tailscale logout` revoked the old node's key, so it is boot + `tailscale up` with a fresh tagged key + k3s auto-rejoin (~5 min; the token is still on the disk). See [Rollback](#rollback).
+5. **The shutdown diagnosis is confirmed empirically.** The old chassis powered off in ~1.5 min rather than ~3.5 because the s6-overlay containers (calibre, calibre-web) had already been evicted — the same 90 s-per-scope stall the new drop-in removes, just with less to stall on.
 
 ## Jellyfin → Vega 11 (after Step 1, before drone-01)
 
@@ -581,10 +610,22 @@ just build-iso drone-03 /dev/nvme0n1
 #    note: --field-selector status.phase=Unknown does not match them; filter the list
 kubectl get pods -A --field-selector status.phase=Unknown
 
-# 2. drain and retire
+# 2. drain
 kubectl drain drone-03 --delete-emptydir-data --ignore-daemonsets
+
+# 3. on the old box: stop the agent BEFORE deleting the node, or it re-registers
+ssh core@drone-03 sudo systemctl stop k3s-agent
+
+# 4. delete the node object — this is what scrubs the old hardware labels
 kubectl delete node drone-03
+
+# 5. on the old box: free the MagicDNS name (use the LAN IP; the name dies here)
+ssh core@192.168.42.23 sudo tailscale logout
 ```
+
+Wait for the drain to move everything (pods Ready elsewhere, and **zero `VolumeAttachment`s naming the node**) before stopping the agent, otherwise a stale attachment blocks the reattach and the pod sits in `ContainerCreating`.
+
+`kubectl delete node` does **not** stop a running kubelet from re-registering. Deleting the object while the agent still runs brings the node back `NotReady`, and since kubelet only ever adds labels, that reused object would keep the old hardware labels (`cpu-model.node.kubevirt.io/Haswell-*`, `feature.node.kubernetes.io/cpu-model.vendor_id: Intel`, `pci-8086`, `openebs.io/*`) on an AMD node — which is why stop-then-delete is the order.
 
 Then power the chassis down and **remove and keep its SSD.** That disk is the rollback.
 
@@ -659,6 +700,8 @@ Do not proceed to the next node until every line passes:
 ## Rollback
 
 Per node, and only until all three are validated: reinstall the original SSD in the Haswell chassis, power it on, and re-run Step 5 to rejoin. The ignition config is static and the k3s config is templated, so a rejoin is a few minutes of work.
+
+⚠️ **Except drone-03, whose old node was logged out of the tailnet (Step 3).** Its rollback is boot + `tailscale up` with a **fresh tagged key** + the k3s agent rejoining on its own (the token is still on the disk) — ~5 min, but it needs a key from the admin console. Logging out was worth it to get the plain `drone-03` name back. If a dead-simple rollback matters more on drone-02/drone-01, skip step 5 until the replacement is validated — the new node comes up as `drone-02-1`/`drone-01-1`, then delete the old device and `tailscale set --hostname=drone-02` on the new box.
 
 **Jellyfin rolls back with git.** Reverting the deployment change returns it to `runtimeClassName: nvidia` + the P620 selector; on drone-01 that still works until drone-01 is drained in step 4. After that the only fallback is the Vega 11 — so do not consider drone-01 swapped until the Vega 11 path is proven.
 
