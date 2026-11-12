@@ -90,7 +90,7 @@ Do this on one unit before any of the three is scheduled. Nothing here touches K
 
 1. **Bench stick:** in `bootc/`, `just download-iso` then `just bench-iso`, flash `bootc/dist/bench.iso`. It is the stock FCOS live ISO with a live ignition only — it comes up on **192.168.42.90** with `sshd` and the GitHub keys, and writes nothing to disk, so it is safe on a unit you are about to install over. Everything below can then be done over SSH instead of at a console.
 2. Live USB: `ip -br link` (measured on the first unit: **`eno1`** — the onboard Realtek gets a firmware/DMI-derived name, so do **not** assume `enp1s0`/`enp2s0`), `lsblk` (SATA `/dev/sda` vs NVMe `/dev/nvme0n1`), `test -d /sys/firmware/efi`.
-3. BIOS (F10): Secure Boot → Disable, Legacy Support → Disable, UEFI order first. Clear Absolute Persistence on corporate units. Note a unit that arrived with **Secure Boot enabled** still boots the bench stick, because the FCOS ISO is Fedora-signed — so a successful boot is not evidence that Secure Boot is off. It must be off before the unsigned bootc node image will boot.
+3. BIOS (F10): Secure Boot → Disable, Legacy Support → Disable, UEFI order first. Clear Absolute Persistence on corporate units. Note a unit that arrived with **Secure Boot enabled** still boots the bench stick, because the FCOS ISO is Fedora-signed — so a successful boot is not evidence that Secure Boot is off. See [Secure Boot must be off](#secure-boot-must-be-off) for why the node image is the part that fails.
 4. Install, then confirm `hostname`, the static IP answering, `tailscale status`, `ssh core@…`.
 5. **Vega ID:** `lspci -nn | grep -i vga`. Raven Ridge is normally `15dd`; some Picasso parts report `15d8`. Hard gate — a wrong ID fails silently in Phase 4, because the node simply never receives the label. Measured on the first unit: `1002:15dd` (rev d6), the expected ID.
 6. **Transcode:** ⚠️ **do not use `vainfo` as the gate.** On this hardware `vainfo` lists only MPEG2/VP9/JPEG decode plus `VAEntrypointVideoProc` — **no H.264, no HEVC, no `EncSlice`** — on both Mesa 25.0.7 and 26.2.6, while real VA-API transcoding works perfectly. Gate on ffmpeg instead, in a container:
@@ -129,6 +129,69 @@ Bench stick booted on a unit whose internal disk still held Windows. Read-only o
 | Transcodes | H.264 1080p ✅, HEVC 8-bit encode ✅, 4K HEVC 10-bit decode ✅ (+ `scale_vaapi` → 1080p H.264/HEVC ✅) |
 
 The ignition for this unit therefore needs `interface-name=eno1` and `--dest-device /dev/nvme0n1`; a wrong interface name here would have been the expensive failure the bench stick exists to catch.
+
+#### Secure Boot must be off
+
+The image is `ghcr.io/ublue-os/ucore:stable-nvidia-lts`. Its out-of-tree modules are signed with **Universal Blue's own key**, not one the HP firmware trusts:
+
+```
+$ modinfo -F signer zfs nvidia spl        # on a running node
+ublue kernel
+ublue kernel
+ublue kernel
+```
+
+With Secure Boot enforcing, those modules are rejected at load time — which on this cluster means no `zfs`, so no pool, no datasets, no NVMe-oF target, and every PVC-backed app dead. It is not a cosmetic warning.
+
+The current cluster already runs the proven configuration: **drone-04** — the only node that boots UEFI and runs this exact image — reports
+
+```
+$ mokutil --sb-state
+SecureBoot disabled
+Platform is in Setup Mode
+```
+
+Keeping Secure Boot on would mean enrolling the ublue public key into MOK on every machine (physical console, one-time password, `mokutil --import`), and re-doing it whenever that key changes. That is per-machine manual work at exactly the point we want hands-off installs, buying nothing here: the nodes are single-purpose and reachable only over the tailnet. **Decision: Secure Boot off on all three.**
+
+Worth knowing: the three Haswells being replaced are **legacy-booting** (`/sys/firmware/efi` absent on drone-01/02/03), so UEFI is a deliberate change, not a continuation — drone-04 proves the image handles it.
+
+#### Wipe and health check — first unit, 2026-11-12
+
+The unit arrived with a company Windows install (`SYSTEM` / MSR / 930.6 G NTFS / WinRE). Erased with `nvme format --ses=2` (crypto erase — `fna=0x4` reports it supported, and it is instant):
+
+```sh
+sudo nvme format /dev/nvme0n1 --ses=2 --force
+sudo blockdev --rereadpt /dev/nvme0n1
+```
+
+Verified afterwards: no partition table, `blkid` silent, and direct reads at 1 M / 100 G / 500 G / 900 G all returned zeros. The controller never re-reports the old layout, so `--rereadpt` is required before `lsblk` looks clean.
+
+Health, read before the wipe:
+
+| | |
+|---|---|
+| `dmesg` MCE / AER / thermal / I/O errors | **0** |
+| NVMe | `critical_warning 0`, 31 °C, 100 % spare, **2 % used**, **0 media errors**, 0 error-log entries, 21,284 h, 33 unsafe shutdowns |
+| Read (2 GiB, O_DIRECT) | **1.1–1.2 GB/s** at `bs=1M`/`4M` — *not* the 85 MB/s a `bs=1M` first run reports cold |
+| NIC | `eno1` 1000 Mb/s, full duplex, link up |
+| Thermal | 30 °C, no throttling |
+
+The read speed is worth re-running once if it looks slow: the first `dd` after boot can report ~85 MB/s purely from cold caches, which is alarming and wrong.
+
+Transcode results on real files, beyond the synthetic 0.4 checks:
+
+| Path | Result |
+|---|---|
+| 1080p H.264 → H.264 (hw) | ✅ fast |
+| HEVC 8-bit encode (hw) | ✅ |
+| 4K HEVC 10-bit decode (hw) | ✅ |
+| 4K HDR10 → 1080p, **no** tone map | ✅ 1–2 s per 6 s clip |
+| **VAAPI tone map** (`tonemap_vaapi`) | ❌ `VAAPI driver doesn't support HDR` — VCN1 has no HDR tone mapping |
+| Software tone map (`zscale`+`hable`) | ✅ but **60 s for 6 s** (~0.1× realtime) |
+| hw decode + soft tone map + hw encode | ✅ same ~0.1× |
+| Vulkan/libplacebo tone map (`error 139` path) | inconclusive — no Vulkan ICD in `linuxserver/ffmpeg`; must be settled in Jellyfin's own image |
+
+**Operational takeaway:** HDR→SDR transcoding on Vega 11 is not realtime. HDR titles must direct-play; everything else is fine. Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated).
 
 ### 0.5 — Rehearse the join under a throwaway hostname
 
