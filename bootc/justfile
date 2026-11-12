@@ -1,37 +1,69 @@
-dist := "./dist"
+dist := justfile_directory() / "dist"
+templates := justfile_directory() / "../butane"
+coreos_installer := "quay.io/coreos/coreos-installer:release"
+butane := "quay.io/coreos/butane:release"
 
+# Render butane/node.bu.j2 for one node and write dist/<hostname>.ign.
+# Run from bootc/ (or any directory): paths are resolved against this justfile,
+# and butane runs from a container so no host binary is needed.
 gen-ignition hostname interface ip:
+  #! /usr/bin/env bash
+  set -euxo pipefail
+  mkdir -p {{dist}}
   minijinja-cli \
     -D hostname={{hostname}} \
     -D interface={{interface}} \
     -D ip={{ip}} \
-    ./butane/node.bu.j2 | \
-  butane \
-    --strict \
-    --pretty \
-    -o {{dist}}/{{hostname}}.ign \
-    --
+    {{templates}}/node.bu.j2 \
+  | podman run --rm -i {{butane}} --strict --pretty \
+  > {{dist}}/{{hostname}}.ign
 
 download-iso:
+  #! /usr/bin/env bash
+  set -euxo pipefail
+  mkdir -p {{dist}}
   podman run --privileged --rm -v {{dist}}:/data \
-  quay.io/coreos/coreos-installer:release \
+  {{coreos_installer}} \
   download -s stable -p metal -f iso -a x86_64 -C /data
 
+# Bootable installer that writes the node image setup to `device` and runs the
+# dest ignition unattended. `device` has no default: it is overwritten without
+# confirmation, and the EliteDesk 705 G4 ships with SATA or NVMe.
 build-iso hostname device:
   #! /usr/bin/env bash
   set -euxo pipefail
-  # `device` is the whole destination disk (e.g. /dev/sda for SATA, /dev/nvme0n1
-  # for NVMe). It has no default on purpose: it is overwritten without
-  # confirmation, and the EliteDesk 705 G4 exists in both flavours. Get it from
-  # `lsblk` on the live USB first.
   ISO=$(ls {{dist}}/fedora-coreos-*.iso | tail -1 | xargs basename)
   rm -f {{dist}}/{{hostname}}.iso
 
-  podman run --rm --privileged
-  -v {{dist}}:/data
-  quay.io/coreos/coreos-installer:release
-  iso customize
-  --dest-device {{device}}
-  --dest-ignition /data/{{hostname}}.ign
-  --output /data/{{hostname}}.iso
+  podman run --rm --privileged \
+  -v {{dist}}:/data \
+  {{coreos_installer}} \
+  iso customize \
+  --dest-device {{device}} \
+  --dest-ignition /data/{{hostname}}.ign \
+  --output /data/{{hostname}}.iso \
+  "/data/$ISO"
+
+# Bench stick: the same live ISO with a live ignition only, so it boots to a
+# console with sshd and a known static address and never touches a disk. Use it
+# to read `ip -br link`, `lsblk`, `lspci` and run vainfo remotely before deciding
+# what to bake into a real installer. Defaults to an address outside the node
+# range (drone-01..04 are .21-.24).
+bench-iso ip='192.168.42.90':
+  #! /usr/bin/env bash
+  set -euxo pipefail
+  mkdir -p {{dist}}
+  ISO=$(ls {{dist}}/fedora-coreos-*.iso | tail -1 | xargs basename)
+  rm -f {{dist}}/bench.ign {{dist}}/bench.iso
+
+  minijinja-cli -D ip={{ip}} {{templates}}/live.bu.j2 \
+  | podman run --rm -i {{butane}} --strict --pretty \
+  > {{dist}}/bench.ign
+
+  podman run --rm --privileged \
+  -v {{dist}}:/data \
+  {{coreos_installer}} \
+  iso customize \
+  --live-ignition /data/bench.ign \
+  --output /data/bench.iso \
   "/data/$ISO"

@@ -1,0 +1,56 @@
+---
+# Live-environment ignition for the bench USB stick.
+#
+# Boots the stock Fedora CoreOS live ISO into a console with sshd and a known
+# static address, and touches nothing on disk. It exists so the hardware
+# discovery in the EliteDesk swap (interface name, disk device, UEFI, Vega PCI
+# id, vainfo) can be done over SSH instead of typed at a console.
+variant: fcos
+version: 1.6.0
+
+passwd:
+  users:
+    - name: &user core
+
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: bench-node
+
+    - path: /home/core/.ssh/authorized_keys
+      mode: 0600
+      user:
+        name: *user
+      group:
+        name: *user
+      contents:
+        source: https://github.com/kevindurb.keys
+
+    # No interface-name: the RTL8111EPH shows up as enp1s0 or enp2s0 depending
+    # on the unit, and a wildcard profile with a high autoconnect priority beats
+    # the live image's DHCP profile either way. The address is deliberately
+    # outside the node range (drone-01..04 are .21-.24).
+    - path: /etc/NetworkManager/system-connections/bench.nmconnection
+      mode: 0600
+      contents:
+        inline: |
+          [connection]
+          id=bench
+          type=ethernet
+          autoconnect=true
+          autoconnect-priority=100
+          [ipv4]
+          method=manual
+          address1={{ ip }}/16,192.168.1.1
+          dns=192.168.1.1;
+          dns-search=
+          may-fail=false
+          [ipv6]
+          method=disabled
+
+systemd:
+  units:
+    - name: sshd.service
+      enabled: true

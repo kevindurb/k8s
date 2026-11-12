@@ -88,12 +88,13 @@ It also cannot resolve `ansible_host: drone-03` before it is on the tailnet, so 
 
 Do this on one unit before any of the three is scheduled. Nothing here touches Kubernetes.
 
-1. Live USB: `ip -br link` (the Realtek will be `enp1s0`/`enp2s0`, **not** `enp0s25`), `lsblk` (SATA `/dev/sda` vs NVMe `/dev/nvme0n1`), `test -d /sys/firmware/efi`.
-2. BIOS (F10): Secure Boot → Disable, Legacy Support → Disable, UEFI order first. Clear Absolute Persistence on corporate units.
-3. Install, then confirm `hostname`, the static IP answering, `tailscale status`, `ssh core@…`.
-4. **Vega ID:** `lspci -nn | grep -i vga`. Raven Ridge is normally `15dd`; some Picasso parts report `15d8`. Hard gate — a wrong ID fails silently in Phase 4, because the node simply never receives the label.
-5. **Transcode:** `vainfo` (not in the base image; run it from a container) must report `VAEntrypointVLD` and `VAEntrypointEncSlice` on `renderD128`. Then one 1080p transcode and **one 4K HDR title**, deliberately: Vega 11's known loss is HEVC 10-bit encode, and its known crash is `error 139` on HEVC 10-bit HDR with Vulkan tone-mapping. After Phase 1 there is no other hardware transcode path in the cluster, so this is where you find out.
-6. **Idle power:** ≈ 11 W at the wall, not ≈ 18 W. The higher figure means `amdgpu` firmware did not load.
+1. **Bench stick:** in `bootc/`, `just download-iso` then `just bench-iso`, flash `bootc/dist/bench.iso`. It is the stock FCOS live ISO with a live ignition only — it comes up on **192.168.42.90** with `sshd` and the GitHub keys, and writes nothing to disk, so it is safe on a unit you are about to install over. Everything below can then be done over SSH instead of at a console.
+2. Live USB: `ip -br link` (the Realtek will be `enp1s0`/`enp2s0`, **not** `enp0s25`), `lsblk` (SATA `/dev/sda` vs NVMe `/dev/nvme0n1`), `test -d /sys/firmware/efi`.
+3. BIOS (F10): Secure Boot → Disable, Legacy Support → Disable, UEFI order first. Clear Absolute Persistence on corporate units.
+4. Install, then confirm `hostname`, the static IP answering, `tailscale status`, `ssh core@…`.
+5. **Vega ID:** `lspci -nn | grep -i vga`. Raven Ridge is normally `15dd`; some Picasso parts report `15d8`. Hard gate — a wrong ID fails silently in Phase 4, because the node simply never receives the label.
+6. **Transcode:** `vainfo` (not in the base image; run it from a container) must report `VAEntrypointVLD` and `VAEntrypointEncSlice` on `renderD128`. Then one 1080p transcode and **one 4K HDR title**, deliberately: Vega 11's known loss is HEVC 10-bit encode, and its known crash is `error 139` on HEVC 10-bit HDR with Vulkan tone-mapping. After Phase 1 there is no other hardware transcode path in the cluster, so this is where you find out.
+7. **Idle power:** ≈ 11 W at the wall, not ≈ 18 W. The higher figure means `amdgpu` firmware did not load.
 
 Record `lsblk` for all three units — disk interface is the one field that varies by SKU — but only one needs the full test.
 
@@ -385,6 +386,8 @@ cd ~/projects/k8s/bootc
 just gen-ignition drone-03 <iface-from-step-1> 192.168.42.23
 just build-iso drone-03 /dev/nvme0n1
 ```
+
+✅ Fixed 2026-11-12: the recipes now resolve `../butane/` against the justfile (they used to look for `./butane/`, which does not exist under `bootc/`) and run `butane` from `quay.io/coreos/butane:release` instead of requiring a host binary. `cd bootc` and `just …` now works as written; artifacts land in the gitignored `bootc/dist/`.
 
 `build-iso` takes the destination disk as its second argument (✅ landed 2026-11-12; it used to hardcode `--dest-device /dev/sda`). Pass what Step 1's `lsblk` showed — `/dev/nvme0n1` for the NVMe units, `/dev/sda` for SATA — and the recipe has no default so a forgotten argument fails instead of guessing. Getting this wrong installs over the wrong device.
 

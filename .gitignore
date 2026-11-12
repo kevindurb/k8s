@@ -10,6 +10,7 @@ secrets.yaml
 *.secret
 dist/*
 !dist/.gitkeep
+bootc/dist/
 .task
 kubeconfig
 *.key
