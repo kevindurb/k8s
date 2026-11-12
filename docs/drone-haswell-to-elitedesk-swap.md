@@ -293,7 +293,7 @@ Two notes for the real swap:
 Phase 0 comes first; nothing here starts until 0.4–0.6 are done (0.1, 0.2 and the git half of 0.3/0.6 have already landed — what is left of 0.3 is the two manual commands each install runs).
 
 1. **Swap drone-03**, validate. ✅ **done 2026-11-12** — see [Step 1 results](#step-1-results--drone-03-swapped-2026-11-12). Jellyfin keeps running on **drone-01's** P620, which this step does not touch.
-2. **Move Jellyfin to drone-03's Vega 11**, validate transcoding.
+2. **Move Jellyfin to drone-03's Vega 11**, validate transcoding. ✅ **done 2026-11-12** — see [Jellyfin on Vega 11 results](#jellyfin-on-vega-11--results-2026-11-12); one HDR10 playback still open.
 3. **Swap drone-02** — GPU-free, and it has not hosted Jellyfin since its 2026-11-10 reboot.
 4. **Swap drone-01** — the last P620 retires with the chassis. By then nothing runs on it: Scrypted came off its GPU back in Phase 0, Jellyfin is on the Vega.
 5. **Retire gpu-operator** and switch NFD to `vendor`+`device` PCI labels — Phase 4 below.
@@ -392,13 +392,34 @@ The transcode hardware is stored in Jellyfin's **config, not in git** — switch
 
 ### Validate before touching drone-01
 
-- [ ] Pod running on drone-03, not CrashLooping on runtime class
-- [ ] `vainfo` inside the pod reports `VAEntrypointVLD` and `VAEntrypointEncSlice` on `renderD128`
-- [ ] A forced 1080p transcode plays and shows low CPU on drone-03
-- [ ] One 10-bit HEVC title transcoded deliberately, to confirm it falls back rather than crashing
-- [ ] Jellyfin playback over Tailscale still works (ingress unaffected)
+- [x] Pod running on drone-03, not CrashLooping on runtime class
+- [x] VA-API decode **and** encode on `renderD128` — proven from the real ffmpeg invocation (the `jellyfin/jellyfin` image has no `vainfo`)
+- [x] A forced transcode plays instead of erroring — `FFmpeg exited with code 0`, `play_method = Transcode (v:hevc a:aac)`
+- [ ] One 10-bit HEVC title transcoded deliberately, to confirm it falls back rather than crashing — **still open**, see the results below
+- [x] Playback over Tailscale still works
 
 If this fails, Jellyfin may go back to drone-01 temporarily — but drone-01 cannot be drained until it works, so treat this as the real gate on step 4. After drone-01 and drone-02 are gone there is no discrete GPU anywhere in the cluster: the only fallback is software transcode on a 4C/8T node, which is not viable for 4K or HEVC-heavy sources. That is why Phase 0 requires a 4K HDR title to be tested before any swap begins.
+
+#### Jellyfin on Vega 11 — results 2026-11-12
+
+Landed as `61a0eb46`. drone-03 was labelled `media/gpu=amd-vega` **before** the commit was pushed, so the new selector always had a target and the pod scheduled straight onto the Vega.
+
+| Check | Result |
+|---|---|
+| Pod | `1/1 Running` on **drone-03**; Argo `Synced/Healthy` |
+| Rendered manifest | no `runtimeClassName`, `nodeSelector: {media/gpu: amd-vega}`, `/dev/dri` hostPath, no `nvidia.com/gpu` limit, `privileged: true` |
+| `/dev/dri` in the container | `card0`, `renderD128` (gid 105, `render`) |
+| Jellyfin accel config (PVC, **not** git) | `HardwareAccelerationType=vaapi`, `VaapiDevice=/dev/dri/renderD128`, `EnableHardwareEncoding=true`, `EnableDecodingColorDepth10Hevc=true`, tonemapping `auto` / `bt2390` |
+| Actual ffmpeg | `-hwaccel vaapi -hwaccel_output_format vaapi … -codec:v:0 hevc_vaapi … scale_vaapi=w=960:h=400`, `FFmpeg exited with code 0` |
+| Leftover `Quadro-P620` / `runtimeClassName: nvidia` in git | none outside `infrastructure/gpu-operator` — its own pods are the only ones still asking for the runtime |
+
+Three things worth keeping:
+
+1. **`tonemap_vaapi` does not work on this GPU.** A direct probe (`Project Hail Mary` remux, HDR10) fails with `Failed to configure output pad on Parsed_tonemap_vaapi_0` / EINVAL — AMD's VPP path has no tone mapping on VCN1. That confirms Phase 0's **~0.1× "hw decode + soft tone map + hw encode"** number: HDR→SDR here is OpenCL or software tone mapping, never VPP. **HDR titles must direct-play**, and that is a hardware limit, not a setting.
+2. **There is no "HEVC 10-bit encoding" toggle to leave off.** 12.4 has `AllowHevcEncoding` (on) and the observed encode is `-profile:v:0 main`, i.e. 8-bit — the encoder only offers profiles the GPU can do. The dashboard instruction above is satisfied by VA-API plus default settings, minus tonemapping if the HDR test fails.
+3. **`media/gpu=amd-vega` is a node label, not a git resource.** Re-apply it after any drone-03 rebuild, or Jellyfin sits Pending with an unschedulable warning — nothing in Argo will complain.
+
+Still open: **one real HDR10 playback.** The library's three 2160p titles (`Project Hail Mary`, `Casino Royale`, `PAW Patrol`) are all `Main 10` / `smpte2084` / `bt2020`, so 30 s of any one of them settles it. Expect *slow*, and watch for the Ryzen `error 139` rather than an obvious failure.
 
 ## Scrypted — no GPU, and none needed
 
@@ -681,6 +702,7 @@ Do not proceed to the next node until every line passes:
 - [ ] Node **Ready**, `kubeletVersion` = cluster version
 - [ ] `democratic-csi-node` pod running on the node
 - [ ] `healthchecks-cronjob-drone-03` schedules and its Jobs complete
+- [ ] If this node hosts Jellyfin, it carries `media/gpu=amd-vega` — that label is **not in git**, and without it Jellyfin is unschedulable
 - [ ] Pods that were displaced by the drain are Ready (some will land here)
 - [ ] No `Unknown` pods left over from the old node (`kubectl get pods -A --field-selector status.phase=Unknown`)
 - [ ] Argo CD: all apps **Synced / Healthy**
