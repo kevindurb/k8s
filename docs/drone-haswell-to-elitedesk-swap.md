@@ -479,7 +479,20 @@ The interface name and disk device are unknown until you look, and both are bake
    - **Disk device**: `lsblk` — `/dev/sda` for SATA, `/dev/nvme0n1` for NVMe.
    - **Disk interface**: also tells you whether the SATA bay is free or occupied.
 3. Confirm UEFI: `test -d /sys/firmware/efi && echo UEFI`.
-4. Enter BIOS (F10) and set: **Secure Boot → Disable**, **Legacy Support → Disable**, UEFI boot order first.
+4. Enter BIOS (F10) and set: **Secure Boot → Disable**, **Legacy Support → Disable**, **Network Boot → Disable**, **After Power Loss → On**, UEFI boot order first.
+
+   Verify from the OS rather than trusting the BIOS screens — `efibootmgr` reads the firmware's own entries:
+
+   ```
+   $ sudo efibootmgr | grep -E '^Boot(Order|Current)|^Timeout'
+   BootCurrent: 0004
+   BootOrder: 0004,0007,0005,0003      # 0004 = the USB stick, 0007 = the internal NVMe
+   Timeout: 0 seconds
+   ```
+
+   Network entries still exist as `Boot0002`/`Boot0006` but are absent from `BootOrder`, so they are never tried — that is what "network boot disabled" looks like, and it is fine. **The USB stick is first in `BootOrder`**, so unplug it after the install completes or the node will keep booting the live image instead of the installed system.
+
+   On the first unit `efibootmgr` also listed `Boot0001`/`Boot0003` for a **WDC PC SN520 256G** that is not in the machine — a leftover from the corporate drive the reseller replaced. Harmless, but don't mistake it for a second disk: `lsblk -dno NAME,MODEL` shows only the one NVMe.
 
 Skipping the interface check is the most expensive mistake available here: the host installs cleanly, then comes up with no network, no Tailscale and no SSH, which presents as a dead machine.
 
