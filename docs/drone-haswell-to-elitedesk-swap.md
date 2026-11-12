@@ -24,48 +24,65 @@ Net effect per node: threads 4 → 8, RAM 16/24/16 → 16/16/16, idle draw rough
 
 ## What was verified before writing this
 
-Read from the live cluster, not from HARDWARE.md:
+Read from the live cluster, not from HARDWARE.md. Re-checked live **2026-11-12**; ✅ marks what has landed since this was written, ⚠️ what is corrected.
 
 - **Actual node CPUs** (`/proc/cpuinfo` via privileged pods): drone-01/02/03 = `Intel Core i5-4590 @ 3.30GHz`; drone-04 = `AMD Ryzen 7 2700`; unimatrix-01..03 = `Intel Core i5-3210M`.
 - **Boot mode**: drone-01/02/03 boot **legacy BIOS**; drone-04 boots UEFI. These minis must be UEFI-only.
-- **GPU placement**: two Quadro P620s — one in drone-01, one in drone-02, each reported as 4 slices by the device plugin (MPS). `scrypted` holds one on drone-01, `jellyfin` holds one on drone-02.
+- **GPU placement** ⚠️: two Quadro P620s — one in drone-01, one in drone-02, each reported as 4 slices by the device plugin (MPS) and **both** labelled `nvidia.com/gpu.product: Quadro-P620-SHARED`, so a GPU pod can land on either node. As of 2026-11-12 `jellyfin` runs on **drone-01** — it moved there when drone-02 rebooted around 2026-11-10 — and `scrypted` also holds a slice on drone-01. Two pods are stale `Unknown` leftovers from those reboots: `scrypted-…-4k2qt` (13d, drone-01) and `jellyfin-…-xzm8p` (2d, drone-02). Delete them before the first drain.
 - **Jellyfin is portable.** `jellyfin-nas-media` is plain NFS from `192.168.42.24:/media` with **no node affinity**, and `jellyfin-config-pvc` is `zfs-generic-nvmeof-csi` (NVMe-oF TCP). Neither ties Jellyfin to a node, so it can move to any node without touching storage.
-- **Stale local PVs**: two `Released` PVs carry node affinity for drone-03 (`mayastor-etcd-localpv`, `openebs-minio-localpv`). They will not block a drain; delete them at cleanup.
+- **Stale local PVs** ⚠️: nine `Released` PVs carry node affinity, not two. drone-03 has the two originally noted (`mayastor-etcd-localpv`, `openebs-minio-localpv`), **drone-02 has two more**, and drone-04 plus unimatrix-01/02/03 account for the rest. None blocks a drain; delete all nine at cleanup.
+- **The NIC rename cannot break the join.** `enp0s25` appears only in this doc, `HARDWARE.md`, and the inventory's informational `static_iface`; `ansible/roles/k3s/templates/agent.yaml.j2` sets no `node-ip` or `flannel-iface`. Only the docs need updating, never the k3s config.
 - **Provisioning path**: `bootc/Containerfile` (uCore + k3s) for the OS, `butane/node.bu.j2` for per-host identity, `ansible/roles/k3s` for the join. `bootc/justfile` has `gen-ignition` and `build-iso`.
 
 ## Phase 0 — readiness (no production hardware touched)
 
-Runs before the first chassis is powered down. Two items are hard blockers: until 0.1 and 0.3 are done, a replacement node cannot join at the right k3s version, and the four existing drones are one reboot away from breaking on their own.
+Runs before the first chassis is powered down. **0.1 and 0.2 have landed** (2026-11-12, see below), so only **0.3** is still a hard blocker: until the installer produces a joinable node, a replacement cannot join at all.
 
-### 0.1 — End the k3s skew by upgrading the cluster to 1.37.2
+### 0.1 — k3s skew: ✅ landed 2026-11-12
 
-`bootc/Containerfile` pins `K3S_VERSION=v1.37.2+k3s1`; every node runs **v1.35.6+k3s1**. Rather than build a throwaway image at the old version, upgrade the cluster: the 1.37.2 image is **already built and already staged on all four drones**, so there is no build work and the installer carries no custom tag.
+`bootc/Containerfile` pins `K3S_VERSION=v1.37.2+k3s1` (since `708e46d4`, 2026-11-04) and every node now reports **v1.37.2+k3s1**, so the skew that would have made a fresh node unjoinable is closed:
 
-Order matters — an agent may not run ahead of its API server:
+```
+$ kubectl get nodes -o custom-columns=NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion
+drone-01       v1.37.2+k3s1
+…
+unimatrix-03   v1.37.2+k3s1
+```
 
-1. Control plane: `unimatrix-01`, `-02`, `-03`, **one at a time**. Drain, reboot into the staged image, wait for `Ready` and etcd quorum before the next.
-2. Then the drones, drained one at a time. drone-04 is never rebooted casually (see the storage-node note in `AGENTS.md`).
-3. Confirm `kubectl get nodes` reports `v1.37.2+k3s1` everywhere, Argo is Synced/Healthy, Gatus green.
+`kubeletVersion` is the running agent, so the control plane and all four drones already rebooted into the 1.37.2 image, and Argo reports everything Synced/Healthy.
 
-**Verify first:** this is a two-minor jump (1.35 → 1.37, skipping 1.36), the range where removed APIs live. `pluto detect-all-in-cluster` (or `kubent`) against the live cluster settles it in minutes. The manifests are current-API; the `pod-security.kubernetes.io/enforce-version: v1.35` labels are cosmetic.
+What remains is a paper trail, not a gate. This was a two-minor jump (1.35 → 1.37, skipping 1.36), the range where removed APIs live; run `pluto detect-all-in-cluster` (or `kubent`) once if you want it recorded. The manifests are current-API, and the `pod-security.kubernetes.io/enforce-version: v1.35` labels are cosmetic.
 
-Once this lands, 0.3's switch target is plain `latest`, and the "deploy at 1.35.6, rebase later" step disappears from the plan entirely.
+Because this landed, 0.3's switch target is plain `latest`, and the "deploy at 1.35.6, rebase later" step does not exist.
 
-### 0.2 — Clear the staged deployment
+### 0.2 — Staged deployment: ✅ moot
 
-`rpm-ostreed` runs `AutomaticUpdatePolicy=stage`, and the weekly Sunday build republished `latest` after the 1.37.2 bump. Every drone currently has `2026.11.08` staged — the same digest, `sha256:da4d862c…` — so a reboot boots an agent at 1.37.2 against a 1.35.6 server.
+`rpm-ostreed` runs `AutomaticUpdatePolicy=stage`, and the weekly Sunday build republished `latest` after the 1.37.2 bump. The hazard was real — a drone rebooted into the staged `2026.11.08` image (`sha256:da4d862c…`) would have run an agent at 1.37.2 against a 1.35.6 server. The nodes have since rebooted into a 1.37.2 image and the API server is on 1.37.2 too (`kubeletVersion` proves both halves), so the mismatch never appeared. All nodes still report the same `44.20261023.3.1` base, though, so a newer build may be pending.
 
-If 0.1 is done first this is a no-op: rebooting into that image *is* the upgrade. Confirm per node that `bootc status` shows the expected booted version and nothing unexpected staged.
+Keep it as a per-node check before touching hardware: `bootc status` must show the expected booted image and nothing unexpected staged. After that the standing freeze on unrelated reboots is discharged.
 
-**Do not reboot any node for any other reason until this is settled** — including the "reboot drone-03 to pick up the current kernel" line in `HARDWARE.md`.
+One correction while you are there: the "reboot drone-03 to pick up the current kernel" line in `HARDWARE.md` is obsolete — all nodes, drone-03 included, run 7.2.11-200.fc44.
 
 ### 0.3 — Make the installer produce a joinable node
 
-The ISO produces a bare FCOS install, not a cluster member. Two gaps, both manual and undocumented today.
+The ISO produces a bare FCOS install, not a cluster member. Two gaps, both manual — one documented below, one decided to stay manual rather than wired into the role.
 
-**Bootc switch.** `butane/node.bu.j2` is `variant: fcos` and `build-iso` wraps it into a plain FCOS installer, but the nodes boot `ghcr.io/kevindurb/k8s-node` — confirmed live: `bootc status` reports `ostreeContainer`, stateroot `fedora-coreos`. Nothing in the repo performs the switch. Either document `sudo bootc switch ghcr.io/kevindurb/k8s-node:latest` + reboot as an explicit install step, or automate it with a first-boot unit in the ignition.
+**Bootc switch.** `butane/node.bu.j2` is `variant: fcos` and `build-iso` wraps it into a plain FCOS installer, but the nodes boot `ghcr.io/kevindurb/k8s-node` — confirmed live: `bootc status` reports `ostreeContainer`, stateroot `fedora-coreos`. Nothing in the repo performs the switch. Options considered, and where they landed:
 
-**Tailscale.** `ansible/roles/tailscale/tasks/main.yml` runs `tailscale up --accept-dns=false --ssh` with no auth key (`tailscale_auth_key` is declared and unused) and no `--advertise-tags`. A fresh node therefore needs an interactive login and comes back **untagged**, not `tag:k8s-node` — a different ACL position from every other node. It also cannot resolve `ansible_host: drone-03` before it is on the tailnet, so the current Step 4 → Step 5 ordering is not achievable as written. Fix by supplying an auth key carrying `tag:k8s-node` (with `--advertise-tags`), or by running the first join from the LAN with `-e ansible_host=192.168.42.30`.
+1. **Install from the node image directly** — ❌ **ruled out, verified 2026-11-12.** The pinned installer image (`quay.io/coreos/coreos-installer:release`, version **0.27.0**) exposes no `--target-imgref` on either `iso customize` or `install`, so the customized ISO cannot be pointed at `ghcr.io/kevindurb/k8s-node`. Re-check only if the `:release` tag moves and its help grows the flag.
+2. **Automate it** with a first-boot systemd unit in the ignition — works, but adds a unit plus a reboot to the boot path for three installs, and leaves the ignition harder to reason about when a boot fails.
+3. **Document it** as the explicit two commands in Step 4 — ✅ **chosen.** Three nodes, once each; a hands-on reboot is worth less than an extra moving part in the first-boot path.
+
+**Tailscale.** ✅ **decided 2026-11-12: keep the join manual too.** `ansible/roles/tailscale/tasks/main.yml` stays exactly as it is — `tailscale up --accept-dns=false --ssh`, no key, no tags — so the role is unchanged and no credential is threaded through `provision.yml`. The first join on each fresh node is done by hand, before Ansible, with a **reusable preauth key tagged `tag:k8s-node`**:
+
+```sh
+sudo tailscale up --accept-dns=false --ssh \
+  --auth-key=tskey-auth-… --advertise-tags=tag:k8s-node
+```
+
+Why it cannot be skipped: without a tagged key the node comes back **untagged**, which is worse than a different ACL position — an untagged device becomes an *owned device*, reachable only through the own-device rules, because `tag:k8s-node` has no network grants of its own and node SSH is `group:admins → tag:k8s-node` (`docs/tailscale-acl-hardening.md` already tracks this gap, around line 464). `--advertise-tags` only works when the key itself carries the tag, so create the key tagged, not plain.
+
+It also cannot resolve `ansible_host: drone-03` before it is on the tailnet, so the join is not reachable at all until this runs. The very first `provision.yml` can run over the LAN either way — `-e ansible_host=192.168.42.23` — which is the fallback if the Tailscale step has to wait.
 
 ### 0.4 — Validate one mini end to end, without the cluster
 
@@ -84,33 +101,35 @@ Record `lsblk` for all three units — disk interface is the one field that vari
 
 All three swaps depend on install → switch → join → Ready, and that cannot be rehearsed as `drone-03` while `drone-03` is live. Install one unit as `test-node` on an address outside the cluster range (e.g. `192.168.42.30`), run `provision.yml --limit test-node`, confirm `Ready`, then drain/delete and wipe.
 
-This is the cheapest place to catch a wrong interface name in the ignition, a missing Tailscale auth key, or a version mismatch — an evening's work instead of a production node.
+This is the cheapest place to catch a wrong interface name in the ignition, a forgotten manual `tailscale up` (or a key that came back untagged), or a version mismatch — an evening's work instead of a production node.
 
 ### 0.6 — Git-only changes that are safe now
 
-**Scrypted** — it does not use the GPU (see the Scrypted section). Its HomeKit path is a remux, not a transcode, and `nvidia-smi` on drone-01 shows no processes. Change it now, while the P620 is still installed as a revert:
+**Scrypted** — ✅ **landed 2026-11-12** (`apps/scrypted/deployment.yml`): `v0.147.0-noble-amd`, no `runtimeClassName`, no GPU selector, no `nvidia.com/gpu` limit. It does not use the GPU (see the Scrypted section). Its HomeKit path is a remux, not a transcode, and `nvidia-smi` on drone-01 showed no processes, so this landed while the P620 was still installed as a revert:
 
 - image → `ghcr.io/koush/scrypted:v0.147.0-noble-amd@sha256:9c8f6dff157be7acc074712e3c050e7dc0a898e1b2c00ede457840f652c8011d`
-- drop `runtimeClassName: nvidia`, the `nvidia.com/gpu.product` selector and the `nvidia.com/gpu: '1'` limit
-- keep `hostNetwork: true` + `dnsPolicy: ClusterFirstWithHostNet` (HomeKit needs Bonjour)
+- dropped `runtimeClassName: nvidia`, the `nvidia.com/gpu.product` selector and the `nvidia.com/gpu: '1'` limit
+- kept `hostNetwork: true` + `dnsPolicy: ClusterFirstWithHostNet` (HomeKit needs Bonjour)
 
 `-noble-amd` needs `/dev/dri` plus `supplementalGroups: [105]` (the `render` group) before it accelerates anything; that arrives with the Vega in Phase 1. Until then it behaves exactly as today.
 
-**Jellyfin does not belong here.** Dropping `runtimeClassName` while the selector still points at drone-02's P620, or landing on a node with no `/dev/dri`, silently downgrades it to software transcode. Its edits land with the drone-03 move.
+**Jellyfin does not belong here.** Dropping `runtimeClassName` while the selector still points at drone-01's P620, or landing on a node with no `/dev/dri`, silently downgrades it to software transcode. Its edits land with the drone-03 move.
 
 ## Phase 1 — swap order
 
-Phase 0 comes first; nothing here starts until 0.1–0.6 are done.
+Phase 0 comes first; nothing here starts until 0.4–0.6 are done (0.1, 0.2 and the git half of 0.3/0.6 have already landed — what is left of 0.3 is the two manual commands each install runs).
 
-1. **Swap drone-03**, validate. Jellyfin keeps running on drone-02's P620 throughout.
+1. **Swap drone-03**, validate. Jellyfin keeps running on **drone-01's** P620, which this step does not touch.
 2. **Move Jellyfin to drone-03's Vega 11**, validate transcoding.
-3. **Swap drone-02** — now GPU-free, because Jellyfin already left it.
-4. **Swap drone-01** — the last P620 retires with the chassis. Scrypted came off its GPU back in Phase 0, so nothing is waiting on this.
+3. **Swap drone-02** — GPU-free, and it has not hosted Jellyfin since its 2026-11-10 reboot.
+4. **Swap drone-01** — the last P620 retires with the chassis. By then nothing runs on it: Scrypted came off its GPU back in Phase 0, Jellyfin is on the Vega.
 5. **Retire gpu-operator** and switch NFD to `vendor`+`device` PCI labels — Phase 4 below.
 
-This ordering means the replacement transcode path is proven before the only node Jellyfin can fall back to is touched, and the operator teardown stays single-variable at the end. **One node in flight at a time**, and one Jellyfin move, with validation between each. drone-01 is no longer a GPU node in any operative sense — Scrypted comes off its P620 in Phase 0 — so it is last for one-variable-at-a-time reasons, not because a GPU leaves with it.
+This ordering proves the replacement transcode path before the only node Jellyfin can fall back to is touched, and keeps the operator teardown single-variable at the end. **One node in flight at a time**, and one Jellyfin move, with validation between each.
 
-## Jellyfin → Vega 11 (after Step 1, before drone-02)
+Note the placement correction: drone-01 is not a bystander — it is the node transcoding right now, and its P620 is the rollback target. That is why it goes last, not because a GPU leaves with it.
+
+## Jellyfin → Vega 11 (after Step 1, before drone-01)
 
 ### Why a discrete GPU is not an option
 
@@ -169,7 +188,7 @@ The transcode hardware is stored in Jellyfin's **config, not in git** — switch
 - Enable hardware decoding for H.264 and HEVC, **leave HEVC 10-bit encoding off**
 - Enable tone mapping only if you accept the Vulkan crash risk above
 
-### Validate before touching drone-02
+### Validate before touching drone-01
 
 - [ ] Pod running on drone-03, not CrashLooping on runtime class
 - [ ] `vainfo` inside the pod reports `VAEntrypointVLD` and `VAEntrypointEncSlice` on `renderD128`
@@ -177,7 +196,7 @@ The transcode hardware is stored in Jellyfin's **config, not in git** — switch
 - [ ] One 10-bit HEVC title transcoded deliberately, to confirm it falls back rather than crashing
 - [ ] Jellyfin playback over Tailscale still works (ingress unaffected)
 
-If this fails, Jellyfin may go back to drone-02 temporarily — but drone-02 cannot be drained until it works, so treat this as the real gate on step 3. After drone-02 and drone-01 are gone there is no discrete GPU anywhere in the cluster: the only fallback is software transcode on a 4C/8T node, which is not viable for 4K or HEVC-heavy sources. That is why Phase 0 requires a 4K HDR title to be tested before any swap begins.
+If this fails, Jellyfin may go back to drone-01 temporarily — but drone-01 cannot be drained until it works, so treat this as the real gate on step 4. After drone-01 and drone-02 are gone there is no discrete GPU anywhere in the cluster: the only fallback is software transcode on a 4C/8T node, which is not viable for 4K or HEVC-heavy sources. That is why Phase 0 requires a 4K HDR title to be tested before any swap begins.
 
 ## Scrypted — no GPU, and none needed
 
@@ -362,14 +381,18 @@ Skipping the interface check is the most expensive mistake available here: the h
 ```sh
 cd ~/projects/k8s/bootc
 just gen-ignition drone-03 <iface-from-step-1> 192.168.42.23
-just build-iso drone-03
+just build-iso drone-03 /dev/nvme0n1
 ```
 
-`build-iso` hardcodes `--dest-device /dev/sda`. If Step 1 showed an NVMe disk, override it to `/dev/nvme0n1` before building, or the install will target the wrong device.
+`build-iso` takes the destination disk as its second argument (✅ landed 2026-11-12; it used to hardcode `--dest-device /dev/sda`). Pass what Step 1's `lsblk` showed — `/dev/nvme0n1` for the NVMe units, `/dev/sda` for SATA — and the recipe has no default so a forgotten argument fails instead of guessing. Getting this wrong installs over the wrong device.
 
 ### Step 3 — Retire the old node
 
 ```sh
+# 1. clear pods left Unknown by earlier reboots
+kubectl get pods -A --field-selector status.phase=Unknown
+
+# 2. drain and retire
 kubectl drain drone-03 --delete-emptydir-data --ignore-daemonsets
 kubectl delete node drone-03
 ```
@@ -387,12 +410,21 @@ sudo bootc switch ghcr.io/kevindurb/k8s-node:latest
 sudo systemctl reboot
 ```
 
+If the disk turns out to already be the node image, this block is skipped — continue to the checks below. With 0.3's option 1 ruled out it never is: the ISO is always bare FCOS, so expect the two commands every time.
+
+Then bring the node onto the tailnet by hand (0.3 — the Ansible role does not do this), with a reusable key **created already tagged `tag:k8s-node`**:
+
+```sh
+sudo tailscale up --accept-dns=false --ssh \
+  --auth-key=tskey-auth-… --advertise-tags=tag:k8s-node
+```
+
 After the reboot, confirm before touching k3s:
 
 - `hostname` returns `drone-03`
 - the static IP answers: `ping 192.168.42.23`
 - `bootc status` reports `ghcr.io/kevindurb/k8s-node` and nothing unexpected staged
-- `tailscale status` lists the node **tagged `tag:k8s-node`** (this needs the auth key from 0.3)
+- `tailscale status` lists the node **tagged `tag:k8s-node`** — an untagged node is an owned device and will not accept the `group:admins → tag:k8s-node` SSH rule
 - `ssh core@drone-03` works
 - `/dev/dri/renderD128` exists (proves `amdgpu` loaded — see the idle-power note)
 
@@ -400,11 +432,15 @@ After the reboot, confirm before touching k3s:
 
 ```sh
 ansible-playbook ansible/provision.yml -i ansible/inventory/prod.yml --limit drone-03
+# if the tailnet name does not resolve yet, go over the LAN instead:
+#   … --limit drone-03 -e ansible_host=192.168.42.23
 ```
+
+The `tailscale` role in that run is a no-op re-`up` — it carries no key, so the join already happened manually in Step 4.
 
 `provision.yml` runs several plays; the ones that matter for a rejoin are `base` (timezone, SSH keys, `tuned` profile) and `k3s`, which fetches the token from `192.168.42.1`, templates `/etc/rancher/k3s/config.yaml` from `ansible/roles/k3s/templates/agent.yaml.j2`, and starts `k3s-agent.service`. The `k3s` play already waits for the node to reach Ready.
 
-Confirm `kubectl get node drone-03` reports **Ready** and that `kubeletVersion` matches the rest of the cluster — `v1.37.2+k3s1` if Phase 0.1 landed. A mismatch means the node booted a different image than expected; check `bootc status` before anything else.
+Confirm `kubectl get node drone-03` reports **Ready** and that `kubeletVersion` matches the rest of the cluster (`v1.37.2+k3s1`). A mismatch means the node booted a different image than expected; check `bootc status` before anything else.
 
 ### Step 6 — Validate
 
@@ -414,6 +450,7 @@ Do not proceed to the next node until every line passes:
 - [ ] `democratic-csi-node` pod running on the node
 - [ ] `healthchecks-cronjob-drone-03` schedules and its Jobs complete
 - [ ] Pods that were displaced by the drain are Ready (some will land here)
+- [ ] No `Unknown` pods left over from the old node (`kubectl get pods -A --field-selector status.phase=Unknown`)
 - [ ] Argo CD: all apps **Synced / Healthy**
 - [ ] Gatus: all endpoints green
 - [ ] Idle draw at the wall ≈ **11 W**, not ≈ 18 W — the higher number means `amdgpu` firmware did not load
@@ -424,15 +461,17 @@ Do not proceed to the next node until every line passes:
 ### Step 7 — Cleanup after all three
 
 - Update `ansible/inventory/prod.yml`: `static_iface` for drone-01/02/03 still says `enp0s25`. Note that `static_iface` and `static_ip` are **not consumed by any playbook or template** — they are documentation only, so this is accuracy rather than correctness. Worth doing anyway, so the inventory doesn't lie.
-- Update `HARDWARE.md` CPU/RAM/GPU rows and the cluster summary. Mid-swap the inventory is 2× P620 (2 GB each); at the end it is **zero discrete GPUs** — the GTX 1060 leaves for another project. Also correct the summary's total RAM 120 → 112 GiB and cores 22 / 16 vCPUs → 26 / 52 threads, and the drone-03 iGPU row (Intel HD → Vega 11).
-- Delete the two stale `Released` PVs bound to drone-03.
+- Update `HARDWARE.md` CPU/RAM/GPU rows and the cluster summary. Note it is already wrong before the swap, so fix it early rather than only here: line 86 claims GPUs only exist on drone-01 and drone-04 (drone-02 has a P620 too), line 5 says kernel 7.0/7.1 (live is 7.2.11), the per-node OS strings are stale, and the "reboot drone-03 for the current kernel" note is obsolete. Mid-swap the inventory is 2× P620 (2 GB each); at the end it is **zero discrete GPUs** — the GTX 1060 leaves for another project. Also correct the summary's total RAM 120 → 112 GiB and cores 22 / 16 vCPUs → 26 / 52 threads, and the drone-03 iGPU row (Intel HD → Vega 11).
+- Delete all nine stale `Released` PVs, not just drone-03's two: drone-03 and drone-02 have two each (`mayastor-etcd-localpv`, `openebs-minio-localpv`), the rest are on drone-04 and unimatrix-01/02/03.
 - Record the final GPU state: Jellyfin on Vega 11, Scrypted on CPU. Confirm nothing still selects `nvidia.com/gpu.product: Quadro-P620-SHARED`.
 
 ## Rollback
 
 Per node, and only until all three are validated: reinstall the original SSD in the Haswell chassis, power it on, and re-run Step 5 to rejoin. The ignition config is static and the k3s config is templated, so a rejoin is a few minutes of work.
 
-**Jellyfin rolls back with git.** Reverting the deployment change returns it to `runtimeClassName: nvidia` + the P620 selector; on drone-02 that still works until drone-02 is drained. After drone-02 is gone, the only fallback is the Vega 11 — so do not consider drone-02 swapped until the Vega 11 path is proven.
+**Jellyfin rolls back with git.** Reverting the deployment change returns it to `runtimeClassName: nvidia` + the P620 selector; on drone-01 that still works until drone-01 is drained in step 4. After that the only fallback is the Vega 11 — so do not consider drone-01 swapped until the Vega 11 path is proven.
+
+The rollback window is wider than the swap order suggests: drone-01's P620 is both the live transcode node today and the revert target, and it is the last chassis to leave. Nothing needs to be re-provisioned to get back to a working GPU transcode path until step 4.
 
 Keep all three Haswell SSDs — and their RAM, if it was pulled — until the whole migration is done. Do not repurpose or wipe them early.
 
@@ -441,9 +480,10 @@ Keep all three Haswell SSDs — and their RAM, if it was pulled — until the wh
 | Risk | Mitigation |
 | --- | --- |
 | Wrong interface name in the ignition config | Discover it on a live USB in Step 1 |
-| `--dest-device /dev/sda` against an NVMe disk | `lsblk` in Step 1, override before `build-iso` |
+| `--dest-device /dev/sda` against an NVMe disk | Fixed — `build-iso` takes the disk as an explicit argument; `lsblk` in Step 1 tells you which |
 | Legacy/CSM boot | UEFI-only, Secure Boot off — otherwise no `amdgpu` firmware, so 18 W idle and no transcoding |
-| k3s agent 1.37.2 vs server 1.35.6 | Phase 0.1 upgrades the cluster first; never reboot a node into the staged image before the control plane is on 1.37.2 |
+| Assuming Jellyfin is pinned to drone-02 | It floats between the two P620 nodes and currently runs on drone-01. Re-check `kubectl get pod -n jellyfin -o wide` before every drain |
+| Stale `Unknown` pods masking a reschedule problem | Delete them before draining (Step 3) and check for none again in Step 6 |
 | Jellyfin left on `runtimeClassName: nvidia` | Remove it with the selector, or the pod will not start on drone-03 |
 | Losing HEVC 10-bit encode | Accepted — Vega 11 cannot do it. Test an HDR title first |
 | Vega 11 Vulkan tone-mapping crash (`error 139`) | Leave Vulkan tone-mapping off for 10-bit HDR, or transcode to H.264 |
