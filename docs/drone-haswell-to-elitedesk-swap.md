@@ -150,6 +150,8 @@ That is a **Fedora CoreOS default** baked in at install time, present identicall
 
 Consequence for the swap: the Ryzen 5 PRO 2400GE is 4C/8T, so with `nosmt` these nodes present **4 CPUs each**, exactly like the i5-4590 Haswells they replace — which have no SMT to lose. Nothing regresses, but there is a free 2× CPU on the table if `nosmt` is dropped from the node image (`rpm-ostree kargs --delete=mitigations=auto,nosmt`, or a `--karg` at install). That is a deliberate security trade, not a default to change casually.
 
+**Read the thread count with `nproc`, not `lscpu`.** `lscpu` prints `CPU(s): 8` on these boxes while only four are online, because that line counts *present* CPUs from ACPI; the giveaway is `Thread(s) per core: 1` next to `Core(s) per socket: 4`. `nproc`, `/sys/devices/system/cpu/smt/active` and `/sys/devices/system/cpu/online` are the trustworthy readings, and this artefact caused a false "this unit has SMT disabled" call on unit 2.
+
 #### Secure Boot must be off
 
 The image is `ghcr.io/ublue-os/ucore:stable-nvidia-lts`. Its out-of-tree modules are signed with **Universal Blue's own key**, not one the HP firmware trusts:
