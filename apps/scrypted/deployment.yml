@@ -17,16 +17,13 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      runtimeClassName: nvidia
-      nodeSelector:
-        nvidia.com/gpu.product: Quadro-P620-SHARED
       volumes:
         - name: volume
           persistentVolumeClaim:
             claimName: volume
       containers:
         - name: scrypted
-          image: ghcr.io/koush/scrypted:v0.147.0-noble-nvidia@sha256:9ce2dcce0b0fd33e9d8363dd2f290c99402d28be8c7f41d309be8c0be69ee37b
+          image: ghcr.io/koush/scrypted:v0.147.0-noble-amd@sha256:9c8f6dff157be7acc074712e3c050e7dc0a898e1b2c00ede457840f652c8011d
           env:
             - name: TZ
               value: America/Denver
@@ -38,7 +35,6 @@ spec:
               memory: 100M
             limits:
               memory: 4G
-              nvidia.com/gpu: '1'
           ports:
             - name: http
               containerPort: 11080
