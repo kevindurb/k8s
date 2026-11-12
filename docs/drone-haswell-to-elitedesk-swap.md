@@ -113,6 +113,8 @@ This is the cheapest place to catch a wrong interface name in the ignition, a fo
 
 `-noble-amd` needs `/dev/dri` plus `supplementalGroups: [105]` (the `render` group) before it accelerates anything; that arrives with the Vega in Phase 1. Until then it behaves exactly as today.
 
+✅ **Validated 2026-11-12:** Argo Synced/Healthy, pod Running on **drone-03** (it left the P620 nodes on its own once the selector went), ingress answering on `https://scrypted.beaver-cloud.ts.net/`, RTSP session open against the Reolink doorbell, and **both cameras confirmed working in the iOS Home app**. 0.6 is done — nothing Scrypted-shaped remains before the swaps.
+
 **Jellyfin does not belong here.** Dropping `runtimeClassName` while the selector still points at drone-01's P620, or landing on a node with no `/dev/dri`, silently downgrades it to software transcode. Its edits land with the drone-03 move.
 
 ## Phase 1 — swap order
@@ -214,7 +216,7 @@ The one case not yet exercised: the GPU selector has kept it on drone-01/drone-0
 ghcr.io/koush/scrypted:v0.147.0-noble-amd@sha256:9c8f6dff157be7acc074712e3c050e7dc0a898e1b2c00ede457840f652c8011d
 ```
 
-It costs nothing today — the render node only matters when it actually transcodes, and that mounts with the Vega in Phase 1. An image variant change does not lose installed plugins: Scrypted keeps them in the PVC (`/server/volume/plugins`). Verify with a live view in the Home app after the change.
+It costs nothing today — the render node only matters when it actually transcodes, and that mounts with the Vega in Phase 1. An image variant change does not lose installed plugins: Scrypted keeps them in the PVC (`/server/volume/plugins`). Verified by live view in the Home app on 2026-11-12 — both cameras fine, plugins intact, pod rescheduled to drone-03.
 
 ---
 
@@ -487,7 +489,7 @@ Keep all three Haswell SSDs — and their RAM, if it was pulled — until the wh
 | Jellyfin left on `runtimeClassName: nvidia` | Remove it with the selector, or the pod will not start on drone-03 |
 | Losing HEVC 10-bit encode | Accepted — Vega 11 cannot do it. Test an HDR title first |
 | Vega 11 Vulkan tone-mapping crash (`error 139`) | Leave Vulkan tone-mapping off for 10-bit HDR, or transcode to H.264 |
-| Scrypted left on the NVIDIA runtime | Only a Phase 0 cleanup — it never used the GPU. Check anyway, or the pod fails on any node without the toolkit binaries |
+| Scrypted left on the NVIDIA runtime | Resolved — it runs `-noble-amd` with no runtime class as of 2026-11-12 (0.6), so there is nothing to fail on a node without the toolkit binaries |
 | Absolute Persistence armed in BIOS on a corporate unit | Clear it before reimaging |
 | Stale Node object colliding with the rejoin | `kubectl delete node` in Step 3, before the new node joins |
 | Expecting a 10 GbE upgrade later | Not possible — no PCIe slot. The M.2 2280 slot is the boot disk and the 2230 slot is WiFi. Accept 1 GbE. |
