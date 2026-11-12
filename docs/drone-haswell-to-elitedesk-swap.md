@@ -12,7 +12,7 @@ Replacement hardware, identical per node:
 | ------- | ----------------------------------------------------------------------------------- |
 | CPU     | AMD Ryzen 5 PRO 2400GE — 4C/8T, 3.2 GHz base / 3.8 GHz boost, 4 MB L3, **35 W**       |
 | iGPU    | Radeon RX Vega 11 — VCN1 video engine: H.264 + HEVC 8-bit encode, HEVC 10-bit decode  |
-| RAM     | **16 GB** DDR4-2666, 2× SODIMM (dual channel), 32 GB max                              |
+| RAM     | **16 GB** DDR4-2666, 2× SODIMM (dual channel), 32 GB max — ⚠️ varies per unit; the first measured unit has **22 GiB usable** |
 | Storage | SSD — **confirm SATA vs M.2 NVMe per unit**, the SKU shipped both ways                |
 | NIC     | Realtek RTL8111EPH, single 1 GbE                                                      |
 | Power   | 65 W external brick, 7.4 × 5.0 mm barrel; **~11 W idle** once the iGPU firmware loads  |
@@ -89,14 +89,46 @@ It also cannot resolve `ansible_host: drone-03` before it is on the tailnet, so 
 Do this on one unit before any of the three is scheduled. Nothing here touches Kubernetes.
 
 1. **Bench stick:** in `bootc/`, `just download-iso` then `just bench-iso`, flash `bootc/dist/bench.iso`. It is the stock FCOS live ISO with a live ignition only — it comes up on **192.168.42.90** with `sshd` and the GitHub keys, and writes nothing to disk, so it is safe on a unit you are about to install over. Everything below can then be done over SSH instead of at a console.
-2. Live USB: `ip -br link` (the Realtek will be `enp1s0`/`enp2s0`, **not** `enp0s25`), `lsblk` (SATA `/dev/sda` vs NVMe `/dev/nvme0n1`), `test -d /sys/firmware/efi`.
-3. BIOS (F10): Secure Boot → Disable, Legacy Support → Disable, UEFI order first. Clear Absolute Persistence on corporate units.
+2. Live USB: `ip -br link` (measured on the first unit: **`eno1`** — the onboard Realtek gets a firmware/DMI-derived name, so do **not** assume `enp1s0`/`enp2s0`), `lsblk` (SATA `/dev/sda` vs NVMe `/dev/nvme0n1`), `test -d /sys/firmware/efi`.
+3. BIOS (F10): Secure Boot → Disable, Legacy Support → Disable, UEFI order first. Clear Absolute Persistence on corporate units. Note a unit that arrived with **Secure Boot enabled** still boots the bench stick, because the FCOS ISO is Fedora-signed — so a successful boot is not evidence that Secure Boot is off. It must be off before the unsigned bootc node image will boot.
 4. Install, then confirm `hostname`, the static IP answering, `tailscale status`, `ssh core@…`.
-5. **Vega ID:** `lspci -nn | grep -i vga`. Raven Ridge is normally `15dd`; some Picasso parts report `15d8`. Hard gate — a wrong ID fails silently in Phase 4, because the node simply never receives the label.
-6. **Transcode:** `vainfo` (not in the base image; run it from a container) must report `VAEntrypointVLD` and `VAEntrypointEncSlice` on `renderD128`. Then one 1080p transcode and **one 4K HDR title**, deliberately: Vega 11's known loss is HEVC 10-bit encode, and its known crash is `error 139` on HEVC 10-bit HDR with Vulkan tone-mapping. After Phase 1 there is no other hardware transcode path in the cluster, so this is where you find out.
+5. **Vega ID:** `lspci -nn | grep -i vga`. Raven Ridge is normally `15dd`; some Picasso parts report `15d8`. Hard gate — a wrong ID fails silently in Phase 4, because the node simply never receives the label. Measured on the first unit: `1002:15dd` (rev d6), the expected ID.
+6. **Transcode:** ⚠️ **do not use `vainfo` as the gate.** On this hardware `vainfo` lists only MPEG2/VP9/JPEG decode plus `VAEntrypointVideoProc` — **no H.264, no HEVC, no `EncSlice`** — on both Mesa 25.0.7 and 26.2.6, while real VA-API transcoding works perfectly. Gate on ffmpeg instead, in a container:
+
+   ```sh
+   podman run --rm --privileged --device /dev/dri --entrypoint bash -i \
+     docker.io/linuxserver/ffmpeg -s <<'EOS'
+   ffmpeg -f lavfi -i testsrc2=size=3840x2160:rate=24 -t 4 \
+     -c:v libx265 -pix_fmt yuv420p10le -preset ultrafast /tmp/h.mp4 -y </dev/null
+   # decode 4K HEVC 10-bit, convert to 8-bit on the GPU, encode
+   ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -hwaccel_output_format vaapi \
+     -i /tmp/h.mp4 -vf scale_vaapi=w=1920:h=1080:format=nv12 \
+     -c:v h264_vaapi /tmp/o.mp4 -y </dev/null && echo H264_OK
+   EOS
+   ```
+
+   Feeding a 10-bit VA-API surface straight into `h264_vaapi` fails with `No usable encoding profile found` — that is a missing `scale_vaapi` conversion, not a hardware limit. Then confirm the real thing: one 1080p transcode and **one 4K HDR title**, watching for the `error 139` SIGSEGV that hits HEVC 10-bit HDR with Vulkan tone-mapping. Measured on the first unit: 1080p H.264 transcode, HEVC 8-bit encode, and 4K HEVC 10-bit → 1080p H.264/HEVC all succeeded in 1–2 s for a 4 s clip.
 7. **Idle power:** ≈ 11 W at the wall, not ≈ 18 W. The higher figure means `amdgpu` firmware did not load.
 
 Record `lsblk` for all three units — disk interface is the one field that varies by SKU — but only one needs the full test.
+
+#### 0.4 results — first unit, 2026-11-12
+
+Bench stick booted on a unit whose internal disk still held Windows. Read-only over SSH, nothing written:
+
+| | |
+|---|---|
+| Model | `HP EliteDesk 705 G4 DM 35W (TAA)`, board `83E9`, BIOS `Q26 Ver. 02.18.01` (2022-04-07) |
+| CPU | `AMD Ryzen 5 PRO 2400GE`, 4C/8T, 3.8 GHz max — as specified |
+| RAM | **22 GiB usable (~24 GB installed)** — *not* the 16 GB in the table above; measure per unit (`free -h`) |
+| Disk | **`/dev/nvme0n1`**, `KINGSTON SA2000M81000G` 931.5 GiB — **NVMe**, and `sn 50026B7683E965AF` identifies the unit |
+| On that disk now | Windows: `SYSTEM` 260M vfat, 16M MSR, 930.6G ntfs, `Windows RE Tools` 639M |
+| NIC | **`eno1`**, MAC `80:e8:2c:25:93:d0` |
+| Boot | **UEFI**, Secure Boot **enabled** (bench stick still boots; must be disabled for the node image) |
+| GPU | `1002:15dd` rev d6, `/dev/dri/renderD128` present, `amdgpu` loaded, VCN fw `ENC 1.15 DEC 3` |
+| Transcodes | H.264 1080p ✅, HEVC 8-bit encode ✅, 4K HEVC 10-bit decode ✅ (+ `scale_vaapi` → 1080p H.264/HEVC ✅) |
+
+The ignition for this unit therefore needs `interface-name=eno1` and `--dest-device /dev/nvme0n1`; a wrong interface name here would have been the expensive failure the bench stick exists to catch.
 
 ### 0.5 — Rehearse the join under a throwaway hostname
 
@@ -371,7 +403,7 @@ The interface name and disk device are unknown until you look, and both are bake
 
 1. Boot a live Linux USB on the EliteDesk.
 2. Record:
-   - **NIC name**: `ip -br link` — the Realtek will be something like `enp1s0` or `enp2s0`, **not** `enp0s25`.
+   - **NIC name**: `ip -br link` — measured on the first unit it is **`eno1`**, not `enp0s25` and not necessarily `enp1s0`/`enp2s0` either. Never guess this one.
    - **Disk device**: `lsblk` — `/dev/sda` for SATA, `/dev/nvme0n1` for NVMe.
    - **Disk interface**: also tells you whether the SATA bay is free or occupied.
 3. Confirm UEFI: `test -d /sys/firmware/efi && echo UEFI`.
@@ -485,12 +517,13 @@ Keep all three Haswell SSDs — and their RAM, if it was pulled — until the wh
 
 | Risk | Mitigation |
 | --- | --- |
-| Wrong interface name in the ignition config | Discover it on a live USB in Step 1 |
+| Wrong interface name in the ignition config | Discover it on a live USB in Step 1 — it was `eno1` on the first unit, i.e. not `enp*s*` at all |
 | `--dest-device /dev/sda` against an NVMe disk | Fixed — `build-iso` takes the disk as an explicit argument; `lsblk` in Step 1 tells you which |
 | Legacy/CSM boot | UEFI-only, Secure Boot off — otherwise no `amdgpu` firmware, so 18 W idle and no transcoding |
 | Assuming Jellyfin is pinned to drone-02 | It floats between the two P620 nodes and currently runs on drone-01. Re-check `kubectl get pod -n jellyfin -o wide` before every drain |
 | Stale `Unknown` pods masking a reschedule problem | Cleared 2026-11-12, but re-check before every drain — list all pods and filter, since `--field-selector status.phase=Unknown` misses them |
 | Jellyfin left on `runtimeClassName: nvidia` | Remove it with the selector, or the pod will not start on drone-03 |
+| `vainfo` used as the transcode gate | It under-reports on this hardware (no H.264/HEVC, no `EncSlice`) while VA-API actually works — gate on a real ffmpeg transcode instead (0.4) |
 | Losing HEVC 10-bit encode | Accepted — Vega 11 cannot do it. Test an HDR title first |
 | Vega 11 Vulkan tone-mapping crash (`error 139`) | Leave Vulkan tone-mapping off for 10-bit HDR, or transcode to H.264 |
 | Scrypted left on the NVIDIA runtime | Resolved — it runs `-noble-amd` with no runtime class as of 2026-11-12 (0.6), so there is nothing to fail on a node without the toolkit binaries |
