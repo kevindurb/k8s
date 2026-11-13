@@ -23,7 +23,7 @@ spec:
             claimName: volume
       containers:
         - name: scrypted
-          image: ghcr.io/koush/scrypted:v0.147.0-noble-amd@sha256:9c8f6dff157be7acc074712e3c050e7dc0a898e1b2c00ede457840f652c8011d
+          image: ghcr.io/koush/scrypted:v0.148.0-noble-amd@sha256:ea7b849342c4bb8b123b87909d92ff64b49715c9cdd7115a626e2462d19b65b7
           env:
             - name: TZ
               value: America/Denver
