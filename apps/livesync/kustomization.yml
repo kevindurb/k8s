@@ -1,0 +1,32 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: livesync
+namePrefix: livesync-
+
+resources:
+  - ./deployment.yml
+  - ./credentials-sealed-secret.yml
+
+# Deliberately no components/app-pod-hardening or app-tmp-dirs: the image runs
+# as 5984:5984 and deployment.yml carries an explicit securityContext instead.
+components: []
+
+configMapGenerator:
+  - name: config
+    files:
+      - zz-livesync.ini
+      - init-vault.sh
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - livesync.yml=gatus.yml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: livesync
