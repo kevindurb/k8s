@@ -458,6 +458,29 @@ format=vulkan,hwmap=derive_device=vaapi,format=vaapi,scale_vaapi=format=nv12:out
 
 Note the chain's shape matters: `hwmap=derive_device=vulkan` straight into `libplacebo` fails (`-542398533`, generic external-library error) — it has to go through `drm_prime`, which is what Jellyfin does.
 
+#### The first real playback ran at 0.5× — and that is the output size
+
+The first HDR playback after re-enabling tone mapping used the correct Vulkan path (`-init_hw_device drm=… -init_hw_device vaapi=va@dr -init_hw_device vulkan=vk@dr -filter_hw_device vk`, `libplacebo=…:range=pc`) and played, but at **0.5×**. The client had asked for **4K output at 75 Mbps H.264**:
+
+```
+-vf "…,libplacebo=upscaler=none:downscaler=none:format=bgra:…"   ← no w/h ⇒ full 3840x2160
+-codec:v:0 h264_vaapi -b:v 75147492
+```
+
+Tone-mapping at source resolution is 4× the pixel work of the 1080p benchmark. Measured on the same remux, 30 s each, whole chain, stock image:
+
+| Output | Encoder | Speed |
+|---|---|---|
+| 4K (3840×2160) | h264 @ 75 Mbps | **0.59×** |
+| 4K (3840×2160) | hevc @ 20 Mbps | 0.65× |
+| 1080p | h264 @ 12 Mbps | **2.14×** |
+| 1080p | hevc @ 8 Mbps | 2.23× |
+| 720p | h264 @ 4 Mbps | 3.02× |
+
+Encode choice barely matters (0.59 vs 0.65 at 4K, 2.14 vs 2.23 at 1080p), so the cost is the **tone map at 4K**, not the encoder. For reference, 4K output with tone mapping *off* measures ~1.1× — even a plain 4K H.264 encode at 75 Mbps is marginal on Vega 11, so a 4K transcode is not sustainable on this iGPU in any configuration.
+
+**Practical rule: tone-mapped HDR is realtime up to 1080p output (~2.1×) and not at 4K (~0.6×).** In a client, cap the quality at 1080p (or ~10 Mbps) for HDR titles — that is a per-client setting, not a server one. The better answer for a 4K display is to avoid transcoding entirely with a client that direct-plays HEVC 10-bit HDR (Jellyfin Media Player, Android TV, most TV apps); a browser always transcodes HDR.
+
 #### Why the earlier attempts hit OpenCL anyway
 
 `EncodingHelper.GetInputVideoHwaccelArgs` falls back to OpenCL for AMD when its Vulkan gate is false:
