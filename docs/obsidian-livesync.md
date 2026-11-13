@@ -32,9 +32,22 @@ Do this in order; the first sync is the only step that is hard to undo.
    - Username / password: the vault user from above
    - Database name: `obsidiannotes`
    - E2EE passphrase: **set one before the first sync** (see below)
+
+   When the wizard asks how to set up, choose the **Join / Fetch** path, never Rebuild (see below).
 3. Write a test note, wait for the status bar to settle, then delete the pod and confirm the note comes back.
 4. On iOS: install Obsidian and the plugin, connect Tailscale, and join using the **Setup URI** from the desktop (`Copy settings as a new Setup URI`). Verify a phone note reaches the desktop, and an offline edit syncs after reconnecting.
 5. Once both directions work, repeat with the real vault, and remove the Obsidian vault from Syncthing on every device.
+
+## Setup path: Join, not Rebuild
+
+The vault user is deliberately **not** a CouchDB server admin, so the plugin's **Rebuild** path fails with `401 You are not a server admin`: Rebuild deletes and recreates the remote database, and CouchDB only lets a server admin delete a database. This is by design upstream ([vrtmrz/obsidian-livesync#1286](https://github.com/vrtmrz/obsidian-livesync/issues/1286)). The database already exists, so always join it:
+
+1. Cancel any pending rebuild (or close the dialog) and restart onboarding.
+2. Import the Setup URI and choose **Join this device**; in the onboarding question that is "I am adding a device to an existing synchronisation setup".
+3. On the Fetch prompt choose **Compare time and take newer**, then **Keep local files even if deleted on remote**.
+4. If **No Synchronisation Settings Found** appears, choose **Use this device's settings**.
+
+Fetching connects without deleting anything; local notes then upload through normal synchronisation. After the first device is connected, generate further Setup URIs from that device rather than from the generator script.
 
 ## End-to-end encryption
 
@@ -81,6 +94,7 @@ kubectl -n livesync rollout restart deploy/livesync-app-deployment
 | Desktop syncs, phone fails | CORS must allow `capacitor://localhost`; also try the plugin's **Use Request API** setting |
 | Phone never connects | Tailscale must be connected on the phone; the plugin status bar shows "stopped" otherwise |
 | 401 from `curl` but clients work | Expected: authentication is mandatory, and an unauthenticated `/` is the health signal Gatus uses |
+| Setup fails with `401 You are not a server admin` | The plugin chose the Rebuild path; cancel it and join the existing database instead (see "Setup path" above) |
 | Pod crash-loops on start | `kubectl -n livesync logs deploy/livesync-app-deployment -c config-init` and the main container logs; the entrypoint needs a writable `/opt/couchdb/etc` |
 | Gatus reports unhealthy while CouchDB runs | An unauthenticated request returned something other than 401, meaning `require_valid_user` was not applied |
 
