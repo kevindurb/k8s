@@ -32,17 +32,17 @@
 
 ## 6. Cluster verification
 
-- [ ] 6.1 Sync the Application and confirm the namespace carries the pod-security labels, the pod reaches Ready, the init container completed, and the PVC is Bound (`kubectl -n livesync get ns,pods,pvc` plus `kubectl -n livesync logs deploy/livesync-app-deployment -c config-init`)
-- [ ] 6.2 Confirm the deployment appears in the reboot playbook's plan by running `just playbook reboot-drone-04.yml -e dry_run=true` and checking the printed scale targets include `livesync/livesync-app-deployment`
-- [ ] 6.3 From a tailnet device, verify unauthenticated `GET https://livesync.<tailnet>.ts.net/` returns `401`, authenticated admin `GET` returns the CouchDB welcome document, and the TLS chain is trusted without warnings
-- [ ] 6.4 Verify CORS for all three origins with `curl -H 'Origin: <origin>'` and confirm each allowed origin is echoed while an unrelated origin is not
-- [ ] 6.5 Verify the `postStart` result: the vault database exists in `_all_dbs`, `_security` lists only the vault user as member, the vault user can write to that database, and admin-only endpoints refuse the vault user
-- [ ] 6.6 Restart the pod twice and confirm the database, documents written by the vault user, and the vault user's password all still work, proving initialisation is idempotent and the seeded config survives
-- [ ] 6.7 Confirm Gatus reports the endpoint healthy, then scale the deployment to 0 and confirm it turns unhealthy, then restore it and confirm it returns to healthy
+- [x] 6.1 Sync the Application and confirm the namespace carries the pod-security labels, the pod reaches Ready, the init container completed, and the PVC is Bound (`kubectl -n livesync get ns,pods,pvc` plus `kubectl -n livesync logs deploy/livesync-app-deployment -c config-init`)
+- [x] 6.2 Confirm the deployment appears in the reboot playbook's plan by running `just playbook reboot-drone-04.yml -e dry_run=true` and checking the printed scale targets include `livesync/livesync-app-deployment`
+- [x] 6.3 From a tailnet device, verify unauthenticated `GET https://livesync.<tailnet>.ts.net/` returns `401`, authenticated admin `GET` returns the CouchDB welcome document, and the TLS chain is trusted without warnings
+- [x] 6.4 Verify CORS for all three origins with `curl -H 'Origin: <origin>'` and confirm each allowed origin is echoed while an unrelated origin is not
+- [x] 6.5 Verify the `postStart` result: the vault database exists in `_all_dbs`, `_security` lists only the vault user as member, the vault user can write to that database, and admin-only endpoints refuse the vault user
+- [x] 6.6 Restart the pod twice and confirm the database, documents written by the vault user, and the vault user's password all still work, proving initialisation is idempotent and the seeded config survives
+- [x] 6.7 Confirm Gatus reports the endpoint healthy, then scale the deployment to 0 and confirm it turns unhealthy, then restore it and confirm it returns to healthy
 
 ## 7. Client bring-up and rehearsal
 
-- [ ] 7.1 Write `docs/obsidian-livesync.md` with the operational procedure (server URL, credentials, rehearsal-then-real vault order, E2EE on before first sync, Customisation Sync instead of Hidden File Sync, passphrase and Setup URI storage, rollback by deleting the Application) and verify each command and setting name in it against the running deployment
+- [x] 7.1 Write `docs/obsidian-livesync.md` with the operational procedure (server URL, credentials, rehearsal-then-real vault order, E2EE on before first sync, Customisation Sync instead of Hidden File Sync, passphrase and Setup URI storage, rollback by deleting the Application) and verify each command and setting name in it against the running deployment
 - [ ] 7.2 On the desktop, create a disposable rehearsal vault, connect the LiveSync plugin, and verify a note created locally appears remotely and survives a pod restart
 - [ ] 7.3 On iOS with Tailscale connected, open the same rehearsal vault and verify a note created on the phone appears on the desktop and an offline edit made with the VPN off queues and syncs once reconnected
 - [ ] 7.4 Enable Customisation Sync with plugins/snippets/themes, verify a new plugin appears on the second device, and confirm `workspace.json` is not synced
