@@ -17,7 +17,6 @@ resources:
   - ./jellyfin/app.yml
   - ./kiwix/app.yml
   - ./linkding/app.yml
-  - ./livesync/app.yml
   - ./makemkv/app.yml
   - ./mealie/app.yml
   - ./miniflux/app.yml

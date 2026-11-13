@@ -1,7 +1,0 @@
----
-endpoints:
-  - name: livesync
-    group: apps
-    url: http://livesync-app-service.livesync
-    conditions:
-      - '[STATUS] == 401'
