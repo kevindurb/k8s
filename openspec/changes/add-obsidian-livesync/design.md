@@ -60,7 +60,7 @@ Alternatives considered: writable rootfs (rejected: loses a hardening property f
 
 ### Database, user, and `_security` from a `postStart` hook
 
-CouchDB must be running before its database can be created, so an init container cannot do this. A `postStart` shell hook waits for the local endpoint, then idempotently:
+CouchDB must be running before its database can be created, so an init container cannot do this. A `postStart` shell hook waits for the local authenticated endpoint, then idempotently:
 
 - creates the vault database (`PUT /<db>`, treating `412` as success),
 - upserts the vault user document in `_users` with the password from the environment (treating `409` by re-reading the revision and updating, so rotating the sealed password and restarting is enough),
@@ -80,9 +80,9 @@ Chosen at first sync, because enabling it later re-uploads the vault. With it on
 
 Syncthing silently syncs the whole `.obsidian` directory. Full hidden-file sync under LiveSync would reproduce that but also make `workspace.json` (window layout, open tabs) fight between a phone and a desktop. Customisation Sync syncs an explicit list — plugins, snippets, themes, hotkeys — and is recommended; the client brings it up after basic note sync is verified.
 
-### Monitoring expects `401`, probes expect `_up`
+### Monitoring expects `401`, probes authenticate
 
-Gatus checks `http://livesync-app-service.livesync/` and requires `[STATUS] == 401`, which fails both when the service is down and when it wrongly accepts anonymous access. Kubernetes readiness/liveness use `/_up`, which returns `200` without credentials by design in CouchDB 3.x. If that assumption ever changes, the probes move to `tcpSocket` and Gatus keeps the `401` check.
+Gatus checks `http://livesync-app-service.livesync/` and requires `[STATUS] == 401`, which fails both when the service is down and when it wrongly accepts anonymous access. Kubernetes probes cannot use `401` (`httpGet` treats it as failure) and the 3.5 image turns out to protect `/_up` as well, so readiness, liveness, and startup run an `exec` shell check that requests `/_up` with the admin credentials from the environment and requires `200`. `tcpSocket` remains the fallback if the credentials ever become unusable for probes.
 
 ### One sealed secret, four keys
 
@@ -94,7 +94,7 @@ Gatus checks `http://livesync-app-service.livesync/` and requires `[STATUS] == 4
 - **Phone silently stops syncing when Tailscale disconnects** -> Enable Tailscale's on-demand/always-on profile on iOS; the plugin status dot shows "stopped".
 - **CORS mismatch works on desktop and fails on mobile** -> The bring-up checklist exercises an actual phone before the vault is considered done; origins are asserted explicitly in the manifests.
 - **Entrypoint `chmod` vs read-only rootfs** -> The seeded `emptyDir` design; verify at first rollout that the container starts rather than crash-looping.
-- **`/_up` auth assumption** -> Confirm on first deploy; fall back to `tcpSocket` probes while keeping the Gatus `401` condition.
+- **`/_up` auth assumption** -> Confirmed wrong on 3.5.3: `/_up` returns `401` unauthenticated. Probes authenticate with the admin credentials from the environment via `exec`; the Gatus `401` check is unchanged.
 - **Unbounded revision growth** -> `_default` compaction thresholds; watch PVC usage occasionally.
 - **E2EE passphrase loss is unrecoverable server-side** -> Passphrase and Setup URI stored in a password manager; devices remain full copies, so recovery from any device is also possible.
 - **Single storage node; CouchDB is down during a drone-04 reboot** -> Clients queue changes and reconnect; the existing reboot playbook scales the workload down and back up automatically.

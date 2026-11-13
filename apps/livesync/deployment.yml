@@ -107,28 +107,35 @@ spec:
             postStart:
               exec:
                 command: [/bin/sh, /opt/config/init-vault.sh]
-          # /_up is deliberately unauthenticated; the Gatus check below still
-          # asserts that an unauthenticated request to / is refused.
+          # CouchDB 3.5 protects /_up as well, so the probes authenticate with
+          # the admin credentials from the environment. The Gatus check below
+          # still asserts that an unauthenticated request to / is refused.
           startupProbe:
-            httpGet:
-              path: /_up
-              port: http
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - '[ "$(curl -s -o /dev/null -w "%{http_code}" -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up")" = 200 ]'
             periodSeconds: 5
             failureThreshold: 30
           readinessProbe:
-            httpGet:
-              path: /_up
-              port: http
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - '[ "$(curl -s -o /dev/null -w "%{http_code}" -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up")" = 200 ]'
             initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 3
+            timeoutSeconds: 5
           livenessProbe:
-            httpGet:
-              path: /_up
-              port: http
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - '[ "$(curl -s -o /dev/null -w "%{http_code}" -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up")" = 200 ]'
             initialDelaySeconds: 40
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 10
           resources:
             requests:
               memory: 256M

@@ -29,13 +29,13 @@ json_escape() {
 }
 
 i=0
-until curl -fsS -o /dev/null "$base/_up" 2>/dev/null; do
+until curl -fsS -m 5 -u "$admin" -o /dev/null "$base/_up" 2>/dev/null; do
   i=$((i + 1))
-  if [ "$i" -ge 120 ]; then
+  if [ "$i" -ge 60 ]; then
     log "couchdb did not become ready; leaving initialisation for the next start"
     exit 0
   fi
-  sleep 1
+  sleep 2
 done
 
 status=$(curl -sS -o /dev/null -w '%{http_code}' -u "$admin" -X PUT "$base/$db")
