@@ -38,8 +38,11 @@ spec:
             - |
               set -eu
               mkdir -p /etc-couchdb/local.d
-              cp -a /opt/couchdb/etc/. /etc-couchdb/
+              # -a would try to preserve the emptyDir root's timestamps, which
+              # a non-root user cannot do; a plain recursive copy is enough.
+              cp -R /opt/couchdb/etc/. /etc-couchdb/
               cp /config/zz-livesync.ini /etc-couchdb/local.d/zz-livesync.ini
+              chmod -R u+rwX /etc-couchdb
               chmod 0644 /etc-couchdb/local.d/zz-livesync.ini
           volumeMounts:
             - name: etc
