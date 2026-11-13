@@ -71,6 +71,10 @@ scrape_configs:
         action: drop
 
   - job_name: kubernetes-service-endpoints
+    # smartctl-exporter blocks /metrics while it polls devices; on drone-02 the
+    # 32 NVMe-oF controllers push a poll past the 10s global timeout, so one
+    # target flaps. Fast scrapes are unaffected by a longer timeout.
+    scrape_timeout: 45s
     kubernetes_sd_configs:
       - role: endpoints
     relabel_configs:

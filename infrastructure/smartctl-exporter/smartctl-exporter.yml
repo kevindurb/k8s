@@ -12,6 +12,12 @@ spec:
       containers:
         - name: smartctl-exporter
           image: quay.io/prometheuscommunity/smartctl-exporter:v0.15.0@sha256:a76e08dbf5db4781fefd1ed81c65ad46ae8d2849dae6b6d3acebcde2fc4e59d6
+          # SMART data changes slowly and every poll shells out to smartctl for
+          # every device, and a scrape that lands during a poll blocks until it
+          # finishes. On drone-02 the 32 NVMe-oF (democratic-csi) controllers
+          # make one poll take 10-30s, so poll every 5m instead of 1m.
+          args:
+            - --smartctl.interval=5m
           ports:
             - name: http
               containerPort: 9633
