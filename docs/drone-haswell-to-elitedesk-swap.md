@@ -240,7 +240,7 @@ Transcode results on real files, beyond the synthetic 0.4 checks:
 | hw decode + soft tone map + hw encode | ✅ same ~0.1× |
 | Vulkan/libplacebo tone map (`error 139` path) | inconclusive — no Vulkan ICD in `linuxserver/ffmpeg`; must be settled in Jellyfin's own image |
 
-**Operational takeaway:** HDR→SDR transcoding on Vega 11 is not realtime. HDR titles must direct-play; everything else is fine. Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated). **Update 2026-11-12:** the ~0.1× here is the *software* tone-map path. rusticl OpenCL tone mapping of a real 4K HDR remux to 960×540 runs at **3.18× realtime** — the hardware is fine, the stock Jellyfin image simply has no AMD OpenCL driver. See [HDR playback fails, and why](#hdr-playback-fails-and-why-2026-11-12).
+**Operational takeaway:** HDR→SDR transcoding on Vega 11 is not realtime. HDR titles must direct-play; everything else is fine. Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated). **Update 2026-11-12:** the ~0.1× here is the *software* tone-map path. Hardware tone mapping of a real 4K HDR remux runs at **2.27× realtime to 1080p** via libplacebo/Vulkan (or 3.18× realtime to 960×540 via rusticl OpenCL) — the hardware is fine, the stock Jellyfin image simply ships no AMD ICD of either kind. See [HDR playback fails, and why](#hdr-playback-fails-and-why-2026-11-12).
 
 ### 0.5 — Rehearse the join under a throwaway hostname
 
@@ -432,18 +432,41 @@ ffmpeg -init_hw_device opencl=ocl:0.0
   Device creation failed: -19 → No such device
 ```
 
-No Vulkan ICD either (`/usr/share/vulkan/icd.d` does not exist), so libplacebo is not an alternative. This is not a settings problem: **no Jellyfin configuration can tone-map on Vega 11 with the stock image.**
+No Vulkan ICD either (`/usr/share/vulkan/icd.d` does not exist). This is not a settings problem: **no Jellyfin configuration can tone-map on Vega 11 with the stock image.**
 
-The fix was proven in a throwaway container on drone-03, not applied:
+The hardware is fine. Both tone-map paths were measured in throwaway containers on drone-03 against the real remux, nothing applied to the cluster:
 
-| Platform | Result |
-|---|---|
-| Clover (`mesa.icd`, OpenCL 1.1) | `Failed to create image for plane 0: -59` — cannot do 10-bit |
-| **rusticl** (`rusticl.icd`, OpenCL 3.0) | works; **3.18× realtime** on the real remux at 960×540 out (`utime=3.09s` for 30 s of video) |
+| Path | What the image needs | Result |
+|---|---|---|
+| OpenCL / `tonemap_opencl` (rusticl) | `mesa-opencl-icd`, delete `/etc/OpenCL/vendors/mesa.icd`, `RUSTICL_ENABLE=radeonsi` | 3.18× realtime at 960×540 (`utime=3.09s` / 30 s) |
+| **Vulkan / `libplacebo`** | `libvulkan1` + `mesa-vulkan-drivers` — **nothing else** | **2.27× realtime at 1920×1080** (`utime=4.50s` / 60 s) |
 
-Note it needs **both** `apt-get install mesa-opencl-icd` *and* deleting `/etc/OpenCL/vendors/mesa.icd` — the package installs Clover as well, and ffmpeg picks platform 0, which is Clover and fails. `RUSTICL_ENABLE=radeonsi` is also required on Mesa 25.
+The two are not directly comparable — OpenCL was measured at 960×540, Vulkan at 1080p — but Vulkan is doing 4× the pixels and is still 2.27× realtime, and it needs no ICD surgery.
 
-**Decision 2026-11-12: tone mapping is off for now.** HDR titles therefore transcode fast but with washed-out colours. The custom image (`FROM jellyfin/jellyfin:12.4`, mesa-opencl-icd, clover ICD removed, `RUSTICL_ENABLE=radeonsi`) is the way to get correct colours, and the 3.18× measurement says the hardware is comfortably up to it — revisit before drone-01 is swapped, or accept the colour shift permanently.
+**Vulkan is the path Jellyfin documents for AMD, and it is selected automatically.** `MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs` (`GetVaapiVidFilterChain`) takes the AMD branch when `IsVulkanFullSupported()` **and** `IsVaapiDeviceSupportVulkanDrmInterop` are true and the kernel is ≥ 5.15 (`_minKernelVersionAmdVkFmtModifier`; we are on 7.2.11). Both conditions depend only on the Vulkan loader + RADV being present, verified in a throwaway container:
+
+```
+/etc/OpenCL/vendors/            intel.icd  intel_legacy1.icd     (still Intel-only — irrelevant)
+ffmpeg -init_hw_device drm=dr:/dev/dri/renderD128 -init_hw_device vulkan=vk@dr
+  PASS VK_KHR_external_memory_fd      PASS VK_EXT_external_memory_dma_buf
+  PASS VK_KHR_external_semaphore_fd   PASS VK_EXT_external_memory_host
+  PASS VK_EXT_image_drm_format_modifier
+```
+
+The chain Jellyfin then builds (reproduced verbatim from the source, not approximated) also runs clean:
+
+```
+hwmap=derive_device=drm,format=drm_prime,
+libplacebo=upscaler=none:downscaler=none:w=1920:h=1080:format=bgra:tonemapping=bt.2390:peak_detect=0:color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv,
+format=vulkan,hwmap=derive_device=vaapi,format=vaapi,scale_vaapi=format=nv12:out_range=tv
+→ frame=1439 fps=54 speed=2.27x  bench: utime=4.495s rtime=26.450s  rc=0
+```
+
+Hand-rolled `hwmap=derive_device=vulkan` before `libplacebo` fails with `-542398533 (Generic error in an external library)`; it must go through `drm_prime` as above. That is why the shape of the chain matters — don't substitute one for the other when testing.
+
+⚠️ `mesa-opencl-icd` is the *worse* fix: it installs Clover (OpenCL 1.1) alongside rusticl, ffmpeg picks Clover as platform 0, and Clover dies on 10-bit with `Failed to create image for plane 0: -59`. It needs the ICD deleted plus an env var. **Do not use it.**
+
+**Decision 2026-11-12: tone mapping is off for now**, so HDR titles transcode fast but with washed-out colours. Confirmed landed after the dashboard change: `HardwareAccelerationType=vaapi`, `EnableTonemapping=false`. The one-line image to restore correct colours is `FROM jellyfin/jellyfin:12.4` + `apt-get install -y libvulkan1 mesa-vulkan-drivers`, with **no** env vars, no ICD deletion and no other changes; Jellyfin picks the Vulkan path by itself. Revisit before drone-01 is swapped, or accept the colour shift permanently.
 
 ⚠️ **The setting cannot be changed by editing `encoding.xml`.** Jellyfin holds its config in memory and rewrites the file at shutdown, so a `sed` plus `rollout restart` silently reverts (observed). Change it in the dashboard, or stop the server first.
 
