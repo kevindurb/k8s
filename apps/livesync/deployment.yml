@@ -115,7 +115,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - '[ "$(curl -s -o /dev/null -w "%{http_code}" -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up")" = 200 ]'
+                - curl -fsS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up
             periodSeconds: 5
             failureThreshold: 30
           readinessProbe:
@@ -123,7 +123,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - '[ "$(curl -s -o /dev/null -w "%{http_code}" -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up")" = 200 ]'
+                - curl -fsS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -132,7 +132,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - '[ "$(curl -s -o /dev/null -w "%{http_code}" -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up")" = 200 ]'
+                - curl -fsS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up
             initialDelaySeconds: 40
             periodSeconds: 30
             timeoutSeconds: 10
