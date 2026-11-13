@@ -22,13 +22,28 @@ Retiring hardware: i5-4590 (Haswell, 4C/4T, 84 W), 16/24/16 GiB DDR3-1333/1600, 
 
 Net effect per node: threads 4 → 8, RAM 16/24/16 → 16/16/16, idle draw roughly 35–45 W → ~11 W. Cluster DRAM across the four drones drops from 72 GB to 64 GB.
 
+## Status at a glance (2026-11-12)
+
+| Node | State |
+|---|---|
+| **drone-03** | ✅ **Replaced and validated.** EliteDesk 705 G4 DM, `v1.37.2+k3s1`, 4 CPU / 22 GiB, `media/gpu=amd-vega` label, Jellyfin running on its Vega 11. See [Step 1 results](#step-1-results--drone-03-swapped-2026-11-12) |
+| **drone-02** | ⏳ **Not started.** Still the Haswell chassis. Blocked on BIOS work plus the single PSU, and its 56 GB `OCZ Vertex Plus` with `/var` at 80 % is in kubelet image-GC thrash, so image pulls there take ~15 min |
+| **drone-01** | ⏳ **Not started.** Still the Haswell chassis and **still holds the last Quadro P620**. It goes last on purpose: the P620 is the only working HDR transcode fallback until Jellyfin's Vega path is trusted |
+
+Cluster state, read live 2026-11-12 after the Jellyfin move:
+
+- 7 nodes `Ready`, all `v1.37.2+k3s1`; 58/58 Argo applications `Synced`.
+- Jellyfin runs on `drone-03` and tone-maps HDR through **Vulkan/libplacebo on the stock image** — no custom image, no extra packages. Realtime to 1080p (~2.1×), not to 4K (~0.6×). See [HDR tone mapping on the Vega 11](#hdr-tone-mapping-on-the-vega-11-2026-11-12).
+- **Nothing requests `nvidia.com/gpu` any more** (Jellyfin's limit and Scrypted's were both removed), so Phase 4's precondition is met — but `gpu-operator` is **still installed** (namespace up 268 days) and NFD still emits the old `pci-10de`/`Haswell-*` labels on drone-01 and drone-02.
+- Remaining work in order: swap drone-02, swap drone-01, then [Phase 4](#phase-4--retire-gpu-operator-proper-pci-labels). Step 7 doc cleanup (inventory `static_iface`, `HARDWARE.md`) is still deliberately deferred.
+
 ## What was verified before writing this
 
 Read from the live cluster, not from HARDWARE.md. Re-checked live **2026-11-12**; ✅ marks what has landed since this was written, ⚠️ what is corrected.
 
 - **Actual node CPUs** (`/proc/cpuinfo` via privileged pods): drone-01/02/03 = `Intel Core i5-4590 @ 3.30GHz`; drone-04 = `AMD Ryzen 7 2700`; unimatrix-01..03 = `Intel Core i5-3210M`.
 - **Boot mode**: drone-01/02/03 boot **legacy BIOS**; drone-04 boots UEFI. These minis must be UEFI-only.
-- **GPU placement** ⚠️: two Quadro P620s — one in drone-01, one in drone-02, each reported as 4 slices by the device plugin (MPS) and **both** labelled `nvidia.com/gpu.product: Quadro-P620-SHARED`, so a GPU pod can land on either node. As of 2026-11-12 `jellyfin` runs on **drone-01** — it moved there when drone-02 rebooted around 2026-11-10. The two stale `Unknown` leftovers from those reboots (`scrypted-…-4k2qt` on drone-01, `jellyfin-…-xzm8p` on drone-02) were ✅ **force-deleted 2026-11-12**; no replacement pods spawned and the cluster had no non-Running pods left. Jellyfin is now the only pod holding an `nvidia.com/gpu` limit. Note that `--field-selector status.phase=Unknown` does **not** match these — list `kubectl get pods -A` and filter, or you will think they are already gone.
+- **GPU placement** ⚠️: two Quadro P620s — one in drone-01, one in drone-02, each reported as 4 slices by the device plugin (MPS) and **both** labelled `nvidia.com/gpu.product: Quadro-P620-SHARED`, so a GPU pod can land on either node. **Updated 2026-11-12:** `jellyfin` no longer uses either — it moved to `drone-03`'s Vega 11 and its `nvidia.com/gpu` limit was removed, as was Scrypted's, so **no pod requests a GPU any more**; the P620s are installed but idle. The two stale `Unknown` leftovers from the 2026-11-10 reboots (`scrypted-…-4k2qt` on drone-01, `jellyfin-…-xzm8p` on drone-02) were ✅ **force-deleted 2026-11-12**; no replacement pods spawned and the cluster had no non-Running pods left. Note that `--field-selector status.phase=Unknown` does **not** match these — list `kubectl get pods -A` and filter, or you will think they are already gone.
 - **Jellyfin is portable.** `jellyfin-nas-media` is plain NFS from `192.168.42.24:/media` with **no node affinity**, and `jellyfin-config-pvc` is `zfs-generic-nvmeof-csi` (NVMe-oF TCP). Neither ties Jellyfin to a node, so it can move to any node without touching storage.
 - **Stale local PVs** ⚠️: nine `Released` PVs carry node affinity, not two. drone-03 has the two originally noted (`mayastor-etcd-localpv`, `openebs-minio-localpv`), **drone-02 has two more**, and drone-04 plus unimatrix-01/02/03 account for the rest. None blocks a drain; delete all nine at cleanup.
 - **The NIC rename cannot break the join.** `enp0s25` appears only in this doc, `HARDWARE.md`, and the inventory's informational `static_iface`; `ansible/roles/k3s/templates/agent.yaml.j2` sets no `node-ip` or `flannel-iface`. Only the docs need updating, never the k3s config.
@@ -293,14 +308,14 @@ Two notes for the real swap:
 Phase 0 comes first; nothing here starts until 0.4–0.6 are done (0.1, 0.2 and the git half of 0.3/0.6 have already landed — what is left of 0.3 is the two manual commands each install runs).
 
 1. **Swap drone-03**, validate. ✅ **done 2026-11-12** — see [Step 1 results](#step-1-results--drone-03-swapped-2026-11-12). Jellyfin keeps running on **drone-01's** P620, which this step does not touch.
-2. **Move Jellyfin to drone-03's Vega 11**, validate transcoding. ✅ **done 2026-11-12** — see [Jellyfin on Vega 11 results](#jellyfin-on-vega-11--results-2026-11-12); one HDR10 playback still open.
+2. **Move Jellyfin to drone-03's Vega 11**, validate transcoding. ✅ **done 2026-11-12** — see [Jellyfin on Vega 11 results](#jellyfin-on-vega-11--results-2026-11-12). HDR tone mapping works on the stock image via Vulkan/libplacebo; the 0.5× first playback was a 4K Firefox transcode, not a GPU limit.
 3. **Swap drone-02** — GPU-free, and it has not hosted Jellyfin since its 2026-11-10 reboot.
 4. **Swap drone-01** — the last P620 retires with the chassis. By then nothing runs on it: Scrypted came off its GPU back in Phase 0, Jellyfin is on the Vega.
 5. **Retire gpu-operator** and switch NFD to `vendor`+`device` PCI labels — Phase 4 below.
 
 This ordering proves the replacement transcode path before the only node Jellyfin can fall back to is touched, and keeps the operator teardown single-variable at the end. **One node in flight at a time**, and one Jellyfin move, with validation between each.
 
-Note the placement correction: drone-01 is not a bystander — it is the node transcoding right now, and its P620 is the rollback target. That is why it goes last, not because a GPU leaves with it.
+Note the placement correction: drone-01 is not a bystander — until 2026-11-12 it was the node transcoding, and its P620 is the rollback target if the Vega path regresses. Jellyfin now runs on drone-03, but drone-01 still goes last because removing the last P620 removes the only hardware fallback for HDR transcode.
 
 ### Step 1 results — drone-03 swapped (2026-11-12)
 
@@ -415,7 +430,7 @@ Landed as `61a0eb46`. drone-03 was labelled `media/gpu=amd-vega` **before** the 
 
 Three things worth keeping:
 
-1. **`tonemap_vaapi` does not work on this GPU.** A direct probe against the `Project Hail Mary` remux fails with `Failed to configure output pad on Parsed_tonemap_vaapi_0` / EINVAL — AMD's VPP path has no tone mapping on VCN1. So the VAAPI tone-map path always goes through **OpenCL**, never VPP.
+1. **`tonemap_vaapi` does not work on this GPU.** A direct probe against the `Project Hail Mary` remux fails with `Failed to configure output pad on Parsed_tonemap_vaapi_0` / EINVAL — AMD's VPP path has no tone mapping on VCN1. That rules out the VPP route; tone mapping has to go through Vulkan/libplacebo (see [below](#hdr-tone-mapping-on-the-vega-11-2026-11-12)).
 2. **There is no "HEVC 10-bit encoding" toggle to leave off.** 12.4 has `AllowHevcEncoding` (on) and the observed encode is `-profile:v:0 main`, i.e. 8-bit — the encoder only offers profiles the GPU can do.
 3. **`media/gpu=amd-vega` is a node label, not a git resource.** Re-apply it after any drone-03 rebuild, or Jellyfin sits Pending with an unschedulable warning — nothing in Argo will complain.
 
@@ -480,6 +495,13 @@ Tone-mapping at source resolution is 4× the pixel work of the 1080p benchmark. 
 Encode choice barely matters (0.59 vs 0.65 at 4K, 2.14 vs 2.23 at 1080p), so the cost is the **tone map at 4K**, not the encoder. For reference, 4K output with tone mapping *off* measures ~1.1× — even a plain 4K H.264 encode at 75 Mbps is marginal on Vega 11, so a 4K transcode is not sustainable on this iGPU in any configuration.
 
 **Practical rule: tone-mapped HDR is realtime up to 1080p output (~2.1×) and not at 4K (~0.6×).** In a client, cap the quality at 1080p (or ~10 Mbps) for HDR titles — that is a per-client setting, not a server one. The better answer for a 4K display is to avoid transcoding entirely with a client that direct-plays HEVC 10-bit HDR (Jellyfin Media Player, Android TV, most TV apps); a browser always transcodes HDR.
+
+**The client in that test was Firefox**, which is the worst case and worth recording: Firefox cannot direct-play HEVC 10-bit HDR, so every HDR title from the web UI is a full tone-mapped transcode, and Firefox also defaults to a high bitrate for a 4K source (`75 Mbps` here). Two consequences:
+
+- From Firefox, set **Settings → Playback → Quality → 1080p / 10 Mbps** (or the client's per-title quality picker) before playing an HDR title. That lands at ~2.1× realtime.
+- Firefox asked for **4K H.264 at 75 Mbps** from a 4K HEVC source, which is the expensive combination (tone map at 4K + 4K H.264 encode). Do not read a 0.5× Firefox transcode as "the Vega cannot tone-map" — it can, just not at that output size.
+
+If HDR playback on a TV is the goal, use a client that direct-plays and the transcoder is not involved at all.
 
 #### Why the earlier attempts hit OpenCL anyway
 
