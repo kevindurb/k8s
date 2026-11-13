@@ -240,7 +240,7 @@ Transcode results on real files, beyond the synthetic 0.4 checks:
 | hw decode + soft tone map + hw encode | ✅ same ~0.1× |
 | Vulkan/libplacebo tone map (`error 139` path) | inconclusive — no Vulkan ICD in `linuxserver/ffmpeg`; must be settled in Jellyfin's own image |
 
-**Operational takeaway:** HDR→SDR transcoding on Vega 11 is not realtime. HDR titles must direct-play; everything else is fine. Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated). **Update 2026-11-12:** the ~0.1× here is the *software* tone-map path. Hardware tone mapping of a real 4K HDR remux runs at **2.27× realtime to 1080p** via libplacebo/Vulkan (or 3.18× realtime to 960×540 via rusticl OpenCL) — the hardware is fine, the stock Jellyfin image simply ships no AMD ICD of either kind. See [HDR playback fails, and why](#hdr-playback-fails-and-why-2026-11-12).
+**Operational takeaway (corrected 2026-11-12):** the ~0.1× figures below are the *software* tone-map path, and the "HDR titles must direct-play" conclusion does not hold. Hardware tone mapping of a real 4K HDR remux runs at **2.22× realtime to 1080p** via libplacebo/Vulkan, using the stock Jellyfin image and nothing installed — it bundles its own RADV. See [HDR tone mapping on the Vega 11](#hdr-tone-mapping-on-the-vega-11-2026-11-12). Samples kept in `/var/tmp/k8s-bench-clips/` on dev (`bbb_1080_h264.mp4`, `bbb_1080_hevc.mp4`, `bbb_hdr10_4k.mp4` — the HDR one is synthesised from BBB, since every free 4K HDR sample is Drive-gated).
 
 ### 0.5 — Rehearse the join under a throwaway hostname
 
@@ -395,7 +395,7 @@ The transcode hardware is stored in Jellyfin's **config, not in git** — switch
 - [x] Pod running on drone-03, not CrashLooping on runtime class
 - [x] VA-API decode **and** encode on `renderD128` — proven from the real ffmpeg invocation (the `jellyfin/jellyfin` image has no `vainfo`)
 - [x] A forced transcode plays instead of erroring — `FFmpeg exited with code 0`, `play_method = Transcode (v:hevc a:aac)`
-- [x] One 10-bit HEVC title transcoded deliberately — **it fails** on the stock image rather than falling back; tone mapping is off until that is fixed (see below)
+- [x] One 10-bit HEVC title transcoded deliberately — **it failed** only because the pod had taken Jellyfin's OpenCL fallback; the stock image does tone-map via Vulkan (see below). Tone mapping is currently off in the dashboard.
 - [x] Playback over Tailscale still works
 
 If this fails, Jellyfin may go back to drone-01 temporarily — but drone-01 cannot be drained until it works, so treat this as the real gate on step 4. After drone-01 and drone-02 are gone there is no discrete GPU anywhere in the cluster: the only fallback is software transcode on a 4C/8T node, which is not viable for 4K or HEVC-heavy sources. That is why Phase 0 requires a 4K HDR title to be tested before any swap begins.
@@ -419,11 +419,9 @@ Three things worth keeping:
 2. **There is no "HEVC 10-bit encoding" toggle to leave off.** 12.4 has `AllowHevcEncoding` (on) and the observed encode is `-profile:v:0 main`, i.e. 8-bit — the encoder only offers profiles the GPU can do.
 3. **`media/gpu=amd-vega` is a node label, not a git resource.** Re-apply it after any drone-03 rebuild, or Jellyfin sits Pending with an unschedulable warning — nothing in Argo will complain.
 
-#### HDR playback fails, and why (2026-11-12)
+#### HDR tone mapping on the Vega 11 (2026-11-12)
 
-Playing `Project Hail Mary` (4K HDR10 remux) **fails outright** — `FFmpeg exited with code 237` on every attempt, retried in a loop. Disabling hardware *decoding* does not help: Jellyfin still builds an OpenCL tone-map chain.
-
-The container has no AMD OpenCL driver:
+Playing `Project Hail Mary` (4K HDR10 remux) **failed outright** — `FFmpeg exited with code 237` on every attempt, retried in a loop, with `-init_hw_device opencl=ocl:0.0` at the front of the command. That is Jellyfin's **OpenCL fallback**, which it takes only when its Vulkan gate is false — and the container has no AMD OpenCL driver to fall back to:
 
 ```
 /etc/OpenCL/vendors/        intel.icd  intel_legacy1.icd      (Intel only)
@@ -432,41 +430,55 @@ ffmpeg -init_hw_device opencl=ocl:0.0
   Device creation failed: -19 → No such device
 ```
 
-No Vulkan ICD either (`/usr/share/vulkan/icd.d` does not exist). This is not a settings problem: **no Jellyfin configuration can tone-map on Vega 11 with the stock image.**
-
-The hardware is fine. Both tone-map paths were measured in throwaway containers on drone-03 against the real remux, nothing applied to the cluster:
-
-| Path | What the image needs | Result |
-|---|---|---|
-| OpenCL / `tonemap_opencl` (rusticl) | `mesa-opencl-icd`, delete `/etc/OpenCL/vendors/mesa.icd`, `RUSTICL_ENABLE=radeonsi` | 3.18× realtime at 960×540 (`utime=3.09s` / 30 s) |
-| **Vulkan / `libplacebo`** | `libvulkan1` + `mesa-vulkan-drivers` — **nothing else** | **2.27× realtime at 1920×1080** (`utime=4.50s` / 60 s) |
-
-The two are not directly comparable — OpenCL was measured at 960×540, Vulkan at 1080p — but Vulkan is doing 4× the pixels and is still 2.27× realtime, and it needs no ICD surgery.
-
-**Vulkan is the path Jellyfin documents for AMD, and it is selected automatically.** `MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs` (`GetVaapiVidFilterChain`) takes the AMD branch when `IsVulkanFullSupported()` **and** `IsVaapiDeviceSupportVulkanDrmInterop` are true and the kernel is ≥ 5.15 (`_minKernelVersionAmdVkFmtModifier`; we are on 7.2.11). Both conditions depend only on the Vulkan loader + RADV being present, verified in a throwaway container:
+**The official image already ships Vulkan.** It bundles its own minimal Mesa — loader plus RADV and ANV — outside the distro paths, which is why looking in the obvious places said otherwise:
 
 ```
-/etc/OpenCL/vendors/            intel.icd  intel_legacy1.icd     (still Intel-only — irrelevant)
-ffmpeg -init_hw_device drm=dr:/dev/dri/renderD128 -init_hw_device vulkan=vk@dr
-  PASS VK_KHR_external_memory_fd      PASS VK_EXT_external_memory_dma_buf
-  PASS VK_KHR_external_semaphore_fd   PASS VK_EXT_external_memory_host
-  PASS VK_EXT_image_drm_format_modifier
+/usr/lib/jellyfin-ffmpeg/lib/libvulkan.so.1.4.355      loader
+/usr/lib/jellyfin-ffmpeg/lib/libvulkan_radeon.so       RADV (AMD)
+/usr/lib/jellyfin-ffmpeg/lib/libvulkan_intel.so        ANV (Intel)
+/usr/lib/jellyfin-ffmpeg/share/vulkan/icd.d/radeon_icd.x86_64.json
 ```
 
-The chain Jellyfin then builds (reproduced verbatim from the source, not approximated) also runs clean:
+`/usr/share/vulkan/icd.d` and `/etc/vulkan/icd.d` genuinely do not exist — checking those was a mistake. The running server confirms it works, and its startup log says so every boot:
+
+```
+VAAPI device /dev/dri/renderD128 is AMD GPU
+VAAPI device /dev/dri/renderD128 supports Vulkan DRM modifier
+VAAPI device /dev/dri/renderD128 supports Vulkan DRM interop
+```
+
+**So no custom image, no `apt-get`, nothing.** The stock `jellyfin/jellyfin:12.4` runs Jellyfin's full AMD+Vulkan tone-map chain (reproduced verbatim from `EncodingHelper.GetAmdVaapiFullVidFiltersPrefered`) at **2.22× realtime, 4K HDR10 → 1080p**, with nothing installed:
 
 ```
 hwmap=derive_device=drm,format=drm_prime,
 libplacebo=upscaler=none:downscaler=none:w=1920:h=1080:format=bgra:tonemapping=bt.2390:peak_detect=0:color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv,
 format=vulkan,hwmap=derive_device=vaapi,format=vaapi,scale_vaapi=format=nv12:out_range=tv
-→ frame=1439 fps=54 speed=2.27x  bench: utime=4.495s rtime=26.450s  rc=0
+→ frame=720 fps=53 speed=2.22x  bench: utime=2.502s rtime=13.542s  rc=0
 ```
 
-Hand-rolled `hwmap=derive_device=vulkan` before `libplacebo` fails with `-542398533 (Generic error in an external library)`; it must go through `drm_prime` as above. That is why the shape of the chain matters — don't substitute one for the other when testing.
+Note the chain's shape matters: `hwmap=derive_device=vulkan` straight into `libplacebo` fails (`-542398533`, generic external-library error) — it has to go through `drm_prime`, which is what Jellyfin does.
 
-⚠️ `mesa-opencl-icd` is the *worse* fix: it installs Clover (OpenCL 1.1) alongside rusticl, ffmpeg picks Clover as platform 0, and Clover dies on 10-bit with `Failed to create image for plane 0: -59`. It needs the ICD deleted plus an env var. **Do not use it.**
+#### Why the earlier attempts hit OpenCL anyway
 
-**Decision 2026-11-12: tone mapping is off for now**, so HDR titles transcode fast but with washed-out colours. Confirmed landed after the dashboard change: `HardwareAccelerationType=vaapi`, `EnableTonemapping=false`. The one-line image to restore correct colours is `FROM jellyfin/jellyfin:12.4` + `apt-get install -y libvulkan1 mesa-vulkan-drivers`, with **no** env vars, no ICD deletion and no other changes; Jellyfin picks the Vulkan path by itself. Revisit before drone-01 is swapped, or accept the colour shift permanently.
+`EncodingHelper.GetInputVideoHwaccelArgs` falls back to OpenCL for AMD when its Vulkan gate is false:
+
+```csharp
+else if (_mediaEncoder.IsVaapiDeviceAmd)
+{
+    if (IsVulkanFullSupported() && IsVaapiDeviceSupportVulkanDrmInterop && kernel >= 5.15)
+        → drm + vaapi + vulkan args          // what the current pod uses
+    else if (doOclTonemap)
+        → -init_hw_device opencl=ocl:0.0     // what produced exit 237
+}
+```
+
+`-init_hw_device opencl=ocl:0.0` in a transcode log is therefore the signature of "the Vulkan gate was false", not "Vulkan is missing". It is evaluated **once at server startup**, so a pod that started while detection failed keeps taking the OpenCL branch for its whole lifetime. That is what happened: the pod from before `15:46` produced `opencl=ocl:0.0`; the pod restarted at `15:46` logs `supports Vulkan DRM interop` and passes `-init_hw_device vulkan=vk@dr`. Why the earlier pod's detection returned false was never established — it could not be reproduced in either a throwaway container or the current pod, both of which select RADV — but a restart re-runs the detection, and that is the fix if it recurs. Nothing was ever missing from the image.
+
+**If an HDR transcode ever fails again, check the command in the log first:** `-init_hw_device vulkan=vk@dr` plus `libplacebo` means the good path; `opencl=ocl` means the startup detection lost, and restarting the pod re-runs it.
+
+**Decision 2026-11-12: tone mapping is off for now**, so HDR titles transcode fast but with washed-out colours. `HardwareAccelerationType=vaapi`, `EnableTonemapping=false`. Since the stock image is sufficient, this can be re-enabled in the dashboard at any time — expect the log to show `-init_hw_device vulkan=vk@dr` and a `libplacebo` filter, at ~2.2× realtime to 1080p. Revisit before drone-01 is swapped, or accept the colour shift permanently.
+
+`mesa-opencl-icd`/rusticl is **not needed** and is the worse path anyway: it installs Clover (OpenCL 1.1) alongside rusticl, ffmpeg picks Clover as platform 0, and Clover dies on 10-bit with `Failed to create image for plane 0: -59` — it needs the ICD deleted plus `RUSTICL_ENABLE=radeonsi`.
 
 ⚠️ **The setting cannot be changed by editing `encoding.xml`.** Jellyfin holds its config in memory and rewrites the file at shutdown, so a `sed` plus `rollout restart` silently reverts (observed). Change it in the dashboard, or stop the server first.
 
