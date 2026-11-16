@@ -1,0 +1,15 @@
+# Pin AHCI link power management to max_performance.
+#
+# Kernel default is `med_power_with_dipm`, which lets a SATA drive drop into a
+# low-power link state. On 2026-11-15 unimatrix-02's boot SSD (Crucial MX100,
+# ata2/host1) dropped off the bus mid-run: the device vanished from /sys/block,
+# journald's last entry is 23:35:12 mid-line, kubelet went unreachable and sshd
+# could not finish a key exchange -- while SMART still reported PASSED with 0
+# reallocated / 0 pending / 0 UDMA_CRC errors and 82% life remaining. A power
+# cycle brought it straight back, and no ATA link or reset event appears in any
+# retained boot. DIPM is the usual suspect when a drive disappears with a clean
+# SMART report, so pin every AHCI host to the highest link-power state.
+#
+# The 99- prefix matters: ATTR writes are last-writer-wins, and /usr/lib udev
+# rules sort before /etc, so nothing distro-shipped can override this.
+ACTION=="add|change", SUBSYSTEM=="scsi_host", KERNEL=="host[0-9]*", ATTR{link_power_management_policy}="max_performance"
