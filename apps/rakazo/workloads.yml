@@ -1,7 +1,10 @@
 ---
 # api and worker both mount the bot-data volume, which is a single-writer zvol:
 # there is no RWX class here, so both are pinned to one node with the same
-# nodeSelector. Recreate keeps one writer per volume during a rollout.
+# nodeSelector, and the Jobs that run the same image (migrate.yml,
+# bootstrap.yml) carry it too so their pulls resolve on that node. Recreate
+# keeps one writer per volume during a rollout. Moving the app means changing
+# this key in all three files.
 #
 # Rakazo reads its settings at process start and rakazo-config has no name
 # suffix hash, so a config change needs a rollout restart (docs/rakazo.md).
@@ -27,7 +30,7 @@ spec:
       serviceAccountName: rakazo-controller
       automountServiceAccountToken: true
       nodeSelector:
-        kubernetes.io/hostname: drone-01
+        kubernetes.io/hostname: drone-03
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -135,7 +138,7 @@ spec:
       serviceAccountName: rakazo-controller
       automountServiceAccountToken: true
       nodeSelector:
-        kubernetes.io/hostname: drone-01
+        kubernetes.io/hostname: drone-03
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch

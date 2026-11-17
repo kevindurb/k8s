@@ -22,6 +22,10 @@ spec:
     spec:
       restartPolicy: Never
       automountServiceAccountToken: false
+      # Same pin as the api/worker Deployments: these run the same image, and
+      # the copy that exists on that node is the one already pulled.
+      nodeSelector:
+        kubernetes.io/hostname: drone-03
       containers:
         - name: app
           image: ghcr.io/elie222/rakazo/app:v0.12.0@sha256:0ede140417319081bf646c97768976aaf0643e07b8ca2970d43da789ecff3b82

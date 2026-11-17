@@ -69,6 +69,17 @@ kubectl -n rakazo rollout restart deployment/rakazo-api deployment/rakazo-worker
 `config.env` also carries the computer image and the sandbox limits; those only take effect for
 computers started after the change (see [Computers](#computers)).
 
+## Placement
+
+`api`, `worker`, `migrate` and `bootstrap` carry `kubernetes.io/hostname: drone-03`
+(`workloads.yml`, `migrate.yml`, `bootstrap.yml`). The pin exists because `api` and `worker` share one
+RWO zvol and there is no RWX class here; the Jobs carry it because they run the same large image, and
+a Job that lands on a node which cannot pull it sits in `ErrImagePull` while the sync stops at wave 1.
+
+Moving the app means changing all four `nodeSelector` values together and confirming the new node can
+pull the images. drone-01 has been observed failing `ghcr.io/elie222/rakazo/app` pulls with
+`local error: tls: bad record MAC` while drone-02 and drone-03 pulled the same digest cleanly.
+
 ## Secrets and backups
 
 | SealedSecret | Secret | Keys |
