@@ -260,6 +260,14 @@ need a vision-capable model; add it to `RAKAZO_LOCAL_MODELS`/`RAKAZO_LOCAL_VISIO
 reasoning trace consumes the server-side default and the reply comes back empty (the same failure
 `docs/pr-agent.md` records).
 
+**Attaching Aperture as an MCP server** (`https://ai.beaver-cloud.ts.net/v1/mcp`, which exposes every
+Aperture connector, browser included) needs `MCP_ALLOW_PRIVATE_ENDPOINT=true`, already set in
+`config.env`. Without it the app refuses the URL with "Connector URL resolves to a private address",
+because the hostname resolves to the egress proxies' ClusterIP inside the cluster. The setting is
+deployment-wide: every user may point MCP servers and model connections at private addresses, while
+cloud metadata and link-local destinations stay blocked. That is acceptable here because there is one
+account and signups are closed - remove it if this deployment ever becomes multi-user or public.
+
 ## Health and observability
 
 Gatus checks `https://rakazo.beaver-cloud.ts.net/api/auth/ok`: public, no session needed, and it
