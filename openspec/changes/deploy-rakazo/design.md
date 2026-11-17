@@ -167,6 +167,12 @@ any Pod forge a client IP.
 gets the upstream computer policy (DNS plus public 80/443 with every private range excepted, ingress
 only from the app Pods on 6080 and 6100-6199).
 
+One measured gap, recorded in `docs/rakazo.md`: this cluster's CNI enforces default-deny and
+same-namespace allows but not a cross-namespace *allow* (a pod in `gatus`, `default` or even
+`tailscale` is refused a connection to the web pod despite a matching `namespaceSelector` or
+`ipBlock` rule). The policies are still written per spec; the Gatus check therefore uses the tailnet
+origin, and `docs/network-segmentation.md` needs that verified before its phases 1-3 roll out.
+
 This departs from `docs/network-segmentation.md`, which defers egress to phase 4: that deferral exists
 because enumerating CDN endpoints for the browser-facing apps has poor cost/benefit. Here the flows
 are few and known, and the code inside the namespace is agent-driven — the case the document says is
@@ -180,8 +186,11 @@ IPs on 6443), not `10.43.0.1`, because the CNI evaluates egress after Service DN
 same and warns to test it; `docs/network-segmentation.md` already documents this "container port, not
 Service port; post-DNAT address" class of mistake.
 
-The Aperture path is an egress rule to the `tailscale` namespace on 443, matching the existing
-documented precedent for OIDC/`mealie` callers.
+The Aperture and Pocket ID paths are egress rules to the `tailscale` namespace on the egress
+proxies' **container** ports, 10205 and 10837 — not the 443 their Services expose (`ts-ai-*` maps
+443 to 10205, `ts-idp-*` to 10837). Written against 443 the rule looks right and denies every model
+call, which is the same "container port, not Service port" trap `docs/network-segmentation.md`
+records; measured here as `ECONNREFUSED` from the API pod while an unrestricted pod got `200`.
 
 ### Models through the deployment-local provider, not a UI connection
 
