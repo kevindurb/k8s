@@ -268,6 +268,13 @@ deployment-wide: every user may point MCP servers and model connections at priva
 cloud metadata and link-local destinations stay blocked. That is acceptable here because there is one
 account and signups are closed - remove it if this deployment ever becomes multi-user or public.
 
+The ACL half lives in `kevindurb/infra`: `tag:k8s-ai` needs a `{"connectors": [...]}` entry in its
+`tailscale.com/cap/aperture` capability, alongside the role and models entries. Without it the MCP
+handshake still succeeds and `tools/list` returns one placeholder tool whose description says exactly
+that. `["**"]` also exposes `chrome_browser_*` and `TailnetSSH_run_command` (Aperture's shell-to-tailnet
+connector) to *every* workload behind `ai-egress`, mealie included - list the connector ids explicitly
+if bots should have the browser only.
+
 ## Health and observability
 
 Gatus checks `https://rakazo.beaver-cloud.ts.net/api/auth/ok`: public, no session needed, and it

@@ -53,10 +53,16 @@ Connector IDs may contain only letters and digits, so the tool names appear pref
 `Browser_browser_navigate`, `Browser_browser_snapshot`, and so on. Aperture strips the prefix
 before forwarding.
 
-No ACL change is needed. `tailnet/policy.hujson` already grants `group:ai-admins` and `tag:dev`
+`tailnet/policy.hujson` grants `group:ai-admins`, `tag:dev` and (since PR #15) `tag:k8s-ai`
 `{"connectors": ["**"]}`, the gateway configuration carries a matching grant, and
 `{"src": ["tag:ai"], "dst": ["tag:apps", "tag:media"], "ip": ["tcp:443"]}` lets the gateway reach
-the endpoint. `tag:pr-agent` and `tag:k8s-ai` hold no connector grants, so neither reaches it.
+the endpoint. `tag:pr-agent` and `tag:ci` hold no connector grants, so neither reaches it.
+
+`tag:k8s-ai` is what in-cluster apps leave as (Rakazo, mealie's recipe AI), so that grant is what
+lets a bot reach this browser through `http://ai.beaver-cloud.ts.net/v1/mcp`. It is also shared with
+every other ai-egress caller, and `["**"]` covers Aperture's other connectors too - including
+`TailnetSSH_run_command`. Narrow the list to the browser connector if a bot should not have a shell
+on the tailnet.
 
 ## Apply the connector
 
