@@ -34,7 +34,9 @@ spec:
         - port: 5173
           protocol: TCP
 ---
-# Gatus checks the ClusterIP Service, so it is an in-cluster source.
+# Gatus is an in-cluster source. Kept even though this cluster's CNI does not
+# currently enforce a cross-namespace allow for a plain pod (see docs/rakazo.md,
+# "Health and observability"), so the intent is right if enforcement improves.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

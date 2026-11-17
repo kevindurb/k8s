@@ -253,10 +253,25 @@ reasoning trace consumes the server-side default and the reply comes back empty 
 
 ## Health and observability
 
-Gatus checks `http://rakazo-web.rakazo/rpc/health` every interval — the same unauthenticated probe
-the mobile client uses, so it proves the web proxy and the API behind it. `api`/`worker` hold the
-cluster-wide `rakazo-computers` policy's target image in `rakazo-config`, so a broken replacement
-shows up first as a failed kustomize build, not at runtime.
+Gatus checks `https://rakazo.beaver-cloud.ts.net/api/auth/ok`: public, no session needed, and it
+proves the whole path (tailnet ingress proxy -> web -> api). Two things forced that target, both
+measured on 2026-11-17:
+
+- `GET /rpc/health` answers `405`; it is not a GET endpoint, so a Gatus `[STATUS] == 200` there can
+  never be green.
+- A ClusterIP probe from another namespace does not work here even with the right policy. With
+  `rakazo-allow-monitoring` in place, a pod in `gatus` (and one in `tailscale`, and a temporary rule
+  for `default`, and a temporary `ipBlock` for `10.42.0.0/16`) all timed out against the web pod,
+  while `default` -> `miniflux`, `default` -> `pocket-id` and the tailnet origin all returned `200`.
+  Default-deny is enforced and same-namespace allows work (`web` -> `api`, `api` -> `postgres`), so
+  the gap is specifically cross-namespace *allow* rules.
+
+  This matters beyond this app: `docs/network-segmentation.md` phases 1-3 rely on `namespaceSelector`
+  allows (`allow-monitoring`, `allow-ingress-proxies`) and would turn every Gatus check red. Verify
+  the CNI behaviour on a throwaway namespace before rolling that out.
+
+`api` and `worker` read the computer image out of `rakazo-config`, so a broken replacement shows up
+first as a failed kustomize build, not at runtime.
 
 ## Retiring the app
 
