@@ -44,6 +44,10 @@ Mobile and desktop clients use **Existing instance** with the same origin.
 - Because registration is closed, SSO never creates an account. The owner links their identity from
   **Account settings → Link SSO** while signed in; matching verified email and a verified provider
   claim are required. Pocket ID runs with `EMAILS_VERIFIED=true`, so its addresses qualify.
+- Check SSO health without a browser: `curl -sS https://rakazo.beaver-cloud.ts.net/api/auth/capabilities`
+  returns `{"sso":{"name":"Pocket ID","availability":"available"}}`. `unavailable` there means the API
+  cannot reach the issuer (measured by removing the 10837 egress rule: availability flips, password
+  sign-in still returns 200, and it recovers on its own once egress is back — no restart).
 - The Pocket ID client is restricted to the `members` user group. A fresh client admits nobody until
   its **Allowed user groups** are set, so re-check that after creating or replacing the client:
 
