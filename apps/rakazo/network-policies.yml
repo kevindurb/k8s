@@ -180,12 +180,19 @@ spec:
     # Aperture (tag:k8s-ai) and Pocket ID (tag:k8s-oidc) both terminate in the
     # tailscale namespace: the CoreDNS rewrite points ai./idp.beaver-cloud.ts.net
     # at the egress ProxyGroups there.
+    #
+    # These are the proxies' CONTAINER ports, not the 443 their Services expose
+    # (svc ts-ai-* 443 -> 10205, svc ts-idp-* 443 -> 10837). A rule against 443
+    # silently denies every model call and every OIDC discovery request - the
+    # "container port, not Service port" trap in docs/network-segmentation.md.
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: tailscale
       ports:
-        - port: 443
+        - port: 10205
+          protocol: TCP
+        - port: 10837
           protocol: TCP
     - to:
         - ipBlock:
