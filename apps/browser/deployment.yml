@@ -88,11 +88,11 @@ spec:
             - --allowed-hosts
             - browser-mcp.beaver-cloud.ts.net,browser-mcp.browser
           ports:
-            - name: http
+            - name: mcp
               containerPort: 8931
           readinessProbe:
             tcpSocket:
-              port: http
+              port: mcp
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
@@ -126,7 +126,9 @@ spec:
   ports:
     - name: http
       port: 3000
-      targetPort: http
+      # Numeric, not the "http" name: two containers in this pod declare HTTP ports,
+      # so a named targetPort resolves ambiguously (it picks the browser's 3000).
+      targetPort: 3000
 ---
 apiVersion: v1
 kind: Service
@@ -139,7 +141,7 @@ spec:
   ports:
     - name: http
       port: 8931
-      targetPort: http
+      targetPort: 8931
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
