@@ -1,0 +1,10 @@
+---
+# The same unauthenticated probe the mobile client uses: it proves the web proxy
+# AND the API behind it, from a ClusterIP source, which is why the service
+# hostname is listed in RAKAZO_ALLOWED_HOSTS.
+endpoints:
+  - name: rakazo
+    group: apps
+    url: http://rakazo-web.rakazo/rpc/health
+    conditions:
+      - '[STATUS] == 200'

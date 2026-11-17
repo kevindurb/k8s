@@ -1,0 +1,106 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  labels: &labels
+    app.kubernetes.io/name: rakazo
+    app.kubernetes.io/component: postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      # Same shape as apps/miniflux/postgres.yml, which has run postgres 18 on
+      # this storage class for months: uid/gid 1000 with fsGroup 1000. Do not add
+      # a root init container (apps/immich/postgres.yml needs one because its
+      # image chmods PGDATA); the alpine image is happy on a group-writable
+      # volume.
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        # Container name follows the repo convention (`app`) even though this
+        # workload is the database; the Deployment name carries the role.
+        - name: app
+          image: docker.io/library/postgres:18.7-alpine@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+              ephemeral-storage: 2Gi
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rakazo-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              value: rakazo
+            - name: POSTGRES_DB
+              value: rakazo
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            periodSeconds: 5
+          # The v18 image's volume root is /var/lib/postgresql (PGDATA lives one
+          # level below it), not /var/lib/postgresql/data.
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: rakazo-database
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database
+  labels:
+    app.kubernetes.io/name: rakazo
+    app.kubernetes.io/component: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels: &labels
+    app.kubernetes.io/name: rakazo
+    app.kubernetes.io/component: postgres
+spec:
+  selector: *labels
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432

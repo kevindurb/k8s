@@ -24,6 +24,8 @@ resources:
   - ./omada/app.yml
   - ./qbittorrent/app.yml
   - ./radarr/app.yml
+  - ./rakazo/app.yml
+  - ./rakazo-sandboxes/app.yml
   - ./romm/app.yml
   - ./scrypted/app.yml
   - ./sonarr/app.yml

@@ -1,0 +1,79 @@
+---
+# A bot computer runs code the model wrote, so it gets the narrowest network the
+# product still works with: DNS and the public web in, nothing out to private
+# space, and screen traffic only from the Rakazo pods.
+#
+# The `except` list covers RFC1918, CGNAT (the tailnet), loopback, link-local
+# (cloud metadata), documentation and multicast ranges. This is not an
+# exfiltration control — the computers are supposed to browse.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: computers
+  namespace: rakazo-sandboxes
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: rakazo
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: api
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: rakazo
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: worker
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: rakazo
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: web
+      ports:
+        - port: 6080
+          protocol: TCP
+        - port: 6100
+          endPort: 6199
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 192.168.0.0/16
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
+              - 224.0.0.0/3
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
