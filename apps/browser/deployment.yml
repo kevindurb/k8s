@@ -40,8 +40,11 @@ spec:
               value: America/Denver
             # Chromium forces the CDP listener onto loopback whatever address is asked
             # for, which suits the mcp container: it shares this pod's network namespace.
+            # The explicit user-data-dir is required: Chrome >= 136 refuses remote
+            # debugging on the default profile, and the image's wrapper passes a bare
+            # --user-data-dir, so this later value wins.
             - name: CHROME_CLI
-              value: --remote-debugging-port=9222 about:blank
+              value: --user-data-dir=/config/profile --remote-debugging-port=9222 about:blank
           ports:
             - name: http
               containerPort: 3000
