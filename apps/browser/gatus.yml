@@ -2,6 +2,6 @@
 endpoints:
   - name: browser
     group: apps
-    url: http://browser-ui-service.browser
+    url: http://browser-ui-service.browser:3000
     conditions:
       - '[STATUS] == 200'
