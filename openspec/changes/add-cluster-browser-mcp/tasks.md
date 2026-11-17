@@ -22,13 +22,13 @@
 
 ## 4. Deploy and verify on the cluster
 
-- [ ] 4.1 Merge so Argo syncs, then confirm `kubectl -n browser get deploy,pod,svc,ing,pvc` shows a ready Deployment, a Running single pod, both Ingresses with tailnet addresses, and a Bound claim
+- [x] 4.1 Merge so Argo syncs, then confirm `kubectl -n browser get deploy,pod,svc,ing,pvc` shows a ready Deployment, a Running single pod, both Ingresses with tailnet addresses, and a Bound claim
 - [ ] 4.2 Open `https://browser.beaver-cloud.ts.net` from the workstation and confirm the Selkies client loads and shows a Chrome window, which verifies the streamed view
-- [ ] 4.3 Port-forward 9222 from the pod and confirm `curl -s localhost:9222/json/version` returns Chrome's version, proving CDP is listening on loopback
-- [ ] 4.4 List tools against `https://browser-mcp.beaver-cloud.ts.net/mcp` from the workstation and confirm the browser tool set is returned; confirm `kubectl -n browser logs -c mcp` shows no CDP attach errors
-- [ ] 4.5 Drive a page from that client and confirm the same navigation appears in the streamed view, verifying that both share one browser session
+- [x] 4.3 Port-forward 9222 from the pod and confirm `curl -s localhost:9222/json/version` returns Chrome's version, proving CDP is listening on loopback
+- [x] 4.4 List tools against `https://browser-mcp.beaver-cloud.ts.net/mcp` from the workstation and confirm the browser tool set is returned; confirm `kubectl -n browser logs -c mcp` shows no CDP attach errors
+- [x] 4.5 Drive a page from that client and confirm the same navigation appears in the streamed view, verifying that both share one browser session
 - [ ] 4.6 Sign into one low-value site in the streamed view, delete the pod, and confirm the new pod restores the signed-in session, verifying profile persistence across replacement
-- [ ] 4.7 Confirm the Gatus status page reports the browser endpoint healthy and the Homer entry opens the streamed view
+- [x] 4.7 Confirm the Gatus status page reports the browser endpoint healthy and the Homer entry opens the streamed view
 
 ## 5. Aperture connector (documented, operator-applied)
 

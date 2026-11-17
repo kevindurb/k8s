@@ -91,6 +91,11 @@ If the connector reports `upstream error`, the MCP container is not answering: c
 `kubectl -n browser logs deploy/browser-app-deployment -c mcp` for a CDP attach failure, and
 `curl -s localhost:9222/json/version` through a port-forward.
 
+If the Gatus check fails after a `gatus.yml` edit, look for a stale generated ConfigMap:
+`kubectl -n browser get cm | grep gatus`. The app-of-apps has `prune: false`, so the previous
+hash-suffixed copy survives and keeps defining the old endpoint alongside the new one. Delete
+it by hand.
+
 ## Rollback
 
 1. Remove the `Browser` connector from the gateway (or restore `aperture-config-backup.json`
