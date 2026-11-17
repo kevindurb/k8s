@@ -28,6 +28,20 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 1Gi
+      initContainers:
+        # A profile replaced by a new pod keeps the previous pod's SingletonLink, which
+        # names another host, and Chrome refuses to start on it. The image only clears
+        # the lock in its default profile directory, not in the one CHROME_CLI selects.
+        # Safe because the strategy is Recreate: no other browser can hold this profile.
+        - name: clear-stale-profile-lock
+          image: lscr.io/linuxserver/chrome:157.0.8103.78-1-ls140@sha256:6c580029b4ca57ce2408f639dc35b50fdcc695ddf69576d7044fb4c9268f01f5
+          command:
+            - /bin/sh
+            - -c
+            - rm -f /config/profile/Singleton*
+          volumeMounts:
+            - name: config
+              mountPath: /config
       containers:
         - name: browser
           image: lscr.io/linuxserver/chrome:157.0.8103.78-1-ls140@sha256:6c580029b4ca57ce2408f639dc35b50fdcc695ddf69576d7044fb4c9268f01f5

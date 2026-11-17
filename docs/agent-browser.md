@@ -111,6 +111,7 @@ If the connector reports `upstream error`, the MCP container is not answering: c
   the tailnet is the only lock. Never enable Funnel for this app.
 - One viewer only: there is no GPU, so the stream is encoded in software, and WebGL is
   unavailable.
-- A single replica is mandatory — one profile has one writer. After an ungraceful node
-  failure Chrome may report "profile in use by another computer"; delete the `SingletonLock`
-  files in the profile directory under `/config`.
+- A single replica is mandatory — one profile has one writer. A `clear-stale-profile-lock`
+  init container removes `Singleton*` from the profile before each start, because a
+  replaced pod otherwise leaves a lock naming the old host and Chrome refuses to start. If
+  Chrome is still stuck, delete those files under `/config/profile` by hand.
