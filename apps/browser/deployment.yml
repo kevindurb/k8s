@@ -1,0 +1,173 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  # One Chrome profile has exactly one writer, so the old pod must exit before its
+  # replacement starts. The grace period lets the image's shutdown script flush cookies.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      # Playwright MCP exposes a code-execution tool; give that container no API identity.
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: data
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+      containers:
+        - name: browser
+          image: lscr.io/linuxserver/chrome:157.0.8103.78-1-ls140@sha256:6c580029b4ca57ce2408f639dc35b50fdcc695ddf69576d7044fb4c9268f01f5
+          env:
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
+            - name: TZ
+              value: America/Denver
+            # Chromium forces the CDP listener onto loopback whatever address is asked
+            # for, which suits the mcp container: it shares this pod's network namespace.
+            - name: CHROME_CLI
+              value: --remote-debugging-port=9222 about:blank
+          ports:
+            - name: http
+              containerPort: 3000
+            - name: cdp
+              containerPort: 9222
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: shm
+              mountPath: /dev/shm
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: '1'
+              memory: 2Gi
+        - name: mcp
+          image: mcr.microsoft.com/playwright/mcp:v0.0.85@sha256:8ca417ff2a3660b770d7dd4a293bd179d0f3c29d0d5fb5bc43d3be617b1566a2
+          # The image's own entrypoint pins --headless and a browser it launches itself.
+          # Replace it so the only browser in play is the one attached over CDP, and so
+          # the allowed-hosts check accepts the hostname the Tailscale proxy forwards.
+          command:
+            - /usr/bin/tini
+            - '-s'
+            - '--'
+            - node
+            - /app/cli.js
+          args:
+            - --cdp-endpoint
+            - http://127.0.0.1:9222
+            - --port
+            - '8931'
+            - --host
+            - 0.0.0.0
+            - --allowed-hosts
+            - browser-mcp.beaver-cloud.ts.net,browser-mcp.browser
+          ports:
+            - name: http
+              containerPort: 8931
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zfs-generic-nvmeof-csi
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 8931
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ui
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: ui-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [browser]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-mcp
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:apps
+spec:
+  defaultBackend:
+    service:
+      name: mcp-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [browser-mcp]

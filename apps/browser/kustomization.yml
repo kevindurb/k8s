@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: browser
+namePrefix: browser-
+resources:
+  - ./deployment.yml
+# No pod-hardening or tmpdirs components: LinuxServer.io's Chrome image starts as root,
+# chowns /config and then drops to PUID/PGID, so it cannot run non-root on a read-only
+# root filesystem. See openspec/changes/add-cluster-browser-mcp/design.md.
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - browser.yml=gatus.yml
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: browser

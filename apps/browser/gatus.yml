@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: browser
+    group: apps
+    url: http://browser-ui-service.browser
+    conditions:
+      - '[STATUS] == 200'

@@ -32,6 +32,10 @@ services:
         url: https://ai.beaver-cloud.ts.net
         icon: fas fa-robot
 
+      - name: Browser
+        url: https://browser.beaver-cloud.ts.net
+        icon: fas fa-window-restore
+
       - name: Calibre Web
         url: https://calibre-web.beaver-cloud.ts.net
         icon: fas fa-book-reader
