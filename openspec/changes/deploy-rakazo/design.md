@@ -224,17 +224,27 @@ start — so `docs/rakazo.md` states that a config change needs a rollout restar
 
 `OIDC_ISSUER=https://idp.beaver-cloud.ts.net`, `OIDC_CLIENT_ID=rakazo`, `OIDC_NAME=Pocket ID`,
 `OIDC_SCOPES=openid email profile`, client secret from `rakazo-oidc` referenced by the **API**
-container only; `AUTH_PASSWORD_ENABLED=true`, `SIGNUPS_ENABLED=false`, `OIDC_ALLOW_SIGNUP_BYPASS`
-unset. The non-secret `OIDC_*` values sit in `config.env`, which `envFrom`s into all three workloads
+container only; `AUTH_PASSWORD_ENABLED=false` (SSO-only, see below), `SIGNUPS_ENABLED=false`,
+`OIDC_ALLOW_SIGNUP_BYPASS` unset. The non-secret `OIDC_*` values sit in `config.env`, which `envFrom`s into all three workloads
 (harmless — only the API reads them); the secret is never in that ConfigMap.
 
 Upstream makes SSO signup follow closed registration, and `SIGNUPS_ENABLED=false` closes it, so SSO
 cannot create an account here at all. The only path that gives the owner an SSO login is **Link SSO**
 from an authenticated session; bootstrap creates a verified account, which is the precondition for
 linking, and Pocket ID runs with `EMAILS_VERIFIED=true`, so the provider asserts `email_verified` and
-the addresses match. Password sign-in stays enabled deliberately: `AUTH_PASSWORD_ENABLED=false` makes
-the API refuse to start without all three OIDC credentials and leaves no way in when Pocket ID is
-unreachable — and on a fresh deployment there would be no session to link from in the first place.
+the addresses match.
+
+Sign-in is then reduced to Pocket ID alone (`AUTH_PASSWORD_ENABLED=false`), decided after the link was
+verified in the live deployment. The order matters and is the whole safety argument: bootstrap first
+(which needs a password), link second (which needs a session), disable the password last. Upstream
+gates that mode on all three OIDC credentials being present, turns passkeys off, and keeps the
+password hash in the database, so the credential row survives and setting the flag back to `true` is
+a working recovery path.
+
+The trade-off accepted: with no mail relay and no password form, an unreachable Pocket ID means no
+interactive sign-in at all until the operator flips that flag in git (Argo sync, about three
+minutes). The alternative — leaving the password form up — keeps a permanent second attack surface
+for one account that never needed it.
 
 Alternatives considered: `OIDC_ALLOW_SIGNUP_BYPASS=true` — admits any Pocket ID identity the client's
 allowed group permits, without the allowlist, which turns the IdP's user list into this deployment's

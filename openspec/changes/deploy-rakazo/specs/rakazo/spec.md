@@ -24,13 +24,25 @@ The deployment SHALL serve the web application at exactly one HTTPS origin, `htt
 
 ### Requirement: Single owner account with closed signups
 
-The deployment SHALL keep public registration disabled and SHALL create exactly one owner account, for the address configured as the owner email, during deployment. That account SHALL be able to sign in with its sealed password or, once linked, with Pocket ID. No other account SHALL be created by any path, including SSO.
+The deployment SHALL keep public registration disabled and SHALL create exactly one owner account, for the address configured as the owner email, during deployment. Pocket ID SHALL be the only interactive sign-in method, and no other account SHALL be created by any path, including SSO.
 
 #### Scenario: Owner account exists after deploy
 
 - **WHEN** the bootstrap step completes
 - **THEN** an account exists for the configured owner email
-- **AND** it can sign in with the sealed owner password
+- **AND** it is linked to a Pocket ID identity
+
+#### Scenario: Password sign-in is refused
+
+- **WHEN** a client posts the owner email and the sealed owner password to the password sign-in endpoint
+- **THEN** the request is refused
+- **AND** the capabilities document reports password sign-in as disabled
+
+#### Scenario: Operator re-enables password sign-in
+
+- **WHEN** the deployment sets password sign-in back to enabled and the API restarts
+- **THEN** the owner can sign in with the sealed password again
+- **AND** the linked Pocket ID identity still signs in
 
 #### Scenario: Signup is refused
 
@@ -71,7 +83,8 @@ secret and MUST be mounted on the API only.
 
 - **WHEN** Pocket ID discovery or its token endpoint is unreachable
 - **THEN** the SSO sign-in reports a temporary error
-- **AND** password sign-in with the sealed owner password still works
+- **AND** the app stays up and reports the provider as unavailable
+- **AND** no sign-in method remains until an operator re-enables password sign-in
 
 #### Scenario: Secret placement
 

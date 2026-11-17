@@ -34,9 +34,14 @@ Mobile and desktop clients use **Existing instance** with the same origin.
 
 - **Signups are closed** (`SIGNUPS_ENABLED=false`). The bootstrap Job creates exactly one account,
   `OWNER_EMAIL`, with `OWNER_PASSWORD` from the sealed secret, and marks it verified.
-- **Password sign-in stays enabled** (`AUTH_PASSWORD_ENABLED=true`). It is the recovery path when
-  Pocket ID is unreachable; SSO-only mode would refuse to start without all OIDC credentials and
-  would have no session to link from on a fresh install.
+- **Sign-in is Pocket ID only** (`AUTH_PASSWORD_ENABLED=false`). The password form, password reset and
+  password mutation endpoints are disabled server-side, and passkeys are off in this mode. The API
+  refuses to start in this mode without all three OIDC credentials, which is why the order matters:
+  bootstrap first, link Pocket ID second, disable the password last.
+- **Recovery when Pocket ID is unreachable**: set `AUTH_PASSWORD_ENABLED=true` in `apps/rakazo/config.env`
+  and let Argo sync (or `kubectl -n rakazo rollout restart deploy/rakazo-api` once the ConfigMap is
+  updated). The password credential row is still in the database, so the owner password in
+  `rakazo-secrets` works again; turn the flag back off afterwards. There is no emailed reset here.
 - **Pocket ID SSO** is app-native OIDC against `https://idp.beaver-cloud.ts.net`, client id `rakazo`,
   button label `Pocket ID`, redirect URI
   `https://rakazo.beaver-cloud.ts.net/api/auth/callback/oidc`. The client secret is sealed as
@@ -45,9 +50,9 @@ Mobile and desktop clients use **Existing instance** with the same origin.
   **Account settings → Link SSO** while signed in; matching verified email and a verified provider
   claim are required. Pocket ID runs with `EMAILS_VERIFIED=true`, so its addresses qualify.
 - Check SSO health without a browser: `curl -sS https://rakazo.beaver-cloud.ts.net/api/auth/capabilities`
-  returns `{"sso":{"name":"Pocket ID","availability":"available"}}`. `unavailable` there means the API
-  cannot reach the issuer (measured by removing the 10837 egress rule: availability flips, password
-  sign-in still returns 200, and it recovers on its own once egress is back — no restart).
+  returns `{"sso":{"name":"Pocket ID","availability":"available"},"passwordAuth":false}`. `unavailable`
+  there means the API cannot reach the issuer; it recovers on its own once egress is back (measured by
+  removing the 10837 egress rule - no restart needed).
 - The Pocket ID client is restricted to the `members` user group. A fresh client admits nobody until
   its **Allowed user groups** are set, so re-check that after creating or replacing the client:
 
@@ -58,8 +63,8 @@ curl -fsS -H "X-API-KEY: $K" https://idp.beaver-cloud.ts.net/api/oidc/clients/ra
 ```
 
 - **No mail relay** (`EMAIL_PROVIDER=none`): no emailed sign-in codes, no password reset, no welcome
-  mail. Forgotten owner password: recover it from the sealed secret, or re-run the bootstrap command
-  below. Pocket ID's own recovery is an admin-issued login code.
+  mail. Pocket ID's own recovery is an admin-issued login code; the Rakazo side recovers as described
+  above.
 
 ## Configuration changes
 
