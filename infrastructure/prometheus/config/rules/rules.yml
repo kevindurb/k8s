@@ -78,14 +78,14 @@ groups:
             LABELS = {{ $labels }}
 
       - alert: HostCpuHighIowait
-        expr: avg without (cpu) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > .10
-        for: 15m
+        expr: avg without (cpu) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > .20
+        for: 30m
         labels:
           severity: warning
         annotations:
           summary: Host CPU high iowait (instance {{ $labels.instance }})
           description: |-
-            CPU iowait > 10%. Your CPU is idling waiting for storage to respond.
+            CPU iowait > 20% for 30m. Your CPU is idling waiting for storage to respond.
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
 
