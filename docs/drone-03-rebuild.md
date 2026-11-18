@@ -23,9 +23,9 @@ Three facts make this cheap:
   which ships the ZFS kmod matched to its own kernel. No akmods, no derived
   image, no runtime `dnf install`. drone-04 has been running ZFS from this image
   since 2026-10-03.
-- **No app data lives on the node.** All 45 PVCs are zvols on drone-04 exported
-  over NVMe-oF, so wiping drone-03 loses nothing. Pods reschedule; the storage
-  stays where it is.
+- **No app data lives on the node.** All 48 zvols are on drone-04, exported over
+  NVMe-oF, so wiping drone-03 loses nothing. Pods reschedule; the storage stays
+  where it is.
 - **`stable-nvidia-lts` is the LTS kernel flavour**, i.e. the mitigation for the
   OpenZFS-lags-Fedora-kernel problem. See [Kernel/ZFS skew](#6-kernelzfs-skew).
 
@@ -49,7 +49,7 @@ Sizes:
 
 | | |
 | --- | --- |
-| App state, excluding immich | 44 GB across 45 volumes |
+| App state, excluding immich | 47.4 GB across 47 volumes (48 PVCs incl. `immich-data`) |
 | Live + replicas per node in the mesh | ~45 GB |
 | With sanoid history (20 % margin) | ~54 GB → **8 % of 600 GiB** |
 | If immich joins the mesh later | ~380 GB → 59 % |
@@ -527,11 +527,11 @@ version:
 1. **drone-01 and drone-02** reuse this with only `hostname`/`ip`/`iface`/disk
    changing. Both are still Haswell, so this gets folded into
    `docs/drone-haswell-to-elitedesk-swap.md` rather than being a separate rebuild.
-2. When all three pools exist: second democratic-csi Argo app
+2. When all three pools exist: the second democratic-csi Argo app
    (`zfs-local-zvol`, driver `org.democratic-csi.zfs-local`), the per-node
-   `components/storage-home-*` components, and the app moves in the placement
-   agreed for drone-01 (media + identity), drone-02 (home/IoT + USB dongle) and
-   drone-03 (platform).
+   `components/storage-home-*` components, and the app moves — see
+   [`storage-placement.md`](storage-placement.md) for the placement, the mesh,
+   and the promote runbook.
 3. Then the teardown: `zfs-generic-nvmeof-csi`, the nvmet driver deployment and
    sealed config, `bootc/overlay/etc/systemd/system/nvmet.service.d/*`,
    `usr/libexec/nvmet-detach-local`, `modules-load.d/nvmeof.conf`, the

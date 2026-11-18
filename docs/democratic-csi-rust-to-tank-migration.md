@@ -1,6 +1,16 @@
 # Migrating democratic-csi: `rust/k8s/volumes` → `tank/k8s/volumes`
 
-Status: researched 2026-11-03. Not started.
+> **Superseded 2026-11-18 — do not execute.** App volumes are moving to
+> node-local ZFS pools on drone-01/02/03 with a replicated mesh, not to a `tank`
+> pool on drone-04. The `Path A` all-or-nothing cutover below is the reason: it
+> was the only option because a single democratic-csi deployment owns one
+> `datasetParentName`, and the replacement design avoids that constraint by
+> running a separate `zfs-local` driver. See
+> [`storage-placement.md`](storage-placement.md) and
+> [`drone-03-rebuild.md`](drone-03-rebuild.md). The capacity analysis and the
+> `zfs send`/`recv` notes are still useful as reference; nothing here was applied.
+
+Status: researched 2026-11-03. Not started, and no longer the plan.
 Target pool: `tank` — 2× 500 GB NVMe mirror on drone-04, ~465 GiB usable.
 Source: `rust/k8s/volumes` — 43 zvols, **496 GiB used**, 1,086 GiB declared, on the 12 TB HDD mirror exported over NVMe-oF/TCP.
 
