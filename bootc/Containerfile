@@ -25,6 +25,6 @@ RUN chmod +x /usr/bin/k3s
 COPY overlay/ /
 
 RUN systemctl disable firewalld \
-  && systemctl enable cockpit tailscaled iscsid tuned nvmet
+  && systemctl enable cockpit tailscaled iscsid tuned nvmet chronyd
 
 RUN bootc container lint
