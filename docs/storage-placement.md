@@ -25,8 +25,10 @@ the cluster), Ceph and DRBD/LINSTOR (more moving parts than the problem, no 10 G
 to run them on, and an out-of-tree module treadmill on a bootc image).
 
 What replaced it: **a small ZFS pool on each app node, replicated between all
-three, with pods pinned.** Downtime on node maintenance is accepted. That trade
-is what makes the rest of this document simple.
+three, with pods pinned.** The CSI layer is **OpenEBS LocalPV-ZFS** (its
+*non*-replicating engine — not Mayastor, which stays rejected) and replication is
+**zrepl**. Downtime on node maintenance is accepted. That trade is what makes the
+rest of this document simple.
 
 ## Target architecture
 
@@ -192,41 +194,64 @@ Exceptions and consequences:
 - **Media readers do not need locality.** The `*-nas-media` mounts are RWX over
   NFS from drone-04, so `radarr`'s home is about its config volume, not its media.
 
-## The CSI layer
+## The CSI layer: OpenEBS LocalPV-ZFS
 
-A **second** Argo application, `infrastructure/democratic-csi-local`, on the same
-chart but a distinct driver name:
+Provisioner `zfs.csi.openebs.io`, installed as its own Argo application
+(`infrastructure/openebs-zfs`) from the `openebs/openebs` Helm chart in namespace
+`openebs`, with only the `zfs-localpv` engine enabled (the chart ships several;
+verify the value names against the chart version — Renovate bumps it).
 
 ```yaml
-csiDriver:
-  name: "org.democratic-csi.zfs-local"
-storageClasses:
-  - name: zfs-local
-    fsType: ext4
-    reclaimPolicy: Delete
-    volumeBindingMode: WaitForFirstConsumer   # mandatory for local volumes
-    allowVolumeExpansion: true
-driver:
-  config:
-    driver: zfs-local-zvol
-    zfs:
-      datasetParentName: k8s/volumes
-      zvolCompression: lz4
-      zvolBlocksize: 16K
-      zvolEnableReservation: false
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zfs-local
+provisioner: zfs.csi.openebs.io
+parameters:
+  poolname: "k8s/volumes"    # must exist under exactly this name on every node
+  fstype: "ext4"            # ⇒ a zvol, formatted ext4
+  volblocksize: "16k"       # power of two; matches the volumes being replaced
+  compression: "lz4"
+  dedup: "off"
+volumeBindingMode: WaitForFirstConsumer   # mandatory for node-local volumes
+allowVolumeExpansion: true
+reclaimPolicy: Delete
 ```
 
-Why this driver rather than `openebs/zfs-localpv`: it reuses the chart,
-namespace, sealed-secret workflow and `just reseal` already in
-`infrastructure/democratic-csi/`, and it writes the topology `nodeAffinity` onto
-the PV for us. OpenEBS LocalPV-ZFS is the fallback if this one disappoints.
+Decisions worth naming:
 
-Because it touches no nvmet, no SSH and no share config, it runs **alongside**
-`zfs-generic-nvmeof-csi` with no interference. That removes the all-or-nothing
-cutover that `docs/democratic-csi-rust-to-tank-migration.md` was stuck with: apps
-migrate one at a time.
+- **ext4 on a zvol, not `fstype: zfs`.** Native datasets are faster — no filesystem
+  layer — but a dataset carries its `mountpoint` property into replication, and the
+  restore runbook that has actually been rehearsed is "mount the zvol, `fsck -n`,
+  start the app". 16 KiB blocks and lz4 match what is being replaced, so
+  `fsGroup: 1000`, the ext4 journal and every note in the existing migration docs
+  still hold.
+- **`poolname` is `k8s/volumes`,** so the zvols land in exactly the tree the old
+  driver used, and the replication job's glob is the same tree.
+- **`WaitForFirstConsumer`** — the pin decides the home, exactly as in
+  [How an app is pinned](#how-an-app-is-pinned).
+- **Node labels.** `kubectl label node <n> openebs.io/nodeid=<n>` on all three.
+  OpenEBS uses that identity for its documented PV-migration procedure, which is
+  the supported alternative to hand-writing a PV during a promotion.
+- **Volumes are `ZFSVolume` objects.** `kubectl -n openebs get zfsvolume` shows
+  node, size and state — better visibility than a driver-internal volume name.
 
-## The mesh
+Snapshot support reuses the `snapshot-controller` already running in `kube-system`;
+the `VolumeSnapshotClass` needs `driver: zfs.csi.openebs.io`. Those are for ad-hoc
+restores only — zrepl owns the periodic history.
+
+**Fallback.** If LocalPV-ZFS misbehaves, the alternative is democratic-csi's
+`zfs-local-zvol` on the same pool and the same `k8s/volumes` parent (a second
+release of that chart, driver name `org.democratic-csi.zfs-local`). Since
+`spec.csi.driver` on a PV is immutable, the choice is settled before the first
+application moves — the canary in [Migration order](#migration-order) is the
+decision point.
+
+**Coexistence.** This is a different operator from `infrastructure/democratic-csi`,
+so the nvmeof app keeps serving un-migrated volumes with no shared code path and no
+all-or-nothing cutover. Apps move one at a time.
+
+## The mesh: zrepl
 
 ### Pool layout
 
@@ -234,7 +259,7 @@ Each node has the same pool name and the same two datasets:
 
 ```
 k8s                 mountpoint=none, ashift=12, compression=lz4, atime=off
-k8s/volumes         what this node sends
+k8s/volumes         what this node snapshots and serves
 k8s/replicas        what it receives
 ```
 
@@ -244,62 +269,98 @@ is needed on the read-only root and nothing sits outside `/var`.
 ### Single-writer fan-out, not mutual sync
 
 For each volume there is **one writer** — the node that hosts the app — and **two
-read-only receivers**. Direction is a property of where the volume lives, not of
-the link, so there is no bidirectional conflict to resolve.
+read-only receivers**. Direction is a property of where the volume lives, not of the
+link, so there is no bidirectional conflict to resolve.
 
-The send set is derived from the pool, which is the whole reason there is no
-config to keep in sync:
+Each node runs three zrepl jobs:
 
-```bash
-#!/usr/bin/env bash
-# /usr/local/bin/syncoid-fanout — every storage node runs this on a timer.
-set -euo pipefail
-exec 9>/run/syncoid.lock
-flock -n 9 || { echo "another syncoid/promote run holds the lock"; exit 0; }
+| Job | Purpose |
+| --- | --- |
+| `source` | snapshot `k8s/volumes/*` every 15 minutes and serve them to peers |
+| `pull-drone-0X` ×2 | one per peer: receive that peer's `k8s/volumes/*` into `k8s/replicas` |
 
-me=$(hostname -s)
-peers=$(printf '%s\n' drone-01 drone-02 drone-03 | grep -vx "$me")
+Sketch (exact keys come from zrepl's `source`/`pull` documentation; the
+`node_zfs` role renders this per host from `host_vars`):
 
-for ds in $(zfs list -H -o name -d1 k8s/volumes | grep -v '^k8s/volumes$'); do
-  for peer in $peers; do
-    syncoid "$ds" "$peer:k8s/replicas/$(basename "$ds")"
-  done
-done
+```yaml
+jobs:
+  - name: source
+    type: source
+    serve:
+      type: tcp
+      listen: "192.168.42.<this node>:8888"   # exact `serve` shape per zrepl docs
+    filesystems:
+      "k8s/volumes/*": true
+    snapshotting:
+      type: periodic
+      interval: 15m
+      prefix: zrepl_
+
+  - name: pull-drone-02
+    type: pull
+    connect:
+      type: tcp
+      address: "drone-02:8888"
+      client_identity: drone-01
+    root_fs: k8s/replicas
+    interval: 15m
+    pruning:
+      keep_sender:
+        - type: not_replicated
+        - type: grid
+          grid: 1x1h(keep=all) | 24x1h | 14x1d
+          regex: "^zrepl_.*"
+      keep_receiver:
+        - type: grid
+          grid: 1x1h(keep=all) | 24x1h | 35x1d | 6x30d
+          regex: "^zrepl_.*"
+    # initial_replication: most_recent (default) sends one snapshot the first
+    # time; "all" seeds the whole history onto the new replica, which is worth
+    # doing once if you want every peer to be a full snapshot archive.
 ```
 
-```ini
-# /etc/systemd/system/syncoid-fanout.service
-[Unit]
-Description=Replicate local zvols to the other storage nodes
+**Why pull rather than push.** A `sink` job receives to
+`$root_fs/$client_identity/$source_path`, which would add a per-peer level
+(`k8s/replicas/drone-02/pvc-x`). `pull` receives to `$root_fs/$source_path` — exactly
+`k8s/replicas/pvc-x`, a flat tree where a volume has one obvious path on every node.
 
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/syncoid-fanout
-```
+**Nothing has to be kept in sync with the placement.** The `source` job exposes a
+glob over `k8s/volumes`; demoting a volume renames it out of that tree, so the node
+stops exposing it, and promoting one renames it in, so it starts. The only per-host
+difference is the peer address list, which the role renders.
 
-```ini
-# /etc/systemd/system/syncoid-fanout.timer
-[Unit]
-Description=Replicate local zvols every 15 minutes
+### What zrepl enforces that a script cannot
 
-[Timer]
-OnBootSec=10min
-OnUnitActiveSec=15min
-RandomizedDelaySec=120
-Persistent=true
+- **Step holds.** `keep_sender: not_replicated` withholds any snapshot a
+  replication step still needs, so pruning cannot break the next incremental. This
+  removes the whole "a pruner deleted the base snapshot" failure class that the
+  sanoid + syncoid design had to guard against with a written rule.
+- **A replication cursor** in ZFS user properties on both sides: resumes after a
+  reboot or a failed transfer without guessing, and without a surprise full send.
+- **Fails closed on divergence.** If a replica has drifted so that no common
+  snapshot exists, the step fails and says so in `zrepl status` and the metrics; it
+  does not overwrite or delete the diverged filesystem. Clearing it is then a
+  deliberate `zfs destroy` of that replica. syncoid can do the same only with
+  `--force-delete`, which is an argument you can also type by mistake.
+- **Visibility.** `zrepl status` for humans; `zrepl prometheus` for the existing
+  scrape config and the lag alert — no bespoke textfile collector.
 
-[Install]
-WantedBy=timers.target
-```
+If the two pullers ever race and a common base is gone, the worst case is a re-sent
+volume (1 GiB, seconds), never a silent overwrite.
 
-A new app needs nothing: its volume appears in `k8s/volumes`, and the next run
-ships it to both peers. The first send of a 1 GiB volume takes seconds.
+### Packaging and transport
 
-**Prerequisite:** `syncoid` runs as root and assumes root SSH to the peers. Fedora
-CoreOS locks the root account, so the `node_zfs` role has to drop
-`/root/.ssh/authorized_keys` (same keys as `core`) and leave
-`PermitRootLogin prohibit-password` in place. Three LAN machines that already grant
-`core` passwordless sudo — but it is a real exception to document, not a detail.
+- Not in Fedora proper: a statically linked Go binary from the vendor's RPM
+  repository. That repo's metadata GPG check cannot be automated, so install the
+  release RPM **by URL** in `bootc/Containerfile` — the same shape as the existing
+  `k3s-selinux` line — and **pin the version**: zrepl is pre-1.0 and the repo tracks
+  latest.
+- `zrepl.service` enabled by the image; the config is rendered to
+  `/etc/zrepl/zrepl.yml` by the `node_zfs` role.
+- Transport: `tcp` is plaintext on the LAN, which is acceptable on the segmented
+  network from [`network-segmentation.md`](network-segmentation.md) (firewalld is
+  off on every node). `tls` with mutual certs is supported if that changes.
+  `ssh+stdinserver` works but brings back root SSH, which this design avoids.
 
 ### Why full mesh rather than a ring
 
@@ -314,24 +375,23 @@ Cost: every node stores the whole mesh dataset.
 | --- | --- | --- |
 | Live state, excluding `immich-data` | 47.4 GB | 8 % |
 | Each node in the mesh holds | ~47 GB live + both peers' replicas = **the whole set** | 8 % |
-| Plus received sanoid history | small (bounded by sanoid's 24h/14d/4w) | — |
+| Plus received snapshot history | small (bounded by the `keep_receiver` grid) | — |
 
 Seeding is the only expensive moment: ~47 GB per peering, six peerings, sequential
 because they share one 1 GbE — well under an hour.
 
 ### Snapshot rules
 
-- **sanoid owns `k8s/volumes` on each node** (hourly/daily/weekly, same template
-  as `rust/k8s/volumes`).
-- **Never run sanoid on `k8s/replicas`.** If the receiver prunes a snapshot the
-  sender still needs as an incremental base, the next run fails with a missing
-  source snapshot. syncoid only prunes the `syncoid_*` snapshots it created, so
-  sanoid's history on the replica survives — which means the replica doubles as a
-  snapshot archive. That is what makes it possible to `zfs clone` an older snapshot
-  on a peer when an app corrupts its own volume.
-- **Alert on lag, not on failure.** For every peer, the age of the newest snapshot
-  in `k8s/replicas/<vol>` older than 2× the interval is the real signal — a silent
-  no-op is the failure mode.
+- **zrepl owns the app tier's snapshots and pruning**: snapshotting on the `source`
+  job's schedule, pruning through `keep_sender`/`keep_receiver` on each `pull`. No
+  sanoid on `k8s/volumes` or `k8s/replicas`.
+- **sanoid stays on drone-04 only**: `rust/media`, and `rust/k8s/volumes` until the
+  last zvol has moved.
+- The replica doubles as a snapshot archive: `keep_receiver` retains a longer grid
+  than the sender, so any peer can `zfs clone` an older snapshot when an app
+  corrupts its own volume.
+- **Alert on lag, not on failure**: scrape `zrepl prometheus` and alert when a
+  replication step is idle or behind by more than 2× the interval.
 
 ## Moving an app, and recovering a node
 
@@ -356,36 +416,44 @@ node affinities, so a pod mounting both is unschedulable. The old runbook's
 destination, so promotion costs no copy time:
 
 ```bash
-# on both nodes, under the same lock the timer takes
-flock /run/syncoid.lock bash -c '
-  # final delta while the old copy is still authoritative
-  syncoid k8s/volumes/<vol> new:k8s/replicas/<vol>
+# 1. stop the app, then wait one zrepl interval (or `zrepl signal wakeup pull-<peer>`)
+#    so the destination's replica is current. This replaces the old "final send".
+kubectl -n <ns> scale deploy/<app> --replicas=0
 
-  # demote the old owner FIRST: it drops out of the send loop
-  ssh old "sudo zfs rename k8s/volumes/<vol> k8s/replicas/<vol>"
+# 2. demote on the old owner: it leaves the source job's glob, so this node stops
+#    snapshotting and serving it
+ssh old "sudo zfs rename k8s/volumes/<vol> k8s/replicas/<vol>"
 
-  # then promote the new one: it enters the send loop
-  ssh new "sudo zfs rename k8s/replicas/<vol> k8s/volumes/<vol>"
-'
+# 3. promote on the new owner: it joins the source job's glob
+ssh new "sudo zfs rename k8s/replicas/<vol> k8s/volumes/<vol>"
 ```
 
-Then a static PV pointing at the new node, and the `nodeSelector` moved in git.
-Because a zvol can only be in one tree on one host, there is **no state in which
-two nodes both consider a volume theirs** — the stale-sender data-loss case is
-structurally impossible instead of a rule to remember. Order matters: demote, then
-promote, both under the lock.
+Then the PV and the pin: use OpenEBS's documented PV-migration procedure
+(`openebs.io/nodeid`) or a static PV pointing at the new node, move the
+`storage-home-*` component in git, and unpause.
 
-A node that is gone for good follows the same script, with the replica already
-current to the last timer run; a node that is merely rebooting needs nothing at all
-— its pods come back on it.
+Two properties make this safe rather than merely scripted:
+
+- A zvol can only be in one tree on one host, so there is **no state where two
+  nodes both consider a volume theirs**.
+- The demoted copy on the old owner is now a replica *of* the new owner. The history
+  is shared, so the next pull continues incrementally. If the copy was written to
+  after the last replication, the pull fails with a missing common snapshot — zrepl
+  neither overwrites nor deletes it. `zfs destroy` the diverged copy and let the
+  puller re-create it (seconds for a 1 GiB volume). The failure mode is a refusal
+  you clear by hand, never an overwrite.
+
+A node that is gone for good follows the same steps, with the replica already
+current to the last interval; a node that is merely rebooting needs nothing — its
+pods come back on it.
 
 ## Backups and integrity
 
 The mesh is **not** a backup: same rack, same switch, same house, same power.
 
-- **sanoid** on `k8s/volumes` per node is the fast "oops" path and the source of
-  the snapshot history the replicas carry.
-- **restic → B2** from each node, reading sanoid snapshots directly, replaces the
+- **zrepl** owns snapshotting on `k8s/volumes` per node: it is both the fast
+  "oops" path and the source of the history the replicas carry.
+- **restic → B2** from each node, reading those snapshots directly, replaces the
   VolSync/CSI-snapshot design in [`backups.md`](backups.md). It is materially
   simpler there: no mover pods, no temp PVC clones, no privileged-mover-vs-PSS
   problem and no shared-repo pruning question, because the snapshots already exist
@@ -408,16 +476,23 @@ The mesh is **not** a backup: same rack, same switch, same house, same power.
 
 ## Migration order
 
-1. **Prove the driver with three apps** once three pools exist: `rakazo` (already
-   pinned, has a database), `golink`, `gatus`. `WaitForFirstConsumer`, one app at a
-   time, `zfs-local` class, verify with the promote script still unused.
-2. **The mesh.** `syncoid-fanout` timers, root SSH keys, the lag alert. Confirm every
-   `k8s/volumes/*` has a copy in both peers' `k8s/replicas/` before trusting it.
-3. **drone-02's stack**, then **drone-01's media** — one node at a time, one short
+1. **Pools.** `docs/drone-03-rebuild.md` for drone-03, then drone-01/02 as they are
+   built. Nothing else can start until three pools exist.
+2. **CSI canary.** `infrastructure/openebs-zfs` (zfs-localpv only), the
+   `openebs.io/nodeid` labels, the `zfs-local` StorageClass and the
+   `VolumeSnapshotClass`. Move `rakazo` (already pinned, has a database), `golink`
+   and `gatus`, one at a time. **This is the go/no-go for OpenEBS versus the
+   democratic-csi `zfs-local-zvol` fallback** — decide before any further volume
+   moves, because `spec.csi.driver` is immutable.
+3. **The mesh.** zrepl RPM in the image, config rendered by `node_zfs`, then confirm
+   with `zrepl status` that every `k8s/volumes/*` exists on both peers, and wire
+   `zrepl prometheus` into the scrape config with a lag alert. Do not migrate
+   further until this is green.
+4. **drone-02's stack**, then **drone-01's media** — one node at a time, one short
    outage each.
-4. **immich last**: move `immich-data` from the zvol to the NFS dataset (a local
+5. **immich last**: move `immich-data` from the zvol to the NFS dataset (a local
    copy on drone-04, minutes), then its postgres to `zfs-local`.
-5. **Teardown** only after a week of green.
+6. **Teardown** only after a week of green.
 
 ## Cleanup found while planning
 
@@ -425,13 +500,16 @@ The mesh is **not** a backup: same rack, same switch, same house, same power.
   from a rename. Delete rather than migrate.
 - `qbittorrent` is at 0 replicas with two PVCs; confirm before moving them.
 - `immich-machine-learning-cache` is regenerable. Replicating it is 1.8 GB of
-  pointless traffic; if that ever matters, an `emptyDir` is the answer, not a
-  separate StorageClass (a second `datasetParentName` would need a second driver).
+  pointless traffic. With OpenEBS a second StorageClass on `poolname: k8s/scratch`
+  would be trivial, but zrepl's `source` glob would still have to exclude it — an
+  `emptyDir` is the simpler answer if it ever matters.
 
 ## Teardown after the last app moves
 
-- `infrastructure/democratic-csi` (nvmeof app, sealed driver config) and the
-  `zfs-generic-nvmeof-csi` StorageClass.
+- `infrastructure/democratic-csi` (the nvmeof app and its sealed driver config) and
+  the `zfs-generic-nvmeof-csi` StorageClass. `infrastructure/openebs-zfs` stays.
+- **sanoid** drops to drone-04 only (`rust/media`); the `[rust/k8s/volumes]` stanza
+  goes.
 - `bootc/overlay/etc/systemd/system/nvmet.service.d/*`,
   `usr/libexec/nvmet-detach-local`, `modules-load.d/nvmeof.conf`,
   `/etc/nvmet/config.json`, the `param_mdts` workaround notes.
@@ -452,10 +530,15 @@ Decided:
 
 - Per-node `zfs-local` pools, not a `tank` pool on drone-04, and not a distributed
   filesystem.
+- **CSI: OpenEBS LocalPV-ZFS** (`zfs.csi.openebs.io`), ext4 on 16 KiB zvols under
+  `k8s/volumes`. Fallback, if the canary fails: democratic-csi `zfs-local-zvol`.
+- **Replication: zrepl**, `source` + two `pull` jobs per node, 15-minute interval.
+  Fallback: sanoid + syncoid fan-out.
 - Full mesh, single-writer fan-out, `zfs rename` promotion.
 - Downtime accepted for node maintenance; no failover automation.
 - `immich-data` on drone-04's NFS share; everything else in the mesh.
 - 600 GiB pool / ~330 GiB root per node (see the rebuild doc).
+- democratic-csi is retired entirely once the last volume has moved.
 
 Open, deliberately deferred:
 

@@ -527,11 +527,11 @@ version:
 1. **drone-01 and drone-02** reuse this with only `hostname`/`ip`/`iface`/disk
    changing. Both are still Haswell, so this gets folded into
    `docs/drone-haswell-to-elitedesk-swap.md` rather than being a separate rebuild.
-2. When all three pools exist: the second democratic-csi Argo app
-   (`zfs-local-zvol`, driver `org.democratic-csi.zfs-local`), the per-node
+2. When all three pools exist: `infrastructure/openebs-zfs` (OpenEBS LocalPV-ZFS,
+   `zfs-local` StorageClass), zrepl for replication, the per-node
    `components/storage-home-*` components, and the app moves — see
-   [`storage-placement.md`](storage-placement.md) for the placement, the mesh,
-   and the promote runbook.
+   [`storage-placement.md`](storage-placement.md) for the placement, the mesh, and
+   the promote runbook.
 3. Then the teardown: `zfs-generic-nvmeof-csi`, the nvmet driver deployment and
    sealed config, `bootc/overlay/etc/systemd/system/nvmet.service.d/*`,
    `usr/libexec/nvmet-detach-local`, `modules-load.d/nvmeof.conf`, the

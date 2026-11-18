@@ -4,9 +4,9 @@
 > node-local ZFS pools on drone-01/02/03 with a replicated mesh, not to a `tank`
 > pool on drone-04. The `Path A` all-or-nothing cutover below is the reason: it
 > was the only option because a single democratic-csi deployment owns one
-> `datasetParentName`, and the replacement design avoids that constraint by
-> running a separate `zfs-local` driver. See
-> [`storage-placement.md`](storage-placement.md) and
+> `datasetParentName`, and the replacement design avoids that constraint by using
+> a different CSI operator entirely (OpenEBS LocalPV-ZFS).
+> See [`storage-placement.md`](storage-placement.md) and
 > [`drone-03-rebuild.md`](drone-03-rebuild.md). The capacity analysis and the
 > `zfs send`/`recv` notes are still useful as reference; nothing here was applied.
 
