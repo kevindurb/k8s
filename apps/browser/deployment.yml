@@ -82,7 +82,7 @@ spec:
               cpu: '1'
               memory: 2Gi
         - name: mcp
-          image: mcr.microsoft.com/playwright/mcp:v0.0.85@sha256:8ca417ff2a3660b770d7dd4a293bd179d0f3c29d0d5fb5bc43d3be617b1566a2
+          image: mcr.microsoft.com/playwright/mcp:v0.0.86@sha256:2dfc17e08e8db54678ec965ce9ffb4100be0aa68135774d761bac9035ceb6668
           # The image's own entrypoint pins --headless and a browser it launches itself.
           # Replace it so the only browser in play is the one attached over CDP, and so
           # the allowed-hosts check accepts the hostname the Tailscale proxy forwards.
