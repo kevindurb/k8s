@@ -17,3 +17,18 @@ spec:
             device: {op: In, value: ["15dd"]}
       labels:
         media/gpu: "amd-vega"
+    # The CyberPower UPS attached to drone-03. Matching the raw USB feature
+    # keeps `deviceClassWhitelist` at its default: that option replaces rather
+    # than extends the list, so adding HID (03) there would drop `ff` and take
+    # `usb-ff_10c4_ea60.present` with it, leaving zigbee2mqtt unable to
+    # schedule on its next restart. Rules match features, so no whitelist edit
+    # is needed. This unit reports no USB serial, hence the model match.
+    - name: cyberpower.ups
+      matchFeatures:
+        - feature: usb.device
+          matchExpressions:
+            class: {op: In, value: ["03"]}
+            vendor: {op: In, value: ["0764"]}
+            device: {op: In, value: ["0601"]}
+      labels:
+        hardware/ups: "or2200pfcrt2u"

@@ -2,11 +2,11 @@
 
 ## 1. NFD hardware label
 
-- [ ] 1.1 Add a `cyberpower.ups` rule to
+- [x] 1.1 Add a `cyberpower.ups` rule to
       `infrastructure/node-feature-discovery/rules/nodefeaturerule.yml`, matching `usb.device` on
       `class: 03`, `vendor: 0764`, `device: 0601` and emitting `hardware/ups: or2200pfcrt2u`;
       verify the file still parses with `yq` and `just check-kustomize` passes.
-- [ ] 1.2 Confirm the rule matches raw features rather than labels, so that no
+- [x] 1.2 Confirm the rule matches raw features rather than labels, so that no
       `deviceClassWhitelist` change is needed: verify `infrastructure/node-feature-discovery/app.yml`
       is unmodified in this change (`git diff` shows no edit to that file) and that the rule has no
       dependency on `usb-03_…` label text.
