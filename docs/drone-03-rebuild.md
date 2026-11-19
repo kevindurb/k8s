@@ -83,22 +83,46 @@ is `--save-partlabel`, which `iso customize` reaches through
 behaves exactly as before:
 
 ```sh
-just gen-installer-config drone-03 /dev/nvme0n1 zfs    # → dist/drone-03-install.yaml
+just gen-installer-config drone-03 zfs                  # → dist/drone-03-install.yaml
 just build-iso drone-03 /dev/nvme0n1 drone-03-install.yaml
 ```
 
-Both paths were built and inspected on 2026-11-19. The resulting ISO carries the
-config as an embedded file:
+Both paths were built and inspected on 2026-11-19. The resulting ISO carries two
+config files, and **the split between them matters**:
 
 ```
-/etc/coreos/installer.d/0000-drone-03-install.yaml   # config build
-dest-device: /dev/nvme0n1
+/etc/coreos/installer.d/0000-drone-03-install.yaml   # ours
 save-partlabel:
   - zfs
+
+/etc/coreos/installer.d/0001-customize.yaml          # from iso customize
+ignition-file: /etc/coreos/dest.ign
+dest-device: /dev/nvme0n1
 ```
 
-…and the plain build has only `installer.d/0000-customize.yaml` (the
-`--dest-device`), so the difference is the preserved partition and nothing else.
+⚠️ **`dest-device` must appear in exactly one of them.** `coreos-installer-service`
+passes *every* file in `installer.d/` as its own `--config-file`, and each one
+that names `dest-device` contributes the positional device argument. Two of them
+produce two positionals and the install dies **before touching the disk**:
+
+```
+Running with arguments: --save-partlabel zfs /dev/nvme0n1 --ignition-file … /dev/nvme0n1
+error: unexpected argument '/dev/nvme0n1' found
+```
+
+This is exactly what the first real attempt did on 2026-11-19, because
+`gen-installer-config` originally emitted `dest-device` too. It now emits only
+`save-partlabel`; the device stays with `iso customize --dest-device`, which is
+also what makes the install unattended. Reproduced and fixed against the same
+`coreos-installer 0.27.0` binary the live environment runs:
+
+```
+# good: one positional
+--save-partlabel zfs --ignition-file /etc/coreos/dest.ign /dev/nvme0n1 --fetch-retries infinite
+```
+
+A failed install like this is harmless to the disk — the argument parsing aborts
+before any write, so the partition plan survives and a retry is just a reflash.
 
 `save-partlabel` matches the **GPT partition label, not a filesystem label**
 (`coreos-installer` man page), so `sgdisk -c 5:zfs` is what makes this work. Do

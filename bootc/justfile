@@ -59,11 +59,18 @@ build-iso hostname device installer_config='':
 # long options without the leading "--"; repeatable options are arrays.
 # `label` is the GPT partition *label* (`sgdisk -c 5:zfs`), never a filesystem
 # label — coreos-installer matches on the partition table.
-gen-installer-config hostname device label:
+#
+# ⚠️ Do NOT add `dest-device` here. `iso customize --dest-device` already writes
+# it to /etc/coreos/installer.d/0001-customize.yaml, and the live service passes
+# EVERY file in that directory as its own `--config-file`. dest-device becomes
+# the positional device argument, so two files naming it produce two positionals
+# and the install dies with "unexpected argument /dev/nvme0n1" before touching
+# the disk. Reproduced 2026-11-19; `save-partlabel` alone merges cleanly.
+gen-installer-config hostname label:
   #! /usr/bin/env bash
   set -euxo pipefail
   mkdir -p {{dist}}
-  printf -- '---\ndest-device: %s\nsave-partlabel:\n  - %s\n' "{{device}}" "{{label}}" \
+  printf -- '---\nsave-partlabel:\n  - %s\n' "{{label}}" \
     > {{dist}}/{{hostname}}-install.yaml
   cat {{dist}}/{{hostname}}-install.yaml
 
