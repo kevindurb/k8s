@@ -1,4 +1,8 @@
-FROM ghcr.io/ublue-os/ucore:stable-nvidia-lts
+# Pinned by digest so a kernel move is a reviewable commit rather than tag drift;
+# with ZFS in the app tier a kernel that outruns its kmod breaks storage on three
+# nodes. Renovate opens these bumps. Index digest for
+# ghcr.io/ublue-os/ucore:stable-nvidia-lts 44.20261023.3.1.
+FROM ghcr.io/ublue-os/ucore:stable-nvidia-lts@sha256:59d41bc9b29cadf4b3b89afdf66a186c827c5d7dde301bc926bdb2cb3c866724
 
 # renovate: datasource=github-releases depName=k3s-selinux packageName=k3s-io/k3s-selinux
 ARG K3S_SELINUX_VERSION=1.6-1

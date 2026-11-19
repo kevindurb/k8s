@@ -1,3 +1,8 @@
 # SPDX-License-Identifier: MIT-0
 ---
 # defaults file for nas-zfs
+
+# ZFS ARC cap for this node, in bytes. The image ships 2 GiB (sized for the
+# drone-01/02/03 app nodes); drone-04 is the one node that runs nothing but
+# ZFS + NFS, so it overrides that in host_vars.
+nas_zfs_arc_max_bytes: 2147483648

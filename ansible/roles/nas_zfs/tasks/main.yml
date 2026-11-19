@@ -1,5 +1,30 @@
 # SPDX-License-Identifier: MIT-0
 ---
+# The image ships a 2 GiB cap, sized for the app nodes that each run a pool and a
+# dozen pods in ~22 GiB. This node does nothing but ZFS + NFS, so it gets the RAM.
+# A separate file whose name sorts after the image's zfs.conf wins on merge; the
+# live write is what makes it take effect without a reboot.
+- name: Cap the ZFS ARC for this storage node
+  ansible.builtin.copy:
+    content: |
+      # Rendered by ansible/roles/nas_zfs. Overrides /etc/modprobe.d/zfs.conf
+      # from the image (later file wins).
+      options zfs zfs_arc_max={{ nas_zfs_arc_max_bytes }}
+    dest: /etc/modprobe.d/99-zfs-arc.conf
+    mode: '0644'
+
+- name: Apply the ARC cap now
+  ansible.builtin.shell: |
+    set -o pipefail
+    if [ "$(cat /sys/module/zfs/parameters/zfs_arc_max)" != "{{ nas_zfs_arc_max_bytes }}" ]; then
+      echo {{ nas_zfs_arc_max_bytes }} > /sys/module/zfs/parameters/zfs_arc_max
+      echo changed
+    fi
+  args:
+    executable: /bin/bash
+  register: zfs_arc_apply
+  changed_when: "'changed' in zfs_arc_apply.stdout"
+
 - name: Create rust zpool
   community.general.zpool:
     name: rust
