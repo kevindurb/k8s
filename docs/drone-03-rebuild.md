@@ -1,9 +1,14 @@
 # Rebuild drone-03 with a ZFS pool on the boot NVMe
 
-Status: **prerequisites landed (2026-11-19).** The six changes below are in git;
-the rebuild window has not run yet. This is the first of the three app nodes to
-get a node-local `k8s` pool, and therefore the rehearsal for drone-01 and
-drone-02.
+Status: **✅ complete (2026-11-19).** drone-03 is rebuilt, back in the cluster on
+the node image, and carries a healthy 600 GiB `k8s` pool. This was the first of
+the three app nodes and the rehearsal for drone-01/02 — both of which now have a
+corrected, VM-validated procedure to follow (see [Phase 2](#phase-2--partition-and-install)).
+
+Result: `p5 zfs` 600.0 GiB last, `root` 331 G grown into the gap, pool ONLINE and
+importing at boot, `zfs send|recv` verified, `media/gpu=amd-vega` arriving from
+`k3s_node_labels`, `zfs_arc_max` = 2 GiB (the new image default). Jellyfin and
+rakazo are Running on drone-03 again.
 
 ## Context
 
@@ -169,6 +174,35 @@ invariants, rather than a second copy of the file:
   on both datasets**, `ashift=12`, `autotrim=on`, `lz4`, `atime=off`, `xattr=sa`;
 - datasets `volumes` (what this node serves) and `replicas` (what it receives);
 - `zpool status -x` as the health gate, so a degraded pool fails the play.
+
+⚠️ **`community.general` 13 changed the `zpool` module's API** and the original
+snippet in this doc was written against the old one. As of 13.x:
+
+- `vdevs` is a list of **dicts** (`role`/`type`/`disks`), not a list of paths —
+  `vdevs: ['/dev/…']` fails with `dictionary requested, could not parse JSON or
+  key=value` (the error names neither the task nor the parameter);
+- `extra_zfs_properties` is gone; pool-level settings go in `pool_properties`
+  and root-dataset settings (`compression`, `atime`, `xattr`) in
+  `filesystem_properties`.
+
+The role as landed:
+
+```yaml
+- name: Create the node pool
+  community.general.zpool:
+    name: '{{ node_zfs_pool_name }}'
+    vdevs:
+      - disks:
+          - '{{ node_zfs_pool_device }}'
+    mountpoint: none
+    pool_properties:
+      ashift: '12'
+      autotrim: 'on'
+    filesystem_properties:
+      compression: lz4
+      atime: 'off'
+      xattr: 'sa'
+```
 
 **Not** in this role: the ARC cap — see [5](#5-arc-sizing--do-not-let-the-images-8-gib-follow-you).
 
@@ -459,36 +493,44 @@ same mistake on drone-01 means doing the whole swap twice.
 
 ## Phase 4 — Rejoin, label, and create the pool
 
+✅ **Done 2026-11-19.** Order that worked:
+
 ```sh
-# base + k3s only: the tailscale role runs `tailscale up`, which blocks on an
-# auth URL on a fresh node. Join the tailnet by hand afterwards.
+# 1. tailnet first — see "no LAN fallback" in the swap doc's Step 5
+sudo tailscale up --accept-dns=false --ssh \
+  --auth-key=tskey-auth-… --advertise-tags=tag:k8s-node
+#    → Running, tags ["tag:k8s-node"]
+
+# 2. base + k3s (the tailscale role is a no-op re-up, so joining by hand first
+#    is still the right order)
 just playbook provision.yml --limit drone-03 --tags base,k3s
+#    → ok=17 changed=4 failed=0, node Ready
 
-ssh core@192.168.42.23 sudo tailscale up --accept-dns=false --ssh
-# open the printed URL, or pass --authkey=... from the admin console
-```
-
-The `media/gpu=amd-vega` label arrives with the k3s role (change 4). Now the pool:
-
-```sh
+# 3. the pool
 just playbook provision.yml --limit drone-03 --tags node_zfs
 ```
 
-Expect:
+`media/gpu=amd-vega` arrived **automatically** with the k3s role — verified on
+the node, which is the whole point of change 4 (no more silent Pending Jellyfin).
+
+Expect and verify:
 
 ```sh
 zpool status -x k8s      # "pool 'k8s' is healthy"
+zpool list               # k8s 596G ONLINE  (600 GiB raw minus parity-less slack)
 zfs list -r k8s          # k8s, k8s/volumes, k8s/replicas, all mountpoint=none
-zfs get -H -o value ashift,compression,atime k8s
-cat /sys/module/zfs/parameters/zfs_arc_max    # 2147483648 — the image default
+sudo zfs get -H -o value compression,atime,xattr k8s   # lz4, off, sa
+sudo zpool get ashift k8s                              # ashift is a POOL property
+cat /sys/module/zfs/parameters/zfs_arc_max             # 2147483648 — image default
+sudo ls -l /etc/hostid                                 # zgenhostid ran
 ```
+
+⚠️ `ashift` is a **pool** property: `zfs get ashift k8s` prints the whole
+property usage text and fails, which reads like a broken pool and is not.
 
 `zpool create` is deliberately **not** run from the live ISO. `zpool.cache` and
 `/etc/hostid` have to land in the *installed* system's `/etc`, which is not
 coherent until it has booted.
-
-Finally: `kubectl get node drone-03 --show-labels` shows `media/gpu=amd-vega`,
-and Jellyfin schedules back onto the Vega.
 
 ## Phase 5 — Prove the pool
 
@@ -497,6 +539,12 @@ on them:
 
 ```sh
 sudo zfs create -V 1G k8s/volumes/probe
+
+# /dev/zvol/<pool>/<ds> is a udev symlink created ASYNCHRONOUSLY. Without this
+# wait, mkfs runs first and dies with "does not exist and no size was specified",
+# which reads like a failed zvol and is just a race.
+for _ in $(seq 1 40); do [ -e /dev/zvol/k8s/volumes/probe ] && break; sleep 0.25; done
+
 sudo mkfs.ext4 -q /dev/zvol/k8s/volumes/probe
 sudo mkdir -p /mnt/probe
 sudo mount /dev/zvol/k8s/volumes/probe /mnt/probe
@@ -518,6 +566,10 @@ sudo zfs destroy -r k8s/replicas/probe
 sudo zfs destroy -r k8s/volumes/probe
 sudo zfs list -r k8s
 ```
+
+✅ **Done 2026-11-19:** `SEND-RECV OK (4ff7a969…)`, then a reboot, after which
+`zpool status -x k8s` reported `pool 'k8s' is healthy` and the datasets were
+intact — import-at-boot works on this image.
 
 A reboot with the pool in place is worth doing once here too: `zpool status`
 afterwards proves import-at-boot works on this image, which matters more than it

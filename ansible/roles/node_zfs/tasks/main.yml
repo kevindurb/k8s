@@ -37,12 +37,18 @@
 - name: Create the node pool
   community.general.zpool:
     name: '{{ node_zfs_pool_name }}'
-    vdevs: ['{{ node_zfs_pool_device }}']
+    # community.general >= 13 declares `vdevs` as a list of DICTS
+    # (role/type/disks), not a list of device paths.
+    vdevs:
+      - disks:
+          - '{{ node_zfs_pool_device }}'
     mountpoint: none
     pool_properties:
       ashift: '12'
       autotrim: 'on'
-    extra_zfs_properties:
+    # Root-dataset properties (inherited by the zvols); `extra_zfs_properties`
+    # was removed from this module.
+    filesystem_properties:
       compression: lz4
       atime: 'off'
       xattr: 'sa'
