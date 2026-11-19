@@ -17,7 +17,12 @@ spec:
               sources:
                 pci:
                   deviceLabelFields:
-                    - 'vendor' # gpu-operator expects only vendor
+                    - 'vendor'
+                    - 'device'
+    # NodeFeatureRules live in git, next to the chart that consumes them.
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: infrastructure/node-feature-discovery/rules
   destination:
     server: https://kubernetes.default.svc
     namespace: node-feature-discovery

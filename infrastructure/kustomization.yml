@@ -8,7 +8,6 @@ resources:
   - coredns/app.yml
   - democratic-csi/app.yml
   - gatus/app.yml
-  - gpu-operator/app.yml
   - healthchecks/app.yml
   - kube-state-metrics/app.yml
   - kube-vip/app.yml
