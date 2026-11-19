@@ -29,11 +29,20 @@ download-iso:
 # Bootable installer that writes the node image setup to `device` and runs the
 # dest ignition unattended. `device` has no default: it is overwritten without
 # confirmation, and the EliteDesk 705 G4 ships with SATA or NVMe.
-build-iso hostname device:
+#
+# Optional third argument: an installer config YAML in `dist/` (see
+# gen-installer-config). With it, the embedded install keeps the partitions it
+# names — that is how the node-local ZFS pool survives the reinstall.
+build-iso hostname device installer_config='':
   #! /usr/bin/env bash
   set -euxo pipefail
   ISO=$(ls {{dist}}/fedora-coreos-*.iso | tail -1 | xargs basename)
   rm -f {{dist}}/{{hostname}}.iso
+
+  EXTRA=()
+  if [ -n "{{installer_config}}" ]; then
+    EXTRA=(--installer-config "/data/{{installer_config}}")
+  fi
 
   podman run --rm --privileged \
   -v {{dist}}:/data \
@@ -41,8 +50,22 @@ build-iso hostname device:
   iso customize \
   --dest-device {{device}} \
   --dest-ignition /data/{{hostname}}.ign \
+  "${EXTRA[@]}" \
   --output /data/{{hostname}}.iso \
   "/data/$ISO"
+
+# Installer config that preserves a GPT partition across the install, so the
+# `k8s` zpool created on it later is not wiped. Key names are coreos-installer
+# long options without the leading "--"; repeatable options are arrays.
+# `label` is the GPT partition *label* (`sgdisk -c 5:zfs`), never a filesystem
+# label — coreos-installer matches on the partition table.
+gen-installer-config hostname device label:
+  #! /usr/bin/env bash
+  set -euxo pipefail
+  mkdir -p {{dist}}
+  printf -- '---\ndest-device: %s\nsave-partlabel:\n  - %s\n' "{{device}}" "{{label}}" \
+    > {{dist}}/{{hostname}}-install.yaml
+  cat {{dist}}/{{hostname}}-install.yaml
 
 # Bench stick: the same live ISO with a live ignition only, so it boots to a
 # console with sshd and a known static address and never touches a disk. Use it
