@@ -17,8 +17,8 @@ presence rather than by hostname.
 #### Scenario: UPS attached to a node
 
 - **WHEN** the UPS is connected to a node's USB port
-- **THEN** within one feature-detection interval that node carries a USB device label naming
-  the UPS's device class, vendor and product identifiers
+- **THEN** within one feature-detection interval that node carries a label identifying the
+  attached UPS model, sufficient for a workload to select the node by hardware presence
 
 #### Scenario: UPS detached from a node
 
@@ -37,20 +37,20 @@ presence rather than by hostname.
 - **THEN** the published label is still unique to that device model and does not depend on a
   serial value
 
-### Requirement: Existing USB device-class scheduling is preserved
+### Requirement: Existing hardware-based scheduling is preserved
 
-The cluster SHALL continue to advertise every USB device class that an existing workload's
-scheduling constraint depends on whenever USB device-class discovery is extended.
+The cluster SHALL NOT remove a node label that an existing workload's scheduling constraint
+depends on when node feature discovery is configured to recognise new hardware.
 
-#### Scenario: A new device class is added
+#### Scenario: A new hardware rule is added
 
-- **WHEN** the set of discovered USB device classes is extended to include the UPS's class
-- **THEN** labels for previously discovered classes remain published
+- **WHEN** a rule is added so that NFD recognises an additional device
+- **THEN** labels produced for previously recognised hardware remain published
 
 #### Scenario: An existing hardware-pinned workload is rescheduled
 
-- **WHEN** a workload pinned by a USB device label restarts after the discovery change
-- **THEN** it is scheduled onto the node holding its device
+- **WHEN** a workload pinned by a hardware label restarts after that rule was added
+- **THEN** it is rescheduled onto the node holding its device
 
 ### Requirement: UPS variables are served from a stable in-cluster endpoint
 

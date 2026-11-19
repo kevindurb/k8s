@@ -1,18 +1,20 @@
 # Tasks
 
-## 1. NFD USB device-class discovery
+## 1. NFD hardware label
 
-- [ ] 1.1 Add `worker.config.sources.usb.deviceClassWhitelist: ['03', '0e', 'ef', 'fe', 'ff']` to
-      `infrastructure/node-feature-discovery/app.yml`, leaving the existing `sources.pci`
-      entry untouched; verify the file still parses with `yq` and `just check-kustomize` passes.
-- [ ] 1.2 Confirm the whitelist is additive rather than replacing: read the rendered values and
-      check that all five classes are present, `ff` included. Verify by diffing against the
-      current file — `ff` must not silently disappear.
-- [ ] 1.3 After Argo CD syncs, verify `drone-03` carries
-      `feature.node.kubernetes.io/usb-03_0764_0601.present` and `drone-02` still carries
-      `feature.node.kubernetes.io/usb-ff_10c4_ea60.present`
-      (`kubectl get node <name> -o jsonpath='{.metadata.labels}'`). If the Zigbee label is gone,
-      stop and revert this group before continuing.
+- [ ] 1.1 Add a `cyberpower.ups` rule to
+      `infrastructure/node-feature-discovery/rules/nodefeaturerule.yml`, matching `usb.device` on
+      `class: 03`, `vendor: 0764`, `device: 0601` and emitting `hardware/ups: or2200pfcrt2u`;
+      verify the file still parses with `yq` and `just check-kustomize` passes.
+- [ ] 1.2 Confirm the rule matches raw features rather than labels, so that no
+      `deviceClassWhitelist` change is needed: verify `infrastructure/node-feature-discovery/app.yml`
+      is unmodified in this change (`git diff` shows no edit to that file) and that the rule has no
+      dependency on `usb-03_…` label text.
+- [ ] 1.3 After Argo CD syncs, verify `drone-03` carries `hardware/ups: or2200pfcrt2u`, and that
+      `drone-02` still carries `feature.node.kubernetes.io/usb-ff_10c4_ea60.present` and the minis
+      still carry `media/gpu: amd-vega`
+      (`kubectl get node <name> -o jsonpath='{.metadata.labels}'`). If the `amd-vega` label is
+      gone, the rule file was damaged — revert this group before continuing.
 
 ## 2. NUT application
 
@@ -21,7 +23,7 @@
       verify no plaintext password is present in the committed file and that `kubeseal`
       round-trips against the cluster key.
 - [ ] 2.2 Write `infrastructure/nut/deployment.yml`: single-replica `Recreate` Deployment,
-      `privileged`, `nodeSelector` on `feature.node.kubernetes.io/usb-03_0764_0601.present`,
+      `privileged`, `nodeSelector` on `hardware/ups: or2200pfcrt2u`,
       `hostPath` volumes for `/dev/bus/usb` (writable), `/sys/bus/usb` and `/run/udev`
       (read-only). Container `app` runs the NUT driver + `upsd` in the foreground; verify
       `kustomize build infrastructure/nut` renders and the manifest contains no `hostNetwork`
@@ -66,15 +68,19 @@
 ## 4. Prometheus alerting
 
 - [ ] 4.1 Confirm the live metric names and label shapes for `ups.status` flags and load by
-      querying Prometheus before writing rules; verify the load metric and at least the `OL`
-      flag are present and that `OB`/`LB`/`RB` are exposed as `0` rather than absent.
+      querying Prometheus before writing rules; verify the load metric is present and that the
+      exporter emits every status flag as `0`/`1` rather than omitting unset ones. Note that the
+      UPS currently asserts `LB` (battery charge 2%), so the low-battery series must be expected
+      to read `1` — that is real state, not a malformed exporter.
 - [ ] 4.2 Add a UPS alert group to `infrastructure/prometheus/config/rules/rules.yml` covering
       on-battery, low-battery, replace-battery, overload, load above the capacity threshold, and
       UPS metrics absent; verify the file still satisfies yamllint's document-start and line
       length rules and that the expressions reference the names confirmed in 4.1.
 - [ ] 4.3 Verify the rules load without parse errors in the Prometheus UI and that the
       metrics-absent alert fires when the `nut` pod is scaled to zero, then clears when it is
-      restored.
+      restored. Expect the low-battery alert to be firing throughout, since the battery sits at
+      2%: use it as live proof that the `LB` expression works, and do not mistake it for this
+      test leaking.
 
 ## 5. Integration verification
 
@@ -82,7 +88,7 @@
       `network_ups_tools_ups_load` series for the same moment, and the `instance` label on that
       series is `drone-03`.
 - [ ] 5.2 Verify the rollback path is recorded and reversible: removing `nut/app.yml` from
-      `infrastructure/kustomization.yml` plus reverting the whitelist still leaves
+      `infrastructure/kustomization.yml` plus reverting the NFD rule still leaves
       `just check-kustomize` passing.
 
 ## Workflow follow-up

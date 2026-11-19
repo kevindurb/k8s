@@ -5,10 +5,10 @@
 See `proposal.md` — Why. The constraints that shape the approach, established by inspecting
 the cluster and probing the device:
 
-- **The device.** CyberPower OR2200PFCRT2U, USB ID `0764:0601`, attached to `drone-03` at bus
-  port `4-2` (`/dev/bus/usb/004/002`). One HID interface, class `03`, bound to `usbhid`. The
-  USB **serial descriptor is empty**. NUT 2.8.5 with `usbhid-ups` and the `CyberPower HID 0.85`
-  subdriver drives it cleanly.
+- **The device.** CyberPower OR2200PFCRT2U, USB ID `0764:0601`, attached to `drone-03`. Its bus
+  address has been `2-3`, then `4-2`, and is now `1-3` across moves and rebuilds. One HID
+  interface, class `03`, bound to `usbhid`. The USB **serial descriptor is empty**. NUT 2.8.5
+  with `usbhid-ups` and the `CyberPower HID 0.85` subdriver drives it cleanly.
 - **What it reports.** `ups.load`, `battery.charge`, `battery.runtime`, `battery.voltage`,
   `input.voltage`, `output.voltage`, `ups.status`, `ups.realpower.nominal: 1540`.
   It does **not** report `ups.realpower`, `ups.power`, `input.current`, `output.current` or
@@ -16,13 +16,17 @@ the cluster and probing the device:
 - **What it controls.** No per-outlet variables. It does expose global `load.off`, `load.on`
   and `shutdown.*`, gated by `driver.flag.allow_killpower: 0`. Out of scope here, but the
   existence of a one-command whole-rack power cut argues for never granting `instcmds`.
-- **NFD is Helm-only** (`infrastructure/node-feature-discovery/app.yml`) and currently sets
-  only `sources.pci.deviceLabelFields`. USB discovery runs, but the default
-  `deviceClassWhitelist` is `['0e','ef','fe','ff']` — HID (`03`) is absent, so the UPS
-  produces no label today.
-- **`zigbee2mqtt` is pinned by `usb-ff_10c4_ea60.present`** on `drone-02`. That label comes
-  from the same whitelist and is the reason the whitelist edit is the riskiest line in this
-  change.
+- **NFD is Helm-plus-rules** (`infrastructure/node-feature-discovery/app.yml`): the chart, with
+  `worker.config.sources.pci.deviceLabelFields: [vendor, device]`, plus a second `sources[]`
+  entry pointing at `infrastructure/node-feature-discovery/rules`, which already manages a
+  `NodeFeatureRule` deriving `media/gpu: amd-vega` from raw PCI features.
+- **USB discovery is unfiltered; only label emission is filtered.** The worker publishes every
+  attached USB device into its `NodeFeature` object, while `deviceClassWhitelist` decides only
+  which labels the worker emits itself. Observed directly: `drone-03`'s `NodeFeature` carries
+  `{'class': '03', 'device': '0601', 'vendor': '0764'}` while the node has no `usb-03…` label,
+  because the default whitelist `['0e','ef','fe','ff']` excludes HID.
+- **`zigbee2mqtt` is pinned by `usb-ff_10c4_ea60.present`** on `drone-02`, where it is still
+  running. That label comes from the same whitelist, which is why this design does not touch it.
 - **Prometheus scrapes by annotation.** `kubernetes-service-endpoints` keeps targets carrying
   `prometheus.io/scrape`, honours `prometheus.io/path` and `prometheus.io/port`, and overwrites
   `instance` with the pod's node name.
@@ -49,47 +53,57 @@ the cluster and probing the device:
 
 ## Decisions
 
-### Place the workload by NFD USB label, not by hostname
+### Place the workload by a hardware label, not by hostname
 
-`nodeSelector: feature.node.kubernetes.io/usb-03_0764_0601.present: "true"`.
+`nodeSelector: hardware/ups: or2200pfcrt2u`.
 
 The label means *the device is present*, which is what the workload actually requires. A
 `kubernetes.io/hostname: drone-03` selector would encode a fact rather than a capability, and
-would silently point at a machine with no UPS after a rebuild. The repo already does this for
+would silently point at a machine with no UPS after a rebuild. The repo already does this with
 `zigbee2mqtt`.
 
-*Alternative rejected:* hand-set node label (`apps/jellyfin` uses `media/gpu: amd-vega`, which
-is not managed by Ansible or Argo and drifts). NFD labels are derived from hardware, so they
-cannot drift.
+*Alternative rejected:* a hand-set node label. `apps/jellyfin` carried `media/gpu: amd-vega` as a
+manually applied label precisely because nothing derived it from hardware, and the `amd-vega`
+NodeFeatureRule exists to replace exactly that drift. Deriving the label from hardware is the
+established pattern, not a new one.
 
-### Label by class, vendor and product — never by serial
+### Match by class, vendor and product — never by serial
 
-Keep NFD's default `deviceLabelFields: [class, vendor, device]`, yielding
-`usb-03_0764_0601.present`. The probe showed the device's USB serial descriptor is empty, so a
-serial-derived label would be malformed on this exact unit and would collide with any second
-unit of the same model. The default fields also keep the label format identical in shape to
-`zigbee2mqtt`'s.
+The rule matches `usb.device` on `class: 03`, `vendor: 0764`, `device: 0601`. The probe showed
+the device's USB serial descriptor is empty, so anything keyed on serial would be malformed on
+this exact unit and would collide with a second unit of the same model. Model identity is the
+right granularity for one UPS.
 
-### Extend the USB whitelist additively
+### Label via a NodeFeatureRule, not the USB whitelist
+
+The rule lives beside the existing one in
+`infrastructure/node-feature-discovery/rules/nodefeaturerule.yml`:
 
 ```yaml
-worker:
-  config:
-    sources:
-      pci:
-        deviceLabelFields: ['vendor']      # unchanged
-      usb:
-        deviceClassWhitelist: ['03', '0e', 'ef', 'fe', 'ff']
+- name: cyberpower.ups
+  matchFeatures:
+    - feature: usb.device
+      matchExpressions:
+        class:  {op: In, value: ["03"]}
+        vendor: {op: In, value: ["0764"]}
+        device: {op: In, value: ["0601"]}
+  labels:
+    hardware/ups: or2200pfcrt2u
 ```
 
-`deviceClassWhitelist` **replaces** the default rather than appending to it. Omitting `ff`
-removes `usb-ff_10c4_ea60.present` from `drone-02`; because node labels gate scheduling and not
-liveness, `zigbee2mqtt` would keep running until its next reschedule and then fail to schedule
-at all, with no obvious cause. Every entry of the default list is therefore preserved.
+This works because `nfd-master` evaluates rules against the published `NodeFeature` features, and
+those are unfiltered by device class — the whitelist only governs the labels the worker emits
+itself. The UPS is therefore already visible to a rule, with the whitelist untouched.
 
-*Alternative rejected:* a `NodeFeatureRule` emitting a friendlier `hardware.nfd/ups: true`. It
-reads better in a manifest but adds a CRD and a second place to update when the device changes;
-the raw NFD label is adequate for one device.
+The first draft of this design did the opposite: add `03` to `deviceClassWhitelist`. That option
+**replaces** the default list rather than extending it, so a list without `ff` removes
+`usb-ff_10c4_ea60.present` from `drone-02`. Node labels gate scheduling and not liveness, so
+`zigbee2mqtt` would keep running until its next reschedule and then fail to schedule at all, with
+no obvious cause. Breaking an unrelated workload silently and on a delay, to obtain a label the
+repo can already produce another way, is not a trade worth making.
+
+The rule also reads better at the point of use — `hardware/ups: or2200pfcrt2u` rather than
+`usb-03_0764_0601.present` — and follows the `media/gpu` precedent for hardware-derived labels.
 
 ### Privileged Deployment, not DaemonSet and not a bootc image change
 
@@ -177,13 +191,19 @@ independent thing to silence during maintenance.
 
 ## Risks / Trade-offs
 
-- **This unit may never populate `ups.load`.** It currently reads `0` with nothing plugged into
-  the outlets, which is also what a non-reporting unit looks like. → Detectable: the load series
-  staying flat at zero once the UPS carries real load is the signal. If it is real, metering
-  degrades to UPS health monitoring and the watts/kWh work is dropped; nothing else breaks.
-- **The `15.4` multiplier is unverified**, and a VA-vs-W misinterpretation would put it up to
-  ~25% out. → Confined to one template sensor, documented as an estimate, recomputable from a
-  single measurement later.
+- **`ups.load` was unconfirmed when this was drafted; it does report.** Measured 18–19% with the
+  rack attached, so metering works as designed. Retained as a note because it is the only power
+  signal the device offers: a flat zero while the rack is up would be a real fault, not an idle
+  UPS.
+- **The `15.4` multiplier is an estimate, but a tighter one than first assumed.** The nameplate
+  ratio (1540 W / 2000 VA = 0.77) is close to the rated power factor, so reading `ups.load` as a
+  percentage of VA instead of W lands within roughly 4% of the same answer; the residual spread
+  is the load's actual power factor, about 290–340 W at the observed 19%. → Still expressed in
+  one place and labelled an estimate, so recalibration is a single edit.
+- **The label now depends on published features.** Rules are evaluated against the `NodeFeature`
+  objects, so adding `usb.device` to `core.noPublishFeatures` — a plausible way to shrink those
+  objects later — would silently stop the rule matching. → Recorded here; a vanished label after
+  such a change is the symptom.
 - **Documented CyberPower USB flakiness** (the driver silently losing the device). → `pollonly`
   + `pollinterval=15`, plus an explicit metrics-absent alert and the container restart policy.
 - **Node labels do not evict running pods.** Moving the cable relabels the nodes but leaves the
@@ -201,17 +221,18 @@ independent thing to silence during maintenance.
 
 Additive and independently revertible at each step:
 
-1. **NFD whitelist only.** Sync, then confirm `usb-03_0764_0601.present` appears on `drone-03`
-   *and* `usb-ff_10c4_ea60.present` still exists on `drone-02`. Stop and revert here if the
-   Zigbee label is lost.
+1. **NodeFeatureRule only.** Sync, then confirm `hardware/ups: or2200pfcrt2u` appears on
+   `drone-03` and that `usb-ff_10c4_ea60.present` on `drone-02` and `media/gpu` on the minis are
+   unchanged. Adding a rule cannot remove the Zigbee label, but this is still the cheapest place
+   to notice a malformed rule.
 2. **NUT app.** Deploy, confirm the pod lands on `drone-03` by label, confirm variables are
    served over the Service.
 3. **Home Assistant.** Manual integration + template sensor + kWh helper.
 4. **Prometheus alert rules.** Last, once the metric names in the live cluster are confirmed.
 
 Rollback: remove `infrastructure/nut/app.yml` from `infrastructure/kustomization.yml` and delete
-the Argo CD Application by hand (prune is off); revert the whitelist edit. Steps 3 and 4 are
-independent of 1 and 2 and can be undone in the UI or by reverting the rules file.
+the Argo CD Application by hand (prune is off); revert the rule. Steps 3 and 4 are independent of
+1 and 2 and can be undone in the UI or by reverting the rules file.
 
 ## Open Questions
 

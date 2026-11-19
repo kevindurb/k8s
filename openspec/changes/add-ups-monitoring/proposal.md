@@ -15,12 +15,12 @@ based scraping, SealedSecrets. This change wires the UPS into them.
 
 ## What Changes
 
-- **NFD learns to see the UPS.** Add HID device class `03` to the NFD worker's USB
-  `deviceClassWhitelist` so it publishes `usb-03_0764_0601.present` on the node with the
-  cable attached. The existing whitelist entries must be preserved, since `usb-ff_10c4_ea60`
-  is what pins `zigbee2mqtt` to `drone-02`.
+- **NFD learns to name the UPS.** A `NodeFeatureRule` matching the UPS's USB identifiers emits
+  `hardware/ups: or2200pfcrt2u` on the node with the cable attached. This matches raw discovered
+  features rather than the USB device-class whitelist, so `usb-ff_10c4_ea60.present` — which
+  pins `zigbee2mqtt` to `drone-02` — is never at risk.
 - **New `infrastructure/nut` app.** A single-replica privileged Deployment scheduled by the
-  NFD USB label, running `usbhid-ups` + `upsd`, with a non-privileged `nut_exporter` sidecar
+  hardware label, running `usbhid-ups` + `upsd`, with a non-privileged `nut_exporter` sidecar
   serving `/ups_metrics`.
 - **Home Assistant gets the UPS** through HA's official NUT integration, pointed at the
   `upsd` Service. Configuration happens in the HA UI (HA config lives on a PVC, not in git).
@@ -53,7 +53,7 @@ None.
 
 ## Impact
 
-- `infrastructure/node-feature-discovery/app.yml` — USB source configuration added.
+- `infrastructure/node-feature-discovery/rules/nodefeaturerule.yml` — UPS rule added.
 - `infrastructure/nut/` — new app directory (`app.yml`, `kustomization.yml`,
   `deployment.yml`, `sealed secret`).
 - `infrastructure/kustomization.yml` — registers the new app.
