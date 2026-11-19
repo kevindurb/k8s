@@ -1,9 +1,44 @@
 # Storage: node-local ZFS with a replicated mesh
 
-Status: **planned (2026-11-18).** Not started, but its prerequisite is met: all
-three app nodes were rebuilt on 2026-11-19 and each carries a healthy 600 GiB
-`k8s` pool ([`drone-03-rebuild.md`](drone-03-rebuild.md)). Step 2 of the migration
-order (the CSI canary) is therefore unblocked.
+## Status (2026-11-19)
+
+**Planned (2026-11-18), prerequisites met.** The pools exist; no application has
+moved and democratic-csi is still the live storage class.
+
+### Done
+
+- **All three node-local `k8s` pools**: drone-01, drone-02 and drone-03 were
+  rebuilt on 2026-11-19 with a 600 GiB pool at the end of the NVMe and a 331 GiB
+  root (`docs/drone-03-rebuild.md`). Each is healthy, imports at boot, and uses
+  `lz4`/`atime=off`/`xattr=sa` with a 2 GiB ARC.
+- The provisioning side of the plan is in git and exercised three times:
+  `ansible/roles/node_zfs`, `k3s_node_labels`, the `storage_nodes` group, and the
+  installer `save-partlabel` flow that reserves the partition.
+- `zfs send | zfs recv` into `k8s/replicas` was verified end to end on drone-03
+  (Phase 5), which is the primitive zrepl will use.
+
+### Not started
+
+- **Step 2 — the CSI canary**: `infrastructure/openebs-zfs` (LocalPV-ZFS only),
+  `openebs.io/nodeid` labels, the `zfs-local` StorageClass and the
+  `VolumeSnapshotClass`; then move `rakazo`, `golink`, `gatus` one at a time.
+- **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
+  `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
+- **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
+  then drone-01's media, immich last), then the teardown of
+  `zfs-generic-nvmeof-csi`.
+
+### Decisions still open
+
+- **OpenEBS vs the democratic-csi `zfs-local-zvol` fallback** — settled by the
+  canary in Step 2. `spec.csi.driver` is immutable per PV, so this must be decided
+  before any further volume moves.
+- **Where Jellyfin lives.** Since 2026-11-19 `media/gpu=amd-vega` comes from a
+  `NodeFeatureRule` and matches **all three** minis (identical Vega 11), so
+  Jellyfin floats. This doc's placement table assumed drone-01 as the media node;
+  either pin it deliberately or accept the float.
+- `prometheus` PVC vs a static local PV per node, and whether the hostNetwork apps
+  become movable (both listed at the bottom of this doc).
 
 ## Why this exists
 

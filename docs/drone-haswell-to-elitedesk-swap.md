@@ -1,5 +1,10 @@
 # Replace drone-01/02/03 (Haswell desktops → HP EliteDesk 705 G4 DM)
 
+Status: **✅ complete (2026-11-19).** All three minis are swapped and validated, and
+Phase 4 (retire `gpu-operator`, proper PCI labels) landed the same day. The
+cluster has no discrete GPU and no NVIDIA operator. Remaining planned work is the
+storage migration in [`storage-placement.md`](storage-placement.md).
+
 ## Context
 
 Three HP EliteDesk 705 G4 Desktop Mini units replace `drone-01`, `drone-02` and `drone-03`. The replacements keep the **same hostnames and the same static IPs** (`.21`, `.22`, `.23`).

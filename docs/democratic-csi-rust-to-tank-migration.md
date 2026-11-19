@@ -6,6 +6,11 @@
 > was the only option because a single democratic-csi deployment owns one
 > `datasetParentName`, and the replacement design avoids that constraint by using
 > a different CSI operator entirely (OpenEBS LocalPV-ZFS).
+
+> **Where it stands (2026-11-19):** the three node-local pools are built and
+> healthy (`docs/drone-03-rebuild.md`); democratic-csi is still serving every
+> volume. The migration itself has not started — see
+> `docs/storage-placement.md` for the current plan and status.
 > See [`storage-placement.md`](storage-placement.md) and
 > [`drone-03-rebuild.md`](drone-03-rebuild.md). The capacity analysis and the
 > `zfs send`/`recv` notes are still useful as reference; nothing here was applied.

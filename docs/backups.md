@@ -1,6 +1,10 @@
 # Off-site backups: CSI snapshots → restic → Backblaze B2
 
-Status: **planned (2026-10-30)**. Nothing in this document is applied yet.
+Status: **planned (2026-10-30), superseded in design — not applied.** The
+VolSync/CSI-snapshot approach below assumed volumes on `zfs-generic-nvmeof-csi`.
+`docs/storage-placement.md` replaces it with restic reading the host-side zrepl
+snapshots directly (no mover pods, no temp PVC clones), so this document needs
+rewriting to match before anything is built.
 
 The cluster has local ZFS snapshots (sanoid) but no off-site copy of anything. A pool failure, a `zfs destroy`, or a fat-fingered `rm -rf` in qbittorrent takes every stateful app with it. This document plans a single backup system that covers every volume on `zfs-generic-nvmeof-csi`, produces point-in-time consistent copies without stopping or quiescing applications, and stores them client-side encrypted in B2.
 
