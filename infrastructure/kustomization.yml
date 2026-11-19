@@ -14,6 +14,7 @@ resources:
   - metallb/app.yml
   - node-exporter/app.yml
   - node-feature-discovery/app.yml
+  - nut/app.yml
   - prometheus/app.yml
   - smartctl-exporter/app.yml
   - snapshot-controller/app.yml

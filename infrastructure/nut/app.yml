@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nut
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kevindurb/k8s.git
+    targetRevision: HEAD
+    path: infrastructure/nut
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nut
+  syncPolicy:
+    # exemption: privileged + hostPath for the UPS USB device
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

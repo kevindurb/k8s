@@ -10,7 +10,7 @@
       `deviceClassWhitelist` change is needed: verify `infrastructure/node-feature-discovery/app.yml`
       is unmodified in this change (`git diff` shows no edit to that file) and that the rule has no
       dependency on `usb-03_…` label text.
-- [ ] 1.3 After Argo CD syncs, verify `drone-03` carries `hardware/ups: or2200pfcrt2u`, and that
+- [x] 1.3 After Argo CD syncs, verify `drone-03` carries `hardware/ups: or2200pfcrt2u`, and that
       `drone-02` still carries `feature.node.kubernetes.io/usb-ff_10c4_ea60.present` and the minis
       still carry `media/gpu: amd-vega`
       (`kubectl get node <name> -o jsonpath='{.metadata.labels}'`). If the `amd-vega` label is
@@ -18,29 +18,29 @@
 
 ## 2. NUT application
 
-- [ ] 2.1 Create the `upsd.users` monitor credential as a SealedSecret at
+- [x] 2.1 Create the `upsd.users` monitor credential as a SealedSecret at
       `infrastructure/nut/upsd-users-sealed-secret.yml` (read-only monitor user, no `instcmds`);
       verify no plaintext password is present in the committed file and that `kubeseal`
       round-trips against the cluster key.
-- [ ] 2.2 Write `infrastructure/nut/deployment.yml`: single-replica `Recreate` Deployment,
+- [x] 2.2 Write `infrastructure/nut/deployment.yml`: single-replica `Recreate` Deployment,
       `privileged`, `nodeSelector` on `hardware/ups: or2200pfcrt2u`,
       `hostPath` volumes for `/dev/bus/usb` (writable), `/sys/bus/usb` and `/run/udev`
       (read-only). Container `app` runs the NUT driver + `upsd` in the foreground; verify
       `kustomize build infrastructure/nut` renders and the manifest contains no `hostNetwork`
       and exactly one privileged container.
-- [ ] 2.3 Add the `ups.conf` and `upsd.conf` ConfigMap generator entries with
+- [x] 2.3 Add the `ups.conf` and `upsd.conf` ConfigMap generator entries with
       `driver=usbhid-ups`, `port=auto`, `vendorid=0764`, `pollinterval=15`, `pollonly`, and a
       `LISTEN` directive; verify the generated ConfigMap contains both keys with those values.
-- [ ] 2.4 Add the `nut_exporter` sidecar container (`exporter`) on port `9199`, path
+- [x] 2.4 Add the `nut_exporter` sidecar container (`exporter`) on port `9199`, path
       `/ups_metrics`, pointed at `127.0.0.1`, with `--nut.vars_enable` covering
       `ups.load,ups.status,battery.charge,battery.runtime,input.voltage,output.voltage,battery.voltage`;
       verify the default variable list is extended so `battery.runtime` is not omitted.
-- [ ] 2.5 Add the Service exposing the NUT port plus the exporter's `http` port, annotated
+- [x] 2.5 Add the Service exposing the NUT port plus the exporter's `http` port, annotated
       `prometheus.io/scrape: 'true'`, `prometheus.io/port: '9199'`,
       `prometheus.io/path: '/ups_metrics'`; verify the annotations match what the
       `kubernetes-service-endpoints` job in `infrastructure/prometheus/config/prometheus.yml`
       relabels on.
-- [ ] 2.6 Write `infrastructure/nut/kustomization.yml` (`namespace`/`namePrefix` `nut`) and
+- [x] 2.6 Write `infrastructure/nut/kustomization.yml` (`namespace`/`namePrefix` `nut`) and
       `infrastructure/nut/app.yml` following the `apps/template` shape, then register
       `nut/app.yml` in `infrastructure/kustomization.yml`; verify `just check-kustomize` passes.
 - [ ] 2.7 Deploy and verify scheduling and service: the pod is `Running` on `drone-03`, and
