@@ -1,7 +1,8 @@
 # Storage: node-local ZFS with a replicated mesh
 
 Status: **planned (2026-11-18).** Not started. Depends on the per-node pools from
-[`drone-03-rebuild.md`](drone-03-rebuild.md).
+[`drone-03-rebuild.md`](drone-03-rebuild.md), whose prerequisites landed
+2026-11-19; the rebuild window itself has not run.
 
 ## Why this exists
 

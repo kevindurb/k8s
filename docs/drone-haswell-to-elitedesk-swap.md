@@ -35,7 +35,13 @@ Cluster state, read live 2026-11-12 after the Jellyfin move:
 - 7 nodes `Ready`, all `v1.37.2+k3s1`; 58/58 Argo applications `Synced`.
 - Jellyfin runs on `drone-03` and tone-maps HDR through **Vulkan/libplacebo on the stock image** — no custom image, no extra packages. Realtime to 1080p (~2.1×), not to 4K (~0.6×). See [HDR tone mapping on the Vega 11](#hdr-tone-mapping-on-the-vega-11-2026-11-12).
 - **Nothing requests `nvidia.com/gpu` any more** (Jellyfin's limit and Scrypted's were both removed), so Phase 4's precondition is met — but `gpu-operator` is **still installed** (namespace up 268 days) and NFD still emits the old `pci-10de`/`Haswell-*` labels on drone-01 and drone-02.
-- Remaining work in order: swap drone-02, swap drone-01, then [Phase 4](#phase-4--retire-gpu-operator-proper-pci-labels). Step 7 doc cleanup (inventory `static_iface`, `HARDWARE.md`) is still deliberately deferred.
+- Remaining work in order: **rebuild drone-03 with its pool partition**
+  ([`drone-03-rebuild.md`](drone-03-rebuild.md) — prerequisites landed 2026-11-19),
+  swap drone-02, swap drone-01, then
+  [Phase 4](#phase-4--retire-gpu-operator-proper-pci-labels). drone-01/02 get the
+  same `save-partlabel` partition at install time, so they are not rebuilt twice.
+  Step 7 doc cleanup (inventory `static_iface`, `HARDWARE.md`) is still
+  deliberately deferred.
 
 ## What was verified before writing this
 

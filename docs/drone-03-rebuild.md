@@ -1,8 +1,9 @@
 # Rebuild drone-03 with a ZFS pool on the boot NVMe
 
-Status: **planned (2026-11-16).** Not started. This is the first of the three app
-nodes to get a node-local `k8s` pool, and therefore the rehearsal for drone-01
-and drone-02.
+Status: **prerequisites landed (2026-11-19).** The six changes below are in git;
+the rebuild window has not run yet. This is the first of the three app nodes to
+get a node-local `k8s` pool, and therefore the rehearsal for drone-01 and
+drone-02.
 
 ## Context
 
@@ -67,60 +68,46 @@ filesystems).
 
 ## Changes to land before the window
 
-Six changes. Everything here is reusable for drone-01/02, so it is worth doing
-properly rather than by hand on the night.
+Six changes, ✅ **all landed 2026-11-19**. Everything here is reusable for
+drone-01/02, so it was worth doing properly rather than by hand on the night.
 
 ### 1. `bootc/justfile` — an optional installer config
 
-The validated flow is a stock FCOS live ISO with `coreos-installer iso customize`
-and an embedded install command. The lever for keeping a partition is
-`--save-partlabel`, which `iso customize` reaches through `--installer-config`:
+✅ **Landed.** The validated flow is a stock FCOS live ISO with `coreos-installer
+iso customize` and an embedded install command. The lever for keeping a partition
+is `--save-partlabel`, which `iso customize` reaches through
+`--installer-config` (confirmed on `coreos-installer 0.27.0`: `iso customize` has
+`--installer-config`, and `install` has `--save-partlabel`/`--save-partindex`).
 
-```make
-# Optional install config (YAML) for the embedded installer, e.g. to preserve a
-# partition: build-iso drone-03 /dev/nvme0n1 drone-03-install.yaml
-build-iso hostname device installer_config='':
-  #! /usr/bin/env bash
-  set -euxo pipefail
-  ISO=$(ls {{dist}}/fedora-coreos-*.iso | tail -1 | xargs basename)
-  rm -f {{dist}}/{{hostname}}.iso
+`build-iso` now takes an optional third argument, and with it omitted the recipe
+behaves exactly as before:
 
-  EXTRA=()
-  if [ -n "{{installer_config}}" ]; then
-    EXTRA=(--installer-config "/data/{{installer_config}}")
-  fi
-
-  podman run --rm --privileged \
-  -v {{dist}}:/data \
-  {{coreos_installer}} \
-  iso customize \
-  --dest-device {{device}} \
-  --dest-ignition /data/{{hostname}}.ign \
-  "${EXTRA[@]}" \
-  --output /data/{{hostname}}.iso \
-  "/data/$ISO"
+```sh
+just gen-installer-config drone-03 /dev/nvme0n1 zfs    # → dist/drone-03-install.yaml
+just build-iso drone-03 /dev/nvme0n1 drone-03-install.yaml
 ```
 
-With no third argument the recipe behaves exactly as it does today, so drone-03's
-existing install path is unchanged unless you pass one.
+Both paths were built and inspected on 2026-11-19. The resulting ISO carries the
+config as an embedded file:
 
-```make
-# Installer config that preserves the ZFS partition. Key names are coreos-installer
-# long options without the leading "--"; repeatable options are arrays.
-gen-installer-config hostname device label:
-  #! /usr/bin/env bash
-  set -euxo pipefail
-  mkdir -p {{dist}}
-  printf 'dest-device: %s\nsave-partlabel:\n  - %s\n' "{{device}}" "{{label}}" \
-    > {{dist}}/{{hostname}}-install.yaml
-  cat {{dist}}/{{hostname}}-install.yaml
 ```
+/etc/coreos/installer.d/0000-drone-03-install.yaml   # config build
+dest-device: /dev/nvme0n1
+save-partlabel:
+  - zfs
+```
+
+…and the plain build has only `installer.d/0000-customize.yaml` (the
+`--dest-device`), so the difference is the preserved partition and nothing else.
 
 `save-partlabel` matches the **GPT partition label, not a filesystem label**
 (`coreos-installer` man page), so `sgdisk -c 5:zfs` is what makes this work. Do
 not `mkfs` the partition.
 
 ### 2. `ansible/inventory/host_vars/drone-03.yml`
+
+✅ **Landed.** Role vars are prefixed per `ansible-lint` (`var-naming`), so the
+keys are `node_zfs_*`, not the `zfs_pool_*` this doc originally proposed:
 
 ```yaml
 ---
@@ -133,116 +120,57 @@ tuned_profile: k8s-node
 # Node-local ZFS pool for the zfs-local CSI class; the vdev is a GPT partition,
 # so resolve it by label, never by number (coreos-installer renumbers saved
 # partitions if it has to).
-zfs_pool_name: k8s
-zfs_pool_device: /dev/disk/by-partlabel/zfs
+node_zfs_pool_name: k8s
+node_zfs_pool_device: /dev/disk/by-partlabel/zfs
 
 k3s_node_labels:
   - media/gpu=amd-vega
 ```
 
-The same two `zfs_pool_*` keys go into drone-01/02 when they are rebuilt.
+The same two `node_zfs_pool_*` keys go into drone-01/02 when they are rebuilt.
 
 ### 3. `ansible/roles/node_zfs` + a provision play
 
-A small role alongside `nas_zfs`. It must be idempotent, because it will be
-re-run after every rebuild and on all three nodes.
+✅ **Landed** (`ansible/roles/node_zfs`, play `tags: node_zfs`). It is idempotent,
+because it re-runs after every rebuild and on all three nodes. Shape and
+invariants, rather than a second copy of the file:
 
-```yaml
-# ansible/roles/node_zfs/defaults/main.yml
----
-zfs_pool_name: k8s
-zfs_pool_device: /dev/disk/by-partlabel/zfs
-zfs_datasets:
-  - volumes
-  - replicas
-```
+- load `zfs` with plain `modprobe` (a two-task check-then-load, so no
+  `community.general.modprobe` dependency), then `zgenhostid` if `/etc/hostid` is
+  missing — every node has a pool with the same name, so duplicate hostids are a
+  real hazard;
+- pool `k8s` on `/dev/disk/by-partlabel/zfs`, `mountpoint: none` **on the pool and
+  on both datasets**, `ashift=12`, `autotrim=on`, `lz4`, `atime=off`, `xattr=sa`;
+- datasets `volumes` (what this node serves) and `replicas` (what it receives);
+- `zpool status -x` as the health gate, so a degraded pool fails the play.
 
-```yaml
-# ansible/roles/node_zfs/tasks/main.yml
----
-- name: Load the zfs module now
-  community.general.modprobe:
-    name: zfs
-    state: present
+**Not** in this role: the ARC cap — see [5](#5-arc-sizing--do-not-let-the-images-8-gib-follow-you).
 
-# `zpool create` does not load the module itself; failing here is a clear error
-# rather than a confusing one from zpool.
-- name: Assert the zfs module is loaded
-  ansible.builtin.command: grep -qw zfs /proc/modules
-  changed_when: false
-
-# Duplicate hostids are how "pool was last accessed by another system" happens.
-# Every node has a pool with the same name here, so be explicit about it.
-- name: Generate a hostid if this machine has none
-  ansible.builtin.command: zgenhostid
-  args:
-    creates: /etc/hostid
-
-- name: Resolve the pool partition
-  ansible.builtin.stat:
-    path: "{{ zfs_pool_device }}"
-  register: pool_dev
-  failed_when: not pool_dev.stat.exists
-
-- name: Create the pool
-  community.general.zpool:
-    name: "{{ zfs_pool_name }}"
-    vdevs: ["{{ zfs_pool_device }}"]
-    mountpoint: none          # zvols only: nothing is mounted, nothing to mount
-    pool_properties:
-      ashift: '12'
-      autotrim: 'on'
-    extra_zfs_properties:
-      compression: lz4
-      atime: 'off'
-      xattr: sa
-
-- name: Create the volume and replica datasets
-  community.general.zfs:
-    name: "{{ zfs_pool_name }}/{{ item }}"
-    state: present
-    extra_zfs_properties:
-      mountpoint: none
-  loop: "{{ zfs_datasets }}"
-
-- name: Show pool health
-  ansible.builtin.command: zpool status -x {{ zfs_pool_name }}
-  register: pool_status
-  changed_when: false
-  failed_when: pool_status.rc != 0
-```
-
-Two details worth keeping:
-
-- `mountpoint: none` on the pool **and** on the datasets. A pool created without
-  it tries to mount at `/<poolname>`, which cannot be created on the read-only
-  root, and any mount outside `/var` is unsupported on a bootc image. A zvol-only
-  pool sidesteps the constraint entirely instead of working around it.
-- The device is `by-partlabel/zfs`, not `/dev/nvme0n1p5`. coreos-installer
-  renumbers saved partitions "if necessary", so the number is not a stable
-  identifier. (Note from `nas_zfs`: `community.general.zpool` records the path it
-  was given, and has surprised us before on whole-disk vs partition paths — if the
-  role reports a permanent change on every run, fall back to the plain device
-  node for `vdevs`.)
-
-Hook it into `ansible/provision.yml` next to the existing `zfs` play:
+The play is hooked into `ansible/provision.yml` next to the existing `zfs` play:
 
 ```yaml
 - name: Setup node-local ZFS pools
   remote_user: core
   tags: node_zfs
-  hosts: storage_nodes          # drone-01, drone-02, drone-03
+  hosts: storage_nodes
   become: true
   roles: [node_zfs]
 ```
 
-…with a `storage_nodes` group in `ansible/inventory/prod.yml`.
+`storage_nodes` currently contains **drone-03 only**. drone-01/02 lack the
+partition until they are rebuilt, and the role fails closed when
+`/dev/disk/by-partlabel/zfs` is absent — listing them early would break every
+plain `provision.yml` run. Each host is added in the commit that rebuilds it.
+
+⚠️ Note for the window: the role does **not** load the ZFS module unless the play
+runs. Because `provision.yml --limit drone-03 --tags base,k3s` skips it (Phase 4
+runs it separately), the pool is created only by the `node_zfs` run.
 
 ### 4. `k3s_node_labels`
 
-`media/gpu=amd-vega` is currently applied by hand and is
-[documented as a manual step](drone-haswell-to-elitedesk-swap.md) after
-every rebuild. Move it into the role, mirroring `k3s_node_taints`:
+✅ **Landed.** `media/gpu=amd-vega` used to be applied by hand and
+[documented as a manual step](drone-haswell-to-elitedesk-swap.md) after every
+rebuild. It is now a host var, mirroring `k3s_node_taints`:
 
 ```yaml
 # ansible/roles/k3s/defaults/main.yml
@@ -262,41 +190,50 @@ node-label:
 That removes a failure mode that has already cost time once ("Jellyfin sits
 Pending with an unschedulable warning — nothing in Argo will complain").
 
+Verified in check mode: the rendered `/etc/rancher/k3s/config.yaml` for drone-03
+gains exactly `node-label: - media/gpu=amd-vega`, and drone-04's config is
+unchanged (no spurious restart on nodes that have no labels).
+
 ### 5. ARC sizing — do not let the image's 8 GiB follow you
 
-`bootc/overlay/etc/modprobe.d/zfs.conf` sets `zfs_arc_max=8589934592` (8 GiB).
-That was sized for drone-04, which is tainted `dedicated=storage` and runs
-nothing but ZFS. **On drone-01/02/03 that same 8 GiB of unreclaimable-ish ARC
-would sit on a ~21 GiB node that also runs a dozen pods** — the kind of thing that
-shows up a week later as an unexplained OOM.
+⚠️ **Changed from the original plan.** `bootc/overlay/etc/modprobe.d/zfs.conf`
+used to set `zfs_arc_max=8589934592` (8 GiB), sized for drone-04, which is tainted
+`dedicated=storage` and runs nothing but ZFS. Letting that follow onto
+drone-01/02/03 — ~21 GiB nodes that also run a dozen pods — is how you get an
+unexplained OOM a week later.
 
-Make it per-node from the role rather than in the image:
+Rather than override it on three nodes, the default was **flipped**: the image now
+ships **2 GiB**, which is what the three app nodes want, and drone-04 is the one
+node that overrides it back up:
 
-```yaml
-# ansible/roles/node_zfs/defaults/main.yml
-zfs_arc_max_bytes: 2147483648   # 2 GiB on app nodes; 45 GB of zvols does not need more
+```ini
+# bootc/overlay/etc/modprobe.d/zfs.conf
+options zfs zfs_arc_max=2147483648
 ```
 
 ```yaml
-# tasks: a later-sorting file overrides the image's zfs.conf, and set it live
-# because the module is already loaded by now.
-- name: Cap the ARC for app nodes
+# ansible/roles/nas_zfs — drone-04 only, which is why it lives here and not in
+# node_zfs. A later-sorting filename wins over the image's zfs.conf on merge.
+- name: Cap the ZFS ARC for this storage node
   ansible.builtin.copy:
     content: |
-      # Overrides /etc/modprobe.d/zfs.conf from the image (later file wins).
-      options zfs zfs_arc_max={{ zfs_arc_max_bytes }}
+      options zfs zfs_arc_max={{ nas_zfs_arc_max_bytes }}
     dest: /etc/modprobe.d/99-zfs-arc.conf
-    mode: '644'
-
-- name: Apply the ARC cap now
-  ansible.builtin.shell: |
-    set -o pipefail
-    echo {{ zfs_arc_max_bytes }} > /sys/module/zfs/parameters/zfs_arc_max
-  changed_when: false
+    mode: '0644'
 ```
 
-drone-04 keeps the image's 8 GiB (it does not run this play). Verify with
-`cat /sys/module/zfs/parameters/zfs_arc_max` after the play.
+…with `nas_zfs_arc_max_bytes: 8589934592` in
+`ansible/inventory/host_vars/drone-04.yml`. A second task writes the value live,
+guarded so it only reports changed when the value actually differs.
+
+⚠️ **Ordering:** this must land on drone-04 *before* drone-04 boots a node image
+carrying the 2 GiB default, or its ARC silently drops to 2 GiB on that boot. The
+`99-` file then keeps winning through the `/etc` 3-way merge.
+
+Verify with `cat /sys/module/zfs/parameters/zfs_arc_max` after the play.
+
+✅ **Landed 2026-11-19**, image default and drone-04 variables both. drone-04 must
+read `8589934592`; a rebuilt app node must read `2147483648`.
 
 ### 6. Kernel/ZFS skew
 
@@ -309,6 +246,8 @@ three nodes**, not just drone-04. Two existing behaviours cover most of it:
   window.
 - Pin the base image by digest in `bootc/Containerfile` so a kernel move is a
   reviewable commit rather than tag drift. Renovate already opens those PRs.
+  ✅ **Landed 2026-11-19** as `stable-nvidia-lts@sha256:59d41bc9…` (index digest
+  for `44.20261023.3.1`, the version every node already runs).
 
 ## Pre-flight
 
@@ -318,16 +257,18 @@ three nodes**, not just drone-04. Two existing behaviours cover most of it:
 - [ ] `kubectl get pods -A --field-selector status.phase=Unknown` is empty. Note
       that this field selector does not match every stale pod — filter the list.
 - [ ] **Decide about Jellyfin.** drone-03 is the only `media/gpu=amd-vega` node, so
-      Jellyfin is Pending for the whole window. Either do this at a quiet hour or
-      temporarily point it at drone-01's Quadro P620 (`runtimeClassName: nvidia`,
-      see the rollback section of the swap doc). The P620 fallback only exists
-      until drone-01 is replaced — it is the last Haswell.
+      Jellyfin is Pending for the whole window. ✅ **Decided 2026-11-19: accept the
+      outage** and run the window at a quiet hour — no temporary P620 revert, so
+      there is no second Jellyfin move to undo and no HDR path to re-validate. The
+      P620 fallback only exists until drone-01 is replaced anyway.
 - [ ] `healthchecks-cronjob-drone-03` will fail during the window. Expected;
       do not "fix" it.
-- [ ] Build and test the ISO artifacts before draining anything
-      (`just gen-ignition drone-03 eno1 192.168.42.23`,
-      `just gen-installer-config drone-03 /dev/nvme0n1 zfs`,
-      `just build-iso drone-03 /dev/nvme0n1 drone-03-install.yaml`).
+- [ ] ISO artifacts built and inspected — ✅ **done 2026-11-19**, already in the
+      gitignored `bootc/dist/`:
+      `drone-03.ign`, `drone-03-install.yaml`, `drone-03.iso` (979 MB, built from
+      the GPG-verified `44.20261023.3.1` live ISO, carrying
+      `installer.d/0000-drone-03-install.yaml`). Rebuild them only if the image or
+      ignition changes.
 
 ## Phase 1 — Retire the node
 
@@ -426,7 +367,7 @@ Expect:
 zpool status -x k8s      # "pool 'k8s' is healthy"
 zfs list -r k8s          # k8s, k8s/volumes, k8s/replicas, all mountpoint=none
 zfs get -H -o value ashift,compression,atime k8s
-cat /sys/module/zfs/parameters/zfs_arc_max    # 2147483648, not the image's 8 GiB
+cat /sys/module/zfs/parameters/zfs_arc_max    # 2147483648 — the image default
 ```
 
 `zpool create` is deliberately **not** run from the live ISO. `zpool.cache` and
@@ -511,7 +452,7 @@ version:
 | Jellyfin down for the window | Quiet hour, or the drone-01 P620 fallback (last one) |
 | `media/gpu` label forgotten | Moved into `k3s_node_labels` (change 4) |
 | Kernel/ZFS skew breaks the app tier after the fact | `bootc status` gate before reboots, base image pinned by digest |
-| The image's 8 GiB ARC starves an app node | Per-node cap via `99-zfs-arc.conf` (change 5); verify `zfs_arc_max` after the play |
+| An 8 GiB ARC starves an app node | Image default is now 2 GiB (change 5); verify `zfs_arc_max` = `2147483648` after the play |
 | Partition vdev cannot be grown by swapping a bigger disk | Size decided now (600 GiB); growth needs `attach`/`detach` |
 
 ## Out of scope
