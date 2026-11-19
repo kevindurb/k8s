@@ -1,9 +1,9 @@
 # Storage: node-local ZFS with a replicated mesh
 
 Status: **planned (2026-11-18).** Not started, but the first of three pools now
-exists: drone-03 was rebuilt with a healthy 600 GiB `k8s` pool on 2026-11-19
-([`drone-03-rebuild.md`](drone-03-rebuild.md)). drone-01/02 still need theirs —
-each gets the partition at install time, since they are being swapped anyway.
+exist: drone-03 and drone-02 were rebuilt with healthy 600 GiB `k8s` pools on
+2026-11-19 ([`drone-03-rebuild.md`](drone-03-rebuild.md)). drone-01 still needs
+one — it gets the partition at install time, since it is being swapped anyway.
 
 ## Why this exists
 

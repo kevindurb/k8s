@@ -22,13 +22,13 @@ Retiring hardware: i5-4590 (Haswell, 4C/4T, 84 W), 16/24/16 GiB DDR3-1333/1600, 
 
 Net effect per node: threads 4 → 8, RAM 16/24/16 → 16/16/16, idle draw roughly 35–45 W → ~11 W. Cluster DRAM across the four drones drops from 72 GB to 64 GB.
 
-## Status at a glance (2026-11-12)
+## Status at a glance (2026-11-19)
 
 | Node | State |
 |---|---|
 | **drone-03** | ✅ **Replaced and validated.** EliteDesk 705 G4 DM, `v1.37.2+k3s1`, 4 CPU / 22 GiB, `media/gpu=amd-vega` label, Jellyfin running on its Vega 11. See [Step 1 results](#step-1-results--drone-03-swapped-2026-11-12) |
-| **drone-02** | ⏳ **Not started.** Still the Haswell chassis. Blocked on BIOS work plus the single PSU, and its 56 GB `OCZ Vertex Plus` with `/var` at 80 % is in kubelet image-GC thrash, so image pulls there take ~15 min |
-| **drone-01** | ⏳ **Not started.** Still the Haswell chassis and **still holds the last Quadro P620**. It goes last on purpose: the P620 is the only working HDR transcode fallback until Jellyfin's Vega path is trusted |
+| **drone-02** | ✅ **Replaced and validated, 2026-11-19.** Unit 1 (disk `…65AF`, MAC `80:e8:2c:25:93:d0`), `v1.37.2+k3s1`, 4 CPU / 22 GiB, plus a 600 GiB node-local `k8s` pool. Install succeeded first try; Zigbee dongle moved into it and `zigbee2mqtt` came back with both devices joined |
+| **drone-01** | ⏳ **Not started — the last one.** Still the Haswell chassis and **still holds the last Quadro P620**. It goes last on purpose: the P620 is the only hardware transcode fallback until Jellyfin's Vega path is trusted, and removing it is what unblocks Phase 4 |
 
 Cluster state, read live 2026-11-12 after the Jellyfin move:
 

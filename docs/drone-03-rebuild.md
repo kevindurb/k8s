@@ -641,8 +641,9 @@ version:
 
 ## Follow-on
 
-1. **drone-01 and drone-02** reuse this with only `hostname`/`ip`/`iface`/disk
-   changing. Both are still Haswell, so this gets folded into
+1. **drone-01** reuses this with only `hostname`/`ip`/`iface`/disk changing.
+   drone-02 was done this way on 2026-11-19 with no deviations, and drone-01 is
+   still Haswell, so this gets folded into
    `docs/drone-haswell-to-elitedesk-swap.md` rather than being a separate rebuild.
 2. When all three pools exist: `infrastructure/openebs-zfs` (OpenEBS LocalPV-ZFS,
    `zfs-local` StorageClass), zrepl for replication, the per-node
