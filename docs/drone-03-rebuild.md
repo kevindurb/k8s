@@ -309,17 +309,35 @@ partition is about to be recreated by the installer anyway:
 
 ```sh
 sudo sgdisk -d 4 /dev/nvme0n1
-sudo sgdisk -n 5:0:+600G -t 5:bf00 -c 5:zfs /dev/nvme0n1
-sudo partprobe /dev/nvme0n1
+sudo sgdisk -n 5:0:+600G -t 5:bf01 -c 5:zfs /dev/nvme0n1
+
+# p5 begins exactly where p4 began, so the OLD root XFS superblock now sits at
+# the start of the new partition. Not formatting p5 is right; leaving a stale
+# filesystem signature on it is not — it reads back as LABEL="root" TYPE="xfs",
+# fails Phase 3's "no TYPE=" check, and leaves a second filesystem claiming the
+# label `root`.
+sudo wipefs -a /dev/nvme0n1p5
+
 sudo udevadm settle
-sudo sgdisk -p /dev/nvme0n1        # p5 present, 600 GiB, name zfs, no filesystem
+sudo sgdisk -p /dev/nvme0n1        # p5 present, 600 GiB, name zfs
+sudo sgdisk -i 5 /dev/nvme0n1      # code 6A898CC3… = Solaris /usr & Mac ZFS
+sudo blkid -t PARTLABEL=zfs        # PARTLABEL/PARTUUID only — no TYPE=
 ```
+
+Three corrections from the drone-03 run (2026-11-19):
+
+- **`-t 5:bf01`, not `bf00`.** `bf00` is *Solaris root*; the ZFS GUID is
+  `6A898CC3-1DD2-11B2-99A6-080020736631` = **`bf01` Solaris /usr & Mac ZFS**.
+  Cosmetic — the pool resolves by `PARTLABEL` — but it is what a human reads.
+- **`wipefs` is required, and it is not formatting.** It erases the 4-byte XFS
+  magic at offset 0 of p5 and nothing else.
+- **`partprobe` is not in the live image** (`command not found`). `sgdisk`
+  already triggers the re-read; `udevadm settle` is enough.
 
 `sgdisk` allocates from the lowest free sector, so p5 lands immediately after the
 FCOS partitions and the ~330 GiB free gap ends up after it — which is where the
-installer expects to build the root. Do **not** format or mount p5: an untouched
-partition is the cleanest thing to preserve, and a filesystem on it would confuse
-both the installer and anyone reading `lsblk` later.
+installer expects to build the root. Measured after this step: 694183311 sectors
+(**331.0 GiB**) free.
 
 Power off, plug in the installer ISO built in the pre-flight, and boot it. The
 embedded install runs unattended. **Pull the USB stick when it reboots** (or put
@@ -331,8 +349,11 @@ Boot the installed system and check before reconnecting anything:
 
 ```sh
 sudo sgdisk -p /dev/nvme0n1
-#  p5 exists (number may differ), ~600 GiB, name zfs, type bf00
-#  p4 is the root, ~330 GiB — if it grew to fill the disk, the preserve failed
+#  p5 exists, ~600 GiB, name zfs, code BF01
+#  root is the OTHER big partition, ~330 GiB — and its NUMBER is not necessarily
+#  4: the installer may reuse the freed slot 4 or take the next free number.
+#  Check it by label and size, never by number. If root grew to fill the disk,
+#  the preserve failed.
 
 lsblk -o NAME,SIZE,FSTYPE,PARTLABEL,MOUNTPOINT
 df -h /var          # ~330 GiB total, not the full disk
