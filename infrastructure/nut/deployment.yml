@@ -58,7 +58,9 @@ spec:
           emptyDir: {}
       containers:
         - name: app
-          image: instantlinux/nut-upsd:2.8.5-1@sha256:5c7386822103525bba26bf06fb9ba40f1a3704fc9593feceb9bd09d672db85aa
+          # 2.8.5-1 (the newer build) ships without /bin/sh, so the wrapper
+          # below cannot run there. This is the build verified end to end.
+          image: instantlinux/nut-upsd:2.8.5-r1@sha256:a186d74a586ec4e10494270f6a52e26bb5e50663d2f8570865f5bd38273e096e
           # usbhid-ups has no other way to reach the device.
           securityContext:
             privileged: true
