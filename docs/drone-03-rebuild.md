@@ -267,8 +267,10 @@ three nodes**, not just drone-04. Two existing behaviours cover most of it:
       gitignored `bootc/dist/`:
       `drone-03.ign`, `drone-03-install.yaml`, `drone-03.iso` (979 MB, built from
       the GPG-verified `44.20261023.3.1` live ISO, carrying
-      `installer.d/0000-drone-03-install.yaml`). Rebuild them only if the image or
-      ignition changes.
+      `installer.d/0000-drone-03-install.yaml`). The ISO is bare FCOS + ignition
+      only, so a new `k8s-node` image does **not** invalidate it — that arrives by
+      `bootc switch` in Phase 4. Rebuild only if the ignition, hostname or
+      interface changes.
 
 ## Phase 1 — Retire the node
 
