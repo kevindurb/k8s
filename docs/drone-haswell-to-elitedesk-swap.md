@@ -28,20 +28,22 @@ Net effect per node: threads 4 → 8, RAM 16/24/16 → 16/16/16, idle draw rough
 |---|---|
 | **drone-03** | ✅ **Replaced and validated.** EliteDesk 705 G4 DM, `v1.37.2+k3s1`, 4 CPU / 22 GiB, `media/gpu=amd-vega` label, Jellyfin running on its Vega 11. See [Step 1 results](#step-1-results--drone-03-swapped-2026-11-12) |
 | **drone-02** | ✅ **Replaced and validated, 2026-11-19.** Unit 1 (disk `…65AF`, MAC `80:e8:2c:25:93:d0`), `v1.37.2+k3s1`, 4 CPU / 22 GiB, plus a 600 GiB node-local `k8s` pool. Install succeeded first try; Zigbee dongle moved into it and `zigbee2mqtt` came back with both devices joined |
-| **drone-01** | ⏳ **Not started — the last one.** Still the Haswell chassis and **still holds the last Quadro P620**. It goes last on purpose: the P620 is the only hardware transcode fallback until Jellyfin's Vega path is trusted, and removing it is what unblocks Phase 4 |
+| **drone-01** | ✅ **Replaced and validated, 2026-11-19.** Unit 2 (disk `…659C`, MAC `80:e8:2c:22:87:a3`), `v1.37.2+k3s1`, 4 CPU / 22 GiB, plus its 600 GiB `k8s` pool. The last P620 left with the chassis, so the cluster has **no discrete GPU** |
 
 Cluster state, read live 2026-11-12 after the Jellyfin move:
 
 - 7 nodes `Ready`, all `v1.37.2+k3s1`; 58/58 Argo applications `Synced`.
 - Jellyfin runs on `drone-03` and tone-maps HDR through **Vulkan/libplacebo on the stock image** — no custom image, no extra packages. Realtime to 1080p (~2.1×), not to 4K (~0.6×). See [HDR tone mapping on the Vega 11](#hdr-tone-mapping-on-the-vega-11-2026-11-12).
 - **Nothing requests `nvidia.com/gpu` any more** (Jellyfin's limit and Scrypted's were both removed), so Phase 4's precondition is met — but `gpu-operator` is **still installed** (namespace up 268 days) and NFD still emits the old `pci-10de`/`Haswell-*` labels on drone-01 and drone-02.
-- Remaining work in order: **rebuild drone-03 with its pool partition**
-  ([`drone-03-rebuild.md`](drone-03-rebuild.md) — prerequisites landed 2026-11-19),
-  swap drone-02, swap drone-01, then
-  [Phase 4](#phase-4--retire-gpu-operator-proper-pci-labels). drone-01/02 get the
-  same `save-partlabel` partition at install time, so they are not rebuilt twice.
-  Step 7 doc cleanup (inventory `static_iface`, `HARDWARE.md`) is still
-  deliberately deferred.
+- ✅ **All three swaps are done** (drone-03 and drone-02 on 2026-11-19, drone-01
+  the same day). Each mini carries a node-local `k8s` ZFS pool; see
+  [`drone-03-rebuild.md`](drone-03-rebuild.md) for the procedure.
+- Remaining work in order: [Phase 4](#phase-4--retire-gpu-operator-proper-pci-labels)
+  (retire `gpu-operator`, NFD `vendor`+`device` labels, clean the stale
+  `nvidia.com/*` labels), then the storage migration in
+  [`storage-placement.md`](storage-placement.md).
+- ✅ Step 7 doc cleanup landed 2026-11-19: inventory `static_iface` is `eno1` on all
+  three drones and `HARDWARE.md` is rewritten for the mini fleet.
 
 ## What was verified before writing this
 
@@ -760,6 +762,16 @@ ssh core@192.168.42.23 sudo tailscale logout
 ```
 
 Wait for the drain to move everything (pods Ready elsewhere, and **zero `VolumeAttachment`s naming the node**) before stopping the agent, otherwise a stale attachment blocks the reattach and the pod sits in `ContainerCreating`.
+
+⚠️ **`tailscale logout` does not free the MagicDNS name.** On 2026-11-19 the
+replacement drone-01 came up as `drone-01-1` because the old device still held
+`drone-01`, and `tailscale set --hostname=drone-01` silently could not take it
+(local prefs said `drone-01`, the control plane kept `drone-01-1`). The name is
+only released when the old device is **deleted** in the admin console; after that
+a fresh `tailscale up --hostname=drone-01 --auth-key=… --advertise-tags=tag:k8s-node`
+registers as `drone-01.beaver-cloud.ts.net`. Do not work around it with an
+`/etc/hosts` entry on dev — that shadows MagicDNS with an address that changes
+when the device re-registers.
 
 `kubectl delete node` does **not** stop a running kubelet from re-registering. Deleting the object while the agent still runs brings the node back `NotReady`, and since kubelet only ever adds labels, that reused object would keep the old hardware labels (`cpu-model.node.kubevirt.io/Haswell-*`, `feature.node.kubernetes.io/cpu-model.vendor_id: Intel`, `pci-8086`, `openebs.io/*`) on an AMD node — which is why stop-then-delete is the order.
 

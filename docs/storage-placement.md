@@ -1,9 +1,9 @@
 # Storage: node-local ZFS with a replicated mesh
 
-Status: **planned (2026-11-18).** Not started, but the first of three pools now
-exist: drone-03 and drone-02 were rebuilt with healthy 600 GiB `k8s` pools on
-2026-11-19 ([`drone-03-rebuild.md`](drone-03-rebuild.md)). drone-01 still needs
-one — it gets the partition at install time, since it is being swapped anyway.
+Status: **planned (2026-11-18).** Not started, but its prerequisite is met: all
+three app nodes were rebuilt on 2026-11-19 and each carries a healthy 600 GiB
+`k8s` pool ([`drone-03-rebuild.md`](drone-03-rebuild.md)). Step 2 of the migration
+order (the CSI canary) is therefore unblocked.
 
 ## Why this exists
 
@@ -59,9 +59,9 @@ enters the mesh — it is replaceable or B2-backed and lives on the 12 TB mirror
 
 ## Node roles
 
-Placement assumes the Haswell → EliteDesk swap is finished on all three
-(`drone-01`/`drone-02` are still Haswell as of 2026-11-18). Each node: 4 vCPU,
-~21 GiB, 1 GbE, one 1 TB NVMe shared by the OS and a 600 GiB `k8s` pool.
+Placement assumes the Haswell → EliteDesk swap is finished on all three — it is,
+as of 2026-11-19. Each node: 4 vCPU, ~22 GiB, 1 GbE, one 1 TB NVMe split into a
+331 GiB root and a 600 GiB `k8s` pool.
 
 | Node | Role | Rationale |
 | --- | --- | --- |

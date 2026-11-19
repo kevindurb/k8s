@@ -19,7 +19,7 @@ agents:
     drone-01:
       ansible_host: drone-01
       static_ip: 192.168.42.21
-      static_iface: enp0s25
+      static_iface: eno1
     drone-02:
       ansible_host: drone-02
       static_ip: 192.168.42.22
@@ -42,9 +42,9 @@ all:
     agents:
 
 # App nodes that carry a node-local `k8s` zpool on a reserved GPT partition
-# (docs/drone-03-rebuild.md). A host is added here in the commit that rebuilds it
-# with the partition; drone-01 is still Haswell and still whole-disk.
+# (docs/drone-03-rebuild.md). All three were rebuilt with it on 2026-11-19.
 storage_nodes:
   hosts:
+    drone-01:
     drone-02:
     drone-03:

@@ -1,9 +1,10 @@
 # Rebuild drone-03 with a ZFS pool on the boot NVMe
 
-Status: **✅ complete (2026-11-19).** drone-03 is rebuilt, back in the cluster on
-the node image, and carries a healthy 600 GiB `k8s` pool. This was the first of
-the three app nodes and the rehearsal for drone-01/02 — both of which now have a
-corrected, VM-validated procedure to follow (see [Phase 2](#phase-2--partition-and-install)).
+Status: **✅ complete for all three nodes (2026-11-19).** drone-03 was first and
+acted as the rehearsal; drone-02 and drone-01 then followed the same procedure
+with no adjustments (drone-01 needed none of the installer-bug detours). Each app
+node now boots a 331 GiB root with a healthy 600 GiB `k8s` pool at the end of
+the disk. See [Phase 2](#phase-2--partition-and-install) for the geometry rule.
 
 Result: `p5 zfs` 600.0 GiB last, `root` 331 G grown into the gap, pool ONLINE and
 importing at boot, `zfs send|recv` verified, `media/gpu=amd-vega` arriving from
