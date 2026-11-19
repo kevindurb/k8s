@@ -53,16 +53,16 @@
 
 ## 3. Home Assistant consumption
 
-- [ ] 3.1 Add the official NUT integration in the HA UI pointing at the `nut` Service on 3493;
+- [x] 3.1 Add the official NUT integration in the HA UI pointing at the `nut` Service on 3493;
       verify a UPS device appears with load, battery charge, runtime, input voltage, output
       voltage and status sensors reporting values.
-- [ ] 3.2 Add the template sensor deriving watts from `sensor.ups_load` and the `15.4`
+- [x] 3.2 Add the template sensor deriving watts from `sensor.ups_load` and the `15.4`
       constant; verify its state is a plausible number and that the constant appears only once
       in the HA configuration.
-- [ ] 3.3 Add a Riemann-sum (integration) helper over the watts sensor and attach it to the
+- [x] 3.3 Add a Riemann-sum (integration) helper over the watts sensor and attach it to the
       Energy dashboard as an energy source; verify the helper shows a `total_increasing`
       kWh sensor and that it appears as a selectable energy source.
-- [ ] 3.4 Verify the derivation is honestly labelled: the watts sensor is named and documented
+- [x] 3.4 Verify the derivation is honestly labelled: the watts sensor is named and documented
       as an estimate (not a measurement), matching `docs/ups-monitoring.md`.
 
 ## 4. Prometheus alerting
@@ -76,7 +76,7 @@
       on-battery, low-battery, replace-battery, overload, load above the capacity threshold, and
       UPS metrics absent; verify the file still satisfies yamllint's document-start and line
       length rules and that the expressions reference the names confirmed in 4.1.
-- [ ] 4.3 Verify the rules load without parse errors in the Prometheus UI and that the
+- [x] 4.3 Verify the rules load without parse errors in the Prometheus UI and that the
       metrics-absent alert fires when the `nut` pod is scaled to zero, then clears when it is
       restored. Expect the low-battery alert to be firing throughout, since the battery sits at
       2%: use it as live proof that the `LB` expression works, and do not mistake it for this
@@ -84,10 +84,10 @@
 
 ## 5. Integration verification
 
-- [ ] 5.1 Verify both consumers agree: the load value in HA's `sensor.ups_load` matches the
+- [x] 5.1 Verify both consumers agree: the load value in HA's `sensor.ups_load` matches the
       `network_ups_tools_ups_load` series for the same moment, and the `instance` label on that
       series is `drone-03`.
-- [ ] 5.2 Verify the rollback path is recorded and reversible: removing `nut/app.yml` from
+- [x] 5.2 Verify the rollback path is recorded and reversible: removing `nut/app.yml` from
       `infrastructure/kustomization.yml` plus reverting the NFD rule still leaves
       `just check-kustomize` passing.
 

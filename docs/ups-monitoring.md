@@ -158,3 +158,7 @@ UPS is attached to.
 - `battery.status` reports 100% while `battery.charge` was 2% — trust `charge`.
 - No graceful shutdown orchestration. Out of scope; see the archived change
   `add-ups-monitoring`.
+- The `UpsMetricsMissing` alert was only verified by expression, not by a live
+  fire-and-clear cycle: scaling the Deployment to zero is reverted by Argo's
+  `selfHeal` before the 5m `for:` elapses. To test it for real, stop
+  `argocd-application-controller` first, as `reboot-drone-04.yml` does.
