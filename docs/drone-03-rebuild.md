@@ -121,8 +121,10 @@ also what makes the install unattended. Reproduced and fixed against the same
 --save-partlabel zfs --ignition-file /etc/coreos/dest.ign /dev/nvme0n1 --fetch-retries infinite
 ```
 
-A failed install like this is harmless to the disk — the argument parsing aborts
-before any write, so the partition plan survives and a retry is just a reflash.
+An argument failure like this is harmless to the disk — parsing aborts before any
+write, so the partition plan survives and a retry is just a reflash. A **collision**
+failure is not harmless: see [Phase 2](#phase-2--partition-and-install), where it
+leaves only the saved partition behind.
 
 `save-partlabel` matches the **GPT partition label, not a filesystem label**
 (`coreos-installer` man page), so `sgdisk -c 5:zfs` is what makes this work. Do
@@ -373,6 +375,14 @@ root to fill it, stopping at p5.
 Also: `get_offset()` uses the **last usable sector** (total − 34 for the backup
 GPT), so computing p5's end as `total-1` makes `sgdisk` refuse the partition with
 `Could not create partition 5 …`. Use `sgdisk -p`'s own "last usable sector".
+
+⚠️ **A collision failure damages the table, it does not leave it alone.** Observed
+on drone-03: after `collision with partition 5`, the disk had **only p5** —
+`p1`–`p3` were gone. `image_copy_default` calls `saved.overwrite(dest)` early (to
+make the saved partitions durable), and the error path's
+`reset_partition_table(…, &saved)` rewrites a table containing just the saved
+partitions. Recoverable (recreate p5 and reinstall), but do not assume a failed
+install is a no-op.
 
 Measured on the 931.5 GiB disk: p5 = 600.0 GiB at sectors 695234560–1953525134,
 leaving 694183936 sectors (**331.0 GiB**) free in front of it.
