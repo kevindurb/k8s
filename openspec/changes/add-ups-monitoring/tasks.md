@@ -43,10 +43,10 @@
 - [x] 2.6 Write `infrastructure/nut/kustomization.yml` (`namespace`/`namePrefix` `nut`) and
       `infrastructure/nut/app.yml` following the `apps/template` shape, then register
       `nut/app.yml` in `infrastructure/kustomization.yml`; verify `just check-kustomize` passes.
-- [ ] 2.7 Deploy and verify scheduling and service: the pod is `Running` on `drone-03`, and
+- [x] 2.7 Deploy and verify scheduling and service: the pod is `Running` on `drone-03`, and
       `kubectl -n nut exec` into the exporter resolves UPS variables from the Service, and
       `/ups_metrics` on the exporter port returns `network_ups_tools_ups_load`.
-- [ ] 2.8 Write `docs/ups-monitoring.md` covering the `watts = ups.load * 15.4` assumption, the
+- [x] 2.8 Write `docs/ups-monitoring.md` covering the `watts = ups.load * 15.4` assumption, the
       empty-USB-serial constraint, the `pollonly` rationale, and the replug caveat (node labels
       do not evict pods). Verify the documented `upsc`, `kubectl` and URL examples run as
       written.
@@ -67,12 +67,12 @@
 
 ## 4. Prometheus alerting
 
-- [ ] 4.1 Confirm the live metric names and label shapes for `ups.status` flags and load by
+- [x] 4.1 Confirm the live metric names and label shapes for `ups.status` flags and load by
       querying Prometheus before writing rules; verify the load metric is present and that the
       exporter emits every status flag as `0`/`1` rather than omitting unset ones. Note that the
       UPS currently asserts `LB` (battery charge 2%), so the low-battery series must be expected
       to read `1` — that is real state, not a malformed exporter.
-- [ ] 4.2 Add a UPS alert group to `infrastructure/prometheus/config/rules/rules.yml` covering
+- [x] 4.2 Add a UPS alert group to `infrastructure/prometheus/config/rules/rules.yml` covering
       on-battery, low-battery, replace-battery, overload, load above the capacity threshold, and
       UPS metrics absent; verify the file still satisfies yamllint's document-start and line
       length rules and that the expressions reference the names confirmed in 4.1.

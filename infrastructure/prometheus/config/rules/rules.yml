@@ -712,3 +712,80 @@ groups:
             It indicates a slower storage backend access or too complex query.
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
+
+  - name: Ups
+    rules:
+      - alert: UpsOnBattery
+        expr: network_ups_tools_ups_status{flag="OB", kubernetes_namespace="nut"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: UPS on battery (instance {{ $labels.instance }})
+          description: |-
+            The rack UPS has lost mains power and is running on battery.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: UpsLowBattery
+        expr: network_ups_tools_ups_status{flag="LB", kubernetes_namespace="nut"} == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: UPS battery critical (instance {{ $labels.instance }})
+          description: |-
+            The UPS reports low battery, so runtime is nearly exhausted.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: UpsReplaceBattery
+        expr: network_ups_tools_ups_status{flag="RB", kubernetes_namespace="nut"} == 1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: UPS battery needs replacing (instance {{ $labels.instance }})
+          description: |-
+            The UPS asks for a battery replacement.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: UpsOverload
+        expr: network_ups_tools_ups_status{flag="OVER", kubernetes_namespace="nut"} == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: UPS overloaded (instance {{ $labels.instance }})
+          description: |-
+            The load exceeds the UPS rating and is running on bypass or risking a trip.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      # Percent of the 1540 W nameplate, so this needs no watts conversion.
+      - alert: UpsLoadHigh
+        expr: network_ups_tools_ups_load{kubernetes_namespace="nut"} > 80
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: UPS load above 80% (instance {{ $labels.instance }})
+          description: |-
+            The rack is drawing more than 80% of the UPS rating, leaving little room
+            for runtime or another machine.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: UpsMetricsMissing
+        expr: absent(network_ups_tools_ups_load{kubernetes_namespace="nut"})
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: UPS metrics missing (instance {{ $labels.instance }})
+          description: |-
+            No UPS metrics have been scraped for 5m. The driver has most likely
+            wedged or the pod is down; check `kubectl -n nut logs`.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
