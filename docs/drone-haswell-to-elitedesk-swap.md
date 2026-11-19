@@ -103,7 +103,10 @@ sudo tailscale up --accept-dns=false --ssh \
 
 Why it cannot be skipped: without a tagged key the node comes back **untagged**, which is worse than a different ACL position — an untagged device becomes an *owned device*, reachable only through the own-device rules, because `tag:k8s-node` has no network grants of its own and node SSH is `group:admins → tag:k8s-node` (`docs/tailscale-acl-hardening.md` already tracks this gap, around line 464). `--advertise-tags` only works when the key itself carries the tag, so create the key tagged, not plain.
 
-It also cannot resolve `ansible_host: drone-03` before it is on the tailnet, so the join is not reachable at all until this runs. The very first `provision.yml` can run over the LAN either way — `-e ansible_host=192.168.42.23` — which is the fallback if the Tailscale step has to wait.
+It also cannot resolve `ansible_host: drone-03` before it is on the tailnet, so the
+join is not reachable at all until this runs. There is **no `-e ansible_host=…`
+fallback** — that extra var is global and breaks the `k3s` role's delegated token
+read (`delegate_to: core@192.168.42.1`); see [Step 5](#step-5--join-k3s).
 
 ### 0.4 — Validate one mini end to end, without the cluster
 
@@ -797,9 +800,22 @@ After the reboot, confirm before touching k3s:
 
 ```sh
 ansible-playbook ansible/provision.yml -i ansible/inventory/prod.yml --limit drone-03
-# if the tailnet name does not resolve yet, go over the LAN instead:
-#   … --limit drone-03 -e ansible_host=192.168.42.23
 ```
+
+⚠️ **There is no LAN fallback for this play.** `-e ansible_host=192.168.42.23` looks
+tempting and cannot work: extra vars are global, so the `k3s` role's
+`delegate_to: core@192.168.42.1` (the task that slurps
+`/var/lib/rancher/k3s/server/node-token`) inherits it too and reads the token from
+drone-03, which has no such file:
+
+```
+fatal: [drone-03 -> core@192.168.42.1(192.168.42.23)]: FAILED!
+msg: File not found: /var/lib/rancher/k3s/server/node-token
+```
+
+So the tailnet join in Step 4 has to happen before this. If you genuinely cannot
+join yet, the workable alternative is a temporary `192.168.42.23 drone-03` line
+in `/etc/hosts` on dev (resolve the name, do not override the variable).
 
 The `tailscale` role in that run is a no-op re-`up` — it carries no key, so the join already happened manually in Step 4.
 
