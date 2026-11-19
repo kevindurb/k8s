@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT-0
+---
+# defaults file for node_zfs
+#
+# Node-local pool for the `zfs-local` CSI class. The vdev is a GPT partition
+# reserved at install time (see docs/drone-03-rebuild.md), so resolve it by
+# label: coreos-installer renumbers saved partitions if it has to.
+node_zfs_pool_name: k8s
+node_zfs_pool_device: /dev/disk/by-partlabel/zfs
+
+# `volumes` is what this node snapshots and serves to peers; `replicas` is what
+# it receives. A zvol exists in exactly one of the two trees on exactly one
+# host, which is what makes `zfs rename` a safe promotion.
+node_zfs_datasets:
+  - volumes
+  - replicas

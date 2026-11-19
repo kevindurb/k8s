@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: MIT-0
+---
+# Node-local ZFS pool for the app nodes (drone-01/02/03). Idempotent: it runs
+# after every rebuild and on all three nodes.
+#
+# Deliberately NOT in this role: the ARC cap. The image defaults to 2 GiB, which
+# is the right value here; only drone-04 overrides it (ansible/roles/nas_zfs).
+# `zpool create` does not load the module itself, and failing at that point is a
+# confusing error rather than a clear one. Plain `modprobe` (not the collection
+# module) keeps the role dependency-free.
+- name: Check whether the zfs module is loaded
+  ansible.builtin.command: grep -qw zfs /proc/modules
+  register: node_zfs_module_loaded
+  changed_when: false
+  failed_when: false
+
+- name: Load the zfs module
+  ansible.builtin.command: modprobe zfs
+  when: node_zfs_module_loaded.rc != 0
+
+# Duplicate hostids are how "pool was last accessed by another system" happens.
+# Every node has a pool with the same name here, so be explicit about it.
+- name: Generate a hostid if this machine has none
+  ansible.builtin.command: zgenhostid
+  args:
+    creates: /etc/hostid
+
+- name: Resolve the pool partition
+  ansible.builtin.stat:
+    path: '{{ node_zfs_pool_device }}'
+  register: node_zfs_pool_dev
+  failed_when: not node_zfs_pool_dev.stat.exists
+
+# A pool created without `mountpoint: none` tries to mount at /<poolname>, which
+# cannot be created on the read-only root; a zvol-only pool sidesteps that
+# instead of working around it.
+- name: Create the node pool
+  community.general.zpool:
+    name: '{{ node_zfs_pool_name }}'
+    vdevs: ['{{ node_zfs_pool_device }}']
+    mountpoint: none
+    pool_properties:
+      ashift: '12'
+      autotrim: 'on'
+    extra_zfs_properties:
+      compression: lz4
+      atime: 'off'
+      xattr: 'sa'
+
+- name: Create the volume and replica datasets
+  community.general.zfs:
+    name: '{{ node_zfs_pool_name }}/{{ item }}'
+    state: present
+    extra_zfs_properties:
+      mountpoint: none
+  loop: '{{ node_zfs_datasets }}'
+
+- name: Show pool health
+  ansible.builtin.command: zpool status -x {{ node_zfs_pool_name }}
+  register: node_zfs_pool_status
+  changed_when: false
+  failed_when: node_zfs_pool_status.rc != 0

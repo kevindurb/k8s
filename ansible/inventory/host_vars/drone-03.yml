@@ -4,3 +4,15 @@ k3s_hostname: drone-03
 k3s_server: 192.168.42.1
 
 tuned_profile: k8s-node
+
+# Node-local ZFS pool for the `zfs-local` CSI class. The vdev is a GPT partition
+# reserved at install time, so resolve it by label: coreos-installer renumbers
+# saved partitions if it has to.
+node_zfs_pool_name: k8s
+node_zfs_pool_device: /dev/disk/by-partlabel/zfs
+
+# Jellyfin's nodeSelector. Was applied by hand after every rebuild, which failed
+# silently: nothing in Argo complains while Jellyfin sits Pending with an
+# unschedulable warning.
+k3s_node_labels:
+  - media/gpu=amd-vega
