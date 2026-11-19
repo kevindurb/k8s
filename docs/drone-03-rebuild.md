@@ -332,6 +332,17 @@ three nodes**, not just drone-04. Two existing behaviours cover most of it:
       `bootc switch` in Phase 4. Rebuild only if the ignition, hostname or
       interface changes.
 
+      ⚠️ **Check the target is a block device before flashing.** If the stick is
+      not plugged in, `dd if=… of=/dev/sdb` does **not** fail — it creates a
+      regular file at that path, and on a devtmpfs `/dev` that is hundreds of MB
+      of RAM. A follow-up `cmp` then "verifies" the file against itself and
+      reports success. Always:
+
+      ```sh
+      test -b /dev/sdX || { echo "not a block device"; exit 1; }
+      lsblk -dno NAME,SIZE,TRAN,MODEL /dev/sdX   # expect usb + the stick's size
+      ```
+
 ## Phase 1 — Retire the node
 
 Straight from the swap doc's Step 3, which is already correct:
