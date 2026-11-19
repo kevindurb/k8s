@@ -560,7 +560,14 @@ It costs nothing today — the render node only matters when it actually transco
 
 ## Phase 4 — retire gpu-operator, proper PCI labels
 
-Runs **last**, after drone-01 is swapped. Scrypted is already off the NVIDIA runtime from Phase 0, so the only remaining dependency is Jellyfin's move. Do not interleave this with the hardware swap.
+✅ **Complete 2026-11-19**, right after drone-01 left. Scrypted came off the
+NVIDIA runtime back in Phase 0 and Jellyfin moved to the Vega in Phase 1, so by
+the time the last P620 left the cluster nothing referenced the operator.
+
+Result: `gpu-operator` namespace, `ClusterPolicy` and the three operator
+RuntimeClasses are gone, `nvidia-experimental` (k3s built-in) remains, PCI labels
+are now `pci-1002_15dd.present`, and `media/gpu=amd-vega` is applied by a
+`NodeFeatureRule` rather than by hand.
 
 ### Why the two changes are linked
 
@@ -639,14 +646,39 @@ Drop the `# gpu-operator expects only vendor` comment with it. Expect `feature.n
 Order matters, because the parent self-heals:
 
 1. Drop the reference in git first — remove `infrastructure/gpu-operator/` (`app.yml`, `kustomization.yml`, `config/any.yaml`) and its entry in `infrastructure/kustomization.yml` — and let the parent sync. The Application is now orphaned but still running.
-2. Delete it explicitly: `kubectl delete application -n argocd gpu-operator`. Application deletion cascades its managed resources, which is what actually tears the chart down. Doing this before step 1 would just get it recreated by the parent.
-3. Verify rather than assume: `kubectl get ns gpu-operator`, `kubectl get clusterpolicy`, `kubectl get ds -n gpu-operator`.
+2. Delete it explicitly: `kubectl delete application -n argocd gpu-operator`.
+
+✅ **Done 2026-11-19.** Two corrections from doing it:
+
+- **Deleting the Application does NOT cascade; it orphans everything.** The app has no
+  `resources-finalizer.argocd.argoproj.io`, so `kubectl delete application` removed
+  only the CR — the namespace, `ClusterPolicy`, DaemonSets and RuntimeClasses all
+  survived. Cascade-on-delete only happens *with* that finalizer. The remaining
+  resources had to be removed by hand:
+
+  ```sh
+  kubectl delete ns gpu-operator          # kills the operator deployment first
+  kubectl delete clusterpolicy cluster-policy
+  ```
+
+  Deleting the namespace first matters: the operator rewrites the ClusterPolicy
+  while it is still running.
+
+- **While the orphan exists, the parent sits `OutOfSync`** whose *only* resource is
+  `Application/gpu-operator` — `prune: false` means it cannot be reconciled away.
+  That is the expected steady state between steps 1 and 2, not a fault; it returns
+  to `Synced` once the Application is gone.
 
 This also removes the 4× time-slicing replicas and the `time-slicing-config-all` ConfigMap.
 
 ### Step E — clean the stale node labels
 
-Nothing garbage-collects them. Per node, remove every `nvidia.com/*` key — 37 on drone-01, 37 on drone-02, 11 on drone-04:
+Nothing garbage-collects them. ✅ **Done 2026-11-19** — and the counts were much
+lower than this doc predicted, because the three minis were reinstalled in the
+same window: **11 keys on drone-04 and zero on drone-01/02/03**. A rebuild is the
+cheapest way to get rid of gpu-feature-discovery's leftovers.
+
+Per node, remove every `nvidia.com/*` key:
 
 `jq` is available on `dev` (linuxbrew). Dry-run the list first, then remove:
 
@@ -661,7 +693,7 @@ kubectl get node drone-01 -o json \
   | jq -r '.metadata.labels | keys[] | select(startswith("nvidia.com/")) | . + "-"' \
   | xargs -r -n1 kubectl label node drone-01 --overwrite
 
-# 3. repeat for drone-02 and drone-04
+# 3. repeat for each remaining node (only drone-04 needed it on this run)
 ```
 
 The trailing `-` is the whole trick and is easy to lose in a pipeline; a single label by hand is:
@@ -683,10 +715,25 @@ grep -rn 'nvidia.com/gpu' apps/ platform/ infrastructure/
 - [ ] Jellyfin transcoding still works on `renderD128` (it never used the operator)
 - [ ] Scrypted Running as a HomeKit gateway — no GPU, no detection, live view in the Home app works
 - [ ] New `pci-*` labels present, e.g. `pci-1002_15dd.present` on the node holding the Vega (no `pci-10de_*` anywhere — no NVIDIA hardware remains)
-- [ ] `media/gpu=amd-vega` present on exactly the node running Jellyfin
+- [ ] `media/gpu=amd-vega` present on every node that has the Vega — **all three
+      minis**, since they are the same hardware. The original wording ("exactly
+      the node running Jellyfin") assumed only drone-03 had it; the
+      NodeFeatureRule is hardware-based, so Jellyfin may now float between the
+      three. Pin it if that is ever a problem.
 - [ ] zigbee2mqtt still scheduled (its USB label must be intact)
 - [ ] No `default_runtime_name` in `/var/lib/rancher/k3s/agent/etc/containerd/config.toml` after a reboot — runc is the implicit default
 - [ ] Cluster Healthy in Argo, Gatus green
+
+✅ **All verified 2026-11-19.** Recorded results:
+
+- 0 pods with `nvidia.com/gpu` limits or `runtimeClassName: nvidia`
+- `runtimeclass`: only `nvidia-experimental` left (no owner, no handler, inert)
+- `pci-1002_15dd.present=true` on drone-01/02/03; no `pci-10de_*` anywhere
+- `media/gpu=amd-vega` on all three minis (NodeFeatureRule `amd-vega-gpu`)
+- `nvidia.com/*` labels: 0 cluster-wide (11 removed from drone-04)
+- no `default_runtime_name` in the k3s containerd config — runc is the default
+- Jellyfin 1/1 Running on drone-03, zigbee2mqtt 1/1, Gatus 68/68 green, 61/61
+  Argo apps Synced+Healthy
 
 ### Rollback
 
