@@ -8,6 +8,7 @@ resources:
 components:
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
+  - ../../components/storage-home-drone-03
 configMapGenerator:
   - name: gatus
     options:

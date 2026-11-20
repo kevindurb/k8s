@@ -1,0 +1,26 @@
+---
+# Pins an app to drone-02 (home / IoT: the Zigbee dongle lives here, so the
+# automation stack follows it). Strategic merge, so an app that already has a
+# `nodeSelector` keeps its existing keys and gains this one.
+#
+# The pin and the PVC must land together: `zfs-local` is WaitForFirstConsumer, so
+# the volume is created on whichever node the pod first schedules to. After that
+# the PV's nodeAffinity is the enforced truth — a wrong pin produces a Pending
+# pod, never a write to the wrong node's copy.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: Deployment
+      labelSelector: app.kubernetes.io/component=app
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: ignored
+      spec:
+        template:
+          spec:
+            nodeSelector:
+              kubernetes.io/hostname: drone-02
