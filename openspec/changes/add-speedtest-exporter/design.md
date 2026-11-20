@@ -93,8 +93,10 @@ job.
 
 ### Stateless pod
 
-`persistCache: false` and no volume; the ConfigMap is mounted at `/config`, the binary's
-default config path, so no `-config` flag is needed.
+`persistCache: false` and no volume; the ConfigMap is mounted at `/config` and passed
+explicitly with `-config /config/config.yaml`. The image only defaults to that path when the
+podman/docker `container` env var is set, which Kubernetes does not set: without the flag it
+silently runs on built-in defaults, i.e. a test every five minutes.
 
 - A pod restart discards the cached result and the first scrape triggers a fresh test, which
   is desirable after a rollout.

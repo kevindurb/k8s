@@ -32,6 +32,12 @@ spec:
       containers:
         - name: app
           image: ghcr.io/heathcliff26/speedtest-exporter:v1.8.2@sha256:07eb2a3772fa558526fd66fe55ca8252cb4e1110843881894094633dedbd0eab
+          # The image only defaults to /config/config.yaml when the podman/docker
+          # `container` env var is set, which Kubernetes does not set; without
+          # this flag it silently uses built-in defaults (a test every 5m).
+          args:
+            - -config
+            - /config/config.yaml
           env:
             - name: TZ
               value: America/Denver
