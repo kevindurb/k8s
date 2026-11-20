@@ -789,3 +789,49 @@ groups:
             wedged or the pod is down; check `kubectl -n nut logs`.
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
+
+  # The app-tier replication mesh. Alert on lag, not on a single failure: zrepl
+  # retries by itself and a refused/diverged filesystem shows up in the error
+  # metric. Jobs with nothing to replicate report last_successful = 0, hence the
+  # `> 0` guard.
+  - name: Zrepl
+    rules:
+      - alert: ZreplReplicationErrors
+        expr: max by (node, zrepl_job) (zrepl_replication_filesystem_errors) > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: zrepl cannot replicate {{ $labels.zrepl_job }} from {{ $labels.node }}
+          description: |-
+            {{ $value }} filesystem(s) failed replication in the latest attempt.
+            A diverged replica fails closed and needs a deliberate `zfs destroy`.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: ZreplReplicationLag
+        expr: >
+          (time() - zrepl_replication_last_successful{zrepl_job=~"pull-.*"} > 3600)
+          and ignoring () (zrepl_replication_last_successful{zrepl_job=~"pull-.*"} > 0)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: zrepl replication stale for {{ $labels.zrepl_job }} on {{ $labels.node }}
+          description: |-
+            No successful replication for over an hour (the interval is 15m).
+            Check `zrepl status` and `journalctl -u zrepl` on both ends.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}
+
+      - alert: ZreplDown
+        expr: up{job="zrepl"} == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: zrepl metrics unreachable on {{ $labels.node }}
+          description: |-
+            Prometheus cannot scrape :9811. The unit is down or wedged.
+            VALUE = {{ $value }}
+            LABELS = {{ $labels }}

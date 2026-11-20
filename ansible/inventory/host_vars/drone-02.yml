@@ -4,3 +4,14 @@ k3s_hostname: drone-02
 k3s_server: 192.168.42.1
 
 tuned_profile: k8s-node
+
+# zrepl mesh (docs/storage-placement.md). This node snapshots and serves its own
+# k8s/volumes tree on 192.168.42.22:8888 and pulls each peer's tree into k8s/replicas.
+# The peer list is the whole placement inventory as far as replication is
+# concerned: demoting a volume renames it out of k8s/volumes, so this node stops
+# serving it, and promoting one renames it in.
+zrepl_peers:
+  - name: drone-01
+    address: 192.168.42.21
+  - name: drone-03
+    address: 192.168.42.23

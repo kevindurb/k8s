@@ -26,9 +26,18 @@ ARG K3S_VERSION=v1.37.2+k3s1
 ADD https://github.com/k3s-io/k3s/releases/download/${K3S_VERSION}/k3s /usr/bin/k3s
 RUN chmod +x /usr/bin/k3s
 
+# zrepl (the app-tier replication mesh) is not in Fedora proper; the vendor's
+# dnf repo tracks latest, and it is pre-1.0 — so install the release RPM by URL
+# and pin the version. The asset is zrepl-<version>-2.x86_64.rpm.
+# renovate: datasource=github-releases depName=zrepl packageName=zrepl/zrepl
+ARG ZREPL_VERSION=v0.7.0
+RUN dnf install -y \
+  https://github.com/zrepl/zrepl/releases/download/${ZREPL_VERSION}/zrepl-${ZREPL_VERSION}-2.x86_64.rpm \
+  && dnf clean all
+
 COPY overlay/ /
 
 RUN systemctl disable firewalld \
-  && systemctl enable cockpit tailscaled iscsid tuned nvmet chronyd
+  && systemctl enable cockpit tailscaled iscsid tuned nvmet chronyd zrepl
 
 RUN bootc container lint

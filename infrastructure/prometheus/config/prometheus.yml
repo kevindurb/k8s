@@ -70,6 +70,20 @@ scrape_configs:
         regex: '.*_bucket'
         action: drop
 
+  # zrepl exposes its own metrics on each app node (:9811). It runs as a systemd
+  # unit, not a pod, so this is a static target list rather than service discovery.
+  - job_name: zrepl
+    static_configs:
+      - targets: ['192.168.42.21:9811']
+        labels:
+          node: drone-01
+      - targets: ['192.168.42.22:9811']
+        labels:
+          node: drone-02
+      - targets: ['192.168.42.23:9811']
+        labels:
+          node: drone-03
+
   - job_name: kubernetes-service-endpoints
     # smartctl-exporter blocks /metrics while it polls devices; on drone-02 the
     # 32 NVMe-oF controllers push a poll past the 10s global timeout, so one

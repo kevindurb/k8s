@@ -34,6 +34,16 @@
 # A pool created without `mountpoint: none` tries to mount at /<poolname>, which
 # cannot be created on the read-only root; a zvol-only pool sidesteps that
 # instead of working around it.
+# `community.general.zpool` with state=present is not idempotent for a pool that
+# already exists: it decides the vdev is missing and shells out to `zpool add`,
+# which fails with "is part of active pool". The role runs after every rebuild
+# *and* on all three nodes, so check first.
+- name: Check whether the node pool already exists
+  ansible.builtin.command: zpool list -H -o name {{ node_zfs_pool_name }}
+  register: node_zfs_pool_exists
+  changed_when: false
+  failed_when: false
+
 - name: Create the node pool
   community.general.zpool:
     name: '{{ node_zfs_pool_name }}'
@@ -52,6 +62,7 @@
       compression: lz4
       atime: 'off'
       xattr: 'sa'
+  when: node_zfs_pool_exists.rc != 0
 
 - name: Create the volume and replica datasets
   community.general.zfs:
@@ -66,3 +77,26 @@
   register: node_zfs_pool_status
   changed_when: false
   failed_when: node_zfs_pool_status.rc != 0
+
+# --- zrepl mesh -----------------------------------------------------------------
+# The package comes from the image (bootc/Containerfile installs the release RPM
+# by URL); this role only renders the config, because the peer list is per host.
+- name: Ensure the zrepl config directory exists
+  ansible.builtin.file:
+    path: /etc/zrepl
+    state: directory
+    mode: '0755'
+
+- name: Render the zrepl config
+  ansible.builtin.template:
+    src: zrepl.yml.j2
+    dest: /etc/zrepl/zrepl.yml
+    mode: '0644'
+  notify: [Restart zrepl]
+
+- name: Enable and start zrepl
+  ansible.builtin.systemd_service:
+    name: zrepl
+    state: started
+    enabled: true
+

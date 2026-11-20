@@ -1,0 +1,73 @@
+# Rendered by ansible/roles/node_zfs from templates/zrepl.yml.j2 — do not edit on
+# the node (bootc keeps hand-edited /etc, which silently wins over the image).
+#
+# Single-writer fan-out: this node snapshots and serves whatever it owns in
+# k8s/volumes, and pulls each peer's k8s/volumes into its own k8s/replicas.
+# A zvol exists in exactly one of the two trees on exactly one host, so promotion
+# is a `zfs rename`, never a copy.
+global:
+  logging:
+    - type: syslog
+      format: human
+      level: warn
+  monitoring:
+    - type: prometheus
+      listen: ':9811'
+
+jobs:
+  - name: source
+    type: source
+    serve:
+      type: tcp
+      # Plain TCP on the segmented LAN; firewalld is off on every node. Switch to
+      # the tls transport with mutual certs if that ever stops being true.
+      listen: "0.0.0.0:8888"
+      # Required by the transport: an allowlist, and the identity each peer
+      # presents. Only these three nodes exist.
+      clients:
+{% for peer in zrepl_peers %}
+        "{{ peer.address }}": "{{ peer.name }}"
+{% endfor %}
+    filesystems:
+      # Every zvol this node owns, but not the empty parent dataset itself (a
+      # full-path pattern wins over the subtree wildcard). It deliberately does
+      # not reach k8s/replicas, which is what the pull jobs fill.
+      "k8s/volumes": false
+      "k8s/volumes<": true
+    snapshotting:
+      type: periodic
+      interval: 15m
+      prefix: zrepl_
+    # No pruning here by design: a `source` job does not prune. The puller's
+    # keep_sender grid sends the prune decisions, so the snapshots this node takes
+    # are governed by every peer's policy.
+
+{% for peer in zrepl_peers %}
+  # Pull, not sink: a sink receives to $root_fs/$client_identity/$source_path
+  # (a per-peer level), while pull receives to $root_fs/$source_path.
+  - name: pull-{{ peer.name }}
+    type: pull
+    connect:
+      type: tcp
+      address: "{{ peer.address }}:8888"
+    root_fs: k8s/replicas
+    interval: 15m
+    recv:
+      # zrepl creates the intermediate datasets under k8s/replicas by itself, and
+      # refuses to guess whether they should be encrypted. The pools are not
+      # encrypted (drone-0X k8s), so inherit whatever the parent has.
+      placeholder:
+        encryption: inherit
+    pruning:
+      keep_sender:
+        # Never prune a snapshot a replication step still needs.
+        - type: not_replicated
+        - type: grid
+          grid: 1x1h(keep=all) | 24x1h | 14x1d
+          regex: "^zrepl_.*"
+      keep_receiver:
+        # The replica is also the longer snapshot archive.
+        - type: grid
+          grid: 1x1h(keep=all) | 24x1h | 35x1d | 6x30d
+          regex: "^zrepl_.*"
+{% endfor %}
