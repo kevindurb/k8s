@@ -1,0 +1,12 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The Helm chart is applied by the Argo CD Application in ./app.yml (multi-source);
+# this directory only carries the cluster-scoped objects that follow from it.
+resources:
+  - ./storage-class.yml
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: openebs-zfs

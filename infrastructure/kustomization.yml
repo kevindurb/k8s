@@ -15,6 +15,7 @@ resources:
   - node-exporter/app.yml
   - node-feature-discovery/app.yml
   - nut/app.yml
+  - openebs-zfs/app.yml
   - prometheus/app.yml
   - smartctl-exporter/app.yml
   - snapshot-controller/app.yml

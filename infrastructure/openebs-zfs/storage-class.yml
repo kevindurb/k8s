@@ -1,0 +1,36 @@
+---
+# Node-local ZFS volumes for the app nodes (drone-01/02/03). `poolname` is the
+# dataset the zvols are created under, which is deliberately the same tree the
+# democratic-csi driver used, so the replication glob and every restore note still
+# apply. ext4 on a 16 KiB zvol matches what is being replaced: `fsGroup: 1000`,
+# the ext4 journal and the rehearsed "mount the zvol, fsck -n, start the app"
+# restore path all keep working.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zfs-local
+provisioner: zfs.csi.openebs.io
+parameters:
+  poolname: "k8s/volumes"
+  fstype: "ext4"
+  volblocksize: "16k"
+  compression: "lz4"
+  dedup: "off"
+  # Thin, like the volumes being replaced: declared capacity is not reserved.
+  thinprovision: "yes"
+# Mandatory for node-local volumes: the pod's nodeSelector decides the home, and
+# the PV's nodeAffinity is the enforced truth afterwards. A wrong pin produces a
+# Pending pod, never a write to the wrong node's data.
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+
+---
+# Ad-hoc snapshots only (restore a volume from an hour ago). zrepl owns the
+# periodic history once the mesh is up.
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: zfs-local
+driver: zfs.csi.openebs.io
+deletionPolicy: Delete

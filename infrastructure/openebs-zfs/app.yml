@@ -1,0 +1,80 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openebs-zfs
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://openebs.github.io/openebs
+      targetRevision: 4.6.2
+      chart: openebs
+      helm:
+        valuesObject:
+          # The umbrella chart ships five engines; only LocalPV-ZFS is wanted.
+          # hostpath (dynamic-localpv-provisioner) comes enabled and would drop a
+          # provisioner + StorageClasses we never use; lvm and mayastor are
+          # rejected designs (see docs/storage-placement.md), and rawfile is
+          # pre-stable.
+          engines:
+            local:
+              hostpath:
+                enabled: false
+              lvm:
+                enabled: false
+              zfs:
+                enabled: true
+              rawfile:
+                enabled: false
+            replicated:
+              mayastor:
+                enabled: false
+          # Loki/alloy are Mayastor observability; nothing to observe here.
+          loki:
+            enabled: false
+          alloy:
+            enabled: false
+          # Only runs on a v3 -> v4 upgrade, decided by an existing
+          # localpv-provisioner deployment. There is none.
+          preUpgradeHook:
+            enabled: false
+          # The cluster already has the snapshot CRDs from the snapshot-controller
+          # app in kube-system. Letting openebs-crds ship them too makes two Argo
+          # apps fight over the same cluster-scoped objects.
+          openebs-crds:
+            csi:
+              volumeSnapshots:
+                enabled: false
+                keep: false
+          zfs-localpv:
+            global:
+              analytics:
+                enabled: false
+            # The node agent formats zvols and needs /dev/zfs; PSS is relaxed for
+            # this namespace below. It is deliberately *not* tolerated onto
+            # drone-04 (dedicated=storage) or the unimatrix control plane: a
+            # local volume is only meaningful where the pool exists.
+            zfsNode:
+              tolerations: []
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: infrastructure/openebs-zfs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openebs
+  syncPolicy:
+    # exemption: the zfs node agent mounts /dev, /run and the kubelet dir and
+    # formats block devices; the controller runs a CSI driver.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true
