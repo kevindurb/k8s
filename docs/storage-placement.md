@@ -34,7 +34,8 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **19 democratic-csi PVCs, 26 on `zfs-local`, 43 GiB of live data.** The stale
+- **3 democratic-csi PVCs left** (miniflux, rakazo-data, semaphore-data); **42 on
+  `zfs-local`**. All three app nodes' stacks are migrated.
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
@@ -111,8 +112,10 @@ reboot.
 
 ### Not started
 
-- **Step 2 is complete** (golink, gatus, rakazo). The next volumes are a policy
-  call, not a canary: move them per node as `storage-home-*` pins land.
+- **Step 2 is complete** (golink, gatus, rakazo) and Steps 4-5 are done for
+  drone-02 and drone-03 and drone-01's media stack — 42 volumes moved with
+  `scripts/migrate-volume`. What remains: `miniflux` (belongs on drone-03),
+  `rakazo-data` (goes with the app) and the orphan `semaphore-data`.
 - **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
   `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
 - **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
@@ -639,7 +642,7 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs | 19; **26 volumes on `zfs-local`** (all of drone-02's and drone-03's stacks plus the canary) |
+| `zfs-generic-nvmeof-csi` PVCs | 3; **42 volumes on `zfs-local`** |
 | Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
 | Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
 | Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
