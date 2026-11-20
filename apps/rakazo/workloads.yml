@@ -295,7 +295,12 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: zfs-local
+  # Deliberately still on the NVMe-oF class: `api` and `worker` both mount this
+  # volume (at /data), and OpenEBS LocalPV-ZFS refuses to stage one RWO PV into a
+  # second pod on the same node — "verifyMount: device already mounted". The only
+  # volume in the cluster shared by two workloads. Give it its own Deployment-pair
+  # rethink (single pod with two containers, or RWX over NFS) before moving it.
+  storageClassName: zfs-generic-nvmeof-csi
   resources:
     requests:
       storage: 30Gi
