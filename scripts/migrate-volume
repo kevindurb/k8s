@@ -216,12 +216,18 @@ OB=$(sed -n 's/^OLD_BYTES=//p' <<<"$LOGS"); NB=$(sed -n 's/^NEW_BYTES=//p' <<<"$
 info "files: $OF -> $NF    bytes: $OB -> $NB"
 [[ $OF == "$NF" && $OB == "$NB" ]] || die "copy verification failed; nothing has been changed in git"
 
+# A completed Job pod still references the temp PVC, and pvc-protection will not
+# let the PVC go until the pod is gone - deleting the PVC first hangs forever.
+step "remove the copy Job"
+kubectl -n "$NS" delete job "migrate-${FULL_PVC}" --wait=true --timeout=180s >/dev/null
+info "job and pod removed"
+
 step "rebind the new PV to $NS/$FULL_PVC"
 NEW_PV=$(kubectl -n "$NS" get pvc "${FULL_PVC}-migrate" -o jsonpath='{.spec.volumeName}')
 kubectl patch pv "$NEW_PV" -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}' >/dev/null
-kubectl -n "$NS" delete pvc "${FULL_PVC}-migrate" --wait=true >/dev/null
+kubectl -n "$NS" delete pvc "${FULL_PVC}-migrate" --wait=true --timeout=180s >/dev/null
 kubectl patch pv "$OLD_PV" -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}' >/dev/null
-kubectl -n "$NS" delete pvc "$FULL_PVC" --wait=true >/dev/null
+kubectl -n "$NS" delete pvc "$FULL_PVC" --wait=true --timeout=180s >/dev/null
 kubectl patch pv "$NEW_PV" --type json \
   -p "[{\"op\":\"replace\",\"path\":\"/spec/claimRef\",\"value\":{\"namespace\":\"$NS\",\"name\":\"$FULL_PVC\"}}]" >/dev/null
 info "new PV $NEW_PV pre-bound; old PV $OLD_PV kept Retain/Released"
@@ -297,12 +303,8 @@ done
 for a in "$ARGO_APP" "$PARENT" borg; do resume_app "$a"; info "$a resumed"; done
 
 step "verify"
-for _ in $(seq 1 60); do
-  ready=$(kubectl -n "$NS" get pods --no-headers 2>/dev/null | grep -cE "Running|Completed" || true)
-  total=$(kubectl -n "$NS" get pods --no-headers 2>/dev/null | grep -c . || true)
-  [[ $total -gt 0 && $ready -eq $total ]] && break
-  sleep 3
-done
+kubectl -n "$NS" wait --for=condition=Ready pod --all --timeout=300s >/dev/null 2>&1 || \
+  info "warning: not every pod is Ready yet (see below)"
 kubectl -n "$NS" get pods --no-headers || true
 echo
 kubectl -n "$NS" get pvc "$FULL_PVC" -o custom-columns='PVC:.metadata.name,VOLUME:.spec.volumeName,CLASS:.spec.storageClassName,STATUS:.status.phase'
