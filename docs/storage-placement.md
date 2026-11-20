@@ -34,8 +34,7 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **45 democratic-csi PVCs, 361 GiB declared, 43 GiB of live data** (one volume,
-  `golink`, is now on `zfs-local`). The stale
+- **42 democratic-csi PVCs, 4 on `zfs-local`, 43 GiB of live data.** The stale
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
@@ -51,10 +50,17 @@ Smoke test on drone-03 passed end to end: create → write 64 MB → **expand**
 with no leftovers. The zvol came up `volblocksize=16K`, `refreservation=none`
 (thin), `compression=lz4`, exactly as configured.
 
-`golink` became the first real volume (1 GiB): copied with a single Job on
-drone-03, verified 26 files / 56,450 bytes / identical `golink.db` md5, rebound to
-the original PVC name, and the app serves again over tsnet
-(`https://go.beaver-cloud.ts.net` → 200). Old PV kept `Retain`/`Released`.
+Four real volumes now run on it, all on drone-03:
+
+| App | Volume | Verified |
+| --- | --- | --- |
+| `golink` | 1 GiB | 26 files / 56,450 bytes, identical `golink.db` md5; serves over tsnet (`https://go.beaver-cloud.ts.net` → 200) |
+| `gatus` | 954Mi | 43 files / 6,224,544 bytes; `/health` → 200 and it is monitoring again |
+| `rakazo` | `database` 20Gi | 2,181 files / 91,462,043 bytes; Postgres answers, 352 tables |
+| `rakazo` | `web-assets` 2Gi | 302 files / 44,545,549 bytes |
+
+`rakazo-data` (30Gi) deliberately **stayed on democratic-csi** — see gotcha 5.
+42 PVCs remain on `zfs-generic-nvmeof-csi`.
 
 **Decision: OpenEBS LocalPV-ZFS it is.** The `zfs-local-zvol` fallback is not
 needed, so `spec.csi.driver` is settled before the rest of the volumes move.
@@ -75,11 +81,17 @@ Four things the canary taught us, all now in the procedure below:
    what brought the pod — and the PVC-deleting `pvc-protection` finalizer — back).
    Pause `borg → apps → <app>` and resume `<app> → apps → borg`, as written.
 4. **Component files are `kustomize.config.k8s.io/v1alpha1`**, not `v1beta1`.
+5. **One RWO PV cannot serve two pods.** zfs-localpv mounts the zvol per pod and
+   refuses a second stage on the same node (`verifyMount: device already
+   mounted`). `rakazo` is the only app in the cluster that shares a volume between
+   two workloads (`api` + `worker` both mount `/data`), so that one volume stays on
+   democratic-csi; its siblings moved. A volume like this needs a single pod with
+   two containers, or RWX over NFS, before it can follow.
 
 ### Not started
 
-- **Step 2 remainder**: `golink` is done; `gatus` and `rakazo` still run on
-  democratic-csi, one at a time.
+- **Step 2 is complete** (golink, gatus, rakazo). The next volumes are a policy
+  call, not a canary: move them per node as `storage-home-*` pins land.
 - **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
   `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
 - **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
@@ -597,7 +609,7 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs | 45, 361 GiB declared; 1 on `zfs-local` (golink) |
+| `zfs-generic-nvmeof-csi` PVCs | 42; 4 volumes now on `zfs-local` (golink, gatus, rakazo database + web-assets) |
 | Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
 | Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
 | Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
