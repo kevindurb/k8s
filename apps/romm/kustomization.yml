@@ -12,6 +12,9 @@ resources:
   - ./secret-sealed-secret.yml
   - ./mariadb-sealed-secret.yml
 
+components:
+  - ../../components/storage-home-drone-01
+
 configMapGenerator:
   - name: gatus
     options:
