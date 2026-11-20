@@ -10,6 +10,7 @@ resources:
   - ./rbac.yml
 
 components:
+  - ../../components/storage-home-drone-03
   - ../../components/app-pod-hardening
   - ../../components/app-http-service
   - ../../components/prometheus-scrape-app-service
