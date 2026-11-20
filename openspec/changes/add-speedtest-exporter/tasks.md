@@ -19,13 +19,13 @@
 
 ## 4. Rollout and verification
 
-- [ ] 4.1 Commit and push, then verify Argo CD reports the `speedtest-exporter` Application Synced/Healthy, the pod is Running and Ready, and `kubectl -n speedtest-exporter get deploy,svc` shows the expected names
-- [ ] 4.2 Verify the first measurement through `kubectl -n speedtest-exporter port-forward svc/speedtest-exporter-service 8080` and `curl localhost:8080/metrics`: the first call takes roughly 25 seconds and then returns `speedtest_up 1` with download, upload, ping, jitter and data-used series, and record the reported `speedtest_data_used_megabytes` for the follow-up review
-- [ ] 4.3 Verify Prometheus collection without config changes: `up{kubernetes_namespace="speedtest-exporter"} == 1` with `job="kubernetes-service-endpoints"`, throughput series present, and `infrastructure/prometheus/config/prometheus.yml` still containing no `speedtest` job
-- [ ] 4.4 Verify the Gatus check shows healthy in the `infrastructure` group and that health probes do not start tests: `curl localhost:8080/` returns immediately and `speedtest_duration_milliseconds` does not change between two consecutive probe cycles
-- [ ] 4.5 Verify the alert rule loaded and is quiet while healthy: Prometheus shows the `Speedtest` rule group with no evaluation error and `ALERTS{alertname="SpeedtestFailed"}` is empty while `speedtest_up == 1`
+- [x] 4.1 Commit and push, then verify Argo CD reports the `speedtest-exporter` Application Synced/Healthy, the pod is Running and Ready, and `kubectl -n speedtest-exporter get deploy,svc` shows the expected names
+- [x] 4.2 Verify the first measurement through `kubectl -n speedtest-exporter port-forward svc/speedtest-exporter-service 8080` and `curl localhost:8080/metrics`: the first call takes roughly 25 seconds and then returns `speedtest_up 1` with download, upload, ping, jitter and data-used series, and record the reported `speedtest_data_used_megabytes` for the follow-up review
+- [x] 4.3 Verify Prometheus collection without config changes: `up{kubernetes_namespace="speedtest-exporter"} == 1` with `job="kubernetes-service-endpoints"`, throughput series present, and `infrastructure/prometheus/config/prometheus.yml` still containing no `speedtest` job
+- [x] 4.4 Verify the Gatus check shows healthy in the `infrastructure` group and that health probes do not start tests: `curl localhost:8080/` returns immediately and `speedtest_duration_milliseconds` does not change between two consecutive probe cycles
+- [x] 4.5 Verify the alert rule loaded and is quiet while healthy: Prometheus shows the `Speedtest` rule group with no evaluation error and `ALERTS{alertname="SpeedtestFailed"}` is empty while `speedtest_up == 1`
 - [ ] 4.6 Verify the pod meets the baseline security requirements: container `runAsNonRoot: true`, `readOnlyRootFilesystem: true`, no privileged flag, no hostPath, and no PersistentVolumeClaim in the namespace
-- [ ] 4.7 Verify a restart recovers without state: `kubectl -n speedtest-exporter rollout restart deployment/speedtest-exporter-deployment`, then confirm the pod returns to Ready and a new measurement is published on the first scrape and appears in Prometheus
+- [x] 4.7 Verify a restart recovers without state: `kubectl -n speedtest-exporter rollout restart deployment/speedtest-exporter-deployment`, then confirm the pod returns to Ready and a new measurement is published on the first scrape and appears in Prometheus
 
 ## Workflow follow-up
 

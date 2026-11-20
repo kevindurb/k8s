@@ -163,6 +163,11 @@ container `app`, port `http`; Service `service` → `speedtest-exporter-service`
   future alerts must not assume `instance` names the exporter.
 - **Removal is manual**: `prune: false`, so deleting the parent registration leaves the
   Application and namespace behind; rollback must delete both.
+- **Editing a generated ConfigMap leaves the old copy behind**: the generator's hash makes
+  the old object an orphan, and `prune: false` keeps the Application OutOfSync
+  (`requiresPruning`) until it is deleted by hand. This change hit it for
+  `speedtest-exporter-gatus` and for the `prometheus-rules` ConfigMap that the new rule group
+  replaced; both stale objects were removed after the sync.
 
 ## Migration Plan
 
