@@ -34,8 +34,8 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **3 democratic-csi PVCs left** (semaphore, miniflux, rakazo-data); **42 on
-  `zfs-local`**. All three app nodes' stacks are migrated.
+- **1 democratic-csi PVC left** (`rakazo-data`, which goes with the app);
+  **44 on `zfs-local`**. Every app that stays is migrated.
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
@@ -114,8 +114,7 @@ reboot.
 
 - **Step 2 is complete** (golink, gatus, rakazo) and Steps 4-5 are done for
   drone-02 and drone-03 and drone-01's media stack — 42 volumes moved with
-  `scripts/migrate-volume`. What remains: `miniflux` (belongs on drone-03),
-  `rakazo-data` (goes with the app) and the orphan `semaphore-data`.
+  `scripts/migrate-volume`. Only `rakazo-data` remains, and it goes with the app.
 - **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
   `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
 - **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
@@ -268,7 +267,9 @@ else here is one functional group.
 | qbittorrent | config 10Gi, ts-state 1Gi + `qbittorrent-nas-media` (app at 0 replicas) |
 | f1timing / pokesim | 30Gi / 1.7, 10Gi / 0.9 |
 | minecraft | 10Gi / 0.7 |
-| semaphore, tsgit ×2, linkding, golink, consignment-app | <0.1 total |
+| semaphore | 5Gi / 4.9 MiB |
+| miniflux | 1Gi / 126 MiB (postgres) |
+| tsgit ×2, linkding, golink, consignment-app | <0.1 total |
 
 ≈ **7 GiB**. `rakazo` is already pinned to `drone-03` in git
 (`apps/rakazo/{workloads,bootstrap,migrate}.yml`), which makes it the natural first
