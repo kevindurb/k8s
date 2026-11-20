@@ -51,6 +51,13 @@ FULL_PVC=$(printf '%s\n' "$RENDERED" | yq -N -r '
   select(.kind == "PersistentVolumeClaim") | .metadata.name' 2>/dev/null |
   grep -E "(^|-)${PVC_ARG}$" | head -1) || true
 [[ -n $FULL_PVC ]] || die "no PVC matching '$PVC_ARG' in $APP_DIR"
+
+# The manifests declare the PVC by its name *before* namePrefix, which may itself
+# contain hyphens (consignment-app- + data), so strip the prefix rather than
+# splitting on the first hyphen.
+PREFIX=$(yq -r '.namePrefix // ""' "$APP_DIR/kustomization.yml" 2>/dev/null || true)
+SHORT_PVC=${FULL_PVC#"$PREFIX"}
+[[ -n $SHORT_PVC ]] || SHORT_PVC=$FULL_PVC
 NS=$(printf '%s\n' "$RENDERED" | yq -N -r "
   select(.kind == \"PersistentVolumeClaim\" and .metadata.name == \"$FULL_PVC\") |
   .metadata.namespace" 2>/dev/null | head -1)
@@ -100,6 +107,28 @@ info "consumers   : ${NWORK:-0} workload(s)"
 timeout 20 ssh -o BatchMode=yes "$HOME_NODE" 'zpool list -H -o name k8s' >/dev/null ||
   die "$HOME_NODE has no k8s pool"
 info "$HOME_NODE k8s pool present"
+
+# Find the source file that declares this PVC, and prove the class line is there.
+# Doing it now means a manifest we cannot edit fails before anything is destroyed.
+TARGET_FILE=$(python3 - "$APP_DIR" "$SHORT_PVC" <<'PY2'
+import os, re, sys
+app_dir, short = sys.argv[1], sys.argv[2]
+for f in sorted(os.listdir(app_dir)):
+    if not f.endswith((".yml", ".yaml")):
+        continue
+    for b in re.split(r"(?m)^---\s*$", open(os.path.join(app_dir, f)).read()):
+        if "PersistentVolumeClaim" in b and re.search(rf"(?m)^\s*name:\s*{re.escape(short)}\s*$", b):
+            if "storageClassName: zfs-generic-nvmeof-csi" in b:
+                print(os.path.join(app_dir, f)); raise SystemExit(0)
+            raise SystemExit(f"{f}: PVC {short} found but its class is not zfs-generic-nvmeof-csi")
+raise SystemExit(f"no PVC block named {short} in {app_dir}")
+PY2
+) || die "cannot edit the manifest: $TARGET_FILE"
+info "manifest    : $TARGET_FILE (PVC '$SHORT_PVC' after namePrefix '$PREFIX')"
+
+if [[ $NO_PIN -eq 0 && ! -d components/storage-home-$HOME_NODE ]]; then
+  die "components/storage-home-$HOME_NODE does not exist"
+fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   step "dry run: would pause borg, $PARENT, $ARGO_APP; scale $NS to 0; copy with a Job on $HOME_NODE"
@@ -233,9 +262,9 @@ kubectl patch pv "$NEW_PV" --type json \
 info "new PV $NEW_PV pre-bound; old PV $OLD_PV kept Retain/Released"
 
 step "git: pin to $HOME_NODE and switch the class"
-python3 - "$APP_DIR" "$HOME_NODE" "$FULL_PVC" "$NO_PIN" <<'PY'
+python3 - "$APP_DIR" "$HOME_NODE" "$SHORT_PVC" "$NO_PIN" "$TARGET_FILE" <<'PY'
 import os, re, sys
-app_dir, node, pvc, no_pin = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+app_dir, node, short, no_pin, target = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1", sys.argv[5]
 
 # 1. the pin component
 kfile = os.path.join(app_dir, "kustomization.yml")
@@ -249,23 +278,18 @@ if not no_pin and comp not in src:
     open(kfile, "w").write(src)
     print(f"   pin added to {kfile}")
 
-# 2. the storageClassName, in whichever file declares this PVC
-short = pvc.split("-", 1)[1] if "-" in pvc else pvc
+# 2. the storageClassName, in the file preflight already validated
+text = open(target).read()
+blocks = re.split(r"(?m)^---\s*$", text)
 changed = False
-for f in sorted(os.listdir(app_dir)):
-    if not f.endswith((".yml", ".yaml")):
-        continue
-    path = os.path.join(app_dir, f)
-    text = open(path).read()
-    blocks = re.split(r"(?m)^---\s*$", text)
-    for i, b in enumerate(blocks):
-        if re.search(rf"(?m)^\s*name:\s*{re.escape(short)}\s*$", b) and "PersistentVolumeClaim" in b:
-            if "storageClassName: zfs-generic-nvmeof-csi" in b:
-                blocks[i] = b.replace("storageClassName: zfs-generic-nvmeof-csi",
-                                      "storageClassName: zfs-local")
-                open(path, "w").write("---".join(blocks))
-                print(f"   class switched in {path}")
-                changed = True
+for i, b in enumerate(blocks):
+    if re.search(rf"(?m)^\s*name:\s*{re.escape(short)}\s*$", b) and "PersistentVolumeClaim" in b:
+        if "storageClassName: zfs-generic-nvmeof-csi" in b:
+            blocks[i] = b.replace("storageClassName: zfs-generic-nvmeof-csi",
+                                  "storageClassName: zfs-local")
+            open(target, "w").write("---".join(blocks))
+            print(f"   class switched in {target}")
+            changed = True
 if not changed:
     sys.exit("could not find the PVC block to edit")
 PY
