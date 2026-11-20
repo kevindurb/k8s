@@ -34,7 +34,7 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **3 democratic-csi PVCs left** (miniflux, rakazo-data, semaphore-data); **42 on
+- **3 democratic-csi PVCs left** (semaphore, miniflux, rakazo-data); **42 on
   `zfs-local`**. All three app nodes' stacks are migrated.
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
@@ -701,6 +701,8 @@ Still open:
 - **`rakazo` is being retired** — do not migrate it. Its `database` and
   `web-assets` are already on `zfs-local` from the canary; `data` stays on
   democratic-csi and will go with the app.
+- `semaphore` **is** live (it lives at `platform/semaphore`, not `apps/`) and
+  still needs its 5 GiB volume moved to drone-03; `miniflux` likewise.
 - **`qbittorrent`** is at 0 replicas with two PVCs (10 Gi + 1 Gi); confirm before
   moving them, or drop the app.
 - **`immich-machine-learning-cache`** is regenerable. Replicating it is 1.8 GB of
