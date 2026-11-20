@@ -7,6 +7,7 @@ resources:
   - ./deployment.yml
   - ./oidc-sealed-secret.yml
 components:
+  - ../../components/storage-home-drone-02
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 configMapGenerator:
