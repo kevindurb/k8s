@@ -34,7 +34,7 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **26 democratic-csi PVCs, 19 on `zfs-local`, 43 GiB of live data.** The stale
+- **19 democratic-csi PVCs, 26 on `zfs-local`, 43 GiB of live data.** The stale
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
@@ -322,10 +322,11 @@ Exceptions and consequences:
   selectors** rather than gaining a component — the Jobs need the same pin so
   their image pulls resolve. Do not add both; two writers to one key merge
   ambiguously.
-- **hostNetwork apps** (`home-assistant`, `omada`, `scrypted`, `syncthing`) get
-  stable LAN IPs as a side effect, which ends the "the pod moved and its IP
-  changed" incidents. Converting them to ClusterIP + Ingress is deliberately out
-  of scope and would make them movable again.
+- **hostNetwork apps** (`home-assistant`, `omada`, `scrypted`, `syncthing`) got
+  stable LAN IPs as a side effect — all four now run on drone-02 as
+  **192.168.42.22**, which ends the "the pod moved and its IP changed" incidents.
+  Converting them to ClusterIP + Ingress is deliberately out of scope and would
+  make them movable again.
 - **Media readers do not need locality.** The `*-nas-media` mounts are RWX over
   NFS from drone-04, so `radarr`'s home is about its config volume, not its media.
 
@@ -638,7 +639,7 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs | 26; **19 volumes on `zfs-local`** (all of drone-03's stack plus the canary) |
+| `zfs-generic-nvmeof-csi` PVCs | 19; **26 volumes on `zfs-local`** (all of drone-02's and drone-03's stacks plus the canary) |
 | Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
 | Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
 | Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
