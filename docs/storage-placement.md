@@ -691,6 +691,9 @@ something live:
 
 Still open:
 
+- **`rakazo` is being retired** — do not migrate it. Its `database` and
+  `web-assets` are already on `zfs-local` from the canary; `data` stays on
+  democratic-csi and will go with the app.
 - **`qbittorrent`** is at 0 replicas with two PVCs (10 Gi + 1 Gi); confirm before
   moving them, or drop the app.
 - **`immich-machine-learning-cache`** is regenerable. Replicating it is 1.8 GB of
