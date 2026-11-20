@@ -6,6 +6,7 @@ namePrefix: consignment-app-
 resources:
   - ./deployment.yml
 components:
+  - ../../components/storage-home-drone-03
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 configMapGenerator:
