@@ -9,6 +9,7 @@ resources:
   - ./deployment.yml
 
 components:
+  - ../../components/storage-home-drone-03
   - ../../components/nas-media
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
