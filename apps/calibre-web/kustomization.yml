@@ -6,6 +6,7 @@ namePrefix: calibre-web-
 resources:
   - ./deployment.yml
 components:
+  - ../../components/storage-home-drone-01
   - ../../components/nas-media
 configMapGenerator:
   - name: gatus
