@@ -155,7 +155,7 @@ metadata:
   name: config
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: zfs-generic-nvmeof-csi
+  storageClassName: zfs-local
   resources:
     requests:
       storage: 10Gi
