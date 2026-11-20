@@ -46,6 +46,38 @@ endpoints:
     group: networking
     conditions: ['[STATUS] == 200']
 
+  # HPE/Aruba managed switches: eHTTP v2.0 web UI on :80 (no :443), Mocana SSH
+  # on :22. HTTP proves the management plane answers, ICMP the data plane.
+  - name: tor-switch-01
+    url: http://192.168.1.11
+    group: switches
+    conditions: ['[STATUS] == 200']
+
+  - name: tor-switch-01-ping
+    url: icmp://192.168.1.11
+    group: switches
+    conditions: ['[CONNECTED] == true']
+
+  - name: core-switch-01
+    url: http://192.168.1.12
+    group: switches
+    conditions: ['[STATUS] == 200']
+
+  - name: core-switch-01-ping
+    url: icmp://192.168.1.12
+    group: switches
+    conditions: ['[CONNECTED] == true']
+
+  - name: poe-switch-01
+    url: http://192.168.1.13
+    group: switches
+    conditions: ['[STATUS] == 200']
+
+  - name: poe-switch-01-ping
+    url: icmp://192.168.1.13
+    group: switches
+    conditions: ['[CONNECTED] == true']
+
   - name: Doorbell Camera
     url: http://192.168.50.1
     group: cameras
