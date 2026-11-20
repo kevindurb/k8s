@@ -101,7 +101,7 @@ metadata:
     app.kubernetes.io/component: postgres
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: zfs-generic-nvmeof-csi
+  storageClassName: zfs-local
   resources:
     requests:
       storage: 1G
