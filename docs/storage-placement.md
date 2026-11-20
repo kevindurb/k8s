@@ -88,6 +88,27 @@ Four things the canary taught us, all now in the procedure below:
    democratic-csi; its siblings moved. A volume like this needs a single pod with
    two containers, or RWX over NFS, before it can follow.
 
+### Mesh — done 2026-11-20
+
+zrepl v0.7.0 runs on all three app nodes: `zrepl status` is clean, the three
+`:9811` exporters are scraped (`up{job="zrepl"} = 1` with a `node` label), the
+lag/error alerts are loaded and not firing, and drone-01 and drone-02 each hold
+**4 replicas** of drone-03's four volumes.
+
+Two config facts the sketch below did not have:
+
+- The `tcp` transport **requires a `clients` allowlist** on the `source` job, and
+  pull jobs need `recv.placeholder.encryption: inherit` — zrepl refuses to guess
+  the encryption of the intermediate datasets it creates.
+- A `source` job has **no `pruning` parameter**; the pullers' `keep_sender` grid
+  is what prunes the source's snapshots.
+
+**Before any reboot:** the nodes are running zrepl from a `bootc usr-overlay`
+(transient writable `/usr`), because the package only reaches the image with this
+commit's build. Until the nodes have upgraded to that image, a reboot loses the
+binary and `zrepl.service` stops. Sequence it as: CI build → pull the image →
+reboot.
+
 ### Not started
 
 - **Step 2 is complete** (golink, gatus, rakazo). The next volumes are a policy
@@ -439,8 +460,13 @@ jobs:
 
 **Why pull rather than push.** A `sink` job receives to
 `$root_fs/$client_identity/$source_path`, which would add a per-peer level
-(`k8s/replicas/drone-02/pvc-x`). `pull` receives to `$root_fs/$source_path` — exactly
-`k8s/replicas/pvc-x`, a flat tree where a volume has one obvious path on every node.
+(`k8s/replicas/drone-02/...`). `pull` receives to `$root_fs/$source_path`, so a
+volume has one path on every node — but `$source_path` is the **full** source
+filesystem, so the tree is nested, not flat:
+
+```
+k8s/replicas/k8s/volumes/pvc-<uuid>      # what drone-01/02 hold of drone-03's volumes
+```
 
 **Nothing has to be kept in sync with the placement.** The `source` job exposes a
 glob over `k8s/volumes`; demoting a volume renames it out of that tree, so the node
@@ -558,10 +584,10 @@ kubectl -n <ns> scale deploy/<app> --replicas=0
 
 # 2. demote on the old owner: it leaves the source job's glob, so this node stops
 #    snapshotting and serving it
-ssh old "sudo zfs rename k8s/volumes/<vol> k8s/replicas/<vol>"
+ssh old "sudo zfs rename k8s/volumes/<vol> k8s/replicas/k8s/volumes/<vol>"
 
 # 3. promote on the new owner: it joins the source job's glob
-ssh new "sudo zfs rename k8s/replicas/<vol> k8s/volumes/<vol>"
+ssh new "sudo zfs rename k8s/replicas/k8s/volumes/<vol> k8s/volumes/<vol>"
 ```
 
 Then the PV and the pin: use OpenEBS's documented PV-migration procedure
@@ -626,10 +652,9 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 3. **CSI canary — done 2026-11-20.** `infrastructure/openebs-zfs`, node labels,
    `zfs-local`, `VolumeSnapshotClass`, smoke test, then `golink` as the first real
    volume. `gatus` and `rakazo` remain, one at a time.
-4. **The mesh.** zrepl RPM in the image, config rendered by `node_zfs`, then confirm
-   with `zrepl status` that every `k8s/volumes/*` exists on both peers, and wire
-   `zrepl prometheus` into the scrape config with a lag alert. Do not migrate
-   further until this is green.
+4. **The mesh — done 2026-11-20.** zrepl in the image and rendered by
+   `node_zfs`, `zrepl status` clean, every `k8s/volumes/*` present on both peers,
+   `zrepl prometheus` scraped with lag/error alerts (see Status).
 5. **drone-02's stack**, then **drone-01's media** — one node at a time, one short
    outage each, including immich's postgres to `zfs-local` on drone-01.
 6. **Teardown** only after a week of green.
