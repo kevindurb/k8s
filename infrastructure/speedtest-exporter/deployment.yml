@@ -1,0 +1,99 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  # Two replicas would run speedtests concurrently during a rollout and each
+  # would measure the other's traffic.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      # Pinned so successive measurements use the same network path, and kept
+      # off drone-04 (storage/NVMe-oF) and drone-03 (Jellyfin transcode).
+      nodeSelector:
+        kubernetes.io/hostname: drone-01
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: config
+          configMap:
+            name: config
+      containers:
+        - name: app
+          image: ghcr.io/heathcliff26/speedtest-exporter:v1.8.2@sha256:07eb2a3772fa558526fd66fe55ca8252cb4e1110843881894094633dedbd0eab
+          env:
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+          resources:
+            # The Go client has to drive a gigabit stream; the usual 250m
+            # exporter limit would throttle it and depress the measured speed.
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 1
+              memory: 256Mi
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          # /metrics blocks for ~25s while a test runs and the first scrape
+          # after the cache expires triggers one, so probes use the cheap
+          # landing page: probing /metrics would time out or start a test.
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service
+  labels: &labels
+    app.kubernetes.io/component: app
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: http

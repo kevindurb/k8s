@@ -19,5 +19,6 @@ resources:
   - prometheus/app.yml
   - smartctl-exporter/app.yml
   - snapshot-controller/app.yml
+  - speedtest-exporter/app.yml
   - tailscale/app.yml
   - zfs-exporter/app.yml

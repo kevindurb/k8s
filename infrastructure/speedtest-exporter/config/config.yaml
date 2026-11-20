@@ -1,0 +1,18 @@
+---
+# A gigabit speedtest moves roughly 2-3 GB, so the upstream default of a test
+# every 5 minutes would be ~1 TB/day. Once per 6h is ~10 GB/day. Prometheus
+# scrapes every minute and gets the cached result in between; the test itself
+# runs inside the first scrape after this cache expires.
+logLevel: info
+port: 8080
+# Stable label instead of the pod hostname, which changes on every restart.
+instance: beaver-cloud
+cache: 6h
+# No volume: a restart should trigger a fresh measurement, not restore an
+# hours-old cached result.
+persistCache: false
+# 0 selects the lowest-latency Ookla server automatically.
+serverID: 0
+# Prometheus pulls the metrics; nothing is pushed.
+remote:
+  enable: false

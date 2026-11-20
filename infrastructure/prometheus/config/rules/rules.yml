@@ -835,3 +835,21 @@ groups:
             Prometheus cannot scrape :9811. The unit is down or wedged.
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
+
+  # The exporter reruns the test on its own cache interval (6h), so a failed
+  # run stays visible until the next successful one. Throughput/latency series
+  # are omitted on failure, which makes speedtest_up the only signal.
+  - name: Speedtest
+    rules:
+      - alert: SpeedtestFailed
+        expr: speedtest_up == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Internet speedtest failed
+          description: |-
+            The last Ookla speedtest did not complete, so there is no current
+            measurement of the uplink. Check `kubectl -n speedtest-exporter logs`
+            for the failure reason (speedtest.net API, DNS, or no connectivity).
+            VALUE = {{ $value }}
