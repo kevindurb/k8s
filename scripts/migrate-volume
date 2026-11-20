@@ -96,8 +96,9 @@ WORKLOADS=$(kubectl get pods -A -o json | jq -r --arg ns "$NS" --arg c "$FULL_PV
   | map(if startswith("ReplicaSet/") then "Deployment/" + (.[11:] | sub("-[a-z0-9]+$"; "")) else . end)
   | unique | .[]')
 NWORK=$(printf '%s\n' "$WORKLOADS" | grep -c . || true)
-[[ $NWORK -eq 1 ]] || die "$FULL_PVC is mounted by $NWORK workloads ($(echo "$WORKLOADS" | tr '\n' ' ')) - zfs-localpv can only serve one"
-info "single consumer"
+# Zero is fine: the app may be parked at 0 replicas on purpose (qbittorrent).
+[[ $NWORK -le 1 ]] || die "$FULL_PVC is mounted by $NWORK workloads ($(echo "$WORKLOADS" | tr '\n' ' ')) - zfs-localpv can only serve one"
+if [[ $NWORK -eq 0 ]]; then info "no running consumer (app parked at 0 replicas)"; else info "single consumer"; fi
 
 timeout 20 ssh -o BatchMode=yes "$HOME_NODE" 'zpool list -H -o name k8s' >/dev/null ||
   die "$HOME_NODE has no k8s pool"
