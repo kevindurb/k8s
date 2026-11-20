@@ -10,6 +10,7 @@ resources:
   - ./secret-sealed-secret.yml
 
 components:
+  - ../../components/storage-home-drone-03
   - ../../components/app-pod-hardening
   - ../../components/app-tmp-dirs
 
