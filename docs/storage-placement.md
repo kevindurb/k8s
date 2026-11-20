@@ -34,15 +34,52 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **47 democratic-csi PVCs, 363 GiB declared, 43 GiB of live data.** The stale
+- **45 democratic-csi PVCs, 361 GiB declared, 43 GiB of live data** (one volume,
+  `golink`, is now on `zfs-local`). The stale
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
+### Canary — done 2026-11-20
+
+`infrastructure/openebs-zfs` is live: the `openebs/openebs` 4.6.2 chart with only
+the LocalPV-ZFS engine enabled, `zfs-local` StorageClass, `VolumeSnapshotClass`,
+and the node agent running on exactly drone-01/02/03 (not tolerated onto
+drone-04 or the control plane).
+
+Smoke test on drone-03 passed end to end: create → write 64 MB → **expand**
+(1 GiB → 2 GiB, block then filesystem) → **snapshot** → **restore** → delete,
+with no leftovers. The zvol came up `volblocksize=16K`, `refreservation=none`
+(thin), `compression=lz4`, exactly as configured.
+
+`golink` became the first real volume (1 GiB): copied with a single Job on
+drone-03, verified 26 files / 56,450 bytes / identical `golink.db` md5, rebound to
+the original PVC name, and the app serves again over tsnet
+(`https://go.beaver-cloud.ts.net` → 200). Old PV kept `Retain`/`Released`.
+
+**Decision: OpenEBS LocalPV-ZFS it is.** The `zfs-local-zvol` fallback is not
+needed, so `spec.csi.driver` is settled before the rest of the volumes move.
+
+Four things the canary taught us, all now in the procedure below:
+
+1. **A `VolumeSnapshot` pins its zvol.** zfs-localpv snapshots the volume's own
+   dataset, so deleting the PVC while the snapshot exists leaves the zvol behind
+   (`DeleteVolume` fails on dependent snapshots, the same as sanoid). Delete
+   snapshots *before* PVCs.
+2. **A pre-bound PV will bind a PVC with the wrong class.** `claimRef` matching
+   overrides the class check, so if Argo creates the PVC from a stale revision you
+   get a `zfs-local`-backed claim labelled `zfs-generic-nvmeof-csi` — and
+   `storageClassName` is immutable. Make sure the app is on the new revision
+   (hard refresh / explicit sync revision) *before* the PVC is recreated.
+3. **The parent app-of-apps undoes a child's pause.** Resuming `apps` while a
+   child is still paused re-enables its `automated` policy within seconds (that is
+   what brought the pod — and the PVC-deleting `pvc-protection` finalizer — back).
+   Pause `borg → apps → <app>` and resume `<app> → apps → borg`, as written.
+4. **Component files are `kustomize.config.k8s.io/v1alpha1`**, not `v1beta1`.
+
 ### Not started
 
-- **Step 2 — the CSI canary**: `infrastructure/openebs-zfs` (LocalPV-ZFS only),
-  `openebs.io/nodeid` labels, the `zfs-local` StorageClass and the
-  `VolumeSnapshotClass`; then move `rakazo`, `golink`, `gatus` one at a time.
+- **Step 2 remainder**: `golink` is done; `gatus` and `rakazo` still run on
+  democratic-csi, one at a time.
 - **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
   `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
 - **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
@@ -50,9 +87,8 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
 
 ### Decisions still open
 
-- **OpenEBS vs the democratic-csi `zfs-local-zvol` fallback** — settled by the
-  canary in Step 2. `spec.csi.driver` is immutable per PV, so this must be decided
-  before any further volume moves.
+- ~~OpenEBS vs the democratic-csi `zfs-local-zvol` fallback~~ — **settled
+  2026-11-20: OpenEBS LocalPV-ZFS**, proven by the canary (see Status).
 - **Where Jellyfin lives.** Since 2026-11-19 `media/gpu=amd-vega` comes from a
   `NodeFeatureRule` and matches **all three** minis (identical Vega 11), so
   Jellyfin floats. This doc's placement table assumed drone-01 as the media node;
@@ -561,7 +597,7 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs | 47, 363 GiB declared |
+| `zfs-generic-nvmeof-csi` PVCs | 45, 361 GiB declared; 1 on `zfs-local` (golink) |
 | Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
 | Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
 | Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
@@ -575,12 +611,9 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 2. **Immich photos → NFS.** Done 2026-11-19 (Status above). It needed no CSI, no
    pin and no zrepl, so it went first: the largest volume is off the pool and the
    mesh only ever has to seed the small stuff.
-3. **CSI canary.** `infrastructure/openebs-zfs` (zfs-localpv only), the
-   `openebs.io/nodeid` labels, the `zfs-local` StorageClass and the
-   `VolumeSnapshotClass`. Move `rakazo` (already pinned, has a database), `golink`
-   and `gatus`, one at a time. **This is the go/no-go for OpenEBS versus the
-   democratic-csi `zfs-local-zvol` fallback** — decide before any further volume
-   moves, because `spec.csi.driver` is immutable.
+3. **CSI canary — done 2026-11-20.** `infrastructure/openebs-zfs`, node labels,
+   `zfs-local`, `VolumeSnapshotClass`, smoke test, then `golink` as the first real
+   volume. `gatus` and `rakazo` remain, one at a time.
 4. **The mesh.** zrepl RPM in the image, config rendered by `node_zfs`, then confirm
    with `zrepl status` that every `k8s/volumes/*` exists on both peers, and wire
    `zrepl prometheus` into the scrape config with a lag alert. Do not migrate
@@ -659,7 +692,8 @@ Decided:
 - Per-node `zfs-local` pools, not a `tank` pool on drone-04, and not a distributed
   filesystem.
 - **CSI: OpenEBS LocalPV-ZFS** (`zfs.csi.openebs.io`), ext4 on 16 KiB zvols under
-  `k8s/volumes`. Fallback, if the canary fails: democratic-csi `zfs-local-zvol`.
+  `k8s/volumes`. **Confirmed by the canary 2026-11-20** — the democratic-csi
+  `zfs-local-zvol` fallback is not needed, so `spec.csi.driver` is settled.
 - **Replication: zrepl**, `source` + two `pull` jobs per node, 15-minute interval.
   Fallback: sanoid + syncoid fan-out.
 - Full mesh, single-writer fan-out, `zfs rename` promotion.
