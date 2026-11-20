@@ -34,7 +34,7 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **42 democratic-csi PVCs, 4 on `zfs-local`, 43 GiB of live data.** The stale
+- **26 democratic-csi PVCs, 19 on `zfs-local`, 43 GiB of live data.** The stale
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
@@ -57,7 +57,7 @@ Four real volumes now run on it, all on drone-03:
 | `golink` | 1 GiB | 26 files / 56,450 bytes, identical `golink.db` md5; serves over tsnet (`https://go.beaver-cloud.ts.net` → 200) |
 | `gatus` | 954Mi | 43 files / 6,224,544 bytes; `/health` → 200 and it is monitoring again |
 | `rakazo` | `database` 20Gi | 2,181 files / 91,462,043 bytes; Postgres answers, 352 tables |
-| `rakazo` | `web-assets` 2Gi | 302 files / 44,545,549 bytes |
+| `rakazo` | `web-assets` 2Gi | 302 files / 44,545,549 bytes (app is being retired) |
 
 `rakazo-data` (30Gi) deliberately **stayed on democratic-csi** — see gotcha 5.
 42 PVCs remain on `zfs-generic-nvmeof-csi`.
@@ -551,8 +551,11 @@ Both are the same operation, which is why it is worth scripting once.
 **Tier 1 — rebuildable.** Caches, redis, `qbittorrent-ts-state`, prometheus. Change
 the pin, delete the PVC, let it recreate on the target. Nothing to move.
 
-**Tier 2 — small volumes (everything else here).** Which procedure applies
-depends on where the *source* volume lives.
+**Tier 2 — small volumes (everything else here).** `scripts/migrate-volume` does
+the whole thing for one volume (`--dry-run` first: it prints the source size, the
+snapshot count, the workloads it will stop, the two files it will edit and the
+ordered plan). Which *internal* procedure applies depends on where the source
+volume lives, which is why off-democratic-csi goes first.
 
 *Off democratic-csi — every volume moving today.* One Job, exactly like
 `docs/longhorn-to-democratic-csi.md`: scale the app to 0 (pause its Argo chain
@@ -635,7 +638,7 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs | 42; 4 volumes now on `zfs-local` (golink, gatus, rakazo database + web-assets) |
+| `zfs-generic-nvmeof-csi` PVCs | 26; **19 volumes on `zfs-local`** (all of drone-03's stack plus the canary) |
 | Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
 | Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
 | Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
