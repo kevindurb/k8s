@@ -57,8 +57,11 @@ spec:
           persistentVolumeClaim:
             claimName: config
         - name: redis-data
-          persistentVolumeClaim:
-            claimName: redis-data
+          # RomM's embedded Redis is a pure cache (one dump.rdb, ~200 MB): losing
+          # it on restart just means refetching metadata from ScreenScraper and
+          # Hasheous. It does not belong on a PVC at all — that cost a 5 GiB zvol,
+          # a sanoid stanza and a replication candidate for a rebuildable dump.
+          emptyDir: {}
         # LaunchBox keeps its downloaded metadata DB under /romm/launchbox.
         - name: launchbox
           persistentVolumeClaim:
@@ -232,20 +235,7 @@ spec:
       storage: 1Gi
 
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: redis-data
-  labels:
-    app.kubernetes.io/component: app
-spec:
-  accessModes: [ReadWriteOnce]
-  storageClassName: zfs-generic-nvmeof-csi
-  resources:
-    requests:
-      storage: 5Gi
 
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
