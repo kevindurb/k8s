@@ -2,8 +2,10 @@
 endpoints:
   - name: speedtest-exporter
     group: infrastructure
+    # Port 8080 is the exporter's native port; unlike the app template, this
+    # Service does not map it to 80, so the check must name it explicitly.
     # The landing page, never /metrics: a probe of /metrics would start a
     # speedtest and burn ~2-3 GB of WAN traffic.
-    url: http://speedtest-exporter-service.speedtest-exporter/
+    url: http://speedtest-exporter-service.speedtest-exporter:8080/
     conditions:
       - '[STATUS] == 200'

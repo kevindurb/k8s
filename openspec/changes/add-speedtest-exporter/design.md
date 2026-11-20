@@ -141,7 +141,7 @@ One rule, `SpeedtestFailed`, on `speedtest_up == 0` for 10m at `severity: warnin
 
 `infrastructure/speedtest-exporter/` with `namespace`/`namePrefix` `speedtest-exporter`;
 container `app`, port `http`; Service `service` → `speedtest-exporter-service`; Gatus group
-`infrastructure` against `http://speedtest-exporter-service.speedtest-exporter/`. Register
+`infrastructure` against `http://speedtest-exporter-service.speedtest-exporter:8080/`. Register
 `- speedtest-exporter/app.yml` in `infrastructure/kustomization.yml` after
 `snapshot-controller`. Renovate's Kubernetes manager already covers
 `infrastructure/**/*.yml`, so the digest is maintained without config changes.
