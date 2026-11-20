@@ -103,7 +103,7 @@ metadata:
     app.kubernetes.io/component: mariadb
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: zfs-generic-nvmeof-csi
+  storageClassName: zfs-local
   resources:
     requests:
       storage: 5Gi
