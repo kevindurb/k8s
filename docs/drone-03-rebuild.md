@@ -56,10 +56,10 @@ Sizes:
 
 | | |
 | --- | --- |
-| App state, excluding immich | 47.4 GB across 47 volumes (48 PVCs incl. `immich-data`) |
-| Live + replicas per node in the mesh | ~45 GB |
-| With sanoid history (20 % margin) | ~54 GB → **8 % of 600 GiB** |
-| If immich joins the mesh later | ~380 GB → 59 % |
+| App state, excluding immich | 43 GiB across 47 volumes (48 PVCs; immich's photos moved to NFS on 2026-11-19) |
+| Live + replicas per node in the mesh | ~43 GiB |
+| With sanoid history (20 % margin) | ~52 GiB → **8 % of 600 GiB** |
+| immich photos | never in the mesh — `/media/immich` on drone-04 |
 | OS footprint measured | 50 GB (drone-03, all pods) / 180 GB worst case (drone-01) |
 
 330 GiB of root is deliberate headroom for container images; drone-02's 59 GB

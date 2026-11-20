@@ -121,7 +121,8 @@ Special cases:
 
 ## Phase 3 – Repo-wide cleanup after the last wave
 
-**Done 2026-10-06** (see `docs/retire-longhorn.md`).
+**Done 2026-10-06** (the remaining teardown work is tracked in
+`docs/storage-placement.md`; there is no separate `retire-longhorn.md`).
 
 - `grep -rn longhorn apps platform infrastructure components` should only match `infrastructure/longhorn`.
 

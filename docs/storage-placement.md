@@ -2,8 +2,9 @@
 
 ## Status (2026-11-19)
 
-**Planned (2026-11-18), prerequisites met.** The pools exist; no application has
-moved and democratic-csi is still the live storage class.
+**In progress.** The pools exist and the first volume has left democratic-csi —
+but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
+`zfs-local` and no volume has joined the mesh.
 
 ### Done
 
@@ -16,6 +17,28 @@ moved and democratic-csi is still the live storage class.
   installer `save-partlabel` flow that reserves the partition.
 - `zfs send | zfs recv` into `k8s/replicas` was verified end to end on drone-03
   (Phase 5), which is the primitive zrepl will use.
+- **`immich-data` → NFS (2026-11-19).** The 600 GiB, 318 GiB-used zvol became
+  `/media/immich` on drone-04's media export, exposed as the static PV
+  `immich-nas` and mounted at `/data` exactly as before (`apps/immich/nas.yml`,
+  the `romm-library` pattern). The copy ran **pool-local on drone-04** with the
+  zvol mounted read-only — no 1 GbE hop for 318 GiB. `server.yml` was not
+  touched: the claim keeps the name `data`, so only the PVC's class changed. The
+  old PV is `Retain`ed for a week. This is the "immich last" step of the original
+  order, pulled forward because it needs no CSI, no pin and no zrepl.
+
+### Verified live (2026-11-19)
+
+- `zpool list` on all three app nodes: `k8s` 596 G, **~700 K allocated**;
+  `k8s/volumes` and `k8s/replicas` both exist and are empty.
+- `systemctl is-enabled zrepl` → **not-found** on all three: the mesh does not
+  exist yet.
+- No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
+  LocalPV-ZFS install.
+- The stale `openebs.io/*` Mayastor labels exist **only** on drone-04 and
+  unimatrix-01/02/03; drone-01/02/03 carry none. Nine `Released` PVs from that
+  install are still in the cluster.
+- 48 democratic-csi PVCs, 373 GiB declared, **43 GiB of live data** — the other
+  ~85 GiB of `rust/k8s/volumes` is sanoid snapshot history.
 
 ### Not started
 
@@ -25,8 +48,7 @@ moved and democratic-csi is still the live storage class.
 - **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
   `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
 - **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
-  then drone-01's media, immich last), then the teardown of
-  `zfs-generic-nvmeof-csi`.
+  then drone-01's media), then the teardown of `zfs-generic-nvmeof-csi`.
 
 ### Decisions still open
 
@@ -37,6 +59,12 @@ moved and democratic-csi is still the live storage class.
   `NodeFeatureRule` and matches **all three** minis (identical Vega 11), so
   Jellyfin floats. This doc's placement table assumed drone-01 as the media node;
   either pin it deliberately or accept the float.
+- **Churny volumes must not enter the mesh.** `rust/k8s/volumes` holds 127 GiB of
+  sanoid history on 43 GiB of data, dominated by `romm-redis` (62 GiB on a 5 GiB
+  volume) and `prometheus` (28 GiB). Replicating that to two peers triples it.
+  Either move them to a `k8s/scratch` StorageClass (second `poolname`) or exclude
+  them from zrepl's glob; regenerable caches (`immich-machine-learning-cache`)
+  should be `emptyDir`.
 - `prometheus` PVC vs a static local PV per node, and whether the hostNetwork apps
   become movable (both listed at the bottom of this doc).
 
@@ -121,55 +149,58 @@ PVs and stay where they are. Sizes are measured use on 2026-11-18.
 
 ### drone-01 — media + identity
 
-| App | Local volumes (declared / used) |
-| --- | --- |
-| immich-server | `immich-data` → **NFS, see below** |
-| immich-postgres | 20Gi / 1.0 GiB |
-| immich-machine-learning | 10Gi / 1.8 GiB (regenerable cache) |
-| jellyfin | 50Gi / 15.0 GiB + `jellyfin-nas-media` |
-| audiobookshelf | config 1Gi, metadata 1Gi, books 10Gi / 1.4, audiobooks 10Gi / 1.8, podcasts 11Gi / 1.2 |
-| romm | resources 20Gi / 13.7, assets 10Gi, config 1Gi, launchbox 10Gi + `romm-library` |
-| romm-mariadb | 5Gi / 0.43 |
-| romm-redis | 5Gi / 0.22 |
-| navidrome | 5Gi / 0.38 + `navidrome-nas-media` |
-| calibre / calibre-web | 1Gi each / 0.02 & 0 + `*-nas-media` |
-| kiwix, dufs | NAS only |
-| pocket-id | 1Gi / 0.006 |
+Live data measured 2026-11-19 (`usedbydataset`, so snapshot history is excluded).
 
-≈ **37 GB** live. Pinned with `storage-home-drone-01`; `jellyfin` also keeps its
-`media/gpu=amd-vega` capability label.
+| App | Local volumes (declared / live) |
+| --- | --- |
+| immich-server | `immich-data` → **NFS `/media/immich`** (318 GiB, PV `immich-nas`) |
+| immich-postgres | 20Gi / 0.8 GiB |
+| immich-machine-learning | 10Gi / 1.7 GiB (regenerable cache) |
+| jellyfin | 50Gi / 10.6 GiB + `jellyfin-nas-media` |
+| audiobookshelf | config 1Gi, metadata 1Gi, books 10Gi / 1.3, audiobooks 10Gi / 1.7, podcasts 11Gi / 1.1 |
+| romm | resources 20Gi / 12.7, assets 10Gi, config 1Gi, launchbox 10Gi + `romm-library` |
+| romm-mariadb | 5Gi / 0.4 |
+| romm-redis | 5Gi / **4.4 — 88 % full**, plus 62 GiB of sanoid snapshots on it |
+| navidrome | 5Gi / 0.4 + `navidrome-nas-media` |
+| calibre / calibre-web | 1Gi each / ~0 + `*-nas-media` |
+| kiwix, dufs | NAS only |
+| pocket-id | 1Gi / ~0 |
+
+≈ **31 GiB** of local data plus 318 GiB of photos on the NAS. Pinned with
+`storage-home-drone-01`; `jellyfin` also keeps its `media/gpu=amd-vega` capability
+label.
 
 ### drone-02 — home / IoT
 
-| App | Local volumes (declared / used) |
+| App | Local volumes (declared / live) |
 | --- | --- |
-| zigbee2mqtt | 1Gi / 0.03 — **USB dongle is physically here** |
+| zigbee2mqtt | 1Gi / ~0 — **USB dongle is physically here** |
 | mosquitto | 1Gi / ~0 |
-| home-assistant | 40Gi / 0.69 — hostNetwork |
-| omada | 10Gi / 0.66 — hostNetwork |
-| syncthing | 100Gi / 0.80 + `syncthing-nas-media` — hostNetwork |
-| scrypted | 10Gi / 0.10 — hostNetwork |
-| donetick | 5Gi / 0 |
-| mealie | 10Gi / 0.03 |
+| home-assistant | 40Gi / 0.9 — hostNetwork |
+| omada | 10Gi / 2.0 — hostNetwork |
+| syncthing | 100Gi / 0.8 + `syncthing-nas-media` — hostNetwork |
+| scrypted | 10Gi / 0.1 — hostNetwork |
+| donetick | 5Gi / ~0 |
+| mealie | 10Gi / ~0 |
 
-≈ **2.3 GB**. Sparse on purpose: the node is defined by the dongle, and everything
+≈ **4 GiB**. Sparse on purpose: the node is defined by the dongle, and everything
 else here is one functional group.
 
 ### drone-03 — platform + background
 
-| App | Local volumes (declared / used) |
+| App | Local volumes (declared / live) |
 | --- | --- |
-| prometheus | 35Gi / 1.7 |
+| prometheus | 35Gi / 2.2 (plus 28 GiB of snapshot history on the current pool) |
 | alertmanager / gatus | 1G each / ~0 |
-| rakazo (api, worker, web, postgres) | data 30Gi / 0.01, database 20Gi / 0.09, web-assets 2Gi / 0.05 |
-| browser | 5Gi / 0.48 |
-| radarr / sonarr | 10G each / 0.80 & 0.24 + `*-nas-media` |
-| qbittorrent | config 10Gi, ts-state 1Gi + `qbittorrent-nas-media` |
-| f1timing / pokesim | 30Gi / 3.2, 10Gi / 0.68 |
-| minecraft | 10Gi / 0.42 |
-| semaphore, tsgit ×2, linkding, golink, consignment-app | <0.15 total |
+| rakazo (api, worker, web, postgres) | data 30Gi / ~0, database 20Gi / 0.1, web-assets 2Gi / 0.05 |
+| browser | 5Gi / 0.5 |
+| radarr / sonarr | 10G each / 0.8 & 0.2 + `*-nas-media` |
+| qbittorrent | config 10Gi, ts-state 1Gi + `qbittorrent-nas-media` (app at 0 replicas) |
+| f1timing / pokesim | 30Gi / 1.7, 10Gi / 0.9 |
+| minecraft | 10Gi / 0.7 |
+| semaphore, tsgit ×2, linkding, golink, consignment-app | <0.1 total |
 
-≈ **7.8 GB**. `rakazo` is already pinned to `drone-03` in git
+≈ **7 GiB**. `rakazo` is already pinned to `drone-03` in git
 (`apps/rakazo/{workloads,bootstrap,migrate}.yml`), which makes it the natural first
 canary: pinned, small, and a database to prove real recovery.
 
@@ -267,9 +298,13 @@ Decisions worth naming:
   driver used, and the replication job's glob is the same tree.
 - **`WaitForFirstConsumer`** — the pin decides the home, exactly as in
   [How an app is pinned](#how-an-app-is-pinned).
-- **Node labels.** `kubectl label node <n> openebs.io/nodeid=<n>` on all three.
-  OpenEBS uses that identity for its documented PV-migration procedure, which is
-  the supported alternative to hand-writing a PV during a promotion.
+- **Node labels.** `kubectl label node <n> openebs.io/nodeid=<n>` on the three
+  **app** nodes only. drone-04 and unimatrix-01/02/03 still carry five
+  `openebs.io/*` keys from the retired Mayastor install (`csi-node`,
+  `csi-node.nvme-ana`, `engine`, `nodeid`, `nodename`); strip those first, or
+  `openebs.io/nodeid` means two different things depending on the node. OpenEBS
+  uses that identity for its documented PV-migration procedure, which is the
+  supported alternative to hand-writing a PV during a promotion.
 - **Volumes are `ZFSVolume` objects.** `kubectl -n openebs get zfsvolume` shows
   node, size and state — better visibility than a driver-internal volume name.
 
@@ -410,12 +445,19 @@ Cost: every node stores the whole mesh dataset.
 
 | | on disk | of the 600 GiB pool |
 | --- | --- | --- |
-| Live state, excluding `immich-data` | 47.4 GB | 8 % |
-| Each node in the mesh holds | ~47 GB live + both peers' replicas = **the whole set** | 8 % |
-| Plus received snapshot history | small (bounded by the `keep_receiver` grid) | — |
+| Live app data (measured 2026-11-19) | 43 GiB | 7 % |
+| Each node in the mesh holds | ~43 GB live + both peers' replicas = **the whole set** | 7 % |
+| Plus received snapshot history | bounded by the `keep_receiver` grid — but see the churn warning below | — |
 
-Seeding is the only expensive moment: ~47 GB per peering, six peerings, sequential
+Seeding is the only expensive moment: ~43 GB per peering, six peerings, sequential
 because they share one 1 GbE — well under an hour.
+
+**Snapshot history is the cost that is easy to forget.** `rust/k8s/volumes` holds
+43 GiB of data inside 127 GiB of sanoid history: `romm-redis` is 62 GiB of
+snapshots on a 5 GiB volume and `prometheus` is 28 GiB. zrepl's grids are tighter
+than sanoid's here, but any volume that rewrites itself constantly should be
+deliberately outside `k8s/volumes` (scratch class or `emptyDir`), or every peer
+carries the churn.
 
 ### Snapshot rules
 
@@ -437,7 +479,19 @@ Both are the same operation, which is why it is worth scripting once.
 **Tier 1 — rebuildable.** Caches, redis, `qbittorrent-ts-state`, prometheus. Change
 the pin, delete the PVC, let it recreate on the target. Nothing to move.
 
-**Tier 2 — small volumes (everything else here).** Two pods and a scratch path:
+**Tier 2 — small volumes (everything else here).** Which procedure applies
+depends on where the *source* volume lives.
+
+*Off democratic-csi — every volume moving today.* One Job, exactly like
+`docs/longhorn-to-democratic-csi.md`: scale the app to 0 (pause its Argo chain
+first), let the Job run on the **destination** node with the old PVC attached
+over NVMe-oF at the same time as the new `zfs-local` PVC, and
+`rsync -aHAX --numeric-ids /old/ /new/` between them. Verified 2026-11-19:
+democratic-csi PVs carry **no** `nodeAffinity`, so nothing pins the old volume
+away from the destination — the old runbook's trick does carry over here.
+
+*Node-local → node-local — promotions after the move.* Two pods and a scratch
+path:
 
 1. scale the app to 0 (pause its Argo app first, as in the old migration runbook);
 2. pod on the **source** node: mount the old PVC, `rsync` to `drone-04:/media/.migrate/<app>`;
@@ -445,9 +499,8 @@ the pin, delete the PVC, let it recreate on the target. Nothing to move.
 4. pod on the **target** node: `rsync` back into the new PVC;
 5. unpause, verify, delete the old PVC (leave the PV `Retain` for a week).
 
-A single Job **cannot** do this in one step: two node-local PVCs have contradictory
-node affinities, so a pod mounting both is unschedulable. The old runbook's
-"mount old read-only and new, rsync" trick does not carry over.
+A single Job **cannot** do *that* in one step: two node-local PVCs have
+contradictory node affinities, so a pod mounting both is unschedulable.
 
 **Tier 3 — big volumes and node recovery.** The replica is already on the
 destination, so promotion costs no copy time:
@@ -495,51 +548,81 @@ The mesh is **not** a backup: same rack, same switch, same house, same power.
   simpler there: no mover pods, no temp PVC clones, no privileged-mover-vs-PSS
   problem and no shared-repo pruning question, because the snapshots already exist
   on the host and restic just reads them. `backups.md` needs revising to match.
-- **`immich-data` stays on drone-04** as a static NFS PV (`/media/immich`, the
-  `romm-library` pattern) with B2 as its real protection. 335 GB of write-once
-  photos belongs next to the media it resembles, not tripled onto consumer SATA
-  SSDs; immich's 1 GiB postgres stays on drone-01 in the mesh.
+- **Immich's photos live on drone-04's NAS** (`/media/immich`, PV `immich-nas`,
+  done 2026-11-19): 318 GiB of write-once photos, growing, next to the media they
+  resemble rather than tripled onto consumer SATA SSDs. `backups.md` excludes
+  `/media` as "re-downloadable", which is **not true of these** — restic → B2 has
+  to cover `/media/immich` explicitly. Immich's 1 GiB postgres stays on drone-01
+  in the mesh.
 - **Bulk media** (`rust/media`, 9 TB) is replaceable and stays out of both the mesh
   and restic.
 
 ## Capacity
 
+Measured 2026-11-19, after the immich photos moved off the pool:
+
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs today | 48, 383.0 GB allocated, 47.4 GB excluding `immich-data` |
-| Largest non-immich | jellyfin 15.0 · romm-resources 13.7 · audiobookshelf 4.4 · f1timing 3.2 · prometheus 1.7 |
-| Pool per node | 600 GiB, 8 % used by the mesh |
-| Headroom | `immich-data` could join the mesh later at 59 %; today it does not |
+| `zfs-generic-nvmeof-csi` PVCs | 48, 373 GiB declared |
+| Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
+| Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
+| Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
+| Pool per node | 600 GiB; the mesh set is ~43 GiB of data |
+| Headroom | immich's postgres (1 GiB) joins drone-01; the photo library never joins the mesh |
 
 ## Migration order
 
 1. **Pools.** `docs/drone-03-rebuild.md` for drone-03, then drone-01/02 as they are
    built. Nothing else can start until three pools exist.
-2. **CSI canary.** `infrastructure/openebs-zfs` (zfs-localpv only), the
+2. **Immich photos → NFS.** Done 2026-11-19 (Status above). It needed no CSI, no
+   pin and no zrepl, so it went first: the largest volume is off the pool and the
+   mesh only ever has to seed the small stuff.
+3. **CSI canary.** `infrastructure/openebs-zfs` (zfs-localpv only), the
    `openebs.io/nodeid` labels, the `zfs-local` StorageClass and the
    `VolumeSnapshotClass`. Move `rakazo` (already pinned, has a database), `golink`
    and `gatus`, one at a time. **This is the go/no-go for OpenEBS versus the
    democratic-csi `zfs-local-zvol` fallback** — decide before any further volume
    moves, because `spec.csi.driver` is immutable.
-3. **The mesh.** zrepl RPM in the image, config rendered by `node_zfs`, then confirm
+4. **The mesh.** zrepl RPM in the image, config rendered by `node_zfs`, then confirm
    with `zrepl status` that every `k8s/volumes/*` exists on both peers, and wire
    `zrepl prometheus` into the scrape config with a lag alert. Do not migrate
    further until this is green.
-4. **drone-02's stack**, then **drone-01's media** — one node at a time, one short
-   outage each.
-5. **immich last**: move `immich-data` from the zvol to the NFS dataset (a local
-   copy on drone-04, minutes), then its postgres to `zfs-local`.
+5. **drone-02's stack**, then **drone-01's media** — one node at a time, one short
+   outage each, including immich's postgres to `zfs-local` on drone-01.
 6. **Teardown** only after a week of green.
 
 ## Cleanup found while planning
 
-- `minecraft/app-deployment` is at 0 replicas with a 0-byte `data` PVC — a leftover
-  from a rename. Delete rather than migrate.
-- `qbittorrent` is at 0 replicas with two PVCs; confirm before moving them.
-- `immich-machine-learning-cache` is regenerable. Replicating it is 1.8 GB of
+Cheap, low-risk items to clear before the canary, so that a "longhorn", "mayastor"
+or "openebs" hit always means something live:
+
+- **Nine `Released` PVs** from the retired Mayastor install (`mayastor-etcd-localpv`
+  ×6, `openebs-minio-localpv` ×3), 275–405 days old, all bound to claims in a
+  namespace that no longer exists. Four are `Retain`, so nothing will ever reap
+  them. Delete the PVs, then the empty `/var/local/openebs/localpv-hostpath/{etcd,minio}`
+  directories on drone-02/03/04 and unimatrix-01/02/03.
+- **Stale `openebs.io/*` labels** on drone-04 and unimatrix-01/02/03 (five keys
+  each) — see the Node labels note in the CSI section.
+- **`rust/longhorn`** on drone-04: 158 GiB, zero PVs reference it, both its
+  subdirectories empty. `zfs destroy rust/longhorn` (and the matching export line).
+  `rust/test` (152 K) goes with it.
+- **Eight empty namespaces**: `collabora`, `freepbx`, `ingress-nginx`, `neko`,
+  `paperless-ngx`, `vikunja`, `wireguard`, `generic-device-plugin` — nothing but
+  the auto-created ServiceAccount and `kube-root-ca` ConfigMap in each.
+- **`minecraft/app-deployment`** is at 0 replicas, is *not* Argo-managed (no
+  tracking annotation), and holds PVC `data` (116 MB zvol). It is a leftover from
+  before the `namePrefix` was added; the live server is `minecraft-app-deployment`
+  on `minecraft-data`. Delete the deployment, PVC, PV and zvol.
+- **`qbittorrent`** is at 0 replicas with two PVCs (10 Gi + 1 Gi); confirm before
+  moving them, or drop the app.
+- **`immich-machine-learning-cache`** is regenerable. Replicating it is 1.8 GB of
   pointless traffic. With OpenEBS a second StorageClass on `poolname: k8s/scratch`
   would be trivial, but zrepl's `source` glob would still have to exclude it — an
   `emptyDir` is the simpler answer if it ever matters.
+- **Dangling reference**: `docs/longhorn-to-democratic-csi.md` says "see
+  `docs/retire-longhorn.md`", which does not exist.
+- `apps/template` **stays**: it is a deliberately live template Application, not a
+  leftover. Don't "clean it up".
 
 ## Teardown after the last app moves
 
@@ -573,12 +656,17 @@ Decided:
   Fallback: sanoid + syncoid fan-out.
 - Full mesh, single-writer fan-out, `zfs rename` promotion.
 - Downtime accepted for node maintenance; no failover automation.
-- `immich-data` on drone-04's NFS share; everything else in the mesh.
+- **`immich-data` on drone-04's NFS share** (`/media/immich`, static PV
+  `immich-nas`, the romm pattern — a subdirectory of the existing `/media` export
+  rather than a new dataset and export). Everything else in the mesh.
 - 600 GiB pool / ~330 GiB root per node (see the rebuild doc).
 - democratic-csi is retired entirely once the last volume has moved.
+- `apps/template` is a **live template**, deployed on purpose — not cleanup.
 
 Open, deliberately deferred:
 
+- **Churny volumes**: a `k8s/scratch` StorageClass versus excluding them from
+  zrepl's `source` glob (see the snapshot-history note under the mesh).
 - Converting the hostNetwork apps to ClusterIP + Ingress so they can move again.
 - Whether `prometheus` should keep a PVC or move to a static local PV per node.
 - Whether the `browser` app (unpinned today) should join the platform group

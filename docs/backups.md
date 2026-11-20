@@ -19,7 +19,17 @@ The cluster has local ZFS snapshots (sanoid) but no off-site copy of anything. A
 
 ## Non-goals
 
-- The `nas-media` share (7.9 TB of `/media` on static NFS PVs). Not snapshottable, not worth $55/month, and re-downloadable. sanoid already snapshots `rust/media` locally.
+- The `nas-media` share (7.9 TB of `/media` on static NFS PVs). Not
+  CSI-provisioned, not worth $55/month, and re-downloadable. sanoid already
+  snapshots `rust/media` locally.
+  **Exception — `/media/immich`:** since 2026-11-19 Immich's `library/`, `upload/`,
+  `thumbs/`, `encoded-video/` and `profile/` live there (318 GiB, PV
+  `immich-nas`, see `docs/storage-placement.md`). These are user photos, not
+  re-downloadable, so they **must** be in the B2 scope even though the rest of
+  `/media` is not. The cheapest implementation is to read them out of a host-side
+  snapshot of `rust/media`
+  (`/var/mnt/rust/media/.zfs/snapshot/<snap>/immich`), which needs no mover pod
+  and no extra snapshot.
 - Point-in-time recovery (WAL archiving). Retention is nightly, not per-second.
 - Ransomware-proof immutability. Could be added later with B2 Object Lock at the cost of breaking `restic prune`.
 - Replacing sanoid. Local snapshots stay as they are and remain the fast "oops" recovery path.
@@ -70,13 +80,13 @@ K8up was considered and rejected: it mounts live PVCs and has no CSI snapshot su
 
 ## Scope
 
-43 PVCs use `zfs-generic-nvmeof-csi`. The other 13 are static NFS PVs for the media share — `*-nas-media`, `dufs-nas`, `romm-library`, `transcoding/nas-media` — all backed by `192.168.42.24:/media`.
+43 PVCs use `zfs-generic-nvmeof-csi`. The other static NFS PVs are for the media share — `*-nas-media`, `dufs-nas`, `romm-library`, `transcoding/nas-media` — all backed by `192.168.42.24:/media`, plus `immich-nas` (`/media/immich`), which is the one NFS volume that **is** in scope (see Non-goals).
 
 **Included** (40 objects, one `ReplicationSource` per PVC):
 
 | Namespace | Volumes |
 | --- | --- |
-| `immich` | `immich-postgres-volume`, `immich-data` |
+| `immich` | `immich-postgres-volume` (its photos are on `immich-nas`, see Non-goals) |
 | `romm` | `romm-mariadb-volume`, `romm-config`, `romm-assets`, `romm-launchbox`, `romm-resources` |
 | `audiobookshelf` | `config`, `metadata`, `books`, `audiobooks`, `podcasts` |
 | `mealie` | `mealie-data` |
