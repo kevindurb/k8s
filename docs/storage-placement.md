@@ -34,8 +34,9 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- **1 democratic-csi PVC left** (`rakazo-data`, which goes with the app);
-  **44 on `zfs-local`**. Every app that stays is migrated.
+- **0 live PVCs on democratic-csi; 42 on `zfs-local`.** The migration is
+  complete. What remains is 45 `Retain`/`Released` PVs and their zvols on `rust`
+  (the soak material), plus the teardown of the driver itself.
   `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
   list were all cleared the same day — see "Cleanup found while planning".
 
@@ -57,8 +58,7 @@ Four real volumes now run on it, all on drone-03:
 | --- | --- | --- |
 | `golink` | 1 GiB | 26 files / 56,450 bytes, identical `golink.db` md5; serves over tsnet (`https://go.beaver-cloud.ts.net` → 200) |
 | `gatus` | 954Mi | 43 files / 6,224,544 bytes; `/health` → 200 and it is monitoring again |
-| `rakazo` | `database` 20Gi | 2,181 files / 91,462,043 bytes; Postgres answers, 352 tables |
-| `rakazo` | `web-assets` 2Gi | 302 files / 44,545,549 bytes (app is being retired) |
+| ~~`rakazo`~~ | database + web-assets | retired 2026-11-20 with the app (namespaces, admission policy, 5 PVs and their zvols deleted) |
 
 `rakazo-data` (30Gi) deliberately **stayed on democratic-csi** — see gotcha 5.
 42 PVCs remain on `zfs-generic-nvmeof-csi`.
