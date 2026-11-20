@@ -34,11 +34,9 @@ but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
   exist yet.
 - No `openebs` namespace and no `openebs`/`mayastor` CRDs: a clean slate for the
   LocalPV-ZFS install.
-- The stale `openebs.io/*` Mayastor labels exist **only** on drone-04 and
-  unimatrix-01/02/03; drone-01/02/03 carry none. Nine `Released` PVs from that
-  install are still in the cluster.
-- 48 democratic-csi PVCs, 373 GiB declared, **43 GiB of live data** — the other
-  ~85 GiB of `rust/k8s/volumes` is sanoid snapshot history.
+- **47 democratic-csi PVCs, 363 GiB declared, 43 GiB of live data.** The stale
+  `Released` PVs, labels, empty namespaces and `rust/longhorn` this section used to
+  list were all cleared the same day — see "Cleanup found while planning".
 
 ### Not started
 
@@ -563,7 +561,7 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 | | |
 | --- | --- |
-| `zfs-generic-nvmeof-csi` PVCs | 48, 373 GiB declared |
+| `zfs-generic-nvmeof-csi` PVCs | 47, 363 GiB declared |
 | Live data on them | 43 GiB — the rest of `rust/k8s/volumes` (85 GiB) is snapshot history |
 | Largest | prometheus 28.2 incl. 28 GiB of snapshots · jellyfin 17.0 · pokesim 13.3 incl. snapshots · romm-resources 12.9 · omada 9.2 volume / 1.5 live |
 | Snapshot overhead | 127 GiB total; `romm-redis` 62 GiB on a 5 GiB volume |
@@ -593,34 +591,44 @@ Measured 2026-11-19, after the immich photos moved off the pool:
 
 ## Cleanup found while planning
 
-Cheap, low-risk items to clear before the canary, so that a "longhorn", "mayastor"
-or "openebs" hit always means something live:
+**Done 2026-11-19**, so that a "longhorn", "mayastor" or "openebs" hit always means
+something live:
 
 - **Nine `Released` PVs** from the retired Mayastor install (`mayastor-etcd-localpv`
-  ×6, `openebs-minio-localpv` ×3), 275–405 days old, all bound to claims in a
-  namespace that no longer exists. Four are `Retain`, so nothing will ever reap
-  them. Delete the PVs, then the empty `/var/local/openebs/localpv-hostpath/{etcd,minio}`
-  directories on drone-02/03/04 and unimatrix-01/02/03.
-- **Stale `openebs.io/*` labels** on drone-04 and unimatrix-01/02/03 (five keys
-  each) — see the Node labels note in the CSI section.
-- **`rust/longhorn`** on drone-04: 158 GiB, zero PVs reference it, both its
-  subdirectories empty. `zfs destroy rust/longhorn` (and the matching export line).
-  `rust/test` (152 K) goes with it.
-- **Eight empty namespaces**: `collabora`, `freepbx`, `ingress-nginx`, `neko`,
-  `paperless-ngx`, `vikunja`, `wireguard`, `generic-device-plugin` — nothing but
-  the auto-created ServiceAccount and `kube-root-ca` ConfigMap in each.
-- **`minecraft/app-deployment`** is at 0 replicas, is *not* Argo-managed (no
-  tracking annotation), and holds PVC `data` (116 MB zvol). It is a leftover from
-  before the `namePrefix` was added; the live server is `minecraft-app-deployment`
-  on `minecraft-data`. Delete the deployment, PVC, PV and zvol.
+  ×6, `openebs-minio-localpv` ×3), 275–405 days old, bound to claims in a
+  namespace that no longer exists. **Deleted**, along with the
+  `/var/local/openebs/` trees on drone-04 and unimatrix-01/02/03 (drone-02/03 had
+  none left after their rebuilds).
+- **Stale `openebs.io/*` labels** (five keys) **stripped** from drone-04 and
+  unimatrix-01/02/03; no node carries an `openebs.io` key now.
+- **`rust/longhorn`** (158 GiB of orphaned Longhorn backupstore) and `rust/test`
+  **destroyed**; the NFS export line went with them. Note the gotcha: Cockpit runs
+  with `-v /:/host`, so its mount namespace pinned both datasets. Restarting
+  `cockpit.service` was the step that made the destroy possible.
+- **Eight empty namespaces deleted**: `collabora`, `freepbx`, `ingress-nginx`
+  (had two admission secrets), `neko`, `paperless-ngx` (had a hand-made TLS secret,
+  backed up outside the repo before deletion), `vikunja`, `wireguard`,
+  `generic-device-plugin`.
+- **`minecraft/app-deployment`** — the pre-`namePrefix` leftover holding PVC `data`
+  (116 MB zvol) — **deleted** with its PVC, zvol and PV. The live server
+  (`minecraft-app-deployment` on `minecraft-data`) was untouched.
+- **`romm-redis` removed from ZFS entirely.** Its 42 sanoid snapshots were pruned
+  (54.9 GiB freed), then the cache became an `emptyDir` (commit `c733ae8e`):
+  `/redis-data` held one 209 MB `dump.rdb` and a stale temp file in 5 GiB, no
+  redis-server of its own, and the ext4/zvol mismatch meant ZFS referenced 4.2 GiB
+  of already-freed blocks. The PVC, PV and zvol are gone. `sanoid.conf` keeps
+  `[template_nosnap]` for the next churny volume.
+
+Still open:
+
 - **`qbittorrent`** is at 0 replicas with two PVCs (10 Gi + 1 Gi); confirm before
   moving them, or drop the app.
 - **`immich-machine-learning-cache`** is regenerable. Replicating it is 1.8 GB of
   pointless traffic. With OpenEBS a second StorageClass on `poolname: k8s/scratch`
   would be trivial, but zrepl's `source` glob would still have to exclude it — an
-  `emptyDir` is the simpler answer if it ever matters.
-- **Dangling reference**: `docs/longhorn-to-democratic-csi.md` says "see
-  `docs/retire-longhorn.md`", which does not exist.
+  `emptyDir` is the simpler answer if it ever matters. `prometheus` (28 GiB of
+  snapshots on 2.2 GiB of data) deserves the same `template_nosnap` treatment if
+  its TSDB history is not wanted.
 - `apps/template` **stays**: it is a deliberately live template Application, not a
   leftover. Don't "clean it up".
 
