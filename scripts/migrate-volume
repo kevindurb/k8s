@@ -1,0 +1,317 @@
+#!/usr/bin/env bash
+# Move one application volume from zfs-generic-nvmeof-csi (democratic-csi, on
+# drone-04 over NVMe-oF) to zfs-local (OpenEBS LocalPV-ZFS, node-local), keeping
+# the PVC name so git only changes the storageClassName line.
+#
+# One volume per invocation, by design (docs/storage-placement.md): every step
+# reports what it did and the script refuses to continue when a verification
+# fails, rather than trying to be re-applied.
+#
+# Usage:
+#   scripts/migrate-volume --app apps/linkding --pvc linkding-data --home drone-03
+#   scripts/migrate-volume ... --dry-run     # print the plan and exit
+#
+# The app must be a Kustomize app dir with an app.yml (Argo Application). The pin
+# (components/storage-home-<node>) is added automatically unless --no-pin.
+
+set -euo pipefail
+
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$REPO"
+
+APP_DIR=""; PVC_ARG=""; HOME_NODE=""; DRY_RUN=0; NO_PIN=0; YES=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --app) APP_DIR=${2:?}; shift 2 ;;
+    --pvc) PVC_ARG=${2:?}; shift 2 ;;
+    --home) HOME_NODE=${2:?}; shift 2 ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --no-pin) NO_PIN=1; shift ;;
+    --yes) YES=1; shift ;;
+    -h|--help) sed -n '1,20p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+step() { printf '\n== %s\n' "$*"; }
+info() { printf '   %s\n' "$*"; }
+die()  { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
+
+[[ -n $APP_DIR && -n $PVC_ARG && -n $HOME_NODE ]] || \
+  die "--app, --pvc and --home are required (see --help)"
+[[ -d $APP_DIR ]] || die "$APP_DIR does not exist"
+[[ -f $APP_DIR/app.yml ]] || die "$APP_DIR/app.yml (Argo Application) missing"
+case "$HOME_NODE" in drone-01|drone-02|drone-03) ;; *) die "home must be drone-01/02/03" ;; esac
+
+# ---------------------------------------------------------------- derive facts
+RENDERED=$(kustomize build "$APP_DIR") || die "kustomize build $APP_DIR failed"
+
+# The rendered PVC whose name is $PVC_ARG, or ends in -$PVC_ARG (namePrefix).
+FULL_PVC=$(printf '%s\n' "$RENDERED" | yq -N -r '
+  select(.kind == "PersistentVolumeClaim") | .metadata.name' 2>/dev/null |
+  grep -E "(^|-)${PVC_ARG}$" | head -1) || true
+[[ -n $FULL_PVC ]] || die "no PVC matching '$PVC_ARG' in $APP_DIR"
+NS=$(printf '%s\n' "$RENDERED" | yq -N -r "
+  select(.kind == \"PersistentVolumeClaim\" and .metadata.name == \"$FULL_PVC\") |
+  .metadata.namespace" 2>/dev/null | head -1)
+[[ -n $NS && $NS != null ]] || die "could not determine the namespace of $FULL_PVC"
+CLASS=$(printf '%s\n' "$RENDERED" | yq -N -r "
+  select(.kind == \"PersistentVolumeClaim\" and .metadata.name == \"$FULL_PVC\") |
+  .spec.storageClassName" 2>/dev/null | head -1)
+SIZE=$(printf '%s\n' "$RENDERED" | yq -N -r "
+  select(.kind == \"PersistentVolumeClaim\" and .metadata.name == \"$FULL_PVC\") |
+  .spec.resources.requests.storage" 2>/dev/null | head -1)
+ARGO_APP=$(yq -r '.metadata.name' "$APP_DIR/app.yml")
+case "$APP_DIR" in
+  apps/*)          PARENT=apps ;;
+  platform/*)      PARENT=platform ;;
+  infrastructure/*) PARENT=infrastructure ;;
+  *) die "APP_DIR must live under apps/, platform/ or infrastructure/" ;;
+esac
+
+step "plan"
+info "app dir     : $APP_DIR  (Argo app '$ARGO_APP', parent '$PARENT', borg above)"
+info "namespace   : $NS"
+info "PVC         : $FULL_PVC  ($SIZE, class $CLASS)"
+info "home node   : $HOME_NODE  (pin component components/storage-home-$HOME_NODE)"
+[[ $CLASS == zfs-generic-nvmeof-csi ]] || die "$FULL_PVC is on '$CLASS', not zfs-generic-nvmeof-csi"
+
+# ---------------------------------------------------------------- preflight
+step "preflight"
+[[ -z $(git status --porcelain) ]] || die "working tree is dirty; commit or stash first"
+info "working tree clean"
+
+LIVE_CLASS=$(kubectl -n "$NS" get pvc "$FULL_PVC" -o jsonpath='{.spec.storageClassName}')
+[[ $LIVE_CLASS == zfs-generic-nvmeof-csi ]] || die "live PVC class is '$LIVE_CLASS'"
+OLD_PV=$(kubectl -n "$NS" get pvc "$FULL_PVC" -o jsonpath='{.spec.volumeName}')
+info "live PVC ok, old PV $OLD_PV"
+
+# A volume shared by two workloads cannot move: zfs-localpv refuses a second
+# mount of the same RWO PV on one node ("verifyMount: device already mounted").
+WORKLOADS=$(kubectl get pods -A -o json | jq -r --arg ns "$NS" --arg c "$FULL_PVC" '
+  .items[] | select(.metadata.namespace == $ns) |
+  select([.spec.volumes[]? | select(.persistentVolumeClaim.claimName? == $c)] | length > 0) |
+  (.metadata.ownerReferences[0].kind + "/" + .metadata.ownerReferences[0].name)' |
+  sort -u)
+NWORK=$(printf '%s\n' "$WORKLOADS" | grep -c . || true)
+info "consumers   : ${NWORK:-0} workload(s)"
+[[ $NWORK -eq 1 ]] || die "$FULL_PVC is mounted by $NWORK workloads ($(echo "$WORKLOADS" | tr '\n' ' ')) - zfs-localpv can only serve one"
+
+timeout 20 ssh -o BatchMode=yes "$HOME_NODE" 'zpool list -H -o name k8s' >/dev/null ||
+  die "$HOME_NODE has no k8s pool"
+info "$HOME_NODE k8s pool present"
+
+if [[ $DRY_RUN -eq 1 ]]; then
+  step "dry run: would pause borg, $PARENT, $ARGO_APP; scale $NS to 0; copy with a Job on $HOME_NODE"
+  info "would create PVC ${FULL_PVC}-migrate ($SIZE, zfs-local), rsync /old -> /new, verify counts+bytes"
+  info "would rebind the new PV to $NS/$FULL_PVC, set the class to zfs-local in git and push"
+  exit 0
+fi
+[[ $YES -eq 1 ]] || die "refusing to touch the cluster without --yes"
+
+# ---------------------------------------------------------------- save state
+SCALED_DIR=$(mktemp -d)
+trap 'rm -rf "$SCALED_DIR"' EXIT
+for kind in deploy sts; do
+  kubectl -n "$NS" get "$kind" -o json |
+    jq -r '.items[] | "\(.metadata.name) \(.spec.replicas // 1)"' > "$SCALED_DIR/$kind" || true
+done
+
+pause_app() {
+  kubectl -n argocd patch app "$1" --type json \
+    -p '[{"op":"remove","path":"/spec/syncPolicy/automated"}]' >/dev/null 2>&1 || true
+}
+resume_app() {
+  kubectl -n argocd patch app "$1" --type json \
+    -p '[{"op":"add","path":"/spec/syncPolicy/automated","value":{"enabled":true,"prune":false,"selfHeal":true}}]' \
+    >/dev/null 2>&1 || true
+}
+
+step "pause Argo (borg -> $PARENT -> $ARGO_APP)"
+for a in borg "$PARENT" "$ARGO_APP"; do pause_app "$a"; info "$a paused"; done
+
+step "scale $NS to 0"
+kubectl -n "$NS" scale deploy,sts --all --replicas=0 >/dev/null 2>&1 || true
+for _ in $(seq 1 60); do
+  [[ -z $(kubectl -n "$NS" get pods --no-headers 2>/dev/null | grep -v Terminating || true) ]] && break
+  sleep 2
+done
+info "no pods left in $NS"
+
+step "wait for $OLD_PV to detach"
+for _ in $(seq 1 90); do
+  n=$(kubectl get volumeattachment --no-headers 2>/dev/null | grep -c "$OLD_PV" || true)
+  [[ $n -eq 0 ]] && break
+  sleep 2
+done
+[[ ${n:-0} -eq 0 ]] || die "$OLD_PV still has a VolumeAttachment"
+info "detached"
+
+step "create ${FULL_PVC}-migrate on zfs-local"
+kubectl -n "$NS" apply -f - >/dev/null <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${FULL_PVC}-migrate
+  labels:
+    migrate-volume: "true"
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-local
+  resources:
+    requests:
+      storage: ${SIZE}
+EOF
+info "created"
+
+step "copy with a Job on $HOME_NODE"
+kubectl -n "$NS" apply -f - >/dev/null <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-${FULL_PVC}
+  labels:
+    migrate-volume: "true"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: ${HOME_NODE}
+      containers:
+        - name: copy
+          image: docker.io/library/alpine:3.21
+          command:
+            - sh
+            - -c
+            - |
+              apk add --no-cache rsync >/dev/null 2>&1
+              rsync -aHAX --numeric-ids --exclude lost+found /old/ /new/
+              echo "OLD_FILES=\$(find /old -type f | wc -l)"
+              echo "NEW_FILES=\$(find /new -type f | wc -l)"
+              echo "OLD_BYTES=\$(find /old -type f -exec stat -c %s {} + | awk '{s+=\$1} END {print s+0}')"
+              echo "NEW_BYTES=\$(find /new -type f -exec stat -c %s {} + | awk '{s+=\$1} END {print s+0}')"
+          volumeMounts:
+            - name: old
+              mountPath: /old
+              readOnly: true
+            - name: new
+              mountPath: /new
+      volumes:
+        - name: old
+          persistentVolumeClaim:
+            claimName: ${FULL_PVC}
+            readOnly: true
+        - name: new
+          persistentVolumeClaim:
+            claimName: ${FULL_PVC}-migrate
+EOF
+kubectl -n "$NS" wait --for=condition=complete --timeout=30m "job/migrate-${FULL_PVC}" >/dev/null ||
+  die "copy Job did not complete; inspect: kubectl -n $NS logs job/migrate-${FULL_PVC}"
+
+LOGS=$(kubectl -n "$NS" logs "job/migrate-${FULL_PVC}")
+OF=$(sed -n 's/^OLD_FILES=//p' <<<"$LOGS"); NF=$(sed -n 's/^NEW_FILES=//p' <<<"$LOGS")
+OB=$(sed -n 's/^OLD_BYTES=//p' <<<"$LOGS"); NB=$(sed -n 's/^NEW_BYTES=//p' <<<"$LOGS")
+info "files: $OF -> $NF    bytes: $OB -> $NB"
+[[ $OF == "$NF" && $OB == "$NB" ]] || die "copy verification failed; nothing has been changed in git"
+
+step "rebind the new PV to $NS/$FULL_PVC"
+NEW_PV=$(kubectl -n "$NS" get pvc "${FULL_PVC}-migrate" -o jsonpath='{.spec.volumeName}')
+kubectl patch pv "$NEW_PV" -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}' >/dev/null
+kubectl -n "$NS" delete pvc "${FULL_PVC}-migrate" --wait=true >/dev/null
+kubectl patch pv "$OLD_PV" -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}' >/dev/null
+kubectl -n "$NS" delete pvc "$FULL_PVC" --wait=true >/dev/null
+kubectl patch pv "$NEW_PV" --type json \
+  -p "[{\"op\":\"replace\",\"path\":\"/spec/claimRef\",\"value\":{\"namespace\":\"$NS\",\"name\":\"$FULL_PVC\"}}]" >/dev/null
+info "new PV $NEW_PV pre-bound; old PV $OLD_PV kept Retain/Released"
+
+step "git: pin to $HOME_NODE and switch the class"
+python3 - "$APP_DIR" "$HOME_NODE" "$FULL_PVC" "$NO_PIN" <<'PY'
+import os, re, sys
+app_dir, node, pvc, no_pin = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+
+# 1. the pin component
+kfile = os.path.join(app_dir, "kustomization.yml")
+src = open(kfile).read()
+comp = f"../../components/storage-home-{node}"
+if not no_pin and comp not in src:
+    if "components:" in src:
+        src = src.replace("components:\n", f"components:\n  - {comp}\n", 1)
+    else:
+        src = src.replace("configMapGenerator:", f"components:\n  - {comp}\n\nconfigMapGenerator:", 1)
+    open(kfile, "w").write(src)
+    print(f"   pin added to {kfile}")
+
+# 2. the storageClassName, in whichever file declares this PVC
+short = pvc.split("-", 1)[1] if "-" in pvc else pvc
+changed = False
+for f in sorted(os.listdir(app_dir)):
+    if not f.endswith((".yml", ".yaml")):
+        continue
+    path = os.path.join(app_dir, f)
+    text = open(path).read()
+    blocks = re.split(r"(?m)^---\s*$", text)
+    for i, b in enumerate(blocks):
+        if re.search(rf"(?m)^\s*name:\s*{re.escape(short)}\s*$", b) and "PersistentVolumeClaim" in b:
+            if "storageClassName: zfs-generic-nvmeof-csi" in b:
+                blocks[i] = b.replace("storageClassName: zfs-generic-nvmeof-csi",
+                                      "storageClassName: zfs-local")
+                open(path, "w").write("---".join(blocks))
+                print(f"   class switched in {path}")
+                changed = True
+if not changed:
+    sys.exit("could not find the PVC block to edit")
+PY
+
+kustomize build "$APP_DIR" >/dev/null || die "kustomize build failed after the edit; git checkout and re-run"
+git add "$APP_DIR"
+git commit -q -m "feat(${ARGO_APP}): ${FULL_PVC} on zfs-local (${HOME_NODE})
+
+Migrated with scripts/migrate-volume: copied by a Job on ${HOME_NODE},
+verified $OF files / $OB bytes on both sides, then rebound to the original claim
+name. Pinned to ${HOME_NODE} with components/storage-home-${HOME_NODE}. Old PV
+${OLD_PV} kept Retain/Released for rollback."
+git push -q origin HEAD
+REV=$(git rev-parse HEAD)
+info "pushed $REV"
+
+step "sync Argo to $REV explicitly"
+kubectl -n argocd patch app "$ARGO_APP" --type merge \
+  -p "{\"operation\":{\"sync\":{\"revision\":\"$REV\"}}}" >/dev/null
+for _ in $(seq 1 60); do
+  lc=$(kubectl -n "$NS" get pvc "$FULL_PVC" -o jsonpath='{.spec.storageClassName}' 2>/dev/null || true)
+  [[ $lc == zfs-local ]] && break
+  sleep 2
+done
+[[ ${lc:-} == zfs-local ]] || die "PVC did not come back on zfs-local; see $REV"
+info "PVC recreated on zfs-local"
+
+step "restore replicas and resume Argo"
+for kind in deploy sts; do
+  while read -r name replicas; do
+    [[ -n $name ]] || continue
+    kubectl -n "$NS" scale "$kind/$name" --replicas="$replicas" >/dev/null 2>&1 || true
+  done < "$SCALED_DIR/$kind"
+done
+for a in "$ARGO_APP" "$PARENT" borg; do resume_app "$a"; info "$a resumed"; done
+
+step "verify"
+for _ in $(seq 1 60); do
+  ready=$(kubectl -n "$NS" get pods --no-headers 2>/dev/null | grep -cE "Running|Completed" || true)
+  total=$(kubectl -n "$NS" get pods --no-headers 2>/dev/null | grep -c . || true)
+  [[ $total -gt 0 && $ready -eq $total ]] && break
+  sleep 3
+done
+kubectl -n "$NS" get pods --no-headers || true
+echo
+kubectl -n "$NS" get pvc "$FULL_PVC" -o custom-columns='PVC:.metadata.name,VOLUME:.spec.volumeName,CLASS:.spec.storageClassName,STATUS:.status.phase'
+kubectl get pv "$OLD_PV" -o custom-columns='OLD-PV:.metadata.name,STATUS:.status.phase,POLICY:.spec.persistentVolumeReclaimPolicy'
+printf '   zvol on %s: ' "$HOME_NODE"
+ssh -o BatchMode=yes "$HOME_NODE" "sudo zfs list -H -o name k8s/volumes/$NEW_PV 2>/dev/null || echo missing"
+printf '   Argo %s: ' "$ARGO_APP"
+kubectl -n argocd get app "$ARGO_APP" -o jsonpath='{.status.sync.status} {.status.health.status}{"\n"}'
+
+step "done"
+info "rollback if the app misbehaves: pause Argo, delete PVC $FULL_PVC,"
+info "clear the old PV claimRef (kubectl patch pv $OLD_PV), git revert $REV"
