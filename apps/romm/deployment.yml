@@ -201,7 +201,7 @@ metadata:
     app.kubernetes.io/component: app
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: zfs-generic-nvmeof-csi
+  storageClassName: zfs-local
   resources:
     requests:
       storage: 20Gi
