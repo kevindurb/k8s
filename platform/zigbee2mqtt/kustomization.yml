@@ -9,6 +9,7 @@ resources:
   - ./deployment.yml
 
 components:
+  - ../../components/storage-home-drone-02
   - ../../components/app-env
   - ../../components/app-http-service
 
