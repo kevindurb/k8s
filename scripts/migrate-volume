@@ -94,7 +94,7 @@ WORKLOADS=$(kubectl get pods -A -o json | jq -r --arg ns "$NS" --arg c "$FULL_PV
     | select([.spec.volumes[]? | select(.persistentVolumeClaim.claimName? == $c)] | length > 0)
     | (.metadata.ownerReferences[0].kind + "/" + .metadata.ownerReferences[0].name) ]
   | map(if startswith("ReplicaSet/") then "Deployment/" + (.[11:] | sub("-[a-z0-9]+$"; "")) else . end)
-  | unique')
+  | unique | .[]')
 NWORK=$(printf '%s\n' "$WORKLOADS" | grep -c . || true)
 [[ $NWORK -eq 1 ]] || die "$FULL_PVC is mounted by $NWORK workloads ($(echo "$WORKLOADS" | tr '\n' ' ')) - zfs-localpv can only serve one"
 info "single consumer"
