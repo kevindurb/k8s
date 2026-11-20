@@ -8,6 +8,9 @@ namePrefix: omada-
 resources:
   - ./deployment.yml
 
+components:
+  - ../../components/storage-home-drone-02
+
 configMapGenerator:
   - name: gatus
     options:
