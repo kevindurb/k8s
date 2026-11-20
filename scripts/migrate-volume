@@ -92,8 +92,9 @@ info "live PVC ok"
 WORKLOADS=$(kubectl get pods -A -o json | jq -r --arg ns "$NS" --arg c "$FULL_PVC" '
   .items[] | select(.metadata.namespace == $ns) |
   select([.spec.volumes[]? | select(.persistentVolumeClaim.claimName? == $c)] | length > 0) |
-  (.metadata.ownerReferences[0].kind + "/" + .metadata.ownerReferences[0].name)' |
-  sort -u)
+  (.metadata.ownerReferences[0].kind + "/" + .metadata.ownerReferences[0].name) |
+  map(if startswith("ReplicaSet/") then "Deployment/" + (.[12:] | sub("-[a-z0-9]+$"; "")) else . end) |
+  unique)
 NWORK=$(printf '%s\n' "$WORKLOADS" | grep -c . || true)
 [[ $NWORK -eq 1 ]] || die "$FULL_PVC is mounted by $NWORK workloads ($(echo "$WORKLOADS" | tr '\n' ' ')) - zfs-localpv can only serve one"
 info "single consumer"
@@ -129,8 +130,11 @@ fi
 SOURCED_BYTES="-"
 SNAPSHOTS="-"
 if timeout 15 ssh -o BatchMode=yes drone-04 "sudo zfs list -H -o name rust/k8s/volumes/$OLD_PV" >/dev/null 2>&1; then
+  # usedbydataset is the live data that will actually be copied; `used` would
+  # include the sanoid history.
   SOURCED_BYTES=$(timeout 15 ssh -o BatchMode=yes drone-04 \
-    "sudo zfs get -Hp -o value used rust/k8s/volumes/$OLD_PV" 2>/dev/null | awk '{printf "%.1f MiB", $1/1048576}')
+    "sudo zfs get -Hp -o value usedbydataset rust/k8s/volumes/$OLD_PV" 2>/dev/null |
+    awk '{ if ($1 > 1073741824) printf "%.1f GiB", $1/1073741824; else printf "%.1f MiB", $1/1048576 }')
   SNAPSHOTS=$(timeout 15 ssh -o BatchMode=yes drone-04 \
     "sudo zfs list -t snapshot -H -o name -d1 rust/k8s/volumes/$OLD_PV 2>/dev/null | wc -l")
 fi
@@ -153,7 +157,7 @@ field "source used" "$SOURCED_BYTES, $SNAPSHOTS sanoid snapshot(s)"
 field "home node" "$HOME_NODE, pool free $NODE_FREE"
 field "pin" "$PIN_STATE"
 field "manifest" "$TARGET_FILE"
-field "consumer" "$(echo "$WORKLOADS" | tr '\n' ' ')"
+field "consumer" "$(echo "$WORKLOADS" | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
 echo "   workloads that will be scaled to 0 and restored:"
 printf '%s\n' "${SCALED_LIST:-      (none)}"
 
