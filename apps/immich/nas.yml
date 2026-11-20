@@ -1,0 +1,40 @@
+---
+# Immich's media root on the NAS, not a zvol: `library/`, `upload/`, `thumbs/`,
+# `encoded-video/`, `profile/` and the nightly DB dumps. The originals are
+# irreplaceable and write-once, so they belong next to the bulk media they
+# resemble (318 GiB and growing) rather than on a 600 GiB zvol that has to be
+# replicated and restored. Same pattern as romm's `library.yml`: a static NFS PV
+# pointed at a subdirectory of drone-04's `/media` export.
+#
+# The claim keeps the name `data` so `server.yml` is unchanged: kustomize's
+# namePrefix rewrites both this claim and the deployment's `claimName: data`.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nas
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  # Default for a statically provisioned PV, spelled out because the photos are
+  # irreplaceable and must never be deleted by a PVC removal.
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: 192.168.42.24
+    path: /media/immich
+  mountOptions: [nfsvers=4.2, nconnect=8, noatime]
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  resources:
+    requests:
+      storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ''
+  volumeName: nas

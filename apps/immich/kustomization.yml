@@ -10,7 +10,7 @@ resources:
   - ./machine-learning.yml
   - ./postgres.yml
   - ./valkey.yml
-  - ./data.yml
+  - ./nas.yml
   - ./secret-sealed-secret.yml
 
 # Deliberately no app-pod-hardening/app-tmp-dirs components: they only match
