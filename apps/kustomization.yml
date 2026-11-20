@@ -36,3 +36,4 @@ resources:
   - ./f1timing/app.yml
   - ./tsgit/app.yml
   - ./browser/app.yml
+  - ./music-assistant/app.yml

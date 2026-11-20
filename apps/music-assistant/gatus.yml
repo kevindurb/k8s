@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: music-assistant
+    group: apps
+    url: http://music-assistant-app-service.music-assistant
+    conditions:
+      - '[STATUS] == 200'

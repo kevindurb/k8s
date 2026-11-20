@@ -1,0 +1,120 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      # Music Assistant discovers players and streams to them over mDNS/uPnP, and opens
+      # ephemeral ports that players must be able to reach back on (AirPlay, Chromecast,
+      # Sonos, DLNA). That requires the node's network namespace; app.yml carries the
+      # matching Pod Security exemption. See docs/network-segmentation.md.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: nas-media
+          persistentVolumeClaim:
+            claimName: nas-media
+      containers:
+        - name: app
+          image: ghcr.io/music-assistant/server:2.10.12@sha256:7eb272e2e13da9a5d61dcbc4e1fcfc734776222b23f2825a9b5690d4427cfafb
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: LOG_LEVEL
+              value: info
+            # The root filesystem is read-only; keep any dotfiles a provider writes on the volume
+            - name: HOME
+              value: /data
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            # Beets-tagged library: the Music/ directory of the NAS export, mounted read-only
+            - name: nas-media
+              mountPath: /music
+              subPath: Music
+              readOnly: true
+          resources:
+            requests:
+              memory: 512Mi
+            limits:
+              memory: 4Gi
+          ports:
+            - name: http
+              containerPort: 8095
+          # First boot migrates the database; 30 * 10 s covers that, then the normal probes run
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-local
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  selector: *labels
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:media
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [music-assistant]

@@ -231,11 +231,13 @@ Live data measured 2026-11-19 (`usedbydataset`, so snapshot history is excluded)
 | romm-mariadb | 5Gi / 0.4 |
 | romm-redis | 5Gi / **4.4 — 88 % full**, plus 62 GiB of sanoid snapshots on it |
 | navidrome | 5Gi / 0.4 + `navidrome-nas-media` |
+| music-assistant | 10Gi / ~0 + `music-assistant-nas-media` (hostNetwork) |
 | calibre / calibre-web | 1Gi each / ~0 + `*-nas-media` |
 | kiwix, dufs | NAS only |
 | pocket-id | 1Gi / ~0 |
 
-≈ **31 GiB** of local data plus 318 GiB of photos on the NAS. Pinned with
+≈ **31 GiB** of local data plus 318 GiB of photos on the NAS (music-assistant's 10Gi claim
+is empty at first boot and holds the server database and analysis cache). Pinned with
 `storage-home-drone-01`; `jellyfin` also keeps its `media/gpu=amd-vega` capability
 label.
 
