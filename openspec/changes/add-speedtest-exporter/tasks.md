@@ -24,7 +24,7 @@
 - [x] 4.3 Verify Prometheus collection without config changes: `up{kubernetes_namespace="speedtest-exporter"} == 1` with `job="kubernetes-service-endpoints"`, throughput series present, and `infrastructure/prometheus/config/prometheus.yml` still containing no `speedtest` job
 - [x] 4.4 Verify the Gatus check shows healthy in the `infrastructure` group and that health probes do not start tests: `curl localhost:8080/` returns immediately and `speedtest_duration_milliseconds` does not change between two consecutive probe cycles
 - [x] 4.5 Verify the alert rule loaded and is quiet while healthy: Prometheus shows the `Speedtest` rule group with no evaluation error and `ALERTS{alertname="SpeedtestFailed"}` is empty while `speedtest_up == 1`
-- [ ] 4.6 Verify the pod meets the baseline security requirements: container `runAsNonRoot: true`, `readOnlyRootFilesystem: true`, no privileged flag, no hostPath, and no PersistentVolumeClaim in the namespace
+- [x] 4.6 Verify the pod meets the baseline security requirements: container `runAsNonRoot: true`, `readOnlyRootFilesystem: true`, no privileged flag, no hostPath, and no PersistentVolumeClaim in the namespace
 - [x] 4.7 Verify a restart recovers without state: `kubectl -n speedtest-exporter rollout restart deployment/speedtest-exporter-deployment`, then confirm the pod returns to Ready and a new measurement is published on the first scrape and appears in Prometheus
 
 ## Workflow follow-up
