@@ -10,7 +10,6 @@ RUN dnf install -y \
   https://rpm.rancher.io/k3s/latest/common/centos/9/noarch/k3s-selinux-${K3S_SELINUX_VERSION}.el9.noarch.rpm \
   wireguard-tools \
   nvme-cli \
-  nvmetcli \
   e2fsprogs \
   xfsprogs \
   sg3_utils \
@@ -38,6 +37,6 @@ RUN dnf install -y \
 COPY overlay/ /
 
 RUN systemctl disable firewalld \
-  && systemctl enable cockpit tailscaled iscsid tuned nvmet chronyd zrepl
+  && systemctl enable cockpit tailscaled iscsid tuned chronyd zrepl
 
 RUN bootc container lint
