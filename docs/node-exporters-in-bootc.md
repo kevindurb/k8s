@@ -14,7 +14,7 @@ All three run as a workload, discovered by Prometheus through the `kubernetes-se
 |---|---|---|---|
 | `node-exporter` | `infrastructure/node-exporter/node-exporter.yml` | `hostNetwork` (via `components/host-networking`), hostPath `/` and `/sys` | PSS namespace enforces `privileged`; **no `hostPID`**; tolerates `NoSchedule` only |
 | `smartctl-exporter` | `infrastructure/smartctl-exporter/smartctl-exporter.yml` | `privileged: true`, `runAsUser: 0`, hostPath `/dev` | `--smartctl.interval=5m` because 32 NVMe-oF controllers make a poll take 10–30 s on drone-02 |
-| `zfs-exporter` | `infrastructure/zfs-exporter/zfs-exporter.yml` | `privileged`, `hostPID`, hostPath `/var/lib/zfs-exporter`, pinned to `drone-04` | An initContainer `wget`s the tarball from GitHub at pod start, then the main container `nsenter -t 1 --mount` runs it from the host |
+| `zfs-exporter` | `infrastructure/zfs-exporter/zfs-exporter.yml` | `privileged`, `hostPID`, hostPath `/var/lib/zfs-exporter`, DaemonSet on drone-01..04 | An initContainer `wget`s the tarball from GitHub at pod start, then the main container `nsenter -t 1 --mount` runs it from the host |
 
 ## Why moving them helps
 
@@ -84,7 +84,7 @@ That initContainer downloads and sha256-verifies a tarball from GitHub every tim
 
 One image for all nodes, so gate the host-specific ones with systemd conditions instead of node selectors:
 
-- `zfs-exporter`: `ConditionPathExists=/dev/zfs` (or `ExecCondition=/usr/sbin/zpool list -H -o name`), so it is a no-op everywhere except `drone-04`. It needs `/usr/sbin/zpool` and `/usr/sbin/zfs`, which the base image already has.
+- `zfs-exporter`: `ConditionPathExists=/dev/zfs` (or `ExecCondition=/usr/sbin/zpool list -H -o name`), so it only does useful work on the ZFS nodes (drone-01..04). It needs `/usr/sbin/zpool` and `/usr/sbin/zfs`, which the base image already has.
 - `smartctl-exporter`: root, `DevicePolicy=closed`, `DeviceAllow=/dev/nvme* /dev/sd*`, `--smartctl.interval=5m` retained.
 - `node-exporter`: as `prometheus`, `MemoryMax=192M`, `CPUQuota=25%` (the current pod limits).
 

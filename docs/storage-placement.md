@@ -323,8 +323,8 @@ canary: pinned, small, and a database to prove real recovery.
 
 ### Not pinned at all
 
-`drone-04`: `makemkv`, `transcoding`, the per-node `healthchecks` CronJobs,
-`zfs-exporter`. Cluster infrastructure stays free to float: argocd, coredns,
+`drone-04`: `makemkv`, `transcoding`, the per-node `healthchecks` CronJobs.
+`zfs-exporter` runs as a DaemonSet on `drone-01..04` (it exports the local `k8s` pools, plus `rust` on drone-04). Cluster infrastructure stays free to float: argocd, coredns,
 metallb, node-exporter, tailscale, and the CSI node DaemonSet.
 
 ## How an app is pinned

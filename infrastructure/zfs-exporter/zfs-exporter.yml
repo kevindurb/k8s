@@ -1,17 +1,30 @@
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
-  name: deployment
+  name: daemon-set
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: zfs-exporter
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: zfs-exporter
     spec:
-      # the pool lives on drone-04 and the exporter needs its zpool/zfs binaries and /dev/zfs
-      nodeSelector:
-        kubernetes.io/hostname: drone-04
+      # Only the drones have local ZFS pools (k8s on 01-03, rust on drone-04);
+      # the exporter reads the host's pools via nsenter, so keep it off the
+      # control-plane unimatrix nodes.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: [drone-01, drone-02, drone-03, drone-04]
       tolerations:
         - key: dedicated
           operator: Equal
