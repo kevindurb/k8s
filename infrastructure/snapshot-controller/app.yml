@@ -7,6 +7,8 @@ metadata:
 spec:
   project: default
   sources:
+    # Not the democratic-csi driver — this chart repo just also publishes
+    # snapshot-controller. Kept since it tracks the same release cadence.
     - repoURL: https://democratic-csi.github.io/charts/
       targetRevision: 0.3.0
       chart: snapshot-controller

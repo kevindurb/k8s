@@ -358,64 +358,18 @@ groups:
             VALUE = {{ $value }}
             LABELS = {{ $labels }}
 
-  - name: DemocraticCSI
+  - name: Storage
     rules:
-      - alert: CsiPvStuck
-        expr: |
-          kube_persistentvolume_status_phase{phase=~"Released|Failed"} == 1
-            and on (persistentvolume)
-          kube_persistentvolume_info{storageclass="zfs-generic-nvmeof-csi"}
-        for: 1h
-        labels:
-          severity: warning
-        annotations:
-          summary: PersistentVolume {{ $labels.persistentvolume }} stuck in {{ $labels.phase }}
-          description: |-
-            Usually democratic-csi DeleteVolume failing on dependent (sanoid) snapshots.
-            See the democratic-csi skill, Gotchas.
-
-      - alert: CsiControllerDown
-        expr: kube_deployment_status_replicas_available{namespace="democratic-csi"} == 0
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: democratic-csi controller {{ $labels.deployment }} has no available replicas
-
-      - alert: CsiNodeDriverUnavailable
-        expr: kube_daemonset_status_number_unavailable{namespace="democratic-csi"} > 0
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: democratic-csi node driver unavailable on {{ $value }} node(s)
-
-      - alert: CsiPodCrashLooping
-        expr: increase(kube_pod_container_status_restarts_total{namespace="democratic-csi"}[30m]) > 3
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: democratic-csi pod {{ $labels.pod }} ({{ $labels.container }}) restarting
-
       - alert: StorageNodeDown
         expr: kube_node_status_condition{node="drone-04",condition="Ready",status="true"} == 0
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: drone-04 (NVMe-oF/ZFS backend) is NotReady
+          summary: drone-04 (ZFS/NFS backend) is NotReady
           description: |-
-            All democratic-csi volumes depend on drone-04. Initiators drop their
-            controllers after ~10 minutes (ctrl_loss_tmo).
-
-      - alert: CsiVolumeAttachmentStuck
-        expr: kube_volumeattachment_status_attached{volumeattachment=~"csi-.*"} == 0
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: VolumeAttachment {{ $labels.volumeattachment }} not attached
+            drone-04 hosts the rust pool and the /media NFS export. Media apps
+            lose their bulk storage while it is down.
 
       - alert: PodStuckContainerCreating
         expr: kube_pod_container_status_waiting_reason{reason="ContainerCreating"} == 1
@@ -424,7 +378,7 @@ groups:
           severity: warning
         annotations:
           summary: Pod {{ $labels.namespace }}/{{ $labels.pod }} stuck in ContainerCreating
-          description: Often a failed volume mount or mkfs (see the MDTS gotcha in the democratic-csi skill).
+          description: Often a failed volume mount or mkfs.
 
       - alert: PvcFillingUp
         expr: predict_linear(kubelet_volume_stats_available_bytes[6h], 4 * 24 * 3600) < 0 and kubelet_volume_stats_available_bytes > 0
@@ -476,7 +430,7 @@ groups:
         annotations:
           summary: drone-04 disk {{ $labels.device }} average I/O latency > 50ms
 
-      - alert: NvmeofInitiatorHighLatency
+      - alert: NvmeLocalDiskHighLatency
         expr: |
           rate(node_disk_read_time_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m])
             / (rate(node_disk_reads_completed_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 1) > 0.2
@@ -489,12 +443,12 @@ groups:
         annotations:
           summary: NVMe device {{ $labels.device }} on {{ $labels.instance }} average I/O latency > 200ms
           description: >-
-            Includes the local NVMe boot disk on drone-01..03, but is dominated
-            by NVMe-oF volumes when they are slow. The 200ms threshold keeps
-            bulk-read jobs (Prometheus compaction, the nightly Immich integrity
-            check) from paging while still catching real device problems.
+            The local NVMe drives backing the k8s pools on drone-01..03 (the
+            zvols' parent devices). The 200ms threshold keeps bulk-read jobs
+            (Prometheus compaction, the nightly Immich integrity check) from
+            paging while still catching real device problems.
 
-      - alert: NvmeofInitiatorQueueBacklog
+      - alert: NvmeLocalDiskQueueBacklog
         expr: rate(node_disk_io_time_weighted_seconds_total{instance=~"drone-0[123]",device=~"nvme[0-9]+n[0-9]+"}[5m]) > 8
         for: 10m
         labels:
