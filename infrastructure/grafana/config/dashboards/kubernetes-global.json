@@ -3449,7 +3449,7 @@
         "definition": "label_values(node_cpu_seconds_total,job)",
         "hide": 0,
         "includeAll": false,
-        "multi": true,
+        "multi": false,
         "name": "job",
         "options": [],
         "query": {

@@ -22,7 +22,7 @@
           "uid": "prometheus"
         },
         "enable": true,
-        "expr": "count(sum(up{instance=\"$instance\"}) by (instance) < 1)",
+        "expr": "count(sum(up{instance=~\"$instance\"}) by (instance) < 1)",
         "hide": false,
         "iconColor": "rgba(255, 96, 96, 1)",
         "limit": 100,
@@ -2949,7 +2949,11 @@
     "list": [
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
@@ -2972,7 +2976,11 @@
       },
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
