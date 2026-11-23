@@ -25,8 +25,8 @@
 ## 5. Integration verification
 
 - [x] 5.1 Run `just check-kustomize` and confirm every kustomization builds, matching CI
-- [ ] 5.2 After Argo CD syncs, verify the pod is `1/1` on drone-01 with `INTERNAL-IP`/pod IP `192.168.42.21`, the data claim is bound on drone-01, and `kubectl -n music-assistant exec deploy/music-assistant-app-deployment -- ls /music | head` lists the library (write attempt fails read-only)
-- [ ] 5.3 Verify the UI answers at `http://192.168.42.21:8095/` (200 or redirect to `/setup`) and that `https://music-assistant.beaver-cloud.ts.net/` responds through the tailnet ingress, then confirm the Gatus endpoint is green
+- [x] 5.2 After Argo CD syncs, verify the pod is `1/1` on drone-01 with `INTERNAL-IP`/pod IP `192.168.42.21`, the data claim is bound on drone-01, and `kubectl -n music-assistant exec deploy/music-assistant-app-deployment -- ls /music | head` lists the library (write attempt fails read-only)
+- [x] 5.3 Verify the UI answers at `http://192.168.42.21:8095/` (200 or redirect to `/setup`) and that `https://music-assistant.beaver-cloud.ts.net/` responds through the tailnet ingress, then confirm the Gatus endpoint is green
 - [ ] 5.4 Complete the first-run setup at `/setup`, add the Filesystem provider at `/music`, and confirm at least one LAN speaker is discovered and plays; record whether any provider needed a writable path outside `/data`
 
 ## Workflow follow-up
