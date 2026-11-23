@@ -17,9 +17,12 @@ ping filter='all':
   just adhoc ping {{filter}}
 
 # Raw reboot (no drain). The filter is required and "all" is rejected so a stray
-# `just reboot` can't take down every node, drone-04 (storage) included.
+# `just reboot` can't take down every node. For a graceful drain + reboot use
+# `just playbook upgrade.yml`, which works for drone-04 too now that storage is
+# node-local. Note drone-04 still serves the /media NFS export, so rebooting it
+# interrupts media access briefly.
 reboot filter:
-  @if [ "{{filter}}" = "all" ]; then echo "refusing to reboot 'all': name the hosts (never drone-04, use reboot-drone-04.yml)" >&2; exit 1; fi
+  @if [ "{{filter}}" = "all" ]; then echo "refusing to reboot 'all': name the hosts" >&2; exit 1; fi
   just sudo-adhoc reboot {{filter}}
 
 shutdown filter='all':
