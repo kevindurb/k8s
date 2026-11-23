@@ -1,6 +1,48 @@
 # Storage: node-local ZFS with a replicated mesh
 
-## Status (2026-11-19)
+## Status (2026-11-23)
+
+**Migration complete; teardown phase 1 done.** All app volumes run on `zfs-local`
+with zrepl replication; drone-04's role is the NFS media share and the `rust`
+pool. The democratic-csi NVMe-oF stack was torn down on 2026-11-23 (phase 1 of
+the teardown below). What remains is **phase 2**: destruction of the 43
+`Released` PVs and their zvols on `rust` (plus the 318 GiB `immich-data` zvol),
+gated on the post-migration soak — target **2026-11-27**. Do not run phase 2
+before then without re-confirming.
+
+The sections below are kept as the historical record; the "Released PVs remain"
+picture described there no longer applies to the driver, which is gone.
+
+### Done 2026-11-23 (teardown, phase 1)
+
+- democratic-csi Argo Application removed from git and cascade-deleted from the
+  cluster (Deployment, node DaemonSet, namespace, `zfs-generic-nvmeof-csi`
+  StorageClass and VolumeSnapshotClass). `zfs-local` is now the default
+  StorageClass.
+- Prometheus `DemocraticCSI` rule group removed; generic storage alerts kept
+  (renamed `StorageNodeDown`, `PvcFillingUp`, `PvcInodesLow`,
+  `PodStuckContainerCreating`); the two NVMe-oF initiator alerts were renamed to
+  `NvmeLocalDisk*` (the local pool disks they actually measured).
+- bootc: removed `nvmet.service` enablement (and its `nvmetcli` package), the
+  `nvmet.service.d/` drop-ins, `nvmet-detach-local`, `modules-load.d/nvmeof.conf`
+  and the Longhorn-era `modules-load.d/longhorn.conf` (`nfs`/`nfsv4` kept in a
+  new `nfs.conf`; dm_*/iscsi_tcp/nvme_tcp/uio_pci_generic/vfio_pci dropped after
+  verifying nothing uses them); `k3s-agent.service` no longer orders after
+  `nvmet.service`. Takes effect on each node's next image + reboot.
+- Ansible: `reboot-drone-04.yml` deleted; `node_reboot_refuse_hosts` and its
+  guard task removed — drone-04 is a normal `upgrade.yml` target now (its NFS
+  export still drops during its reboot). The `dedicated=storage:NoSchedule`
+  taint **stays** (node still hosts the drives and NFS).
+- drone-04: nvmet target cleared (no subsystems left), `nvmet.service`
+  stopped/disabled, `/etc/nvmet` removed, `/var/run/nvmet-config-loaded` removed,
+  `/var/lib/longhorn` removed. (`/usr/etc/nvmet/config.json` is baked into the
+  current image's read-only `/usr`; it is inert — no `nvmetcli`, no unit — and
+  disappears with the next image build.)
+- `docs/backups.md` rewritten for the zrepl + restic → B2 design (was: VolSync on
+  democratic-csi, never built).
+- Historical/superseded docs pruned; Backups, AGENTS.md and friends updated.
+
+### Status (2026-11-19)
 
 **In progress.** The pools exist and the first volume has left democratic-csi —
 but not for OpenEBS yet: Immich's photos moved to the NAS. No application uses
@@ -110,15 +152,17 @@ commit's build. Until the nodes have upgraded to that image, a reboot loses the
 binary and `zrepl.service` stops. Sequence it as: CI build → pull the image →
 reboot.
 
-### Not started
+### Migration order — all steps done
 
-- **Step 2 is complete** (golink, gatus, rakazo) and Steps 4-5 are done for
-  drone-02 and drone-03 and drone-01's media stack — 42 volumes moved with
-  `scripts/migrate-volume`. Only `rakazo-data` remains, and it goes with the app.
-- **Step 3 — the mesh**: zrepl RPM in the image, config rendered by `node_zfs`,
-  `zrepl status` green on every peer, `zrepl prometheus` scraped with a lag alert.
-- **Steps 4–6**: `components/storage-home-*` and the app moves (drone-02's stack,
-  then drone-01's media), then the teardown of `zfs-generic-nvmeof-csi`.
+- **Step 2** (golink, gatus, rakazo) and **Steps 4–5** (drone-02's stack, then
+  drone-01's media stack, including immich's postgres) are done — 42 volumes
+  moved with `scripts/migrate-volume`, completed 2026-11-20. `rakazo` was
+  retired whole (its `data` PV was handled with the app).
+- **Step 3 — the mesh**: done 2026-11-20 (zrepl in the image, rendered by
+  `node_zfs`, `zrepl status` green, replicas on both peers, metrics + lag
+  alerts wired). See "Mesh — done 2026-11-20" above.
+- **Step 6 — teardown**: phase 1 done 2026-11-23 (see Status at the top);
+  phase 2 (PV/zvol destruction) is gated on the soak, target 2026-11-27.
 
 ### Decisions still open
 
@@ -701,13 +745,12 @@ something live:
 
 Still open:
 
-- **`rakazo` is being retired** — do not migrate it. Its `database` and
-  `web-assets` are already on `zfs-local` from the canary; `data` stays on
-  democratic-csi and will go with the app.
-- `semaphore` **is** live (it lives at `platform/semaphore`, not `apps/`) and
-  still needs its 5 GiB volume moved to drone-03; `miniflux` likewise.
-- **`qbittorrent`** is at 0 replicas with two PVCs (10 Gi + 1 Gi); confirm before
-  moving them, or drop the app.
+- **`rakazo` is gone** — retired 2026-11-20; its `database` and `web-assets`
+  (migrated in the canary) and its `data` zvol were handled with the app.
+- `semaphore` (`platform/semaphore`) and `miniflux` are on `zfs-local` now —
+  moved 2026-11-20 and verified.
+- **`qbittorrent`** is on `zfs-local` (`config` + `ts-state`); the app is still
+  at 0 replicas by choice.
 - **`immich-machine-learning-cache`** is regenerable. Replicating it is 1.8 GB of
   pointless traffic. With OpenEBS a second StorageClass on `poolname: k8s/scratch`
   would be trivial, but zrepl's `source` glob would still have to exclude it — an
@@ -719,23 +762,47 @@ Still open:
 
 ## Teardown after the last app moves
 
-- `infrastructure/democratic-csi` (the nvmeof app and its sealed driver config) and
-  the `zfs-generic-nvmeof-csi` StorageClass. `infrastructure/openebs-zfs` stays.
-- **sanoid** drops to drone-04 only (`rust/media`); the `[rust/k8s/volumes]` stanza
-  goes.
-- `bootc/overlay/etc/systemd/system/nvmet.service.d/*`,
+**Phase 1 — done 2026-11-23:**
+
+- [x] `infrastructure/democratic-csi` (the nvmeof app and its sealed driver
+  config) and the `zfs-generic-nvmeof-csi` StorageClass + VolumeSnapshotClass —
+  removed from git and cascade-deleted from the cluster; `zfs-local` is the
+  default StorageClass. `infrastructure/openebs-zfs` stays.
+- [x] `bootc/overlay/etc/systemd/system/nvmet.service.d/*`,
   `usr/libexec/nvmet-detach-local`, `modules-load.d/nvmeof.conf`,
-  `/etc/nvmet/config.json`, the `param_mdts` workaround notes.
-- The `dedicated=storage:NoSchedule` taint, its six tolerations, and
-  `k3s_node_taints` in `host_vars/drone-04.yml` (keep the node, lose the taint; it
-  still hosts the drives and NFS).
-- `ansible/reboot-drone-04.yml`, `node_reboot_refuse_hosts`, and the "never reboot
-  drone-04" rules in `ansible/justfile` and `AGENTS.md`.
-- `.claude/skills/democratic-csi/SKILL.md` — most of its gotchas become history.
-- `docs/democratic-csi-rust-to-tank-migration.md` (superseded) and the
-  NVMe-oF material in `docs/longhorn-to-democratic-csi.md` (keep as history).
-- Sanity: `grep -rn "nvmeof\|nvmet" apps platform infrastructure bootc` should only
-  match drone-04's own notes.
+  `modules-load.d/longhorn.conf` (remnant: `nfs`/`nfsv4` kept in `nfs.conf`, the
+  rest dropped), `nvmetcli` package + `nvmet.service` enablement,
+  `/etc/nvmet/config.json` (stale copies on the node), `/var/run/nvmet-config-loaded`,
+  `/var/lib/longhorn`. `zz-shutdown-timeout.conf` comment updated. `nvmet.service`
+  has zero subsystems.
+- [x] `ansible/reboot-drone-04.yml`, `node_reboot_refuse_hosts` (role default and
+  guard task), and the "never reboot drone-04" rules in `ansible/justfile` and
+  `AGENTS.md`.
+- [x] `.claude/skills/democratic-csi/` deleted.
+- [x] Prometheus `DemocraticCSI` rule group removed; generic storage alerts kept.
+
+Deliberately **kept**: the `dedicated=storage:NoSchedule` taint and its
+tolerations — drone-04 still hosts the drives and NFS. The
+`docs/democratic-csi-rust-to-tank-migration.md` deletion is pending (it carries
+uncommitted local edits).
+
+**Phase 2 — after the soak (target 2026-11-27):**
+
+- [ ] Delete the 43 `Released` PVs (`kubectl delete pv`) and `zfs destroy -r`
+  their zvols under `rust/k8s/volumes` (this clears the ~1,800 sanoid snapshots).
+  Includes the `immich-data` zvol (318 GiB). Do **not** do this before the soak
+  ends.
+- [ ] `zfs destroy -r rust/k8s` (drops the `rust/k8s/volumes` and
+  `rust/k8s/snapshots` datasets).
+- [ ] **sanoid** drops to drone-04 only (`rust/media`); the `[rust/k8s/volumes]`
+  stanza and the now-unused `template_volumes`/`template_nosnap` templates go.
+- [ ] Final sweep: `grep -rn "nvmeof\|nvmet" apps platform infrastructure bootc` —
+  only drone-04's own notes remain; update `HARDWARE.md`/`AGENTS.md` wording if
+  reality drifted.
+
+`docs/democratic-csi-rust-to-tank-migration.md` (superseded) and the NVMe-oF
+material in `docs/longhorn-to-democratic-csi.md` are kept as history (the former
+unless its uncommitted edits are resolved).
 
 ## Decisions and open questions
 

@@ -59,19 +59,19 @@ That initContainer downloads and sha256-verifies a tarball from GitHub every tim
 
 ### 6. It matches how the rest of the node is managed
 
-`k3s`, `nvmet`, `tailscaled`, `chronyd`, `tuned`, `cockpit` and `iscsid` are already systemd units in `bootc/overlay`. The exporters are the only host-facing daemons still deployed as pods, and `zfs-exporter` is effectively half-moved already (host binary, host mount namespace, host PID namespace) — it just keeps the awkward parts.
+`k3s`, `tailscaled`, `chronyd`, `tuned`, `cockpit` and `iscsid` are already systemd units in the bootc image. The exporters are the only host-facing daemons still deployed as pods, and `zfs-exporter` is effectively half-moved already (host binary, host mount namespace, host PID namespace) — it just keeps the awkward parts.
 
 ## What it costs
 
-- **No Argo reconciliation.** Changing a flag means editing `bootc/overlay` or the `Containerfile`, waiting for `.github/workflows/build-bootc.yml`, then `just playbook pull-upgrade.yml` and a reboot. For `node-exporter` (stable, roughly yearly releases, currently in lockstep with Fedora's package) that trade is reasonable; it is the same one already accepted for k3s and nvmet.
+- **No Argo reconciliation.** Changing a flag means editing `bootc/overlay` or the `Containerfile`, waiting for `.github/workflows/build-bootc.yml`, then `just playbook pull-upgrade.yml` and a reboot. For `node-exporter` (stable, roughly yearly releases, currently in lockstep with Fedora's package) that trade is reasonable; it is the same one already accepted for k3s.
 - **No per-exporter rollback.** A bad version rolls back the whole node image instead of one `git revert` of an image digest.
 - **Scrape wiring changes.** The `Service` + annotation + `role: endpoints` path is replaced by `role: node` jobs in `prometheus.yml`, and the object disappears from Argo entirely. See below.
 - **No pod `resources:`.** Set `CPUQuota=`/`MemoryMax=` in the unit; enforcement is at least as good as cgroup limits on a pod.
-- **Version bumps need a node reboot**, which for `drone-04` means `just playbook reboot-drone-04.yml` and its scale-down/scale-up dance.
+- **Version bumps need a node reboot**; on `drone-04` that also briefly drops the `/media` NFS export.
 
 ## What must stay in Kubernetes
 
-`kube-state-metrics`, `node-feature-discovery`, `gpu-operator`/DCGM, `metallb` speaker, `kube-vip`, the `tailscale` operator, the democratic-csi node plugin, `coredns`, `prometheus` and `alertmanager` all need the apiserver, leader election, CRDs or the kubelet's own endpoints. Moving them to bootc would mean reimplementing an operator on a node, which is not worth it.
+`kube-state-metrics`, `node-feature-discovery`, `gpu-operator`/DCGM, `metallb` speaker, `kube-vip`, the `tailscale` operator, `coredns`, `prometheus` and `alertmanager` all need the apiserver, leader election, CRDs or the kubelet's own endpoints. Moving them to bootc would mean reimplementing an operator on a node, which is not worth it.
 
 ## If it is done
 

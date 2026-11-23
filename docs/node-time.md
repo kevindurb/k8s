@@ -53,7 +53,7 @@ just playbook upgrade.yml --limit drone-01   # canary
 just playbook upgrade.yml --limit 'all:!drone-04'
 ```
 
-`drone-04` is the storage node and must be updated and rebooted separately with `just playbook reboot-drone-04.yml`; see `AGENTS.md`.
+`drone-04` reboots like any other node now (`just playbook upgrade.yml`); the only effect is a brief drop of the `/media` NFS export. See `AGENTS.md`.
 
 ## bootc `/etc` merge caveat
 

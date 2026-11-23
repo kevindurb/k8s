@@ -39,7 +39,7 @@ Ansible (`ansible/justfile`, run from `ansible/`): `just ansible <args>` / `just
 
 `clusters/borg/kustomization.yml` is the entrypoint applied to the (single) cluster and includes three Argo CD `Application` manifests, each pointing at a top-level directory in this repo via `sources[].path`:
 
-- `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (democratic-csi), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, node-feature-discovery.
+- `infrastructure/` — cluster plumbing: networking (metallb, kube-vip, tailscale), storage (node-local ZFS pools via OpenEBS LocalPV-ZFS `zfs-local`, replicated with zrepl; drone-04 serves `/media` over NFS), observability (prometheus, alertmanager, kube-state-metrics, node-exporter, gatus), argocd itself, node-feature-discovery.
 - `platform/` — shared platform services apps depend on: sealed-secrets, smtp-relay, pocket-id, mosquitto, zigbee2mqtt.
 - `apps/` — user-facing applications (jellyfin, nextcloud, radarr/sonarr, syncthing, home-assistant, etc.), plus an `AppProject` (`apps/project.yml`) and one Argo CD `Application` per app (each app dir has its own `app.yml`).
 
@@ -79,21 +79,20 @@ Note the app `namePrefix` interaction: the generated `Secret` takes the `SealedS
 
 ### Node OS / provisioning (outside the k8s tree)
 
-- `bootc/` — Containerfile + `overlay/` building the bootc (rpm-ostree/bootc) image used for cluster nodes (`ghcr.io/kevindurb/k8s-node`), including k3s systemd units, sysctl/module config for k8s and ZFS/NVMe-oF, and a tuned profile. Built/pushed/signed (cosign) by `.github/workflows/build-bootc.yml` on changes under `bootc/**`.
+- `bootc/` — Containerfile + `overlay/` building the bootc (rpm-ostree/bootc) image used for cluster nodes (`ghcr.io/kevindurb/k8s-node`), including k3s systemd units, sysctl/module config for k8s and ZFS, and a tuned profile. Built/pushed/signed (cosign) by `.github/workflows/build-bootc.yml` on changes under `bootc/**`.
 - `butane/node.bu.j2` — Jinja2-templated Butane config (Ignition) for node first-boot config, rendered per-host presumably via the ansible inventory.
-- `ansible/` — provisioning/upgrade playbooks (`provision.yml`, `upgrade.yml`, `pull-upgrade.yml`, `check-zfs.yml`, `reboot-drone-04.yml`) run against `inventory/prod.yml`; also has its own `Containerfile` building `ghcr.io/kevindurb/k8s-ansible`, built by `.github/workflows/build-ansible.yml` on changes under `ansible/**`.
+- `ansible/` — provisioning/upgrade playbooks (`provision.yml`, `upgrade.yml`, `pull-upgrade.yml`, `check-zfs.yml`) run against `inventory/prod.yml`; also has its own `Containerfile` building `ghcr.io/kevindurb/k8s-ansible`, built by `.github/workflows/build-ansible.yml` on changes under `ansible/**`.
 - Tailnet policy (`policy.hujson`) lives in `kevindurb/infra` under `tailnet/`, managed by Terraform (`tailscale_acl`) and applied by that repo's CI. Nothing here applies it, but every `tailscale.com/tags` annotation in this repo must exist in that file's `tagOwners` (and every `svc:` name in `autoApprovers.services`), or the Ingress silently never serves.
 
 
-#### Rebooting drone-04 (storage node)
+#### Rebooting drone-04 (storage/NFS node)
 
-drone-04 hosts the ZFS pool and the NVMe-oF target for democratic-csi, so every stateful app depends on it. **Never reboot it with `roles/node_reboot`, `upgrade.yml` or `just reboot`**; use `just playbook reboot-drone-04.yml` (`-e dry_run=true` previews).
+drone-04 hosts the `rust` ZFS pool and exports `/media` (bulk media, including Immich's library) over NFS. It is still tainted `dedicated=storage:NoSchedule` and still runs makemkv/transcoding/healthchecks/zfs-exporter, so app pods stay off it — but it no longer serves any Kubernetes volumes (app data lives on node-local pools on drone-01..03). Reboot it like any other node (`just playbook upgrade.yml`); the only effect is a brief NFS interruption for media reads.
 
-- The play stops the Argo CD application controller (selfHeal would undo the scale-down), scales every Deployment/StatefulSet using a `zfs-generic-nvmeof-csi` PVC to 0, waits for the pods and VolumeAttachments to go, reboots, waits for `/var/run/nvmet-config-loaded` and the same number of exported volumes, then scales back up and restarts Argo CD (also on failure). If it dies midway, scale `argocd-application-controller` back up and Argo restores replicas from git.
-- `node_reboot` fails on hosts in `node_reboot_refuse_hosts` (default `drone-04`), so `upgrade.yml` fails at drone-04 on purpose after the other nodes; run the play above for it. `just reboot` uses the raw `reboot` module and requires an explicit filter (`all` is rejected), but a group like `agents` still matches drone-04.
-- Shutdown order is set in the image: `k3s-agent.service` is `After=nvmet.service` (k3s stops first; `KillMode=process` means that does not stop pods), and the `nvmet.service` drop-in `20-shutdown-order.conf` runs `/usr/libexec/nvmet-detach-local` (unmount + sync NVMe-oF volumes), `nvme disconnect-all`, then `nvmetcli clear`. Without this, shutdown hung ~3.5 min in `sync` on drone-04's own loopback initiator.
-- Stop timeouts are 15 s, not Fedora's 90 s: `system.conf.d/zz-shutdown-timeout.conf` overrides `/usr/lib/systemd/system.conf.d/longer-default-shutdown-timeout.conf`, because container scopes that ignore SIGTERM (democratic-csi's `cleanup` on `sleep 2`, s6-overlay supervisors; gpu-operator's validator used to loop on `sleep 86400` until the operator was retired on 2026-11-19) each burned the full 90 s, twice if they survived SIGKILL — 3m30s to power off drone-01. The drop-in **filename is load-bearing**: system.conf.d files are applied in lexicographic order and the last assignment wins, so anything named `10-`/`90-` sorts before `longer-…` and loses. `nvmet.service` sets its own `TimeoutStopSec=120` because it flushes real data.
+- App volumes are unaffected by a drone-04 reboot; there is no NVMe-oF/NVMe-based dependency left.
+- Stop timeouts are 15 s, not Fedora's 90 s: `system.conf.d/zz-shutdown-timeout.conf` overrides `/usr/lib/systemd/system.conf.d/longer-default-shutdown-timeout.conf`, because container scopes that ignore SIGTERM (s6-overlay supervisors; gpu-operator's validator used to loop on `sleep 86400` until the operator was retired on 2026-11-19) each burned the full 90 s, twice if they survived SIGKILL — 3m30s to power off drone-01. The drop-in **filename is load-bearing**: system.conf.d files are applied in lexicographic order and the last assignment wins, so anything named `10-`/`90-` sorts before `longer-…` and loses.
 - bootc 3-way merges `/etc`: a file hand-edited on a node keeps winning over a changed image copy. When patching a unit live, make it byte-identical to the overlay copy.
+- The democratic-csi/NVMe-oF teardown (removed 2026-11-23): the `zfs-generic-nvmeof-csi` StorageClass, the driver, `nvmet.service`, and the loopback initiator on drone-04 are all gone; the 43 Released PVs and their zvols are pending deletion after the post-migration soak (see `docs/storage-placement.md`).
 
 ### CI
 

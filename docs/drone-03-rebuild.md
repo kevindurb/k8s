@@ -653,6 +653,6 @@ version:
    the promote runbook.
 3. Then the teardown: `zfs-generic-nvmeof-csi`, the nvmet driver deployment and
    sealed config, `bootc/overlay/etc/systemd/system/nvmet.service.d/*`,
-   `usr/libexec/nvmet-detach-local`, `modules-load.d/nvmeof.conf`, the
-   `dedicated=storage` taint and its six tolerations, and
-   `ansible/reboot-drone-04.yml`.
+   `usr/libexec/nvmet-detach-local`, `modules-load.d/nvmeof.conf`,
+   `ansible/reboot-drone-04.yml` — done 2026-11-23. (The `dedicated=storage`
+   taint stays: drone-04 still hosts the NFS export and the transcode hardware.)

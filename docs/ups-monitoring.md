@@ -161,4 +161,4 @@ UPS is attached to.
 - The `UpsMetricsMissing` alert was only verified by expression, not by a live
   fire-and-clear cycle: scaling the Deployment to zero is reverted by Argo's
   `selfHeal` before the 5m `for:` elapses. To test it for real, stop
-  `argocd-application-controller` first, as `reboot-drone-04.yml` does.
+  `argocd-application-controller` first, then scale the app and watch the alert fire.
