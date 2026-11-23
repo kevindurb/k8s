@@ -106,7 +106,9 @@ upstream's `contrib/pv-updater.sh`.
       over 1 GbE — do this *with* the 10GbE upgrade if you can.)
 - [ ] **Second 500 GB NVMe physically installed.** Only `nvme0n1` exists today (`01:00.0`, the
       CPU-attached M.2). One more M.2 slot needed on the B450M Pro4.
-- [ ] **L2ARC removed** so `nvme0n1` is free — see Phase 1.
+- [x] **L2ARC removed** so `nvme0n1` is free — done 2026-11-20: `zpool remove rust
+      /dev/nvme0n1p1`, drive wiped. It was serving a 7.7 % hit rate and its index was
+      eating a mis-applied 2 GiB ARC (fixed: `zz-zfs-arc.conf`, 10 GiB).
 - [ ] `zpool list rust` shows ≥2 TB free (it does: 2.07 TB).
 
 ---
@@ -139,8 +141,9 @@ after the migration, not 45.
 ## Phase 1 — retire the L2ARC and build `tank`
 
 ```bash
-zpool remove rust nvme0n1        # reversible, frees the drive
+zpool remove rust nvme0n1p1      # cache vdev: no data to evacuate, instant
 ```
+Done 2026-11-20. The drive was then wiped (`wipefs -a` + `sgdisk --zap-all`).
 
 Then, with the second drive installed:
 
@@ -152,11 +155,13 @@ zfs create tank/k8s/volumes
 zfs create tank/k8s/snapshots
 ```
 
-Then raise the ARC that the L2ARC was eating — `zfs_arc_max=8589934592` in
-`/etc/modprobe.d/zfs.conf` was sized for an 8 GiB ceiling that 1.84 GB of L2ARC index was sharing.
-drone-04 is tainted `dedicated=storage:NoSchedule`, so ZFS gets the RAM; 10–12 GiB is reasonable
-with 15 GiB total. Tune live via `/sys/module/zfs/parameters/zfs_arc_max`, then persist in
-`bootc/overlay/etc/modprobe.d/zfs.conf`.
+The ARC was also fixed on 2026-11-20: the cap lives in
+`/etc/modprobe.d/zz-zfs-arc.conf` (rendered by `ansible/roles/nas_zfs`, 10 GiB). The
+original `99-zfs-arc.conf` sorted *before* the image's `zfs.conf`, so the node had been
+running a 2 GiB ceiling for months with the L2ARC index inside it.
+drone-04 is tainted `dedicated=storage:NoSchedule`, so ZFS gets the RAM. Tune live via
+`/sys/module/zfs/parameters/zfs_arc_max`, then persist in
+`ansible/inventory/host_vars/drone-04.yml`.
 
 ## Phase 2 — seed the data (apps still running)
 

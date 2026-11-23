@@ -66,7 +66,7 @@ one 1 TB Kingston NVMe, Realtek `eno1` 1 GbE, **UEFI with Secure Boot disabled**
 | CPU     | **AMD Ryzen 7 2700** — 8C/16T, 8 vCPU (`nosmt`)                                                                                                  |
 | GPU     | **None** — the GTX 1060 was removed                                                                                                              |
 | RAM     | ~15.5 GiB DDR4-2400                                                                                                                              |
-| Storage | 112 GB Kingston SA400 (OS) · 480 GB Team NVMe as L2ARC · **2× 12 TB Exos mirror** (`rust`, 10.9 T, 80 % used) · 2× Blu-ray writers               |
+| Storage | 112 GB Kingston SA400 (OS) · 480 GB Team NVMe (wiped spare) · **2× 12 TB Exos mirror** (`rust`, 10.9 T, 82 % used) · 2× Blu-ray writers               |
 | NIC     | enp5s0 (1 GbE)                                                                                                                                   |
 | Role    | storage + hardware: NFS server for bulk media, ZFS, makemkv, transcode jobs                                                                      |
 
@@ -92,11 +92,19 @@ one 1 TB Kingston NVMe, Realtek `eno1` 1 GbE, **UEFI with Secure Boot disabled**
   a resize, since XFS cannot shrink. See `docs/drone-03-rebuild.md` and
   `docs/storage-placement.md`.
 - **drone-04 is storage-first:** tainted `dedicated=storage:NoSchedule` so app pods
-  stay off it. Its ZFS ARC is pinned to 8 GiB by
-  `/etc/modprobe.d/99-zfs-arc.conf` (rendered by `ansible/roles/nas_zfs`), which
-  overrides the image default of 2 GiB that the three app nodes use.
-- **NVMe-oF volumes** from drone-04 show up on the app nodes as `/dev/nvme*` devices
-  with model `Linux` (democratic-csi). They are not hardware.
+  stay off it. Its ZFS ARC is pinned to 10 GiB by `/etc/modprobe.d/zz-zfs-arc.conf`
+  (rendered by `ansible/roles/nas_zfs`), which overrides the image default of 2 GiB
+  that the three app nodes use. The `zz-` prefix is load-bearing — modprobe.d is read
+  lexicographically and the last `options zfs` wins, so the previous `99-` name lost
+  to `zfs.conf` and the node silently ran a 2 GiB ARC for months.
+- **The 480 GB Team NVMe on drone-04 is no longer an L2ARC** (removed 2026-11-20).
+  It managed a 7.7 % hit rate (2.2M hits / 29.2M requests) while writing 86 GB to a
+  DRAM-less SSD, and its ~1.84 GB index was crowded into a 2 GiB ARC. It is wiped
+  and unused; `ansible/roles/nas_zfs` will remove any cache vdev it finds on `rust`.
+- **drone-04's `nvme` devices are plain local disks, not network devices.** The
+  NVMe-oF/democratic-csi target is gone (removed 2026-11-23); the app nodes' storage
+  is the local `k8s` pool on each node. drone-04's exports are NFS (`/media`), not
+  NVMe-oF.
 - **`nosmt` is a kernel argument, not a BIOS setting.** It comes from Fedora CoreOS
   and drops each Ryzen from 8 threads to 4. Removing it (`rpm-ostree kargs
   --delete=mitigations=auto,nosmt`) would roughly double CPU on all four drones —

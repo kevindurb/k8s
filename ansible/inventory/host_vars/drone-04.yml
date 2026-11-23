@@ -6,8 +6,9 @@ k3s_server: 192.168.42.1
 k3s_node_taints:
   - dedicated=storage:NoSchedule
 
-# 8 GiB ARC: this node runs nothing but ZFS + NFS, unlike the app nodes that take
-# the image's 2 GiB default (see ansible/roles/nas_zfs).
-nas_zfs_arc_max_bytes: 8589934592
+# 10 GiB ARC: this node runs nothing but ZFS + NFS (the app nodes take the image's
+# 2 GiB default), and since 2026-11-20 there is no L2ARC index sharing the ceiling.
+# See ansible/roles/nas_zfs; ~5.5 GiB is left for the OS and the transcode jobs.
+nas_zfs_arc_max_bytes: 10737418240
 
 tuned_profile: k8s-node

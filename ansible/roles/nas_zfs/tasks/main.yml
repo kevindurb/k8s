@@ -2,16 +2,27 @@
 ---
 # The image ships a 2 GiB cap, sized for the app nodes that each run a pool and a
 # dozen pods in ~22 GiB. This node does nothing but ZFS + NFS, so it gets the RAM.
-# A separate file whose name sorts after the image's zfs.conf wins on merge; the
-# live write is what makes it take effect without a reboot.
+# The filename is load-bearing: modprobe.d files are read in lexicographic order
+# and the last `options zfs` wins, so the file must sort AFTER the image's
+# `zfs.conf`. `zz-` does; the original `99-zfs-arc.conf` did not ("9" < "z"), which
+# is why this node silently ran the image's 2 GiB cap. The live write is what
+# makes it take effect without a reboot.
 - name: Cap the ZFS ARC for this storage node
   ansible.builtin.copy:
     content: |
-      # Rendered by ansible/roles/nas_zfs. Overrides /etc/modprobe.d/zfs.conf
-      # from the image (later file wins).
+      # Rendered by ansible/roles/nas_zfs. Must sort after /etc/modprobe.d/zfs.conf
+      # from the image: modprobe.d is read in lexicographic order and the last
+      # `options zfs` wins.
       options zfs zfs_arc_max={{ nas_zfs_arc_max_bytes }}
-    dest: /etc/modprobe.d/99-zfs-arc.conf
+    dest: /etc/modprobe.d/zz-zfs-arc.conf
     mode: '0644'
+
+# The old name sorted before zfs.conf and therefore never applied. Remove it so a
+# hand-inspected node doesn't suggest a cap that is not in force.
+- name: Remove the superseded ARC cap file
+  ansible.builtin.file:
+    path: /etc/modprobe.d/99-zfs-arc.conf
+    state: absent
 
 - name: Apply the ARC cap now
   ansible.builtin.shell: |
@@ -22,8 +33,8 @@
     fi
   args:
     executable: /bin/bash
-  register: zfs_arc_apply
-  changed_when: "'changed' in zfs_arc_apply.stdout"
+  register: nas_zfs_arc_apply
+  changed_when: "'changed' in nas_zfs_arc_apply.stdout"
 
 - name: Create rust zpool
   community.general.zpool:
@@ -34,12 +45,30 @@
     vdevs:
       - type: mirror
         disks: [/dev/sdb, /dev/sdc]
-      # Longhorn's old NVMe (/var/lib/longhorn) repurposed as L2ARC read cache.
-      # Purely a cache vdev: no redundancy needed, losing it never harms the pool.
-      # Use the plain device node: the module normalises whole-disk -> partition
-      # (it records ...p1), but not a /dev/disk/by-id path.
-      - role: cache
-        disks: [/dev/nvme0n1]
+  # The 480 GB Team NVMe that used to sit here as an L2ARC read cache was retired
+  # 2026-11-20: 7.7 % hit rate (2.2M hits / 29.2M requests) against 86 GB of writes
+  # to a DRAM-less SSD, and its ~1.84 GB index was competing with a 2 GiB ARC.
+  # The drive is now a wiped spare; do not add it back as a cache vdev here.
+
+# `community.general.zpool` will not drop vdevs from an existing pool, so a node
+# provisioned before the L2ARC was retired keeps it forever. Cache vdevs hold no
+# pool data, so removing one is immediate and carries no risk.
+- name: Look for a cache vdev on the rust pool
+  ansible.builtin.shell: |
+    set -o pipefail
+    zpool list -H -o name rust >/dev/null 2>&1 || exit 0
+    zpool status -P rust \
+      | awk '/^[[:space:]]*cache$/{f=1; next} f && /^[[:space:]]*\/dev\//{print $1}'
+  args:
+    executable: /bin/bash
+  register: nas_zfs_cache_devs
+  changed_when: false
+
+- name: Remove the retired L2ARC cache vdev
+  ansible.builtin.command: "zpool remove rust {{ item }}"
+  loop: "{{ nas_zfs_cache_devs.stdout_lines }}"
+  when: nas_zfs_cache_devs.stdout_lines | length > 0
+  changed_when: true
 
 - name: Configure rust pool as NFSv4 pseudo-root
   community.general.zfs:
