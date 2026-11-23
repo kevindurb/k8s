@@ -22,6 +22,10 @@ spec:
         pod-security.kubernetes.io/audit: restricted
     syncOptions:
       - CreateNamespace=true
+      # The dashboard ConfigMaps are hundreds of KB; client-side apply stores
+      # the whole object in last-applied-configuration and exceeds the 256 KiB
+      # annotation limit.
+      - ServerSideApply=true
     automated:
       enabled: true
       prune: false
