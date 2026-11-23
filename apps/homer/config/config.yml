@@ -156,6 +156,10 @@ services:
         url: https://alertmanager.beaver-cloud.ts.net
         icon: fas fa-bell
 
+      - name: Grafana
+        url: https://grafana.beaver-cloud.ts.net
+        icon: fas fa-chart-pie
+
       - name: Gatus
         url: https://gatus.beaver-cloud.ts.net
         icon: fas fa-heartbeat

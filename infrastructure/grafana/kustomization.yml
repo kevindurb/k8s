@@ -1,0 +1,44 @@
+---
+# NOTE: this app deliberately does NOT use components/app-pod-hardening /
+# components/app-tmp-dirs. The Grafana image runs as uid/gid 472, not 1000,
+# and expects /var/lib/grafana (its database and plugins) to be writable.
+# The hardened context is written inline in deployment.yml instead, following
+# the apps/tsgit pattern. tmp emptyDirs are mounted there too.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: grafana
+namePrefix: grafana-
+
+resources:
+  - ./deployment.yml
+  - ./secrets-sealed-secret.yml
+
+components:
+  - ../../components/storage-home-drone-03
+  - ../../components/app-http-service
+  # Grafana exposes /metrics without auth; lets Prometheus scrape the service.
+  - ../../components/prometheus-scrape-app-service
+
+configMapGenerator:
+  - name: config
+    files:
+      - ./config/grafana.ini
+  - name: provisioning
+    files:
+      # keys end up as <basename>; the volume below maps them back onto the
+      # directory layout Grafana's provisioning loader expects.
+      - config/provisioning/datasources/prometheus.yml
+      - config/provisioning/dashboards/dashboards.yml
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - grafana.yml=gatus.yml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: grafana

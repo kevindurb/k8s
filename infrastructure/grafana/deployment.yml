@@ -1,0 +1,149 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels: &labels
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      # The Grafana image runs as uid/gid 472 and writes to /var/lib/grafana.
+      # components/app-pod-hardening hardcodes uid/gid 1000, so the context
+      # is spelled out here (same trade-off as apps/tsgit).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+        seccompProfile:
+          type: RuntimeDefault
+      hostname: grafana
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: app-volume
+        - name: config
+          configMap:
+            name: config
+        - name: provisioning
+          configMap:
+            name: provisioning
+            items:
+              - key: prometheus.yml
+                path: datasources/prometheus.yml
+              - key: dashboards.yml
+                path: dashboards/dashboards.yml
+        # No dashboards yet; reserved dir so the file provider has a path.
+        # Mount a ConfigMap here when provisioning dashboards.
+        - name: dashboards
+          emptyDir: {}
+        # Read-only rootfs; the only writable paths Grafana needs besides
+        # its data dir.
+        - name: tmp
+          emptyDir: {}
+        - name: var-log-grafana
+          emptyDir: {}
+      containers:
+        - name: app
+          image: docker.io/grafana/grafana:13.3.1@sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf
+          env:
+            - name: TZ
+              value: America/Denver
+          envFrom:
+            # GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET, GF_SECURITY_ADMIN_PASSWORD
+            - secretRef:
+                name: grafana-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/grafana
+            - name: config
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+              readOnly: true
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning
+              readOnly: true
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: var-log-grafana
+              mountPath: /var/log/grafana
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 472
+            runAsGroup: 472
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              memory: 128M
+            limits:
+              memory: 512M
+          ports:
+            - name: http
+              containerPort: 3000
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    tailscale.com/proxy-group: ingress-proxy-group
+    tailscale.com/tags: tag:monitoring
+spec:
+  defaultBackend:
+    service:
+      name: app-service
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts: [grafana]
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-volume
+  labels:
+    app.kubernetes.io/component: app
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: zfs-local
+  resources:
+    requests:
+      storage: 5Gi

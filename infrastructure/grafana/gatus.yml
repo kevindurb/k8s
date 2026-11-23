@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: grafana
+    group: infrastructure
+    url: http://grafana-app-service.grafana/api/health
+    conditions:
+      - '[STATUS] == 200'
