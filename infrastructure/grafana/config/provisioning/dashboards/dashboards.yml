@@ -1,11 +1,10 @@
 apiVersion: 1
 
-# No dashboards are provisioned yet. Drop JSON dashboards into
-# config/dashboards/ plus a matching ConfigMap + volume mount (see
-# infrastructure/grafana/deployment.yml, the `dashboards` emptyDir) to add
-# provisioned dashboards; they'll appear under the "Imported" folder.
+# Dashboards are vendored under config/dashboards/ (see SOURCES.md there) and
+# mounted from two ConfigMaps (split for the 1 MiB ConfigMap size limit).
+# Both providers load flat into the root folder.
 providers:
-  - name: imported
+  - name: imported-a
     orgId: 1
     folder: ''
     type: file
@@ -14,4 +13,14 @@ providers:
     allowUiUpdates: true
     options:
       path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false
+  - name: imported-b
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards-extra
       foldersFromFilesStructure: false

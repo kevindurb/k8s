@@ -30,6 +30,24 @@ configMapGenerator:
       # directory layout Grafana's provisioning loader expects.
       - config/provisioning/datasources/prometheus.yml
       - config/provisioning/dashboards/dashboards.yml
+  # Dashboards are split across two ConfigMaps: the 1 MiB ConfigMap size
+  # limit can't hold all vendored dashboards in one. Each group is mounted at
+  # its own path and loaded by one of the two providers in dashboards.yml.
+  - name: dashboards
+    files:
+      - config/dashboards/node-exporter-full.json
+      - config/dashboards/node-zfs-stats.json
+      - config/dashboards/smartctl.json
+      - config/dashboards/gatus.json
+      - config/dashboards/zfs-pools.json
+  - name: dashboards-extra
+    files:
+      - config/dashboards/kubernetes-global.json
+      - config/dashboards/argocd.json
+      - config/dashboards/prometheus-overview.json
+      - config/dashboards/speedtest.json
+      - config/dashboards/nut-ups.json
+      - config/dashboards/zrepl.json
   - name: gatus
     options:
       labels:

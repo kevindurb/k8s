@@ -41,10 +41,16 @@ spec:
                 path: datasources/prometheus.yml
               - key: dashboards.yml
                 path: dashboards/dashboards.yml
-        # No dashboards yet; reserved dir so the file provider has a path.
-        # Mount a ConfigMap here when provisioning dashboards.
+        # Dashboards are baked into ConfigMaps generated from
+        # config/dashboards/*.json (split in two to stay under the 1 MiB
+        # ConfigMap size limit); the file provider in
+        # config/provisioning/dashboards/dashboards.yml loads both.
         - name: dashboards
-          emptyDir: {}
+          configMap:
+            name: dashboards
+        - name: dashboards-extra
+          configMap:
+            name: dashboards-extra
         # Read-only rootfs; the only writable paths Grafana needs besides
         # its data dir.
         - name: tmp
@@ -73,6 +79,9 @@ spec:
               readOnly: true
             - name: dashboards
               mountPath: /etc/grafana/dashboards
+              readOnly: true
+            - name: dashboards-extra
+              mountPath: /etc/grafana/dashboards-extra
               readOnly: true
             - name: tmp
               mountPath: /tmp
