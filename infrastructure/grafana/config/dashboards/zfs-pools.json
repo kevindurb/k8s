@@ -315,7 +315,7 @@
             "uid": "prometheus"
           },
           "expr": "zfs_pool_allocated_bytes / zfs_pool_size_bytes * 100",
-          "legendFormat": "{{pool}}"
+          "legendFormat": "{{instance}} \u00b7 {{pool}}"
         }
       ],
       "fieldConfig": {
@@ -364,7 +364,7 @@
             "uid": "prometheus"
           },
           "expr": "zfs_pool_free_bytes",
-          "legendFormat": "{{pool}}"
+          "legendFormat": "{{instance}} \u00b7 {{pool}}"
         }
       ],
       "fieldConfig": {
@@ -413,7 +413,7 @@
             "uid": "prometheus"
           },
           "expr": "zfs_pool_fragmentation_ratio",
-          "legendFormat": "{{pool}}"
+          "legendFormat": "{{instance}} \u00b7 {{pool}}"
         }
       ],
       "fieldConfig": {
@@ -462,7 +462,7 @@
             "uid": "prometheus"
           },
           "expr": "zfs_pool_size_bytes",
-          "legendFormat": "{{pool}} size"
+          "legendFormat": "{{instance}} \u00b7 {{pool}} size"
         },
         {
           "refId": "B",
@@ -471,7 +471,7 @@
             "uid": "prometheus"
           },
           "expr": "zfs_pool_allocated_bytes",
-          "legendFormat": "{{pool}} allocated"
+          "legendFormat": "{{instance}} \u00b7 {{pool}} allocated"
         }
       ],
       "fieldConfig": {
