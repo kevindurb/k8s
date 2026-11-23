@@ -7,7 +7,7 @@ See `proposal.md` for motivation. The relevant current state:
 - `bootc/Containerfile` builds `ghcr.io/kevindurb/k8s-node` from `ghcr.io/ublue-os/ucore:stable-nvidia-lts`, a Fedora/bootc derivative, and copies `bootc/overlay/` over `/` at build time.
 - The base image ships `chronyd` and a `/etc/chrony.conf` that uses `2.fedora.pool.ntp.org`. Nothing in this repository currently manages time configuration, and the Containerfile's `systemctl enable` list does not mention `chronyd`.
 - bootc performs a three-way merge of `/etc` when a node updates: a file edited locally on a node keeps winning over the image's version. This is documented in `AGENTS.md` as a known operational trap.
-- There are seven nodes: `unimatrix-01..03` (servers) and `drone-01..04` (agents). `drone-04` is the ZFS/NVMe-oF storage node and must be rebooted only with `ansible/reboot-drone-04.yml`, never `ansible/upgrade.yml` (`node_reboot` refuses it).
+- There are seven nodes: `unimatrix-01..03` (servers) and `drone-01..04` (agents). `drone-04` hosts the `rust` pool and the `/media` NFS export; it no longer serves Kubernetes volumes and reboots through the normal upgrade playbook (only the NFS export drops).
 - `.github/workflows/build-bootc.yml` rebuilds and signs the image on any change under `bootc/**`.
 
 ## Goals / Non-Goals

@@ -35,8 +35,10 @@ context: |
   (document-start required, 150-char lines), ansible-lint and a kustomize
   check scoped to changed `apps|platform|infrastructure|clusters` files.
 
-  Never reboot drone-04 with `roles/node_reboot`/`upgrade.yml`/`just reboot` —
-  use `just playbook reboot-drone-04.yml` (see AGENTS.md).
+  drone-04 holds the `rust` pool and the `/media` NFS export (it is tainted
+  `dedicated=storage:NoSchedule`) but serves no Kubernetes volumes — app data
+  lives on node-local pools (`zfs-local`, OpenEBS LocalPV-ZFS) replicated by
+  zrepl. Reboot it like any other node; only the NFS export drops.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

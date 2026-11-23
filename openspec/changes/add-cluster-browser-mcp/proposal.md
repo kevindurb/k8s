@@ -54,7 +54,7 @@ None. The only existing capability, `tsgit`, is unrelated and its requirements d
 - New files under `apps/browser/`, a new resource line in `apps/kustomization.yml`, and a
   link in `apps/homer/config/config.yml`.
 - Creates the `browser` namespace (baseline pod-security labels via the standard `app.yml`),
-  a `data` PVC on `zfs-generic-nvmeof-csi`, two Services and two Ingresses.
+  a `data` PVC on `zfs-local`, two Services and two Ingresses.
 - Depends on: the Tailscale operator's `ingress-proxy-group` and the `tag:apps` ACLs, plus
   the existing `{"src": ["tag:ai"], "dst": ["tag:apps"], "ip": ["tcp:443"]}` grant so the
   Aperture host can reach the MCP endpoint.

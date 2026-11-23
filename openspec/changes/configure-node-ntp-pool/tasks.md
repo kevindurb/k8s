@@ -28,8 +28,8 @@
 ## 5. Storage node (drone-04)
 
 - [ ] 5.1 Stage the image without rebooting: from `ansible/`, run `just ansible drone-04 -b -m community.general.bootc_manage -a 'state=latest'`; verify it exits 0.
-- [ ] 5.2 Preview the storage-safe reboot with `just playbook reboot-drone-04.yml -e dry_run=true`; verify the workload scale-down list is expected and nothing is changed.
-- [ ] 5.3 Run `just playbook reboot-drone-04.yml`; verify it exits 0, `drone-04` is `Ready`, the number of nvmet exports matches the pre-reboot count, and pods that use `zfs-generic-nvmeof-csi` PVCs return to `Running`.
+- [ ] 5.2 Preview the drone-04 reboot with `just playbook upgrade.yml --limit drone-04 --check`; verify the drain list is expected and nothing is changed.
+- [ ] 5.3 Run `just playbook upgrade.yml --limit drone-04`; verify it exits 0, `drone-04` is `Ready`, the `rust` pool imports, the NFS export serves, and all pods return to `Running`.
 - [ ] 5.4 On drone-04, repeat the checks in 3.3, 3.4, and 3.5; verify time sync, the pool line, and no `allow` directive.
 
 ## 6. Cluster integration check

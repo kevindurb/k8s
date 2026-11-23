@@ -12,7 +12,7 @@
 - [x] 2.2 Add a `config-init` init container that copies the image's `/opt/couchdb/etc` into a shared `emptyDir` and installs the ini fragment under its `local.d/`, and mount that `emptyDir` at `/opt/couchdb/etc` in the main container; verify `kustomize build` shows both mounts and that the main container has `readOnlyRootFilesystem: true`
 - [x] 2.3 Add the `postStart` hook that waits for `/_up`, creates the vault database, upserts the vault user document in `_users`, and sets `_security`; keep it idempotent (`412`/`409` handled) and verify the script is syntactically valid with `sh -n` on the extracted command
 - [x] 2.4 Define the main container (`couchdb` image tag+digest, name `app`, port `http` 5984), `COUCHDB_USER`/`COUCHDB_PASSWORD` from the `livesync-credentials` Secret, a writable `/tmp` `emptyDir`, and readiness/liveness probes on `/_up`; verify `kustomize build apps/livesync` contains every field and no plaintext credential
-- [x] 2.5 Add the 10Gi `zfs-generic-nvmeof-csi` PVC mounted at `/opt/couchdb/data`, plus `replicas: 1` and `strategy: Recreate`; verify `kustomize build` shows one replica, the Recreate strategy, and the claim name on both the mount and the PVC
+- [x] 2.5 Add the 10Gi `zfs-local` PVC mounted at `/opt/couchdb/data`, plus `replicas: 1` and `strategy: Recreate`; verify `kustomize build` shows one replica, the Recreate strategy, and the claim name on both the mount and the PVC
 - [x] 2.6 Give the pod an explicit securityContext (non-root uid/gid of the image's `couchdb` user, seccomp RuntimeDefault, no privilege escalation, all capabilities dropped) instead of `components/app-pod-hardening`, and verify the rendered pod spec has no `runAsUser: 0` and no added capabilities
 - [x] 2.7 Add the `Service` (port 80 named `http` to container 5984) and the `Ingress` with `ingressClassName: tailscale`, `tailscale.com/proxy-group: ingress-proxy-group`, `tailscale.com/tags: tag:apps`, and `tls.hosts: [livesync]`; verify `kustomize build` contains no Funnel annotation, no `hostPort`, and no NodePort
 
@@ -33,7 +33,7 @@
 ## 6. Cluster verification
 
 - [x] 6.1 Sync the Application and confirm the namespace carries the pod-security labels, the pod reaches Ready, the init container completed, and the PVC is Bound (`kubectl -n livesync get ns,pods,pvc` plus `kubectl -n livesync logs deploy/livesync-app-deployment -c config-init`)
-- [x] 6.2 Confirm the deployment appears in the reboot playbook's plan by running `just playbook reboot-drone-04.yml -e dry_run=true` and checking the printed scale targets include `livesync/livesync-app-deployment`
+- [x] 6.2 Confirm the deployment is covered by the standard node-upgrade drain (drone-04 no longer needs a bespoke reboot playbook; volumes are node-local)
 - [x] 6.3 From a tailnet device, verify unauthenticated `GET https://livesync.<tailnet>.ts.net/` returns `401`, authenticated admin `GET` returns the CouchDB welcome document, and the TLS chain is trusted without warnings
 - [x] 6.4 Verify CORS for all three origins with `curl -H 'Origin: <origin>'` and confirm each allowed origin is echoed while an unrelated origin is not
 - [x] 6.5 Verify the `postStart` result: the vault database exists in `_all_dbs`, `_security` lists only the vault user as member, the vault user can write to that database, and admin-only endpoints refuse the vault user

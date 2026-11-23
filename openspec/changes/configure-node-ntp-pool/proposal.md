@@ -26,6 +26,6 @@ None.
 - `bootc/Containerfile` — add `chronyd` to `systemctl enable`.
 - `bootc/overlay/etc/chrony.conf` — new file, baked into `ghcr.io/kevindurb/k8s-node`.
 - `.github/workflows/build-bootc.yml` — rebuilds, signs, and pushes the node image automatically on `bootc/**` changes; no workflow edit expected.
-- Node rollout — `ansible/upgrade.yml` pulls the new image and reboots nodes serially; `drone-04` must be handled only via `ansible/reboot-drone-04.yml` per the repository's storage-node rules.
+- Node rollout — `ansible/upgrade.yml` pulls the new image and reboots nodes serially, including `drone-04` (only its NFS export drops briefly).
 - Outage risk — a misconfigured chrony file could stop time sync after reboot; verification is required on the first upgraded node before rolling out to the rest.
 - Not in scope: running an NTP server in the cluster, serving time to LAN devices, changing node time zones, or NTP authentication/NTS.

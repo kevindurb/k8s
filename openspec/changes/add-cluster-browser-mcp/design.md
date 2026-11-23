@@ -16,8 +16,8 @@ See `proposal.md` — Why. What shapes the approach:
   client and re-publishes everything at `http://ai.beaver-cloud.ts.net/v1/mcp`, prefixing tool
   names with the connector id. `group:ai-admins` and `tag:dev` already hold
   `{"connectors": ["**"]}`, so a new connector needs no ACL change.
-- The only StorageClass is `zfs-generic-nvmeof-csi` (democratic-csi zvols on `drone-04`,
-  exported over NVMe-oF/TCP).
+- Persistent volumes use `zfs-local` (OpenEBS LocalPV-ZFS zvols on drone-01..03,
+  node-local, ext4).
 - The nodes have no GPU.
 - `components/app-pod-hardening` assumes a non-root user and a read-only rootfs. LinuxServer.io
   images start as root, chown their volume and then drop to `PUID`/`PGID`, so they cannot use

@@ -11,7 +11,7 @@
 - [x] 2.1 Rewrite `apps/browser/deployment.yml`'s Deployment as a two-container pod: `replicas: 1`, `strategy: Recreate`, `terminationGracePeriodSeconds: 60`, `automountServiceAccountToken: false`, and a 1Gi memory-backed `emptyDir` named `shm`; verify `kustomize build apps/browser` renders one Deployment with these fields
 - [x] 2.2 Configure the `browser` container — pinned digest, `PUID=1000`, `PGID=1000`, `TZ=America/Denver`, `CHROME_CLI` enabling `--remote-debugging-port=9222`, `/config` on the `data` claim, `shm` at `/dev/shm`, `http` port 3000 with a TCP readiness probe, requests 200m/512Mi and limits 1/2Gi; verify the rendered container shows each value and mount
 - [x] 2.3 Configure the `mcp` container — pinned digest, args `--cdp-endpoint http://127.0.0.1:9222 --port 8931 --host 0.0.0.0 --allowed-hosts browser-mcp.beaver-cloud.ts.net,browser-mcp.browser`, `mcp` port 8931 with a TCP readiness probe, no `/config` mount and no `--isolated`; verify the rendered args and that the profile volume appears in exactly one container
-- [x] 2.4 Declare the `data` PVC (5Gi, `zfs-generic-nvmeof-csi`) and the two Services — `ui-service` on 3000 and `mcp-service` on 8931, both with port name `http`; verify the rendered names are `browser-ui-service` and `browser-mcp-service` with the expected ports
+- [x] 2.4 Declare the `data` PVC (5Gi, `zfs-local`) and the two Services — `ui-service` on 3000 and `mcp-service` on 8931, both with port name `http`; verify the rendered names are `browser-ui-service` and `browser-mcp-service` with the expected ports
 
 ## 3. Routing and observability
 

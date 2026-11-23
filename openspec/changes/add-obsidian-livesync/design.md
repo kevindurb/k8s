@@ -6,7 +6,7 @@ See `proposal.md` for motivation. Constraints that shape the approach:
 
 - This repository is GitOps-only: manifests plus Argo CD, no application source. A new app is a Kustomize root under `apps/` with an Argo CD `Application` registered in `apps/kustomization.yml`.
 - Two reachability patterns already exist: `Service` + `Ingress{ingressClassName: tailscale}` served by the `ingress-proxy-group` ProxyGroup (linkding, dufs, syncthing), and a pod that joins the tailnet itself via tsnet and therefore has no `Service` (tsgit).
-- Cluster storage is `zfs-generic-nvmeof-csi`: single-replica ZFS zvols on drone-04, ext4, ReadWriteOnce. `ansible/reboot-drone-04.yml` discovers workloads on that class and scales them to 0 around a reboot, so nothing about that playbook needs to change.
+- Cluster storage is `zfs-local` (OpenEBS LocalPV-ZFS; node-local ext4 zvols on drone-01..03, ReadWriteOnce). `zfs-generic-nvmeof-csi` was retired 2026-11-23; reboots need no per-workload handling since volumes are node-local.
 - sanoid takes 24 hourly / 14 daily / 4 weekly snapshots of those zvols, unencrypted, so anything plaintext on the volume is plaintext in every snapshot.
 - Namespaces use `baseline` enforce with `restricted` warn/audit. `components/app-pod-hardening` hardcodes uid/gid 1000 and a read-only rootfs; database containers in this repo (immich/miniflux postgres) instead carry explicit `securityContext` blocks.
 - There is no S3/MinIO in the cluster, so livesync's object-storage backend would require a second new stateful service.
