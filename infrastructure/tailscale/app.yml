@@ -47,3 +47,8 @@ spec:
       name: ai
       jsonPointers:
         - /spec/externalName
+    - group: ""
+      kind: Service
+      name: tsgit
+      jsonPointers:
+        - /spec/externalName

@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tsgit-ci
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kevindurb/k8s.git
+    targetRevision: HEAD
+    path: infrastructure/tsgit-ci
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tekton-pipelines
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

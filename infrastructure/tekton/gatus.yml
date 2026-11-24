@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: tekton-dashboard
+    url: http://tekton-dashboard.tekton-pipelines
+    group: infrastructure
+    conditions:
+      - '[STATUS] == 200'

@@ -1,0 +1,64 @@
+---
+# Deletes PipelineRuns older than 14 days. Tekton keeps run history in CRDs;
+# without pruning it grows unbounded. Runs as the same SA as the poller
+# (delete on pipelineruns only).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tsgit-pipeline-prune
+spec:
+  schedule: "23 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: tsgit-ci
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            fsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: prune
+              image: alpine/k8s:1.34.13@sha256:4011c68d73de6803987509ad1ab9520124a27e31484e3f0e45f95a74ecac7a45
+              securityContext:
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              env:
+                - name: HOME
+                  value: /tmp
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  cutoff=$(date -u -d "@$(( $(date -u +%s) - 14*24*3600 ))" +%Y-%m-%dT%H:%M:%SZ)
+                  echo "deleting PipelineRuns created before $cutoff"
+                  kubectl get pipelineruns -n tekton-pipelines \
+                    --field-selector "metadata.creationTimestamp<$cutoff" \
+                    -o name | while read -r pr; do
+                      [ -z "$pr" ] && continue
+                      echo "deleting $pr"
+                      kubectl delete -n tekton-pipelines "$pr"
+                    done
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+          volumes:
+            - name: tmp
+              emptyDir: {}

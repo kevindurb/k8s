@@ -41,6 +41,21 @@ spec:
     - tag:k8s-ai
 
 ---
+# In-cluster path to tsgit for CI pods (Tekton): they resolve
+# tsgit.beaver-cloud.ts.net via the CoreDNS rewrite (../coredns) and reach it
+# through these proxy pods as tag:tekton. tsgit authorizes the tag against
+# cap/repo, so no git credentials exist in the cluster.
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: tsgit-egress
+spec:
+  type: egress
+  replicas: 2
+  tags:
+    - tag:tekton
+
+---
 # In-cluster path to the Aperture LLM gateway for apps that call it (mealie's
 # recipe AI). Pods resolve ai.beaver-cloud.ts.net to this Service (see
 # infrastructure/coredns) and leave the cluster as tag:k8s-ai instead of the
@@ -52,6 +67,25 @@ metadata:
   annotations:
     tailscale.com/tailnet-fqdn: ai.beaver-cloud.ts.net
     tailscale.com/proxy-group: ai-egress
+spec:
+  type: ExternalName
+  externalName: placeholder   # rewritten by the operator
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+
+---
+# In-cluster path to tsgit for CI pods; see CoreDNS rewrite and coredns-custom.yml.
+# Pods hit tsgit.beaver-cloud.ts.net, which resolves here; the egress proxy
+# dials tsgit on the tailnet as tag:tekton.
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsgit
+  annotations:
+    tailscale.com/tailnet-fqdn: tsgit.beaver-cloud.ts.net
+    tailscale.com/proxy-group: tsgit-egress
 spec:
   type: ExternalName
   externalName: placeholder   # rewritten by the operator

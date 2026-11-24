@@ -5,6 +5,7 @@
 # the caller instead of tag:k8s-node:
 #   idp.beaver-cloud.ts.net -> ProxyGroup oidc-egress (tag:k8s-oidc)
 #   ai.beaver-cloud.ts.net  -> ProxyGroup ai-egress   (tag:k8s-ai)
+#   tsgit.beaver-cloud.ts.net -> ProxyGroup tsgit-egress (tag:tekton)
 #
 # One single-line rule on purpose: plugin/rewrite rejects a block holding more
 # than one `name exact` rule ("exceeded the number of arguments"), which
@@ -17,4 +18,4 @@ metadata:
   namespace: kube-system
 data:
   tailnet.override: |
-    rewrite stop name regex ^(idp|ai)\.beaver-cloud\.ts\.net\.?$ {1}.tailscale.svc.cluster.local answer auto
+    rewrite stop name regex ^(idp|ai|tsgit)\.beaver-cloud\.ts\.net\.?$ {1}.tailscale.svc.cluster.local answer auto

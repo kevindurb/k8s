@@ -4,6 +4,8 @@ extends: default
 ignore: |
   # sealed secrets are ciphertext blobs, line-length cannot apply
   *-sealed-secret.yml
+  # vendored upstream manifest (tekton dashboard v0.74.0), not hand-maintained
+  infrastructure/tekton/dashboard-release.yaml
 
 rules:
   document-start:

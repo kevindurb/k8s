@@ -1,0 +1,36 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tekton
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://cdfoundation.github.io/tekton-helm-chart
+      chart: tekton-pipeline
+      targetRevision: 1.15.3
+      helm:
+        releaseName: tekton-pipeline
+        valuesObject: {}
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: infrastructure/tekton
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tekton-pipelines
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: restricted
+        pod-security.kubernetes.io/audit: restricted
+    syncOptions:
+      - CreateNamespace=true
+      # upstream dashboard ships CRDs; Helm would not manage them on upgrade
+      - ServerSideApply=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

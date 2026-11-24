@@ -21,4 +21,6 @@ resources:
   - snapshot-controller/app.yml
   - speedtest-exporter/app.yml
   - tailscale/app.yml
+  - tekton/app.yml
+  - tsgit-ci/app.yml
   - zfs-exporter/app.yml
