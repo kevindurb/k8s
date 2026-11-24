@@ -1,18 +1,18 @@
 # tsgit's push webhook reaches the cluster as a tailnet service, reachable
-# only by tag:tsgit (see the kevindurb/infra tailnet policy: tag:tsgit-hooks).
+# only by tag:tsgit (see the kevindurb/infra tailnet policy: tag:tekton-hooks).
 # The tailscale operator creates the proxy and the *.beaver-cloud.ts.net cert.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: tsgit-hooks
+  name: tekton-hooks
   annotations:
-    tailscale.com/tags: tag:tsgit-hooks
+    tailscale.com/tags: tag:tekton-hooks
 spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: el-tsgit-hooks
+      name: el-tekton-hooks
       port:
         number: 8080
   tls:
-    - hosts: [tsgit-hooks]
+    - hosts: [tekton-hooks]

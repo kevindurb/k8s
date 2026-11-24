@@ -12,8 +12,8 @@ triggered by tsgit's push webhooks (tsgit >= v0.5.0), not by polling.
 | Tekton Triggers | `infrastructure/tekton/triggers-release.yaml` + `triggers-interceptors.yaml` (vendored from `infra.tekton.dev/tekton-releases/triggers/previous/v0.38.0/`) | EventListener, TriggerBinding/Template, CEL interceptor; curation notes in `kustomization.yml` |
 | Tekton Dashboard | same app, `infrastructure/tekton/dashboard-release.yaml` | `https://tekton.beaver-cloud.ts.net` (tailnet-only, Tailscale ingress) |
 | tsgit egress | `infrastructure/tailscale/resources.yml` + CoreDNS rewrite | In-cluster pods reach `tsgit.beaver-cloud.ts.net` as `tag:tekton`, read-only (`cap/repo`), granted in `kevindurb/infra` (`tailnet/policy.hujson`) |
-| Webhook receiver | `infrastructure/tsgit-ci/webhook.yml` (EventListener `tsgit-hooks`) | CEL-filters pushes to `refs/heads/main`, creates a `PipelineRun` per push |
-| Webhook ingress | `infrastructure/tsgit-ci/ingress.yml` | Tailscale ingress `tsgit-hooks.beaver-cloud.ts.net`, proxy tagged `tag:tsgit-hooks` (reachable only from `tag:tsgit`) |
+| Webhook receiver | `infrastructure/tsgit-ci/webhook.yml` (EventListener `tekton-hooks`) | CEL-filters pushes to `refs/heads/main`, creates a `PipelineRun` per push |
+| Webhook ingress | `infrastructure/tsgit-ci/ingress.yml` | Tailscale ingress `tekton-hooks.beaver-cloud.ts.net`, proxy tagged `tag:tekton-hooks` (reachable only from `tag:tsgit`) |
 | Pipelines | _in the repo under test_ (`ci/pipeline.yaml`) | Resolved at run time by Tekton's git resolver at the exact pushed SHA; the k8s repo holds no pipeline copies |
 | Prune | `infrastructure/tsgit-ci/prune.yml` | Deletes `PipelineRun`s older than 14 days, every 6h |
 
@@ -21,7 +21,7 @@ triggered by tsgit's push webhooks (tsgit >= v0.5.0), not by polling.
 
 1. A push to a watched repository moves a ref. tsgit compares refs before/after
    the receive-pack and emits one GitHub-shaped `push` event per changed ref.
-2. The delivery goes over the tailnet to `https://tsgit-hooks.beaver-cloud.ts.net/`
+2. The delivery goes over the tailnet to `https://tekton-hooks.beaver-cloud.ts.net/`
    (the EventListener's tailscale ingress). Which repos emit events is the
    `github.com/kevindurb/tsgit/cap/hooks` node attribute on `tag:tsgit` in
    `kevindurb/infra` (`tailnet/policy.hujson`); currently `kevindurb/dotfiles`.

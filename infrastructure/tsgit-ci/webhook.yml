@@ -1,12 +1,12 @@
 # tsgit push webhook receiver. tsgit delivers a GitHub-shaped `push` event
 # for each changed ref (see docs/tsgit-ci.md) to whatever URL the tailnet
 # policy assigns via the node's `github.com/kevindurb/tsgit/cap/hooks`
-# capability; that points at this EventListener through the `tsgit-hooks`
+# capability; that points at this EventListener through the `tekton-hooks`
 # tailscale ingress. Only the ref filter below decides what builds.
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
-  name: tsgit-hooks
+  name: tekton-hooks
 spec:
   serviceAccountName: tsgit-ci
   triggers:
