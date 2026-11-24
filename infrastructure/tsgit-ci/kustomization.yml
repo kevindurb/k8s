@@ -21,7 +21,6 @@ resources:
   - rbac.yml
   - poller.yml
   - prune.yml
-  - pipeline.yml
 
 labels:
   - includeSelectors: false

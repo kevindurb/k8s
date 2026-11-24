@@ -13,7 +13,7 @@ only — no forge features are required or used.
 | Tekton Dashboard | same app, `infrastructure/tekton/` vendored `dashboard-release.yaml` | `https://tekton.beaver-cloud.ts.net` (tailnet-only, Tailscale ingress) |
 | tsgit egress | `infrastructure/tailscale/resources.yml` + CoreDNS rewrite | In-cluster pods reach `tsgit.beaver-cloud.ts.net` as `tag:tekton`, read-only (`cap/repo`), granted in `kevindurb/infra` (`tailnet/policy.hujson`) |
 | Poller | `infrastructure/tsgit-ci/poller.yml` (CronJob, every 2 min) | `git ls-remote`-equivalent per repo; creates a `PipelineRun` for new commits |
-| Pipelines | `infrastructure/tsgit-ci/pipeline.yml` | `validate-repo`: `clone` → `dotfiles-check` (chezmoi dry-run + shellcheck) |
+| Pipelines | _in the repo under test_ (`ci/pipeline.yaml`) | Resolved at run time by Tekton's git resolver at the exact pushed SHA; k8s holds no pipeline copy |
 | Prune | `infrastructure/tsgit-ci/prune.yml` | Deletes `PipelineRun`s older than 14 days, every 6h |
 
 ## Using it
@@ -34,13 +34,21 @@ kubectl logs -n tekton-pipelines -l tekton.dev/pipelineRun=<name> --all-containe
 State lives in the `tsgit-poll-state` PVC (`infrastructure/tsgit-ci/poller.yml`).
 Deleting `<repo>.sha` forces a rebuild of the current head.
 
-## Adding a new pipeline for a repo
+## How a pipeline is defined
 
-Add a `Pipeline` (and its Tasks) to `infrastructure/tsgit-ci/pipeline.yml` and a
-row to the poller ConfigMap pointing at it. The poller currently always runs
-`validate-repo`; parameterize `pipelineRef` in the CronJob payload if a repo
-needs different stages. Image references are digest-pinned; keep them pinned
-and bump deliberately.
+The build definition lives in the repository being built (`ci/pipeline.yaml`,
+an inline-task Tekton Pipeline). The poller creates each `PipelineRun` with
+`pipelineRef: {resolver: git, params: [url, revision, pathInRepo: ci/pipeline.yaml]}`,
+so Tekton fetches and runs exactly the pipeline version from the commit being
+built. Consequences:
+
+- CI changes ship with the repo (no k8s PR), and always match the code.
+- The k8s repo holds only the poller, RBAC, the state PVC, and the prune job.
+- The git resolver clones over the same tailnet egress (`tag:tekton`, read-only).
+
+Adding CI to another repo = add a `ci/pipeline.yaml` to it, then add one line
+to `repos.txt` (see `repos.txt` in this directory). Image references are
+digest-pinned; keep them pinned and bump deliberately.
 
 ## Credentials and permissions
 
@@ -60,6 +68,9 @@ spec) and run non-root with a read-only root filesystem.
 
 - **No status in tsgit.** tsgit has no status API; green/red shows in the
   Dashboard and `kubectl`/`tkn` only.
+- **CI definition is code.** Whoever can push to a repo controls what its
+  pipeline does; that's the point of the model. The runner holds no secrets
+  and has no cluster permissions, so a hostile pipeline can burn CPU, nothing more.
 - **~2 minute latency** from push to build start (poll interval).
 - **First run after state loss** rebuilds the current head once per repo.
 - **macOS-only chezmoi branches** are parse-checked but not executed

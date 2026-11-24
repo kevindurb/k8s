@@ -41,7 +41,7 @@ while read -r name url branch _; do
   echo "poll: $name @ $branch ${last:-<none>} -> $sha, creating PipelineRun"
 
   payload=$(cat <<JSON
-{"apiVersion":"tekton.dev/v1","kind":"PipelineRun","metadata":{"generateName":"${name}-","namespace":"$NS","labels":{"ci.tsgit/repo":"$name","ci.tsgit/branch":"$branch"},"annotations":{"ci.tsgit/revision":"$sha"}},"spec":{"pipelineRef":{"name":"validate-repo"},"taskRunTemplate":{"serviceAccountName":"pipeline-runner","podTemplate":{"automountServiceAccountToken":false,"securityContext":{"seccompProfile":{"type":"RuntimeDefault"}}}},"params":[{"name":"repo","value":"$url"},{"name":"revision","value":"$sha"}],"workspaces":[{"name":"source","emptyDir":{}},{"name":"tools","emptyDir":{}}],"timeouts":{"pipeline":"10m","tasks":"9m"}}}
+{"apiVersion":"tekton.dev/v1","kind":"PipelineRun","metadata":{"generateName":"${name}-","namespace":"$NS","labels":{"ci.tsgit/repo":"$name","ci.tsgit/branch":"$branch"},"annotations":{"ci.tsgit/revision":"$sha"}},"spec":{"pipelineRef":{"resolver":"git","params":[{"name":"url","value":"$url"},{"name":"revision","value":"$sha"},{"name":"pathInRepo","value":"ci/pipeline.yaml"}]},"taskRunTemplate":{"serviceAccountName":"pipeline-runner","podTemplate":{"automountServiceAccountToken":false,"securityContext":{"seccompProfile":{"type":"RuntimeDefault"}}}},"params":[{"name":"repo","value":"$url"},{"name":"revision","value":"$sha"}],"workspaces":[{"name":"source","emptyDir":{}},{"name":"tools","emptyDir":{}}],"timeouts":{"pipeline":"10m","tasks":"9m"}}}
 JSON
 )
   code=$(curl -s -o /tmp/resp -w '%{http_code}' --cacert "$CACERT" \

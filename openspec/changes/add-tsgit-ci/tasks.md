@@ -26,9 +26,9 @@
 
 ## 5. `dotfiles` validation pipeline
 
-- [x] 5.1 Add `Task` `clone` (shallow clone into a workspace `emptyDir`, non-root, `RuntimeDefault` seccomp, read-only root fs).
-- [x] 5.2 Add `Task` `dotfiles-check`: run `chezmoi --dry-run --verbose apply` with a scratch `HOME`/`--source` against the clone, and render every `*.sh.tmpl` via `chezmoi execute-template` piped to `shellcheck -s bash`; plus `shellcheck` over plain `*.sh`. Pin `ghcr.io/twpayne/chezmoi` and the shellcheck image by digest.
-- [x] 5.3 Add `Pipeline` `validate-repo` (clone → dotfiles-check) with params `repo`, `revision`, `repoPath`; `timeouts` 10m; per-step CPU/mem limits; `status: skipped`-safe wiring between tasks.
+- [x] 5.1 clone step (pinned alpine/git, read-only root fs, seccomp) — implemented inline in the repo's `ci/pipeline.yaml` (single task, see 5.3).
+- [x] 5.2 chezmoi dry-run + shellcheck steps — implemented inline; chezmoi is fetched pinned (v2.74.2, musl build, sha256-verified) rather than from an unofficial registry image; shellcheck from `koalaman/shellcheck-alpine` pinned by digest.
+- [x] 5.3 Pipeline lives in dotfiles (`ci/pipeline.yaml`, resolved by Tekton's git resolver at the pushed SHA — see design.md); not in this repo. Single task (emptyDir isn't shared across tasks).
 - [ ] 5.4 Verify on a real push: create a scratch commit (e.g. add a file) on tsgit `dotfiles`, watch the PipelineRun appear via the poller, reach `Succeeded`; then push a deliberately broken template (e.g. unmatched `{{`) and see `Failed` with the shell/template error visible in `tkn pr logs`.
 - [ ] 5.5 Revert/cleanup the deliberate-break commit (or land the fix as a real commit) so the repo is green.
 
