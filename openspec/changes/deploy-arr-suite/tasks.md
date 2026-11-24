@@ -4,13 +4,13 @@
 
 - [x] 1.1 In `~/projects/infra`, add `tag:qbittorrent` to `tagOwners` (owner `tag:k8s-operator`) in `tailnet/policy.hujson`; verify with the policy test suite (`terraform test` / CI as configured in that repo) — done in kevindurb/infra#20; owners are `group:admins` + `tag:k8s-operator` (an admin-console-minted key needs the user to own the tag)
 - [x] 1.2 Add `{"target": ["tag:qbittorrent"], "attr": ["mullvad"]}` to `nodeAttrs` in `tailnet/policy.hujson`; extend `tests` in the same file to assert `tag:qbittorrent` has no tailnet grants (the `mullvad` attr is not assertable in policy tests — verify post-apply); PR #20 opened, terraform fmt/validate clean, policy parses; CI pending
-- [ ] 1.3 Merge the infra PR and confirm the applied policy on the tailnet (admin console or `tailscale exit-node list` from an admin device shows `100.84.2.120`)
+- [x] 1.3 Merge the infra PR (#20, merged 2026-11-24; `terraform apply` succeeded) — Mullvad reachability itself is verified from the pod at 2.4, since tag:dev cannot enumerate Mullvad nodes
 - [ ] 1.4 Mint a new auth key tagged `tag:qbittorrent` in the tailnet admin console (user-operated); seal it with kubeseal into `qbittorrent-ts-auth-key` in the `qbittorrent` namespace; verify the sealed secret decodes in-cluster (`kubectl get secret qbittorrent-ts-auth-key -n qbittorrent -o jsonpath='{.data}'`)
 
 ## 2. qBittorrent re-enable (fresh state)
 
-- [ ] 2.1 Update `apps/qbittorrent/deployment.yml`: `replicas: 1`, new `ts-state` and `config` PVC names/sizes, `TS_EXTRA_ARGS` with `--exit-node=100.84.2.120`, keep SOCKS5 proxy wiring; verify `kustomize build apps/qbittorrent` renders
-- [ ] 2.2 Delete the stale `qbittorrent-config` and `qbittorrent-ts-state` PVCs (or let them linger unused and record them; do not reuse) — verify old PVCs are gone/released before new pods start
+- [x] 2.1 Update `apps/qbittorrent/deployment.yml`: `replicas: 1`, new `ts-state` and `config` PVC names/sizes, `TS_EXTRA_ARGS` with `--exit-node=100.84.2.120`, keep SOCKS5 proxy wiring; verify `kustomize build apps/qbittorrent` renders (done; landed on `main` via c6cbabdb)
+- [x] 2.2 Delete the stale `qbittorrent-config` and `qbittorrent-ts-state` PVCs (or let them linger unused and record them; do not reuse) — chose to let them linger; pod now uses `config-v2` / `ts-state-v2`, old PVCs left untouched for manual deletion
 - [ ] 2.3 Commit, push, wait for Argo CD sync; verify `kubectl get pods -n qbittorrent` is 1/1 Ready and gatus qBittorrent endpoint is green (after re-enabling its check in gatus.yml)
 - [ ] 2.4 Verify egress: exec into the pod (or an ephemeral sibling) and confirm traffic exits via Mullvad (`curl --socks5 127.0.0.1:1055 ifconfig.me` or equivalent); confirm the pod's startup probe gates on exit-node health
 - [ ] 2.5 In the qBittorrent UI, create categories `radarr` (`/media/Downloads/radarr`) and `sonarr` (`/media/Downloads/sonarr`); verify both directories exist and are writable on the NAS mount
