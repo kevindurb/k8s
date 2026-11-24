@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: bazarr
+    group: apps
+    url: http://bazarr-app-service.bazarr/ping
+    conditions:
+      - '[STATUS] == 200'

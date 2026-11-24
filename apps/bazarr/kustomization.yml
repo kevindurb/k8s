@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bazarr
+namePrefix: bazarr-
+resources:
+  - ./deployment.yml
+components:
+  - ../../components/storage-home-drone-03
+  - ../../components/nas-media
+  - ../../components/app-pod-hardening
+  - ../../components/app-tmp-dirs
+configMapGenerator:
+  - name: gatus
+    options:
+      labels:
+        gatus.io/enabled: 'true'
+    files:
+      - bazarr.yml=gatus.yml
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/name: bazarr

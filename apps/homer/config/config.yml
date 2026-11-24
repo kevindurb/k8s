@@ -106,12 +106,24 @@ services:
         icon: fas fa-book
 
       - name: Radarr
-        url: https://radarr.beaver-cloud.ts.net/radarr
+        url: https://radarr.beaver-cloud.ts.net
         icon: fas fa-film
 
       - name: Sonarr
         url: https://sonarr.beaver-cloud.ts.net
         icon: fas fa-tv
+
+      - name: Prowlarr
+        url: https://prowlarr.beaver-cloud.ts.net
+        icon: fas fa-search
+
+      - name: Seerr
+        url: https://seerr.beaver-cloud.ts.net
+        icon: fas fa-film
+
+      - name: Bazarr
+        url: https://bazarr.beaver-cloud.ts.net
+        icon: fas fa-closed-captioning
 
       - name: qBittorrent
         url: https://qbittorrent.beaver-cloud.ts.net

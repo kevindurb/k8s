@@ -1,0 +1,54 @@
+# Tasks
+
+## 1. Prerequisite: tailnet Mullvad access (infra repo)
+
+- [x] 1.1 In `~/projects/infra`, add `tag:qbittorrent` to `tagOwners` (owner `tag:k8s-operator`) in `tailnet/policy.hujson`; verify with the policy test suite (`terraform test` / CI as configured in that repo) — done in kevindurb/infra#20; owners are `group:admins` + `tag:k8s-operator` (an admin-console-minted key needs the user to own the tag)
+- [x] 1.2 Add `{"target": ["tag:qbittorrent"], "attr": ["mullvad"]}` to `nodeAttrs` in `tailnet/policy.hujson`; extend `tests` in the same file to assert `tag:qbittorrent` has no tailnet grants (the `mullvad` attr is not assertable in policy tests — verify post-apply); PR #20 opened, terraform fmt/validate clean, policy parses; CI pending
+- [ ] 1.3 Merge the infra PR and confirm the applied policy on the tailnet (admin console or `tailscale exit-node list` from an admin device shows `100.84.2.120`)
+- [ ] 1.4 Mint a new auth key tagged `tag:qbittorrent` in the tailnet admin console (user-operated); seal it with kubeseal into `qbittorrent-ts-auth-key` in the `qbittorrent` namespace; verify the sealed secret decodes in-cluster (`kubectl get secret qbittorrent-ts-auth-key -n qbittorrent -o jsonpath='{.data}'`)
+
+## 2. qBittorrent re-enable (fresh state)
+
+- [ ] 2.1 Update `apps/qbittorrent/deployment.yml`: `replicas: 1`, new `ts-state` and `config` PVC names/sizes, `TS_EXTRA_ARGS` with `--exit-node=100.84.2.120`, keep SOCKS5 proxy wiring; verify `kustomize build apps/qbittorrent` renders
+- [ ] 2.2 Delete the stale `qbittorrent-config` and `qbittorrent-ts-state` PVCs (or let them linger unused and record them; do not reuse) — verify old PVCs are gone/released before new pods start
+- [ ] 2.3 Commit, push, wait for Argo CD sync; verify `kubectl get pods -n qbittorrent` is 1/1 Ready and gatus qBittorrent endpoint is green (after re-enabling its check in gatus.yml)
+- [ ] 2.4 Verify egress: exec into the pod (or an ephemeral sibling) and confirm traffic exits via Mullvad (`curl --socks5 127.0.0.1:1055 ifconfig.me` or equivalent); confirm the pod's startup probe gates on exit-node health
+- [ ] 2.5 In the qBittorrent UI, create categories `radarr` (`/media/Downloads/radarr`) and `sonarr` (`/media/Downloads/sonarr`); verify both directories exist and are writable on the NAS mount
+- [ ] 2.6 Set the qBittorrent WebUI password to a non-default value (sealed-secret or in-app generated), since CGNAT clients are outside the subnet whitelist
+
+## 3. Prowlarr
+
+- [ ] 3.1 Scaffold `apps/prowlarr` with `just tmpl apps prowlarr`; adapt to the stack pattern (image `ghcr.io/home-operations/prowlarr` pinned by digest, `storage-home-drone-03`, `app-pod-hardening`, `app-tmp-dirs`, PVC for config, tailscale Ingress `prowlarr`, gatus check, `app.yml`); verify `kustomize build apps/prowlarr` passes
+- [ ] 3.2 Wire into `apps/kustomization.yml` and confirm `just check-kustomize` passes
+- [ ] 3.3 After sync, open Prowlarr UI, add public indexers, and add Radarr and Sonarr as "sync apps" with their API keys; verify indexers appear in both (Settings → Indexers shows Prowlarr-sourced entries)
+
+## 4. Radarr / Sonarr wiring
+
+- [ ] 4.1 In Radarr and Sonarr: disable "Use Hardlinks instead of Copy" (Media Management); verify setting persisted
+- [ ] 4.2 Add qBittorrent as download client in both (host `qbittorrent-app-service.qbittorrent`, port 80, categories `radarr`/`sonarr`); enable "remove completed/imported torrents" and remove-files-after-import behavior; verify a test grab imports and the torrent disappears
+- [ ] 4.3 Verify one end-to-end grab per app on a small free release: search → grab → download via Mullvad IP → copy into `/media` → torrent auto-removed
+
+## 5. Seerr
+
+- [ ] 5.1 Scaffold `apps/seerr` (image `ghcr.io/seerr-team/seerr` pinned to `latest`'s current digest, `containerPort` per upstream (5055), tailscale Ingress `seerr`, gatus, `storage-home-drone-03`, `app-pod-hardening` — drop or adjust hardening flags if the upstream image fails them, noting what and why); `just check-kustomize`
+- [ ] 5.2 Wire Seerr to Jellyfin (in-cluster URL `http://jellyfin-app-service.jellyfin`) with a Jellyfin API key (sealed or entered at setup); verify login with a Jellyfin account succeeds and the library scans
+- [ ] 5.3 Wire Seerr to Radarr and Sonarr (service DNS names, API keys); enable manual approval; verify a test request transitions pending → approved → appears in Radarr/Sonarr as wanted
+
+## 6. Bazarr
+
+- [ ] 6.1 Scaffold `apps/bazarr` (image `ghcr.io/home-operations/bazarr` pinned by digest, same component set as siblings, Ingress `bazarr`, gatus, `nas-media` mounted RW for subtitle writes); verify kustomize build
+- [ ] 6.2 Point Bazarr at Radarr and Sonarr (API keys entered at setup); leave subtitle providers unconfigured and note it in the PR/README for follow-up; verify the UI loads and shows both "connected" statuses
+
+## 7. Polish and convergence
+
+- [ ] 7.1 Homer: add Seerr/Prowlarr/Bazarr entries; fix the Radarr URL (drop the stale `/radarr` path); verify homer renders the changes after sync
+- [ ] 7.2 Gatus: re-enable qBittorrent endpoint, add prowlarr/seerr/bazarr endpoints; confirm all show healthy on the status page
+- [ ] 7.3 `just check-kustomize` clean; yamllint clean; commit in logical chunks; after merge, verify Argo CD converges all new apps and `kubectl get applications -n argocd` is Healthy/Synced
+- [ ] 7.4 End-to-end acceptance from the spec: a household Jellyfin user requests something in Seerr → approved → downloaded through the Mullvad tunnel → copied (not hardlinked) into the library → torrent auto-removed → appears in Jellyfin → gatus green across the pipeline
+
+## Workflow follow-up
+
+- Delete the legacy `qbittorrent-config` / `qbittorrent-ts-state` PVCs once the new deployment is verified (destructive; confirm at the time)
+- Configure Bazarr subtitle providers (OpenSubtitles.com account + API key) as a follow-up
+- Consider Seerr notification agent (in-cluster SMTP via `smtp-relay`) as a follow-up
+- Archive this change once merged and verified (`/opsx-archive`)

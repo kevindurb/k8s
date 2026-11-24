@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: seerr
+    group: apps
+    url: http://seerr-app-service.seerr/api/v1/status
+    conditions:
+      - '[STATUS] == 200'

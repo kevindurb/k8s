@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: prowlarr
+    group: apps
+    url: http://prowlarr-app-service.prowlarr/ping
+    conditions:
+      - '[STATUS] == 200'

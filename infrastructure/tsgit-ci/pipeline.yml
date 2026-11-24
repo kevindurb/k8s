@@ -2,24 +2,34 @@
 # Pipelines and Tasks for tsgit-hosted repositories. Plain tekton.dev/v1.
 # No remote resolvers: everything is inline so the controller never needs
 # network access to a task catalog.
+#
+# Note: emptyDir workspaces are NOT shared between Tasks (each pod gets its
+# own emptyDir); sharing only works between steps within one Task. That is
+# why fetch+check are a single task with two image steps rather than one
+# task per phase.
 
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: clone
+  name: dotfiles-check
   namespace: tekton-pipelines
 spec:
-  description: Shallow-fetch one revision of a repository into the workspace.
+  description: >-
+    Clone a chezmoi dotfiles repo, then validate it: dry-run apply on Linux
+    plus shellcheck of every *.sh.tmpl (rendered) and plain *.sh.
   params:
     - name: repo
       type: string
     - name: revision
       type: string
+    - name: branch
+      type: string
   workspaces:
     - name: source
+    - name: tools
   steps:
-    - name: git-clone
-      image: alpine/git:2.54.1@sha256:29cff25811f790b9f72fc266bf8009a5a911714c0e03c31c47339c50909d9aef
+    - name: clone
+      image: alpine/git:2.54.1@sha256:29cff25811f790b9f72fc266bf8009a5a911714c0e03c50909d9aef
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -29,8 +39,8 @@ spec:
         capabilities:
           drop: ["ALL"]
       env:
-        # git refuses to touch the root-owned workspace without this; the
-        # pod is ephemeral and isolated, so '*' is acceptable here.
+        # git refuses the root-owned emptyDir workspace without this; the pod
+        # is ephemeral so '*' is fine.
         - name: GIT_CONFIG_COUNT
           value: "1"
         - name: GIT_CONFIG_KEY_0
@@ -47,20 +57,8 @@ spec:
         # revision or fail loudly - never silently build a different one.
         git fetch --depth 1 origin "$(params.revision)"
         git checkout -q --detach FETCH_HEAD
-        echo "cloned at $(git rev-parse HEAD)"
-
----
-apiVersion: tekton.dev/v1
-kind: Task
-metadata:
-  name: fetch-chezmoi
-  namespace: tekton-pipelines
-spec:
-  description: Download the pinned chezmoi binary (sha256-verified) into the tools workspace.
-  workspaces:
-    - name: tools
-  steps:
-    - name: fetch
+        echo "cloned $(git rev-parse HEAD)"
+    - name: fetch-chezmoi
       image: curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
       securityContext:
         runAsNonRoot: true
@@ -74,7 +72,7 @@ spec:
         #!/bin/sh
         set -eu
         base=https://github.com/twpayne/chezmoi/releases/download/v2.74.2
-        # musl build: the shellcheck step image is Alpine
+        # musl build: the check step image is Alpine/shellcheck-alpine
         file=chezmoi_2.74.2_linux-musl_amd64.tar.gz
         want=0570eea5af5dea146d872423a65bdf46f140087fbb01ed279dc0c219e1e1da49
         cd "$(workspaces.tools.path)"
@@ -83,21 +81,6 @@ spec:
         tar xzf "$file"
         rm "$file"
         chmod 755 chezmoi
-
----
-apiVersion: tekton.dev/v1
-kind: Task
-metadata:
-  name: dotfiles-check
-  namespace: tekton-pipelines
-spec:
-  description: >-
-    Dry-run apply (renders every template that applies on Linux) plus render-and-shellcheck
-    for every *.sh.tmpl and plain *.sh in a chezmoi source tree.
-  workspaces:
-    - name: source
-    - name: tools
-  steps:
     - name: check
       image: koalaman/shellcheck-alpine:v0.11.0@sha256:9955be09ea7f0dbf7ae942ac1f2094355bb30d96fffba0ec09f5432207544002
       securityContext:
@@ -110,7 +93,7 @@ spec:
           drop: ["ALL"]
       env:
         - name: HOME
-          value: $(workspaces.tools.path)/home
+          value: $(workspaces.tools.path)
         - name: PATH
           value: $(workspaces.tools.path):/usr/local/bin:/usr/local/sbin:/usr/bin:/bin
       script: |
@@ -146,31 +129,23 @@ spec:
       type: string
     - name: revision
       type: string
+    - name: branch
+      type: string
+      default: main
   workspaces:
     - name: source
     - name: tools
   tasks:
-    - name: fetch-chezmoi
+    - name: checks
       taskRef:
-        name: fetch-chezmoi
-      workspaces:
-        - name: tools
-          workspace: tools
-    - name: clone
-      taskRef:
-        name: clone
+        name: dotfiles-check
       params:
         - name: repo
           value: $(params.repo)
         - name: revision
           value: $(params.revision)
-      workspaces:
-        - name: source
-          workspace: source
-    - name: checks
-      taskRef:
-        name: dotfiles-check
-      runAfter: [fetch-chezmoi, clone]
+        - name: branch
+          value: $(params.branch)
       workspaces:
         - name: source
           workspace: source

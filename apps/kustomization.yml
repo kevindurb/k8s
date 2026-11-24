@@ -1,39 +1,41 @@
----
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ./project.yml
-  - ./audiobookshelf/app.yml
-  - ./calibre-web/app.yml
-  - ./calibre/app.yml
-  - ./consignment-app/app.yml
-  - ./donetick/app.yml
-  - ./dufs/app.yml
-  - ./golink/app.yml
-  - ./home-assistant/app.yml
-  - ./homer/app.yml
-  - ./immich/app.yml
-  - ./jellyfin/app.yml
-  - ./kiwix/app.yml
-  - ./linkding/app.yml
-  - ./makemkv/app.yml
-  - ./mealie/app.yml
-  - ./miniflux/app.yml
-  - ./navidrome/app.yml
-  - ./omada/app.yml
-  - ./qbittorrent/app.yml
-  - ./radarr/app.yml
-  - ./romm/app.yml
-  - ./scrypted/app.yml
-  - ./sonarr/app.yml
-  - ./syncthing/app.yml
-  - ./template/app.yml
-  - ./transcoding/app.yml
-  - ./searxng/app.yml
-  - ./minecraft/app.yml
-  - ./pokesim/app.yml
-  - ./f1timing/app.yml
-  - ./tsgit/app.yml
-  - ./browser/app.yml
-  - ./music-assistant/app.yml
+- ./project.yml
+- ./audiobookshelf/app.yml
+- ./calibre-web/app.yml
+- ./calibre/app.yml
+- ./consignment-app/app.yml
+- ./donetick/app.yml
+- ./dufs/app.yml
+- ./golink/app.yml
+- ./home-assistant/app.yml
+- ./homer/app.yml
+- ./immich/app.yml
+- ./jellyfin/app.yml
+- ./kiwix/app.yml
+- ./linkding/app.yml
+- ./makemkv/app.yml
+- ./mealie/app.yml
+- ./miniflux/app.yml
+- ./navidrome/app.yml
+- ./omada/app.yml
+- ./qbittorrent/app.yml
+- ./radarr/app.yml
+- ./romm/app.yml
+- ./scrypted/app.yml
+- ./sonarr/app.yml
+- ./syncthing/app.yml
+- ./template/app.yml
+- ./transcoding/app.yml
+- ./searxng/app.yml
+- ./minecraft/app.yml
+- ./pokesim/app.yml
+- ./f1timing/app.yml
+- ./tsgit/app.yml
+- ./browser/app.yml
+- ./music-assistant/app.yml
+- ./prowlarr/app.yml
+- ./seerr/app.yml
+- ./bazarr/app.yml

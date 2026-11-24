@@ -1,7 +1,6 @@
 ---
 endpoints:
   - name: qbittorrent
-    enabled: false
     group: apps
     url: http://qbittorrent-app-service.qbittorrent
     conditions:

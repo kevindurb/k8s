@@ -8,7 +8,7 @@ metadata:
   labels: &labels
     app.kubernetes.io/component: app
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -23,7 +23,7 @@ spec:
             claimName: nas-media
         - name: config
           persistentVolumeClaim:
-            claimName: config
+            claimName: config-v2
         - name: qbittorrent-defaults
           configMap:
             name: qbittorrent-defaults
@@ -31,7 +31,7 @@ spec:
           emptyDir: {}
         - name: tailscale-state
           persistentVolumeClaim:
-            claimName: ts-state
+            claimName: ts-state-v2
       initContainers:
         - name: tailscale
           restartPolicy: Always
@@ -57,7 +57,7 @@ spec:
             - name: TS_SOCKET
               value: /tmp/tailscaled.sock
             - name: TS_EXTRA_ARGS
-              value: --exit-node=100.117.167.110 --exit-node-allow-lan-access=false
+              value: --exit-node=100.84.2.120 --exit-node-allow-lan-access=false
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
@@ -152,7 +152,11 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: config
+  name: config-v2
+  annotations:
+    # Fresh state 2026-11-24: the pre-existing `config` PVC is left in place, unused,
+    # pending manual deletion. Do not point pods at it.
+    deploy-arr-suite/previous-pvc: qbittorrent-config
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: zfs-local
@@ -163,7 +167,11 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ts-state
+  name: ts-state-v2
+  annotations:
+    # Fresh tailscale identity 2026-11-24; the pre-existing `ts-state` PVC is
+    # left in place, unused, pending manual deletion.
+    deploy-arr-suite/previous-pvc: qbittorrent-ts-state
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: zfs-local
