@@ -4,6 +4,19 @@ kind: Kustomization
 
 namespace: tekton-pipelines
 
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: tsgit-poll-repos
+    files:
+      - repos=repos.txt
+  - name: tsgit-poll-script
+    files:
+      - poll.sh
+    options:
+      disableNameSuffixHash: true
+
 resources:
   - rbac.yml
   - poller.yml
