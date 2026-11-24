@@ -12,7 +12,18 @@ spec:
       targetRevision: 1.15.3
       helm:
         releaseName: tekton-pipeline
-        valuesObject: {}
+        valuesObject:
+          namespace:
+            name: tekton-pipelines
+            create: true
+            labels:
+              # tekton injects helper containers (workingdirinit, place-scripts)
+              # that cannot satisfy restricted; baseline + restricted warn/audit.
+              pod-security.kubernetes.io/enforce: baseline
+              pod-security.kubernetes.io/enforce-version: v1.35
+              pod-security.kubernetes.io/warn: restricted
+              pod-security.kubernetes.io/audit: restricted
+              app.kubernetes.io/part-of: tekton-pipelines
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: infrastructure/tekton
@@ -20,12 +31,6 @@ spec:
     server: https://kubernetes.default.svc
     namespace: tekton-pipelines
   syncPolicy:
-    managedNamespaceMetadata:
-      labels:
-        pod-security.kubernetes.io/enforce: baseline
-        pod-security.kubernetes.io/enforce-version: v1.35
-        pod-security.kubernetes.io/warn: restricted
-        pod-security.kubernetes.io/audit: restricted
     syncOptions:
       - CreateNamespace=true
       # upstream dashboard ships CRDs; Helm would not manage them on upgrade
