@@ -8,3 +8,11 @@ metadata:
     app.kubernetes.io/part-of: argocd
 data:
   url: https://argocd.beaver-cloud.ts.net
+  # Tekton creates a PipelineRun/TaskRun per build; they are ephemeral and
+  # carry no app config, so keep Argo CD from tracking them (health/sync).
+  resource.exclusions: |
+    - apiGroups:
+      - tekton.dev
+      kinds:
+      - PipelineRun
+      - TaskRun
