@@ -29,8 +29,14 @@ spec:
         capabilities:
           drop: ["ALL"]
       env:
-        - name: HOME
-          value: $(workspaces.source.path)
+        # git refuses to touch the root-owned workspace without this; the
+        # pod is ephemeral and isolated, so '*' is acceptable here.
+        - name: GIT_CONFIG_COUNT
+          value: "1"
+        - name: GIT_CONFIG_KEY_0
+          value: safe.directory
+        - name: GIT_CONFIG_VALUE_0
+          value: "*"
       script: |
         #!/bin/sh
         set -eu
