@@ -111,7 +111,7 @@ spec:
         - name: HOME
           value: $(workspaces.tools.path)/home
         - name: PATH
-          value: $(workspaces.tools.path):$PATH
+          value: $(workspaces.tools.path):/usr/local/bin:/usr/local/sbin:/usr/bin:/bin
       script: |
         #!/bin/sh
         set -eu
