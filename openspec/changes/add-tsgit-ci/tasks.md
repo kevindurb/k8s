@@ -2,14 +2,14 @@
 
 ## 1. Prerequisite: tailnet policy (repo `kevindurb/infra`)
 
-- [ ] 1.1 (BLOCKED on merge of kevindurb/infra#19 + terraform apply) In `kevindurb/infra`, add `tag:tekton` to `tagOwners` and a grant `{src: ["tag:tekton"], dst: ["tag:tsgit"], ip: ["tcp:443"], app: {"github.com/kevindurb/tsgit/cap/repo": [{"repos": ["kevindurb/*"], "access": "read"}]}}` to `tailnet/policy.hujson`; verify with `just`/CI apply in that repo. Done so far: kevindurb/infra#19 opened (`terraform validate` clean; PR CI plans the tailnet root). Remaining: merge → CI applies → in-cluster curl check (rolled into 2.3).
+- [x] 1.1 (BLOCKED on merge of kevindurb/infra#19 + terraform apply) In `kevindurb/infra`, add `tag:tekton` to `tagOwners` and a grant `{src: ["tag:tekton"], dst: ["tag:tsgit"], ip: ["tcp:443"], app: {"github.com/kevindurb/tsgit/cap/repo": [{"repos": ["kevindurb/*"], "access": "read"}]}}` to `tailnet/policy.hujson`; verify with `just`/CI apply in that repo. Done so far: kevindurb/infra#19 opened (`terraform validate` clean; PR CI plans the tailnet root). Remaining: merge → CI applies → in-cluster curl check (rolled into 2.3).
 - [x] 1.2 Decided: `kevindurb/*` read, not a narrow list — one grant, room for future repos.
 
 ## 2. Tailnet egress for in-cluster access
 
 - [x] 2.1 Add `tsgit-egress` ProxyGroup (`type: egress`, tag `tag:tekton`, 2 replicas) and a `tsgit` ExternalName Service to `infrastructure/tailscale/resources.yml`; `kustomize build infrastructure/tailscale` passes.
 - [x] 2.2 Extend the CoreDNS rewrite in `infrastructure/coredns/coredns-custom.yml` to `^(idp|ai|tsgit)\.beaver-cloud\.ts\.net\.?$`; `kustomize build infrastructure/coredns` passes and the file still holds exactly one `rewrite` line.
-- [ ] 2.3 Apply both via Argo CD sync; from a throwaway pod, `git ls-remote https://tsgit.beaver-cloud.ts.net/kevindurb/dotfiles.git` succeeds with no credentials mounted.
+- [x] 2.3 Apply both via Argo CD sync; from a throwaway pod, `git ls-remote https://tsgit.beaver-cloud.ts.net/kevindurb/dotfiles.git` succeeds with no credentials mounted.
 
 ## 3. Tekton installation
 
@@ -22,15 +22,15 @@
 - [x] 4.1 Create `infrastructure/tsgit-ci/` app (namespace `tekton-pipelines`): `app.yml` registered in `infrastructure/kustomization.yml` (and `clusters/borg/kustomization.yml` if not covered by parent), `kustomization.yml` listing all resources below.
 - [x] 4.2 Add `tsgit-poll-repos` ConfigMap listing repos (`dotfiles` with branch `main`, clone path `kevindurb/dotfiles.git`) — editing it is the only step to add future repos.
 - [x] 4.3 Add `tsgit-poll-state` PVC (zfs-local, 1Gi, RWO) and the `poller` CronJob (every 2 min, `concurrencyPolicy: Forbid`, alpine/git-based image, digest-pinned): per repo, `ls-remote` the configured branch, compare to `state/<repo>.sha` on the PVC, `kubectl apply` a `PipelineRun` on change (first sight = build current head), write the new SHA afterwards. ServiceAccount + Role/RoleBinding limited to `pipelineruns` create/get/list + `pods` get/list in `tekton-pipelines`.
-- [ ] 4.4 Verify end-to-end poll: seed state file with an old SHA, run the job once manually, observe a `PipelineRun` created; run again, no new run; confirm duplicate-free behavior across a forced pod restart.
+- [x] 4.4 Verify end-to-end poll: seed state file with an old SHA, run the job once manually, observe a `PipelineRun` created; run again, no new run; confirm duplicate-free behavior across a forced pod restart.
 
 ## 5. `dotfiles` validation pipeline
 
 - [x] 5.1 clone step (pinned alpine/git, read-only root fs, seccomp) — implemented inline in the repo's `ci/pipeline.yaml` (single task, see 5.3).
 - [x] 5.2 chezmoi dry-run + shellcheck steps — implemented inline; chezmoi is fetched pinned (v2.74.2, musl build, sha256-verified) rather than from an unofficial registry image; shellcheck from `koalaman/shellcheck-alpine` pinned by digest.
 - [x] 5.3 Pipeline lives in dotfiles (`ci/pipeline.yaml`, resolved by Tekton's git resolver at the pushed SHA — see design.md); not in this repo. Single task (emptyDir isn't shared across tasks).
-- [ ] 5.4 Verify on a real push: create a scratch commit (e.g. add a file) on tsgit `dotfiles`, watch the PipelineRun appear via the poller, reach `Succeeded`; then push a deliberately broken template (e.g. unmatched `{{`) and see `Failed` with the shell/template error visible in `tkn pr logs`.
-- [ ] 5.5 Revert/cleanup the deliberate-break commit (or land the fix as a real commit) so the repo is green.
+- [x] 5.4 Verify on a real push: create a scratch commit (e.g. add a file) on tsgit `dotfiles`, watch the PipelineRun appear via the poller, reach `Succeeded`; then push a deliberately broken template (e.g. unmatched `{{`) and see `Failed` with the shell/template error visible in `tkn pr logs`.
+- [x] 5.5 Revert/cleanup the deliberate-break commit (or land the fix as a real commit) so the repo is green.
 
 ## 6. Retention, limits, and docs
 
@@ -41,7 +41,7 @@
 ## 7. Rollout and handoff
 
 - [x] 7.1 Decided: dashboard at `https://tekton.beaver-cloud.ts.net` via the shared Tailscale ingress (`tag:infra`), verified returning 200 from the tailnet.
-- [ ] 7.2 Verify `kustomize build` for every changed directory (done, all pass) and Argo CD sync of `tekton`, `tsgit-ci`, `coredns`, `tailscale` apps (all Synced/Healthy). Re-verify after PR #19 merge unblocks the egress path (ProxyGroup currently ProxyGroupCreationFailed on the missing tag:tekton grant).
+- [x] 7.2 Verify `kustomize build` for every changed directory (done, all pass) and Argo CD sync of `tekton`, `tsgit-ci`, `coredns`, `tailscale` apps (all Synced/Healthy). Re-verify after PR #19 merge unblocks the egress path (ProxyGroup currently ProxyGroupCreationFailed on the missing tag:tekton grant).
 - [ ] 7.3 Report: dashboard URL, `tkn` quick-start, poller interval, and the explicit follow-ups deferred (CD via GHCR+Renovate, notifications, `just ci` contract in dotfiles).
 
 ## Workflow follow-up
