@@ -37,10 +37,7 @@ See proposal.md for motivation. Key facts this design is built around:
 - Rejected alternative: one CronJob *per repo* — ConfigMap-driven loop keeps it one resource; adding a repo = one line in one ConfigMap.
 
 ### 4. Repo → pipeline mapping: one PipelineRun template, parameters per repo
-- `Pipeline` `validate-repo` with params `repo`, `revision`, `repoPath` (clone URL). Steps: clone (shallow, `--depth 1`) into an `emptyDir` workspace → `run-checks` (repo-specific command).
-- dotfiles uses two inline Tasks (no Tekton Hub / remote resolvers — release chart ships none):
-  - `task-dotfiles-check`: `chezmoi apply --dry-run --verbose` against the clone with a scratch `HOME` (renders every template that applies on Linux; parses all templates) — plus render check of every `*.sh.tmpl` via `chezmoi execute-template` piped to `shellcheck -s bash -`.
-  - `task-shellcheck`: `shellcheck` over every tracked `*.sh` (skips nothing; the repo's scripts are small).
+- `Pipeline` `validate-repo` with params `repo`, `revision`, `branch` and a single task `dotfiles-check` (Tekton `emptyDir` workspaces are not shared between tasks, only between the steps of one task — so clone, fetch, and check live in one Task with three steps, each with its own image). Steps: (1) shallow git clone (`git init` + `fetch --depth 1 <sha>`), (2) download pinned chezmoi (musl build, sha256-verified), (3) `chezmoi apply --dry-run --verbose` with a scratch destination, plus every `*.sh.tmpl` rendered via `chezmoi execute-template` into `shellcheck -s bash`, plus plain `*.sh` through `shellcheck`.
 - Images: `ghcr.io/twpayne/chezmoi` (official) and `koalaman/shellcheck-alpine` (or alpine + apk) — pinned by digest in the Task definitions, Renovate-tracked like everything else.
 - Non-Linux templates render only partially under `--dry-run` (Go-template branches for `darwin` are parsed but not executed); accepted — this catches syntax and Linux-relevant render errors, not macOS-runtime semantics.
 
