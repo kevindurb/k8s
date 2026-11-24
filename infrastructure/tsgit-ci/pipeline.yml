@@ -116,10 +116,10 @@ spec:
         #!/bin/sh
         set -eu
         SRC="$(workspaces.source.path)"
-        mkdir -p "$HOME/target"
+        TOOLS="$(workspaces.tools.path)"
         cd "$SRC"
         echo "== chezmoi dry-run apply"
-        chezmoi --source "$SRC" --destination "$HOME/target" apply --dry-run --verbose
+        chezmoi --source "$SRC" --destination "$TOOLS/target" apply --dry-run --verbose
         echo "== render + shellcheck *.sh.tmpl"
         find . -type f -name '*.sh.tmpl' -print | while IFS= read -r f; do
           echo "-- $f"
