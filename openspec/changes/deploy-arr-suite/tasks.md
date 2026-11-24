@@ -9,7 +9,7 @@
 
 ## 2. qBittorrent re-enable (fresh state)
 
-- [x] 2.1 Update `apps/qbittorrent/deployment.yml`: `replicas: 1`, new `ts-state` and `config` PVC names/sizes, `TS_EXTRA_ARGS` with `--exit-node=100.84.2.120`, keep SOCKS5 proxy wiring; verify `kustomize build apps/qbittorrent` renders (done; landed on `main` via c6cbabdb)
+- [x] 2.1 Update `apps/qbittorrent/deployment.yml`: `replicas: 1`, new `ts-state` and `config` PVC names/sizes, `TS_EXTRA_ARGS` with `--exit-node=100.104.110.13`, keep SOCKS5 proxy wiring; verify `kustomize build apps/qbittorrent` renders (done; landed on `main` via c6cbabdb)
 - [x] 2.2 Delete the stale `qbittorrent-config` and `qbittorrent-ts-state` PVCs (or let them linger unused and record them; do not reuse) — chose to let them linger; pod now uses `config-v2` / `ts-state-v2`, old PVCs left untouched for manual deletion
 - [ ] 2.3 Commit, push, wait for Argo CD sync; verify `kubectl get pods -n qbittorrent` is 1/1 Ready and gatus qBittorrent endpoint is green (after re-enabling its check in gatus.yml)
 - [ ] 2.4 Verify egress: exec into the pod (or an ephemeral sibling) and confirm traffic exits via Mullvad (`curl --socks5 127.0.0.1:1055 ifconfig.me` or equivalent); confirm the pod's startup probe gates on exit-node health

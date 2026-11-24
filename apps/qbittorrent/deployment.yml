@@ -57,7 +57,7 @@ spec:
             - name: TS_SOCKET
               value: /tmp/tailscaled.sock
             - name: TS_EXTRA_ARGS
-              value: --exit-node=100.84.2.120 --exit-node-allow-lan-access=false
+              value: --exit-node=100.104.110.13 --exit-node-allow-lan-access=false
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false

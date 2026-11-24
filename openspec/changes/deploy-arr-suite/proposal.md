@@ -6,7 +6,7 @@ The media automation pipeline is broken end to end. Radarr and Sonarr are deploy
 
 ## What Changes
 
-- Re-enable **qBittorrent** with fresh state: new config and ts-state PVCs, new tailscale auth key tagged `tag:qbittorrent`, exit node `100.84.2.120` (Mullvad) via the tailscale sidecar, qBittorrent categories `radarr` and `sonarr` writing to `/media/Downloads/{radarr,sonarr}` on the shared `nas-media` NFS export.
+- Re-enable **qBittorrent** with fresh state: new config and ts-state PVCs, new tailscale auth key tagged `tag:qbittorrent`, exit node `100.104.110.13` (Mullvad) via the tailscale sidecar, qBittorrent categories `radarr` and `sonarr` writing to `/media/Downloads/{radarr,sonarr}` on the shared `nas-media` NFS export.
 - **Prowlarr** deployed as the indexer manager for public trackers, syncing indexers into Radarr and Sonarr.
 - **Radarr / Sonarr** wired to Prowlarr (indexers) and qBittorrent (download client). Imports use **copy** (not hardlink), and the torrent is **automatically removed** once the import completes — `/media/Downloads` is a transit area, not a seedbox.
 - **Seerr** deployed (`ghcr.io/seerr-team/seerr`) as the request front-end: Jellyfin authentication, household use, manual approval, creates requests in Radarr/Sonarr.
