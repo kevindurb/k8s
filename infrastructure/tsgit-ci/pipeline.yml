@@ -114,9 +114,10 @@ spec:
           value: $(workspaces.tools.path):/usr/local/bin:/usr/local/sbin:/usr/bin:/bin
       script: |
         #!/bin/sh
-        set -eu
+        set -eux
         SRC="$(workspaces.source.path)"
         TOOLS="$(workspaces.tools.path)"
+        echo "PATH=$PATH"; echo "TOOLS=$TOOLS"; ls -la "$TOOLS" || true; command -v chezmoi || true
         cd "$SRC"
         echo "== chezmoi dry-run apply"
         chezmoi --source "$SRC" --destination "$TOOLS/target" apply --dry-run --verbose
