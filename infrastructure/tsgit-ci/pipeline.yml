@@ -74,8 +74,9 @@ spec:
         #!/bin/sh
         set -eu
         base=https://github.com/twpayne/chezmoi/releases/download/v2.74.2
-        file=chezmoi_2.74.2_linux_amd64.tar.gz
-        want=5f2024119a1860f18f2243b892dd43a79f0fefe2ebef9786ee143f4d5fd69ccb
+        # musl build: the shellcheck step image is Alpine
+        file=chezmoi_2.74.2_linux-musl_amd64.tar.gz
+        want=0570eea5af5dea146d872423a65bdf46f140087fbb01ed279dc0c219e1e1da49
         cd "$(workspaces.tools.path)"
         curl -fsSL -o "$file" "$base/$file"
         echo "$want  $file" | sha256sum -c -
@@ -114,10 +115,9 @@ spec:
           value: $(workspaces.tools.path):/usr/local/bin:/usr/local/sbin:/usr/bin:/bin
       script: |
         #!/bin/sh
-        set -eux
+        set -eu
         SRC="$(workspaces.source.path)"
         TOOLS="$(workspaces.tools.path)"
-        echo "PATH=$PATH"; echo "TOOLS=$TOOLS"; ls -la "$TOOLS" || true; command -v chezmoi || true
         cd "$SRC"
         echo "== chezmoi dry-run apply"
         chezmoi --source "$SRC" --destination "$TOOLS/target" apply --dry-run --verbose
