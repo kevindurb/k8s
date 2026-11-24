@@ -1,0 +1,97 @@
+# tsgit push webhook receiver. tsgit delivers a GitHub-shaped `push` event
+# for each changed ref (see docs/tsgit-ci.md) to whatever URL the tailnet
+# policy assigns via the node's `github.com/kevindurb/tsgit/cap/hooks`
+# capability; that points at this EventListener through the `tsgit-hooks`
+# tailscale ingress. Only the ref filter below decides what builds.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: tsgit-hooks
+spec:
+  serviceAccountName: tsgit-ci
+  triggers:
+    - name: tsgit-push
+      interceptors:
+        # Only pushes to main that actually moved refs. `deleted: false`
+        # drops branch deletions (after would be all zeros). The event type
+        # and repo scope are already constrained by the cap/hooks policy.
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "header.match('X-GitHub-Event', 'push') && body.ref == 'refs/heads/main' && body.deleted == false"
+      bindings:
+        - ref: tsgit-push
+      template:
+        ref: tsgit-push
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: tsgit-push
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.after)
+    - name: giturl
+      value: $(body.repository.clone_url)
+    - name: repo-name
+      value: $(body.repository.name)
+    - name: ref
+      value: $(body.ref)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: tsgit-push
+spec:
+  params:
+    - name: gitrevision
+    - name: giturl
+    - name: repo-name
+    - name: ref
+  resourcetemplates:
+    # Same PipelineRun shape the poller used to create. The git resolver
+    # clones through the tsgit-egress proxy (tag:tekton, read-only), so no
+    # git credentials exist here either. Delivery is unsigned: the only
+    # caller that can reach the EventListener is tag:tsgit, and a forged
+    # event can only re-build a commit that already exists in the repo.
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: $(tt.params.repo-name)-
+        labels:
+          ci.tsgit/repo: $(tt.params.repo-name)
+        annotations:
+          ci.tsgit/revision: $(tt.params.gitrevision)
+          ci.tsgit/ref: $(tt.params.ref)
+      spec:
+        pipelineRef:
+          resolver: git
+          params:
+            - name: url
+              value: $(tt.params.giturl)
+            - name: revision
+              value: $(tt.params.gitrevision)
+            - name: pathInRepo
+              value: ci/pipeline.yaml
+        taskRunTemplate:
+          serviceAccountName: pipeline-runner
+          podTemplate:
+            automountServiceAccountToken: false
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+        params:
+          - name: repo
+            value: $(tt.params.giturl)
+          - name: revision
+            value: $(tt.params.gitrevision)
+        workspaces:
+          - name: source
+            emptyDir: {}
+          - name: tools
+            emptyDir: {}
+        timeouts:
+          pipeline: 10m
+          tasks: 9m

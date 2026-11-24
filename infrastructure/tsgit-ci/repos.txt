@@ -1,2 +1,0 @@
-# name  url                                                                   branch
-dotfiles https://tsgit.beaver-cloud.ts.net/kevindurb/dotfiles.git main

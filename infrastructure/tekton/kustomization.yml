@@ -5,6 +5,11 @@ kind: Kustomization
 namespace: tekton-pipelines
 
 resources:
+  # Vendored from https://infra.tekton.dev/tekton-releases/triggers/previous/v0.38.0/
+  # release.yaml + interceptors.yaml (core interceptors: cel, github, gitlab,
+  # bitbucket, slack). Bump by downloading the new version over these files.
+  - triggers-release.yaml
+  - triggers-interceptors.yaml
   - ./dashboard-release.yaml
   - ./dashboard-ingress.yml
 
