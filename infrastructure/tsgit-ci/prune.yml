@@ -1,6 +1,8 @@
 ---
-# Deletes PipelineRuns older than 14 days. Tekton keeps run history in CRDs;
-# without pruning it grows unbounded. Runs as tsgit-ci (delete on pipelineruns only).
+# Deletes PipelineRuns older than 14 days, and FAILED PipelineRuns older than
+# 24h (failed runs leave Error pods behind that trip pod-not-healthy alerts).
+# Tekton keeps run history in CRDs; without pruning it grows unbounded.
+# Runs as tsgit-ci (delete on pipelineruns only).
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -49,6 +51,19 @@ spec:
                       echo "deleting $pr"
                       kubectl delete -n tekton-pipelines "$pr"
                     done
+                  fail_cutoff=$(date -u -d "@$(( $(date -u +%s) - 24*3600 ))" +%Y-%m-%dT%H:%M:%SZ)
+                  echo "deleting failed PipelineRuns created before $fail_cutoff"
+                  kubectl get pipelineruns -n tekton-pipelines -o json \
+                    | jq -r --arg cutoff "$fail_cutoff" '
+                        .items[]
+                        | select(.metadata.creationTimestamp < $cutoff)
+                        | select(any(.status.conditions[]?; .type == "Succeeded" and .status == "False"))
+                        | "pipelinerun.tekton.dev/" + .metadata.name' \
+                    | while read -r pr; do
+                        [ -z "$pr" ] && continue
+                        echo "deleting failed $pr"
+                        kubectl delete -n tekton-pipelines "$pr"
+                      done
               volumeMounts:
                 - name: tmp
                   mountPath: /tmp
