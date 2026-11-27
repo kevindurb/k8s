@@ -29,7 +29,7 @@
 ## 5. Wrap-up
 
 - [x] 5.1 No gatus entry (platform component, not a user-facing service); instead add the smoke-test evidence (commands + output summary) to the change notes
-- [ ] 5.2 Confirm no other changes were snuck in: `git diff main --stat` shows only `infrastructure/kubevirt/**`, `infrastructure/kustomization.yml`, `docs/kubevirt.md`
+- [x] 5.2 Confirm no other changes were snuck in: `git diff main --stat` shows only `infrastructure/kubevirt/**`, `infrastructure/kustomization.yml`, `docs/kubevirt.md`
 
 ## Workflow follow-up
 
