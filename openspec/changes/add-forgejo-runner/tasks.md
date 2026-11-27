@@ -8,29 +8,29 @@ applied (needs a forgejo URL + registration token). Cross-repo: tasks marked
 
 - [x] 1.1 **(bootc)** Create `containers/ci-runner/Containerfile` — done: `quay.io/fedora/fedora-bootc:44@sha256:6b3262...` (no `stable` tag exists; `44` is current Fedora, matches fleet), dnf installs podman/buildah/podman-docker/skopeo/git/git-lfs/make/jq/nodejs/cloud-init, `forgejo-runner` v13.2.2 from code.forgejo.org pinned by sha256, `forgejo-runner.service` + hourly `podman-gc.timer` enabled, `bootc container lint` passes (warnings only, same class as other images)
 - [x] 1.2 **(bootc)** `ci-runner` job added to `.github/workflows/build.yml` via `reusable-build.yml`; CI build succeeded 2026-11-27 and pushed `ghcr.io/kevindurb/ci-runner:latest` (+ `sha-4cd0994`). Note: dated `YYYY.MM.DD` tags are only produced by the weekly cron build; the push-path build emits `latest` + `sha-<short>`. Dated tag will appear after the next scheduled Build (or on any future scheduled run) — flagging in case the dated tag is wanted on every push (one-line change to reusable-build.yml, intentionally left alone since it tags every image in the repo)
-- [ ] 1.3 **(bootc)** Add `.github/workflows/build-runner-disk.yml`: run `bootc-image-builder` (type `qcow2`) in a privileged step, then wrap the qcow2 as `FROM scratch / COPY *.qcow2 /disk/disk.img`, tag `ghcr.io/kevindurb/ci-runner-disk:<sha>`, cosign-sign both images (existing cosign flow), push
-- [ ] 1.4 Verify: `skopeo inspect docker://ghcr.io/kevindurb/ci-runner-disk:<sha>` succeeds from a clean machine; image is public (or note the required pull secret for KubeVirt)
+- [x] 1.3 **(bootc)** `.github/workflows/build-runner-disk.yml` implemented **differently than planned**: GH-hosted runners cannot build the qcow2 (osbuild needs nested user namespaces; Ubuntu's `apparmor_restrict_unprivileged_userns=1` blocks them even with `--privileged`; `/dev/kvm` exists but the failure happens before the VM is used). The qcow2 is built locally on a Fedora 44 host with `image-builder-cli` (proven, 2026-11-27) and published as a release asset (`ci-runner-disk/2026.11.27`: `bootc-fedora-44-qcow2-x86_64.qcow2` → `ci-runner-disk.qcow2.xz`, sha256 published). The workflow repacks the asset into a `FROM scratch` containerDisk (`disk.img`), pushes `ghcr.io/kevindurb/ci-runner-disk:<tag>` + `:latest`, and cosign-signs **both** images (same key as the node image; verified locally with the repo's `cosign.pub`). Rebuild procedure documented in `docs/forgejo.md`. Release/asset flow is the supported path; the workflow triggers on `release: published` for tags `ci-runner-disk/*` or via `workflow_dispatch`
+- [x] 1.4 Verify: `skopeo inspect docker://ghcr.io/kevindurb/ci-runner-disk:2026.11.27` succeeds anonymously (also `:latest`); KubeVirt pulled it and the VM booted from it, so KubeVirt needs no pull secret (image is public). Signed via `cosign verify --key kevindurb/bootc/cosign.pub`
 
 ## 2. Runner VM (this repo)
 
-- [ ] 2.1 Create `infrastructure/ci-runner/` app: `app.yml` (Argo Application, project `infrastructure`, namespace `ci-runner`, CreateNamespace), `kustomization.yml`, `vm.yaml`, `sealed-secret.yml`, gatus entry if a healthcheck makes sense (else skip — the VM's liveness signal is the runner status in forgejo)
-- [ ] 2.2 `vm.yaml`: `VirtualMachine` `ci-runner` — 2 vCPU, 4 GiB, `containerDisk` source `ghcr.io/kevindurb/ci-runner-disk:<pinned tag>`, nodeSelector `kubernetes.io/hostname` in `[drone-01, drone-02, drone-03]`, no control-plane tolerations, masquerade networking, cloudInitNoCloud userData from secret `ci-runner-cloudinit`
-- [ ] 2.3 `sealed-secret.yml` `ci-runner-cloudinit`: userData (from file, not literal) that (a) writes `/etc/forgejo-runner/config.yaml` — instance `https://forgejo.beaver-cloud.ts.net`, one runner, `capacity: 1`, labels `self-hosted,linux` — and (b) registers on first boot (`forgejo-runner register --no-interactive --token $(cat /run/secrets/ci-runner-token) ...` then `systemctl start forgejo-runner`)
-- [ ] 2.4 Mint the registration token in forgejo (site administration → runners → create registration token); seal it INTO the cloud-init secret; delete local copy
-- [ ] 2.5 `just check-kustomize`; push; Argo syncs; `kubectl -n ci-runner get vmi` shows `Running`; forgejo UI shows runner **Online**
-- [ ] 2.6 Smoke job: add a temp workflow on a scratch repo that runs `podman info` and `podman run --rm hello-world`; confirm green in forgejo
+- [x] 2.1 Create `infrastructure/ci-runner/` app: `app.yml` (Argo Application, project `infrastructure`, namespace `ci-runner`, CreateNamespace), `kustomization.yml`, `vm.yaml`, `sealed-secret.yml` — committed and synced 2026-11-27 (one fix: `interfaces[].model` must be a string for the kubevirt webhook). Gatus entry deliberately skipped — the VM has no HTTP endpoint; forgejo URL gatus check covers reachability, runner visibility is via forgejo UI/API (see docs/forgejo.md)
+- [x] 2.2 `vm.yaml`: `VirtualMachine` `ci-runner` — 2 vCPU, 4 GiB, `containerDisk` `ghcr.io/kevindurb/ci-runner-disk:2026.11.27` (pinned tag + digest recorded in a comment), nodeAffinity `kubernetes.io/hostname` in `[drone-01, drone-02, drone-03]` (affinity instead of nodeSelector — same semantics, no control-plane, drone-04 excluded), no control-plane tolerations, masquerade networking, cloudInitNoCloud `secretRef` (`ci-runner-cloudinit`), host/VM runs with no privileged pods
+- [x] 2.3 `sealed-secret.yml` `ci-runner-cloudinit`: userData (from file, not literal) that (a) writes `/etc/forgejo-runner/config.yaml` — instance `https://forgejo.beaver-cloud.ts.net`, one runner, `capacity: 1`, labels `self-hosted:host,linux:host` (typed labels required by the runner; names match `runs-on: [self-hosted, linux]`) — and (b) registers on first boot (`forgejo-runner register --no-interactive --token $(cat /run/secrets/ci-runner-token) --labels self-hosted:host,linux:host`, then `rm` the token file, then `systemctl start forgejo-runner`)
+- [x] 2.4 Registration token generated via `kubectl exec -n forgejo deploy/forgejo -- forgejo actions generate-runner-token` (global scope), sealed into `ci-runner-cloudinit` (name matches post-unseal name — no prefix in this app), local plaintext shredded (`/tmp` copies removed). Token is alive/needed only for first boot
+- [x] 2.5 `just check-kustomize` ✓; pushed; Argo app `ci-runner` synced; `vmi/ci-runner` Running on drone-02; kubevirt `virt-launcher` pod not privileged; forgejo API shows runner `ci-runner` **active** v13.2.2 with labels self-hosted,linux
+- [x] 2.6 Smoke job: `runner-smoke` scratch repo with `podman info`, `podman run hello-world`, and a `podman build` of a tiny image — all green (run id 7, then deleted the scratch repo)
 
 ## 3. Job sandbox verification
 
-- [ ] 3.1 Confirm the runner pod is **not** privileged and the workflow job did not create any privileged pod: `kubectl get pods -A -o json | jq '..|.securityContext? //empty | select(.privileged==true)'` shows only known infra pods
-- [ ] 3.2 Confirm podman storage works across steps (push a tag, then a second job reuses cache) — or document that each job starts cold; either is acceptable, record which
+- [x] 3.1 Confirmed: `kubectl get pods -A` privileged list contains only known infra pods (kubevirt virt-handler, openebs, smartctl-exporter, zfs-exporter, tailscale, nut/jellyfin/makemkv/zigbee2mqtt, pod-pinned DaemonSets). The runner job runs inside the VM, not in a pod; the `virt-launcher` pod runs as uid 107, not privileged; no pods were created by the smoke workflow
+- [x] 3.2 Recorded: each job effectively starts cold w.r.t. podman cache — the VM persists between jobs but the image ships an hourly `podman system prune -f` timer, and VM recreation wipes everything. Observed cold behavior on first smoke run (hello-world pulled from docker.io). Persistent per-job cache is out of scope; jobs must not rely on it. No podman socket is exposed to pods — it is only the in-VM local socket
 
 ## 4. Migrate dotfiles CI
 
-- [ ] 4.1 Add `.forgejo/workflows/ci.yml` to dotfiles: checkout → chezmoi (pinned to the version from the old Tekton pipeline) `execute-template --dry-run` render → `shellcheck` on all shell sources (same semantics as the Tekton task)
-- [ ] 4.2 Delete `.github/workflows` content that duplicates it (dotfiles has none today — verify); open a PR/branch, watch it run, iterate to green
-- [ ] 4.3 Negative test: branch with an unmatched `{{` fails the render step; capture the failure log; then revert
-- [ ] 4.4 Merge to `main`; confirm `main` build green; confirm forgejo shows the commit status
+- [x] 4.1 Add `.forgejo/workflows/ci.yml` to dotfiles: checkout → chezmoi (`anz/chezmoi` v2.74.2, glibc build, sha256-verified — same version as the Tekton task, which used the musl build) `execute-template --dry-run` render → `shellcheck` (v0.11.0, same as Tekton's koalaman/shellcheck-alpine v0.11.0) on all shell sources, same semantics as the Tekton task. Deployed via PR #1 (merged 2026-11-27), with a follow-up fix: run steps need `HOME` set (forgejo runner doesn't export it — first runs failed on `chezmoi: $HOME is not defined`)
+- [x] 4.2 Verified dotfiles has no `.github/workflows` (nothing to delete). PR #1 opened, ran, iterated to green; PR body documents the change. Note: the first runs all failed on a workflow bug unrelated to the runner (missing `HOME` for run steps — fixed in `c61358f`), not because of runner availability
+- [x] 4.3 Negative test: branch `ci-negative-test` with an unbalanced `{{` failed the render step (`unclosed action ... broken_negative_test.sh.tmpl`); branch deleted afterwards, nothing merged
+- [x] 4.4 `main` is green (commit `c61358f`, run at 2026-11-27T07:49); `forgejo` commit status on `main` reports `success`. One intermediate empty commit (`47d32f6`) was pushed to retrigger after the runner came online; it failed only on the missing `HOME` in run steps, fixed in `c61358f`
 
 ## 5. Migrate image-building repositories
 
@@ -50,9 +50,9 @@ applied (needs a forgejo URL + registration token). Cross-repo: tasks marked
 
 ## 6. Wrap-up
 
-- [ ] 6.1 Extend `docs/forgejo.md` (created in `add-forgejo`): runner architecture, adding/replacing the VM, rotating the registration token, what happens on reboot, how to read a failed job log
-- [ ] 6.2 Verify `gatus` shows forgejo healthy and the runner VM pod healthy; add a gatus check on the forgejo URL only (runner is visible via forgejo UI)
-- [ ] 6.3 Hand off to `remove-tsgit-tekton` — do **not** delete Tekton/tsgit here
+- [x] 6.1 Extended `docs/forgejo.md`: runner architecture (VM, containerDisk, build/signing path), rebuild/replace steps, token rotation, reboot behavior, reading job logs (web UI + `/data/actions_log/...` via `kubectl exec`), cold-cache caveat, why no gatus runner check
+- [x] 6.2 gatus shows forgejo healthy (verified `api/v1/endpoints/statuses` → forgejo `success=true`; the forgejo URL check already exists in `platform/forgejo/gatus.yml`). No runner-specific gatus check added, per spec — the VM has no HTTP endpoint and runner presence is visible in the forgejo UI/API (`admin/actions/runners` → `ci-runner` idle/online)
+- [x] 6.3 Hand-off to `remove-tsgit-tekton` noted in docs/forgejo.md; Tekton/tsgit untouched by this change
 
 ## Workflow follow-up
 

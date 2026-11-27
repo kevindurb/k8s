@@ -4,9 +4,10 @@ Self-hosted git forge at `https://forgejo.beaver-cloud.ts.net` (web UI and HTTPS
 git), SSH at `forgejo-ssh.beaver-cloud.ts.net:22`. Tailnet-only, no LAN/public
 listeners, no MetalLB addresses. Implemented by the `add-forgejo` change.
 
-> Status: migration in progress. CI still runs on the Tekton/tsgit stack until
-> `remove-tsgit-tekton` lands; forgejo is the new source of truth for repos,
-> not yet for CI. See `openspec/changes/add-forgejo/`.
+> Status: `dotfiles` CI runs on forgejo Actions (self-hosted runner, see
+> below) since 2026-11-27. The Tekton/tsgit stack still serves anything that
+> has not been migrated; its removal is `remove-tsgit-tekton`. See
+> `openspec/changes/add-forgejo-runner/`.
 
 ## Access
 
@@ -61,6 +62,76 @@ leave internal sign-in enabled. OIDC-provisioned site admins (see above) are
 the normal path for administrative access; this account is only for
 catastrophic SSO failure.
 
+## CI runner (`add-forgejo-runner`, since 2026-11-27)
+
+Forgejo Actions runs on a self-hosted runner, **not** in pods: a single
+`VirtualMachine` (`infrastructure/ci-runner`, Argo app `ci-runner`) in the
+`ci-runner` namespace on drone-01..03 (2 vCPU / 4 GiB, ephemeral overlay
+root — state does not survive VM recreation).
+
+- **Image**: `ghcr.io/kevindurb/ci-runner` (bootc, Fedora 44): podman,
+  buildah, podman-docker, skopeo, git, git-lfs, make, jq, nodejs,
+  `forgejo-runner` v13.2.2 (pinned, sha256-verified at build), plus
+  `cloud-init`. Built by `kevindurb/bootc` (`containers/ci-runner/`);
+  cosign-signed (same key as the node image).
+- **Disk**: the VM boots a KubeVirt containerDisk,
+  `ghcr.io/kevindurb/ci-runner-disk:2026.11.27` — the fedora-bootc qcow2
+  wrapped in a scratch image. cosign-signed. **The GH-hosted runners cannot
+  build the qcow2** (osbuild needs nested user namespaces, which Ubuntu's
+  `kernel.apparmor_restrict_unprivileged_userns=1` blocks; `/dev/kvm` exists
+  but manifest generation itself dies in the sandbox). The qcow2 is therefore
+  built on a Fedora host with `image-builder` (see the release notes on
+  `kevindurb/bootc` → `ci-runner-disk/2026.11.27`) and published as a GitHub
+  release asset; `build-runner-disk.yml` in that repo repacks the asset into
+  the containerDisk and signs it. Rebuild: repeat the command in the release
+  notes on any unrestricted Fedora/RHEL host, upload a new
+  `ci-runner-disk/<date>` release (qcow2.xz + .sha256), and the workflow
+  publishes+signs the images automatically.
+- **Registration**: first boot, cloud-init (`ci-runner-cloudinit`
+  SealedSecret → NoCloud `userData`) writes `/etc/forgejo-runner/config.yaml`
+  (capacity 1, labels `self-hosted,linux`), registers with
+  `forgejo-runner register --no-interactive` using the token in
+  `/run/secrets/ci-runner-token` (tmpfs, deleted after registration), and
+  starts `forgejo-runner.service`. The `.runner` credentials live in
+  `/var/lib/forgejo-runner/` on the VM's ephemeral root.
+- **Draining/reboot**: the VM is recreated from the pinned image (a drain
+  migrates or recreates it; containerDisk VMs are migratable, so KubeVirt
+  default `LiveMigrate` applies). On recreation it registers again with the
+  same token — the stale duplicate entry in Site administration → Actions →
+  Runners can be deleted there, or rotate the token (below).
+- **Job environment**: jobs run as root directly on the VM (host backend),
+  not in containers. `podman`/`podman build` work unmodified. No
+  privileged *pods* are involved anywhere; the podman socket is not exposed
+  to jobs except as the local `/run/podman/podman.sock` inside the VM.
+- **Capacity**: 1 job at a time; queue via forgejo. Podman cache survives
+  normal VM reboots but is wiped by the hourly `podman system prune -f`
+  systemd timer and by VM recreation (recreation is always a cold start).
+- **Reading logs**: web UI → repo → Actions → job, or on the server:
+  `kubectl exec -n forgejo deploy/forgejo -- ls /data/actions_log/<owner>/<repo>/`
+  and `zstd -d` the `<run-id>.log.zst`.
+- **Adding/replacing runners**: bump `infrastructure/ci-runner/vm.yaml`
+  (`containerDisk` tag) and let Argo sync. For a *second* runner, copy the
+  app with a new name and a fresh registration token sealed separately.
+- **Rotating the registration token**:
+  1. `kubectl exec -n forgejo deploy/forgejo -- forgejo actions generate-runner-token`
+  2. Re-create the `ci-runner-cloudinit` secret with the new token
+     (delete the `SealedSecret`, re-seal, commit, let Argo apply).
+  3. `kubectl -n ci-runner delete vmi ci-runner` — it re-registers on boot.
+  4. Delete the stale runner entry in Site administration → Actions → Runners.
+- **No gatus check** is added for the VM (it has no HTTP endpoint); the
+  existing gatus check on the forgejo URL is the availability signal, and
+  runner presence is visible in the forgejo UI / `admin/actions/runners` API.
+- Token rotation note: the registration token used at first boot is consumed
+  at registration time only; the runner's long-lived credential is the
+  `.runner` file inside the VM.
+
+### Verifying the pipeline
+
+`dotfiles` `main` is green (run on `c61358f`, 2026-11-27). `ci-negative-test`
+(unbalanced `{{`) fails at the render step as expected. Smoke-tested with podman
+(`hello-world`, `podman build`) on a scratch repo (since deleted). Context:
+JS actions run on the VM's nodejs 22.
+
 ## Operations
 
 - App: `platform/forgejo/` (Argo CD app `forgejo`, project `apps`, chart
@@ -84,14 +155,20 @@ tailnet peer verified.
 - `kevindurb/dotfiles` — migrated. Push-mirrors to `github.com/kevindurb/dotfiles`
   (mirror configured in forgejo → repo → Settings → Mirror Settings; the PAT is
   a fine-grained GitHub token with Contents: Read/Write on that one repo, stored
-  only in forgejo). Treat GitHub as read-only for this repo.
+  only in forgejo). Treat GitHub as read-only for this repo. Its CI
+  (`.forgejo/workflows/ci.yml`: chezmoi dry-run + shellcheck) runs on the
+  forgejo runner; the Tekton `ci/pipeline.yaml` is kept for reference until
+  `remove-tsgit-tekton` lands.
+- The image-building repos (`bootc`, `containers`, `box`, `ts-forge`) were
+  enumerated 2026-11-27 for migration to the forgejo runner; none are migrated
+  yet (owner decision — runner is amd64-only and these build multi-arch). They
+  keep building on GitHub Actions.
 - `kevindurb/ci` — **stays on tsgit** for now (owner decision, 2026-11-27). It is
   not migrated and gets no mirror. Revisit when `remove-tsgit-tekton` lands.
 - No other repos exist on tsgit, so the "image-building repos" scope item resolved
   to exactly these two.
-- CI still runs on the Tekton/tsgit stack; forgejo is a git host only until
-  `add-forgejo-runner` lands and `remove-tsgit-tekton` follows. Nothing in
-  forgejo builds or tests code yet.
+- CI runs on forgejo for `dotfiles` only; the other migrated repo (`ci`) does
+  not exist on forgejo. Image-building repos remain on GitHub Actions.
 
 ## TODO before this doc is final
 
@@ -101,4 +178,4 @@ tailnet peer verified.
 - [x] Repo migration SHAs match tsgit
 - [ ] Push mirror verified with a test commit
 - [x] Mirror policy for non-dotfiles repos documented
-- [ ] Gatus green; runner/`add-forgejo-runner` handoff noted
+- [x] Gatus green; runner/`add-forgejo-runner` handoff noted
