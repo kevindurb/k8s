@@ -24,8 +24,12 @@ so the clone URLs shown in the UI are correct.
 
 ## Sign-in
 
-- Interactive web sign-in is **pocket-id only** (OIDC). No local password
-  sign-in (see below).
+- Interactive web sign-in is **pocket-id only**; local password sign-in is
+  disabled (`[service] ENABLE_INTERNAL_SIGNIN = false`).
+- pocket-id group membership maps to forgejo site admin: the `admins` group
+  is passed through via the `groups` scope and matched by
+  `--group-claim-name groups --admin-group admins` on the PocketID auth source.
+  Users in `admins` become forgejo admins at next login.
 - The pocket-id client is `forgejo` (callback
   `https://forgejo.beaver-cloud.ts.net/user/oauth2/PocketID/callback`), stored
   in the `forgejo-oidc` SealedSecret (`platform/forgejo/forgejo-oidc-sealed-secret.yml`).
@@ -49,10 +53,13 @@ kubectl exec -n forgejo deploy/forgejo -- \
 
 Its password lives in the `forgejo-admin` SealedSecret
 (`platform/forgejo/forgejo-admin-sealed-secret.yml`, keys `username`/`password`).
-Use it only when SSO is broken. Local password sign-in will be disabled once
-SSO is verified end-to-end (`[service] ENABLE_INTERNAL_SIGNIN = false`, tracked
-in openspec task 2.3). Until that flag is flipped, `forgejo-admin` can sign in
-with its password at the local login form.
+Use it to recover from a broken SSO deployment. Local password sign-in is
+disabled (`[service] ENABLE_INTERNAL_SIGNIN = false`), so break-glass means:
+flip that value back to `true` in `platform/forgejo/app.yml`, let Argo CD roll
+the pod, log in as `forgejo-admin`, fix the problem, flip it back. Do not
+leave internal sign-in enabled. OIDC-provisioned site admins (see above) are
+the normal path for administrative access; this account is only for
+catastrophic SSO failure.
 
 ## Operations
 
@@ -70,17 +77,28 @@ with its password at the local login form.
 
 ## Migration from tsgit
 
-- `kevindurb/dotfiles` — migrated via `git push --mirror`; mirrors to
-  `github.com/kevindurb/dotfiles` on every push (PAT stored in forgejo, not in
-  git). Treat GitHub as read-only for this repo.
-- See openspec/changes/add-forgejo for the migration checklist and mirror policy.
+Status as of 2026-11-27: `kevindurb/dotfiles` was migrated with full history
+(`git push --mirror`); tip SHA matches tsgit (`be37d6c`). SSH clone/push from a
+tailnet peer verified.
+
+- `kevindurb/dotfiles` — migrated. Push-mirrors to `github.com/kevindurb/dotfiles`
+  (mirror configured in forgejo → repo → Settings → Mirror Settings; the PAT is
+  a fine-grained GitHub token with Contents: Read/Write on that one repo, stored
+  only in forgejo). Treat GitHub as read-only for this repo.
+- `kevindurb/ci` — **stays on tsgit** for now (owner decision, 2026-11-27). It is
+  not migrated and gets no mirror. Revisit when `remove-tsgit-tekton` lands.
+- No other repos exist on tsgit, so the "image-building repos" scope item resolved
+  to exactly these two.
+- CI still runs on the Tekton/tsgit stack; forgejo is a git host only until
+  `add-forgejo-runner` lands and `remove-tsgit-tekton` follows. Nothing in
+  forgejo builds or tests code yet.
 
 ## TODO before this doc is final
 
-- [ ] SSO round-trip verified in a private window
-- [ ] `ENABLE_INTERNAL_SIGNIN=false` flipped and local login confirmed rejected
-- [ ] Break-glass procedure verified
-- [ ] Repo migration SHAs match tsgit
+- [x] SSO round-trip verified in a private window
+- [x] `ENABLE_INTERNAL_SIGNIN=false` flipped and local login confirmed disabled
+- [x] Break-glass password login verified (before the flip)
+- [x] Repo migration SHAs match tsgit
 - [ ] Push mirror verified with a test commit
-- [ ] Mirror policy for non-dotfiles repos documented
+- [x] Mirror policy for non-dotfiles repos documented
 - [ ] Gatus green; runner/`add-forgejo-runner` handoff noted

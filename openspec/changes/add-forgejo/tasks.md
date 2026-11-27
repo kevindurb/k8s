@@ -14,7 +14,7 @@ Depends on: nothing (parallel with `install-kubevirt`). Blocks: `add-forgejo-run
 
 - [x] 2.1 In pocket-id admin: create client `forgejo` with redirect URI `https://forgejo.beaver-cloud.ts.net/user/oauth2/PocketID/callback` (confirm exact path from the running forgejo version); scopes: openid profile email
 - [x] 2.2 Seal the client secret (`forgejo-oidc`); wire into chart values/oauth config (values key per chart docs — verify against the pinned chart's values.yaml)
-- [ ] 2.3 Verify SSO round-trip in a private window; only then disable local password sign-in (keep break-glass admin working); verify break-glass login works with the sealed password
+- [x] 2.3 Verify SSO round-trip in a private window; only then disable local password sign-in (keep break-glass admin working); verify break-glass login works with the sealed password
 
 ## 3. Namespace, secrets, first boot
 
@@ -24,18 +24,18 @@ Depends on: nothing (parallel with `install-kubevirt`). Blocks: `add-forgejo-run
 
 ## 4. Repositories and migration
 
-- [ ] 4.1 Create repos in forgejo: `dotfiles` + owner-confirmed image-building repos; all private
-- [ ] 4.2 From a laptop: clone each from tsgit; `git push --mirror forgejo <url>`; verify SHA equality (`git rev-parse main` forgejo vs tsgit) for every migrated repo
+- [x] 4.1 Create repos in forgejo: `dotfiles` created (private). `ci` stays on tsgit per owner decision — no image-building repos existed on tsgit
+- [x] 4.2 From a laptop: clone each from tsgit; `git push --mirror forgejo <url>`; verify SHA equality (`git rev-parse main` forgejo vs tsgit) for every migrated repo
 - [ ] 4.3 Create fine-grained GitHub PAT (Contents: Read/Write on `kevindurb/dotfiles`) and configure the forgejo push mirror; push a test commit; confirm it lands on `github.com/kevindurb/dotfiles`
-- [ ] 4.4 Decide + record the mirror policy for the image-building repos (mirror vs GitHub-only-read mirror vs none); document in `docs/forgejo.md`
+- [x] 4.4 Decide + record the mirror policy for the image-building repos (mirror vs GitHub-only-read mirror vs none); document in `docs/forgejo.md` (decision: dotfiles mirrors to GitHub; `ci` not migrated, no mirror)
 
 ## 5. Verification
 
 - [ ] 5.1 Anonymous `curl https://forgejo.beaver-cloud.ts.net/` from outside the tailnet (e.g. phone on LTE) gets nothing; from a tailnet peer it returns the login page
-- [ ] 5.2 Fresh SSH clone + push of `dotfiles` from a tailnet laptop using only the user's SSH key; `git log` matches tsgit tip
+- [x] 5.2 Fresh SSH clone + push of `dotfiles` from a tailnet laptop using only the user's SSH key; `git log` matches tsgit tip
 - [ ] 5.3 Mirror sync observed for a second test commit; revert both test commits on forgejo
 - [ ] 5.4 gatus endpoint configured and green; `docs/forgejo.md` complete (install, OIDC, mirror, admin recovery, where the PAT lives, upgrade procedure pointer)
-- [ ] 5.5 Leave `apps/tsgit` and the Tekton stack fully intact (removal is `remove-tsgit-tekton`); note in docs that CI still runs on Tekton until that change lands
+- [x] 5.5 Leave `apps/tsgit` and the Tekton stack fully intact (removal is `remove-tsgit-tekton`); note in docs that CI still runs on Tekton until that change lands (see docs/forgejo.md → Migration from tsgit)
 
 ## Workflow follow-up
 
