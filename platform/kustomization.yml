@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ./forgejo/app.yml
   - ./mosquitto/app.yml
   - ./pocket-id/app.yml
   - ./sealed-secrets/app.yml

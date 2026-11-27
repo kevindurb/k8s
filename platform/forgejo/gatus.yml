@@ -1,0 +1,7 @@
+---
+endpoints:
+  - name: forgejo
+    group: apps
+    url: https://forgejo.beaver-cloud.ts.net/
+    conditions:
+      - '[STATUS] == 200'

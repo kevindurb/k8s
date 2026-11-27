@@ -28,7 +28,9 @@ internet, and no MetalLB reservation SHALL exist for the forge.
 
 #### Scenario: Git over SSH
 
-- **WHEN** a tailnet peer runs `git clone ssh://forgejo/…`
+- **WHEN** a tailnet peer runs `git clone ssh://forgejo-ssh.beaver-cloud.ts.net/…`
+  (the SSH LoadBalancer is `forgejo-ssh` because the `forgejo` MagicDNS name is
+  taken by the HTTPS ingress VIP)
 - **THEN** the connection succeeds and authenticates as the peer's configured user
 
 ### Requirement: Single sign-on via pocket-id

@@ -1,0 +1,107 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: forgejo
+  namespace: argocd
+spec:
+  project: apps
+  sources:
+    - repoURL: code.forgejo.org/forgejo-helm
+      chart: forgejo
+      targetRevision: 17.3.3
+      helm:
+        releaseName: forgejo
+        valuesObject:
+          podSecurityContext:
+            fsGroup: 1000
+          containerSecurityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          service:
+            http:
+              type: ClusterIP
+              port: 3000
+            ssh:
+              type: LoadBalancer
+              port: 22
+              loadBalancerClass: tailscale
+              annotations:
+                # Separate MagicDNS name from the web VIP (forgejo) — a tailnet
+                # device and a VIP service cannot share one MagicDNS name.
+                tailscale.com/hostname: forgejo-ssh
+                tailscale.com/tags: tag:apps
+          ingress:
+            enabled: true
+            className: tailscale
+            annotations:
+              tailscale.com/proxy-group: ingress-proxy-group
+              tailscale.com/tags: tag:apps
+            hosts:
+              - host: forgejo.beaver-cloud.ts.net
+                paths:
+                  - path: /
+                    pathType: Prefix
+            tls:
+              - hosts:
+                  - forgejo
+          persistence:
+            storageClass: zfs-local
+            size: 10Gi
+          test:
+            enabled: false
+          gitea:
+            admin:
+              # No chart-managed admin; the break-glass admin is created
+              # out-of-band with `forgejo admin user create` (see docs/forgejo.md).
+              username: ''
+            metrics:
+              enabled: false
+            oauth:
+              - name: PocketID
+                provider: openidConnect
+                autoDiscoverUrl: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
+                existingSecret: forgejo-oidc
+            config:
+              APP_NAME: Forgejo
+              server:
+                DOMAIN: forgejo.beaver-cloud.ts.net
+                ROOT_URL: https://forgejo.beaver-cloud.ts.net/
+                SSH_DOMAIN: forgejo-ssh.beaver-cloud.ts.net
+                SSH_PORT: "22"
+              service:
+                DISABLE_REGISTRATION: "true"
+                ALLOW_ONLY_EXTERNAL_REGISTRATION: "true"
+              oauth2_client:
+                ENABLE_AUTO_REGISTRATION: "true"
+    - repoURL: https://github.com/kevindurb/k8s.git
+      targetRevision: HEAD
+      path: platform/forgejo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: forgejo
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: restricted
+        pod-security.kubernetes.io/audit: restricted
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

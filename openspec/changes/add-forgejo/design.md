@@ -34,7 +34,9 @@ Alternative rejected: raw manifests — chart drift for no gain.
 ### 3. Exposure: tailscale ingress (web/HTTPS-git) + tailscale LoadBalancer (SSH)
 The ingress pattern every other tailnet app uses for HTTP; SSH is a raw TCP
 service, so it gets a `type: LoadBalancer` with the tailscale class (the
-minecraft pattern), hostname `forgejo` in MagicDNS. No MetalLB member is
+minecraft pattern), hostname `forgejo-ssh` in MagicDNS (`forgejo` itself is
+the HTTPS ingress VIP; a device and a VIP service cannot share a MagicDNS
+name). No MetalLB member is
 consumed; the `.222` reservation stays unused and is removed later in
 `remove-tsgit-tekton`.
 
