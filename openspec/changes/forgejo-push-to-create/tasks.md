@@ -10,9 +10,15 @@
 
 ## 3. Deploy and verify
 
-- [ ] 3.1 Commit and merge the above (Argo CD syncs `platform/forgejo`); verify the forgejo pod rolls and `https://forgejo.beaver-cloud.ts.net/api/healthz` is green and Gatus stays green.
-- [ ] 3.2 Push a scratch repo to a nonexistent path over SSH (e.g. `git push ssh://git@forgejo-ssh.beaver-cloud.ts.net/kevindurb/push-to-create-smoke.git`) and verify it is created and private in the UI; delete the scratch repo; repeat once over HTTPS; record results in the change notes.
-- [ ] 3.3 Check whether an org exists on the instance (`forgejo` admin UI or `kubectl exec -n forgejo deploy/forgejo -- forgejo ...`); if one does, push-create a scratch org repo and verify it lands private, then delete it; if no org exists, note the org scenario as untested (design.md).
+- [x] 3.1 Merged as PR #658 (squash of `feat/forgejo-push-to-create`, merged 2026-11-27). Argo CD synced `forgejo` (hard refresh), pod rolled (23s old at check), `[repository]` in `app.ini` shows all three keys, `/api/healthz` returns 200. Gatus reported `forgejo` down once during the roll (15:16:31, 10s timeout) and green again from 15:17:22 onward. The PR's `Review` (pr-agent) check failed on an LLM-backend connection error in the action itself; `Check Kustomize` passed and main is not branch-protected.
+- [x] 3.2 Verified over SSH: `git push` of a fresh repo to `kevindurb/push-to-create-smoke` created the repo (branch `main`); anonymous HTTPS GET of the repo page returns 404 and `info/refs` 401, i.e. it is private. HTTPS push NOT verified (no non-interactive credential available; skipped per user decision). Scratch repo left in place for the user to delete in the UI.
+- [x] 3.3 No organization exists on the instance (anonymous `GET /api/v1/orgs` returns `[]`; user confirmed). The org push-create scenario is untested; `ENABLE_PUSH_CREATE_ORG` remains enabled but unexercised.
+
+## Verification log
+
+- 2026-11-27 ~15:16 UTC: merged PR #658; Argo roll completed; healthz 200; gatus green post-roll.
+- 2026-11-27 ~15:3x UTC: SSH push-to-create succeeded; repo confirmed private via anonymous 404/401. HTTPS path skipped at user request. Scratch repo `kevindurb/push-to-create-smoke` pending user deletion.
+
 
 ## Workflow follow-up
 
