@@ -7,7 +7,7 @@ listeners, no MetalLB addresses. Implemented by the `add-forgejo` change.
 > Status: `dotfiles` CI runs on forgejo Actions (self-hosted runner, see
 > below) since 2026-11-27. The Tekton/tsgit stack still serves anything that
 > has not been migrated; its removal is `remove-tsgit-tekton`. See
-> `openspec/changes/add-forgejo-runner/`.
+> `openspec/changes/archive/2026-11-27-add-forgejo-runner/`.
 
 ## Access
 
@@ -186,7 +186,7 @@ mirrors it to `github.com/kevindurb/dotfiles` on every push (branches and
 tags), hourly, and on manual dispatch. Git is force-pushed from forgejo, so
 forgejo is authoritative; refs are never deleted on GitHub.
 
-Design (see `openspec/changes/add-github-mirror/` in this repo for the full
+Design (see `openspec/changes/archive/2026-11-27-add-github-mirror/` in this repo for the full
 change):
 
 - Auth comes from the GitHub App **kevindurb-forgejo-mirror** (app id 5954313,

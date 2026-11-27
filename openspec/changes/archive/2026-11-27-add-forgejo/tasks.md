@@ -31,10 +31,10 @@ Depends on: nothing (parallel with `install-kubevirt`). Blocks: `add-forgejo-run
 
 ## 5. Verification
 
-- [ ] 5.1 Anonymous `curl https://forgejo.beaver-cloud.ts.net/` from outside the tailnet (e.g. phone on LTE) gets nothing; from a tailnet peer it returns the login page
+- [x] 5.1 Anonymous `curl https://forgejo.beaver-cloud.ts.net/` from outside the tailnet (e.g. phone on LTE) gets nothing; from a tailnet peer it returns the login page — verified 2026-11-27: name resolves only via MagicDNS (`fd7a:115c:a1e0::5c3a:f71c`); public resolvers (1.1.1.1, 8.8.8.8) return NXDOMAIN for A and AAAA; live Ingress is `ingressClassName: tailscale`, SSH Service is `type: LoadBalancer` / `loadBalancerClass: tailscale` (tailnet IP 100.112.41.119); tailnet peer gets HTTP 200 (no LTE device at hand; NXDOMAIN + tailscale-only exposure is the evidence)
 - [x] 5.2 Fresh SSH clone + push of `dotfiles` from a tailnet laptop using only the user's SSH key; `git log` matches tsgit tip
-- [ ] 5.3 Mirror sync observed for a second test commit; revert both test commits on forgejo
-- [ ] 5.4 gatus endpoint configured and green; `docs/forgejo.md` complete (install, OIDC, mirror, admin recovery, where the PAT lives, upgrade procedure pointer)
+- [x] 5.3 Mirror sync observed — superseded by the `add-github-mirror` change (archived 2026-11-27): mirroring is now CI-driven via the `gh-mirror` composite action, which ls-remote-compares refs on every run (push/hourly/dispatch). End-to-end verified there: push-triggered and dispatch runs green, GitHub `main` == forgejo `main`, and a rogue direct commit on GitHub was force-overwritten by the next run. `git ls-remote https://github.com/kevindurb/dotfiles.git` works (HEAD `b9f83b4`). See `openspec/changes/archive/2026-11-27-add-github-mirror/tasks.md` §5.
+- [x] 5.4 gatus endpoint configured and green; `docs/forgejo.md` complete (install, OIDC, mirror, admin recovery, where the PAT/App creds live, upgrade procedure pointer) — verified 2026-11-27: `platform/forgejo/gatus.yml` exists with label `gatus.io/enabled: 'true'`; gatus `api/v1/endpoints/statuses` shows `forgejo` `success=true` (last 50 checks, latest 2026-11-27T15:55:55Z); `docs/forgejo.md` covers install (Operations), OIDC sign-in, GitHub mirror (app creds in forgejo user-level secrets `MIRROR_APP_CLIENT_ID` / `MIRROR_APP_PRIVATE_KEY`), break-glass admin recovery, and the upgrade pointer (Operations: bump `targetRevision` in `platform/forgejo/app.yml`)
 - [x] 5.5 Leave `apps/tsgit` and the Tekton stack fully intact (removal is `remove-tsgit-tekton`); note in docs that CI still runs on Tekton until that change lands (see docs/forgejo.md → Migration from tsgit)
 
 ## Workflow follow-up

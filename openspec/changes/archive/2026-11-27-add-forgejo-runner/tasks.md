@@ -34,19 +34,21 @@ applied (needs a forgejo URL + registration token). Cross-repo: tasks marked
 
 ## 5. Migrate image-building repositories
 
-> Deferred 2026-11-27 by owner decision: no image repos migrate yet. Enumeration (5.1) was done:
+> Closed 2026-11-27 by owner decision: no image repos migrate. Enumeration (5.1) was done:
 > candidates with image-build workflows on GitHub are `kevindurb/bootc` (push-triggered multi-arch
 > builds), `kevindurb/containers` (buildah multi-arch matrix), `kevindurb/box` and
 > `kevindurb/ts-forge` (buildah multi-arch + manifest step), all pushing to ghcr.io.
 > None of them exist on forgejo yet (add-forgejo migrated only dotfiles), and a forgejo-runner
 > build there is amd64-only, so arm64 builds would either drop or stay on GitHub.
-> 5.2–5.5 stay unchecked until the owner picks the scope.
+> GHCR also rejects GitHub App installation tokens for package writes, so per-run App tokens
+> cannot push images; image builds stay on GitHub Actions (see docs/forgejo.md → "GitHub mirror").
 
-- [x] 5.1 Enumerate candidates: `gh repo list kevindurb --json name,isPrivate | jq ...` cross-referenced with `gh search code 'podman build' --owner kevindurb` (or manual recall: confirm list with owner before starting) — done 2026-11-27: candidates are `bootc`, `containers`, `box`, `ts-forge`; owner decision: none migrate for now
-- [ ] 5.2 For each repo: push history (already done in `add-forgejo`), rewrite workflow file(s) to `.forgejo/workflows/`, `runs-on: [self-hosted, linux]`, drop GH-hosted-specific steps (e.g. `actions/checkout` pins are fine — forgejo resolves them), set `REGISTRY` = `ghcr.io`, `IMAGE` = same name as before
-- [ ] 5.3 Create per-repo or org-wide secret `REGISTRY_TOKEN` = fine-grained PAT (`packages: write` on GHCR) in forgejo secrets
-- [ ] 5.4 For each repo: push a no-op commit, watch the build go green in forgejo, verify GHCR has the new tag/digest, verify the deployed consumers (renovate PR flow) still work
-- [ ] 5.5 Delete `.github/workflows/*.yml` in each migrated repo in the same PR (no double runs from the mirror), or explicitly disable the GH workflow
+- [x] 5.1 Enumerate candidates: `gh repo list kevindurb --json name,isPrivate | jq ...` cross-referenced with `gh search code 'podman build' --owner kevindurb` (or manual recall: confirm list with owner before starting) — done 2026-11-27: candidates are `bootc`, `containers`, `box`, `ts-forge`; owner decision: none migrate
+- [x] 5.2–5.5 Image-repo CI migration — closed by decision 2026-11-27: none migrate; image builds remain on GitHub Actions (see docs/forgejo.md). Original tasks retained for the record (not planned):
+  > - [ ] 5.2 For each repo: push history (already done in `add-forgejo`), rewrite workflow file(s) to `.forgejo/workflows/`, `runs-on: [self-hosted, linux]`, drop GH-hosted-specific steps (e.g. `actions/checkout` pins are fine — forgejo resolves them), set `REGISTRY` = `ghcr.io`, `IMAGE` = same name as before
+  > - [ ] 5.3 Create per-repo or org-wide secret `REGISTRY_TOKEN` = fine-grained PAT (`packages: write` on GHCR) in forgejo secrets
+  > - [ ] 5.4 For each repo: push a no-op commit, watch the build go green in forgejo, verify GHCR has the new tag/digest, verify the deployed consumers (renovate PR flow) still work
+  > - [ ] 5.5 Delete `.github/workflows/*.yml` in each migrated repo in the same PR (no double runs from the mirror), or explicitly disable the GH workflow
 
 ## 6. Wrap-up
 
