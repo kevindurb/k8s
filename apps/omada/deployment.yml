@@ -25,7 +25,7 @@ spec:
             claimName: volume
       containers:
         - name: omada
-          image: mbentley/omada-controller:6@sha256:de268d09b258a53a167ec94492c44361df118a766832adb544f5d36d64d9e570
+          image: mbentley/omada-controller:6@sha256:8e55c5593971704c3c30e6b3528de9e98cf97dde8554073dd1b1519ff348a715
           env:
             - name: TZ
               value: America/Denver
