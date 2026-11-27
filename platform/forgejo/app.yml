@@ -84,6 +84,7 @@ spec:
               service:
                 DISABLE_REGISTRATION: "true"
                 ALLOW_ONLY_EXTERNAL_REGISTRATION: "true"
+                ENABLE_INTERNAL_SIGNIN: "false"
               oauth2_client:
                 ENABLE_AUTO_REGISTRATION: "true"
                 OPENID_CONNECT_SCOPES: "openid profile email"
