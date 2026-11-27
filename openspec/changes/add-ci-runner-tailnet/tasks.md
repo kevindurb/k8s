@@ -2,9 +2,9 @@
 
 ## 1. Tailnet policy (kevindurb/infra)
 
-- [ ] 1.1 Add grant `{"src": ["tag:ci"], "dst": ["tag:apps"], "ip": ["tcp:443"]}` to `tailnet/policy.hujson` and update the `tests` block: move `tag:apps:443` from `tag:ci`'s `deny` list into `accept`. Verify: `just plan tailnet` shows only that grant + test diff; CI plan on the PR matches.
-- [ ] 1.2 Add SSH rule: `{"action": "accept", "src": ["group:admins"], "dst": ["tag:ci"], "users": ["root", "autogroup:nonroot"]}` plus a matching `sshTests` entry (`group:admins` → `tag:ci` accepts `kevindurb` and `root`). Verify: policy test suite in the PR passes (`terraform plan` applies; `tests`/`sshTests` are evaluated by Tailscale on apply).
-- [ ] 1.3 Merge the infra PR; confirm CI applies it and the tailnet policy includes the new grant (spot-check via the admin console or a no-op `tailscale policy test` if available).
+- [x] 1.1 Add grant `{"src": ["tag:ci"], "dst": ["tag:apps"], "ip": ["tcp:443"]}` to `tailnet/policy.hujson` and update the `tests` block: move `tag:apps:443` from `tag:ci`'s `deny` list into `accept`. Verify: `just plan tailnet` shows only that grant + test diff; CI plan on the PR matches.
+- [x] 1.2 Add SSH rule: `{"action": "accept", "src": ["group:admins"], "dst": ["tag:ci"], "users": ["root", "autogroup:nonroot"]}` plus a matching `sshTests` entry (`group:admins` → `tag:ci` accepts `kevindurb` and `root`). Verify: policy test suite in the PR passes (`terraform plan` applies; `tests`/`sshTests` are evaluated by Tailscale on apply).
+- [x] 1.3 Merge the infra PR; confirm CI applies it and the tailnet policy includes the new grant (spot-check via the admin console or a no-op `tailscale policy test` if available).
 
 ## 2. Runner image (kevindurb/bootc)
 
@@ -13,9 +13,9 @@
 
 ## 3. Secrets (this repo)
 
-- [ ] 3.1 Mint a reusable, ephemeral, pre-authorized auth key tagged `tag:ci` in the Tailscale admin console (no expiry or max allowed; generate in a single admin session, never paste into shell history or files).
-- [ ] 3.2 Re-seal `ci-runner-cloudinit` with a new `tailscale-authkey` key added alongside the existing one (per `docs/secrets.md` workflow: `kubectl create secret --dry-run=client -o yaml` piped through `kubeseal`, commit the `SealedSecret`). Verify: `kubeseal` round-trip succeeds and no plaintext lands in the repo (`git diff` shows only ciphertext).
-- [ ] 3.3 Extend the cloud-init `userData` in `infrastructure/ci-runner/sealed-secret.yml` (or the source file used to build it) to write `/run/tailscale-authkey` from the new key and remove it after `tailscale-up.service` runs. Keep the existing `forgejo-runner` sections untouched. Verify: `kustomize build infrastructure/ci-runner` renders.
+- [x] 3.1 Mint a reusable, ephemeral, pre-authorized auth key tagged `tag:ci` in the Tailscale admin console (no expiry or max allowed; generate in a single admin session, never paste into shell history or files).
+- [x] 3.2 Re-seal `ci-runner-cloudinit` with a new `tailscale-authkey` key added alongside the existing one (per `docs/secrets.md` workflow: `kubectl create secret --dry-run=client -o yaml` piped through `kubeseal`, commit the `SealedSecret`). Verify: `kubeseal` round-trip succeeds and no plaintext lands in the repo (`git diff` shows only ciphertext).
+- [x] 3.3 Extend the cloud-init `userData` in `infrastructure/ci-runner/sealed-secret.yml` (or the source file used to build it) to write `/run/tailscale-authkey` from the new key and remove it after `tailscale-up.service` runs. Keep the existing `forgejo-runner` sections untouched. Verify: `kustomize build infrastructure/ci-runner` renders.
 
 ## 4. VM wiring and rollout (this repo)
 

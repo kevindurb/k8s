@@ -62,17 +62,50 @@ leave internal sign-in enabled. OIDC-provisioned site admins (see above) are
 the normal path for administrative access; this account is only for
 catastrophic SSO failure.
 
-## CI runner (`add-forgejo-runner`, since 2026-11-27)
+## CI runner (`add-forgejo-runner`, since 2026-11-27; tailnet join: `add-ci-runner-tailnet`, 2026-11-27)
 
 Forgejo Actions runs on a self-hosted runner, **not** in pods: a single
 `VirtualMachine` (`infrastructure/ci-runner`, Argo app `ci-runner`) in the
 `ci-runner` namespace on drone-01..03 (2 vCPU / 4 GiB, ephemeral overlay
 root — state does not survive VM recreation).
 
+- **Tailnet**: the VM joins the tailnet on first boot as **`tag:ci`** (the
+  same tag the GitHub Actions runners use). `tailscaled` runs in the image;
+  `tailscale-up.service` (oneshot, after `tailscaled.service` and
+  `cloud-config.service`) runs `tailscale up --auth-key=file:/run/tailscale-authkey
+  --advertise-tags=tag:ci --ssh --accept-dns=true --reset` and then `shred`s
+  the key file. On later boots the key file is gone (tmpfs) and tailscaled
+  reconnects from persisted state, so the unit is a no-op.
+  - MagicDNS is on (`--accept-dns=true`), so `forgejo.beaver-cloud.ts.net`
+    resolves to the ingress VIP from inside the VM.
+  - **Grants** (`tailnet/policy.hujson` in `kevindurb/infra`): `tag:ci` →
+    `tag:apps:443` (this is what lets the runner reach forgejo directly),
+    plus the pre-existing `svc:argocd:443`, `tag:ai:443` (Aperture, `ci-agents`
+    bucket — shared with the GitHub Actions runners), `tag:tsgit:443`
+    (`cap/repo`, read). Inbound SSH is `group:admins → tag:ci` (`root` +
+    `autogroup:nonroot`), enforced by the tailnet policy, not by sshd config.
+  - The old path — pod-network egress SNAT'd to the node IP, hairpinning
+    through the LAN router (`tag:router → tag:apps:443`) — is no longer
+    load-bearing; the router grant may be removed later.
+  - **Ephemeral key**: the auth key is reusable + ephemeral (VM recreations
+    don't accumulate device entries) and lives only in the
+    `ci-runner-cloudinit` SealedSecret. Rotation: mint a new `tag:ci` key in
+    the Tailscale admin console → re-seal `ci-runner-cloudinit` with the new
+    value in the `tailscale-authkey` key and updated `userData`
+    (`kubectl create secret --dry-run=client -o yaml | kubeseal`, per
+    `docs/secrets.md`) → `kubectl -n ci-runner delete vmi ci-runner` to
+    recreate. The old key should be revoked in the admin console.
+  - **Note**: cloud-init's NoCloud datasource only exposes the `userData`
+    key to the guest, so the key travels inside `userData` itself (a
+    `write_files` entry to `/run/tailscale-authkey`); the separate
+    `tailscale-authkey` key in the same SealedSecret is kept for rotation
+    bookkeeping. `tailscale-up.service` shreds the file after first use.
+
 - **Image**: `ghcr.io/kevindurb/ci-runner` (bootc, Fedora 44): podman,
   buildah, podman-docker, skopeo, git, git-lfs, make, jq, nodejs,
   `forgejo-runner` v13.2.2 (pinned, sha256-verified at build), plus
-  `cloud-init`. Built by `kevindurb/bootc` (`containers/ci-runner/`);
+  `cloud-init` and `tailscale` (`tailscaled.service` + `tailscale-up.service`).
+  Built by `kevindurb/bootc` (`containers/ci-runner/`);
   cosign-signed (same key as the node image).
 - **Disk**: the VM boots a KubeVirt containerDisk,
   `ghcr.io/kevindurb/ci-runner-disk:2026.11.27` — the fedora-bootc qcow2
