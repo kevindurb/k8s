@@ -54,12 +54,13 @@ spec:
       volumes:
         - name: rootdisk
           containerDisk:
-            # Pinned to the 2026.11.27 image (qcow2 built from
-            # ghcr.io/kevindurb/ci-runner:latest @ sha256:e323405a...).
-            # Digest fcc22bca02fc25e907b1d00a78e22924a1423b84a39ecae7f6ac595549066113
+            # Pinned to the 2026.11.27.2 image (qcow2 built from
+            # ghcr.io/kevindurb/ci-runner:sha256:a0caa9bc3a87079f4b7f4a63a83b16b19f19f19b03f4d81e04f2171144af6167cc8,
+            # i.e. main @ 367ac19 with tailscale + tailscale-up.service).
+            # Digest 8ae021c32c3f752200793b05747c888ccf6f1675d36f52e999d544338b9f8b40
             # Built by .github/workflows/build-runner-disk.yml in kevindurb/bootc.
             # Never use a floating tag here; bump deliberately.
-            image: ghcr.io/kevindurb/ci-runner-disk:2026.11.27
+            image: ghcr.io/kevindurb/ci-runner-disk:2026.11.27.2
         - name: cloudinitdisk
           cloudInitNoCloud:
             secretRef:
