@@ -92,6 +92,12 @@ spec:
               oauth2_client:
                 ENABLE_AUTO_REGISTRATION: "true"
                 OPENID_CONNECT_SCOPES: "openid profile email groups"
+              repository:
+                # Push-to-create: `git push` to a nonexistent path creates the
+                # repo (private by default). See docs/forgejo.md.
+                ENABLE_PUSH_CREATE_USER: "true"
+                ENABLE_PUSH_CREATE_ORG: "true"
+                DEFAULT_PUSH_CREATE_PRIVATE: "true"
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: platform/forgejo
