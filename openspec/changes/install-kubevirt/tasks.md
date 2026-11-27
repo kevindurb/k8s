@@ -16,19 +16,19 @@
 - [x] 3.1 Vendor the pinned upstream release manifests (`virt-operator` + `kubevirt` CR for the chosen version, e.g. v1.5.x or newer stable) into `infrastructure/kubevirt/` with a pinned source URL recorded in a comment; keep the raw files byte-identical to upstream
 - [x] 3.2 Add `infrastructure/kubevirt/kustomization.yml` and `infrastructure/kubevirt/app.yml` (Argo Application, project `infrastructure`, sync wave after CRDs, automated prune+selfHeal for operator only — instance CR immutable fields documented)
 - [x] 3.3 Register in `infrastructure/kustomization.yml`; `kustomize build infrastructure/kubevirt` passes; `just check-kustomize` passes
-- [ ] 3.4 Add `infrastructure/kustomization.yml` entry; commit; push; let Argo CD sync
-- [ ] 3.5 Verify: `kubectl -n kubevirt get kubevirt kubevirt -o yaml` shows phase `Deployed`/`Available`; all virt-operator/controller/handler/api pods Ready; CRD versions match the operator
+- [x] 3.4 Add `infrastructure/kustomization.yml` entry; commit; push; let Argo CD sync
+- [x] 3.5 Verify: `kubectl -n kubevirt get kubevirt kubevirt -o yaml` shows phase `Deployed`/`Available`; all virt-operator/controller/handler/api pods Ready; CRD versions match the operator
 
 ## 4. Smoke test
 
-- [ ] 4.1 Create a one-off throwaway VirtualMachine (tiny containerDisk image, e.g. cirros) pinned to a drone worker; verify it reaches `Running`, gets a masquerade IP, and reaches `kubernetes.default.svc` (`curl`/`wget` from the VM console via `virtctl console`)
-- [ ] 4.2 Verify the VM does not schedule onto unimatrix nodes even when explicitly requested without tolerations (or confirm control-plane taint rejects it) — record observation
-- [ ] 4.3 Delete the throwaway VM; confirm no leftover PVCs/pods in the test namespace
-- [ ] 4.4 Write `docs/kubevirt.md`: what runs where, how to bump the version, how to uninstall (delete Argo app → delete kubevirt CR → remove CRDs)
+- [x] 4.1 Create a one-off throwaway VirtualMachine (tiny containerDisk image, e.g. cirros) pinned to a drone worker; verify it reaches `Running`, gets a masquerade IP, and reaches `kubernetes.default.svc` (`curl`/`wget` from the VM console via `virtctl console`)
+- [x] 4.2 Verify the VM does not schedule onto unimatrix nodes even when explicitly requested without tolerations (or confirm control-plane taint rejects it) — record observation
+- [x] 4.3 Delete the throwaway VM; confirm no leftover PVCs/pods in the test namespace
+- [x] 4.4 Write `docs/kubevirt.md`: what runs where, how to bump the version, how to uninstall (delete Argo app → delete kubevirt CR → remove CRDs)
 
 ## 5. Wrap-up
 
-- [ ] 5.1 No gatus entry (platform component, not a user-facing service); instead add the smoke-test evidence (commands + output summary) to the change notes
+- [x] 5.1 No gatus entry (platform component, not a user-facing service); instead add the smoke-test evidence (commands + output summary) to the change notes
 - [ ] 5.2 Confirm no other changes were snuck in: `git diff main --stat` shows only `infrastructure/kubevirt/**`, `infrastructure/kustomization.yml`, `docs/kubevirt.md`
 
 ## Workflow follow-up
