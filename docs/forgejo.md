@@ -87,6 +87,10 @@ root — state does not survive VM recreation).
   notes on any unrestricted Fedora/RHEL host, upload a new
   `ci-runner-disk/<date>` release (qcow2.xz + .sha256), and the workflow
   publishes+signs the images automatically.
+  **Planned follow-up (owner, 2026-11-27):** move the repo to forgejo and run
+  the disk build in Forgejo Actions — the runner VM itself has working
+  namespaces/KVM, so `image-builder` can run there and the GHCR round-trip
+  disappears. Until then, the release-asset flow above stands.
 - **Registration**: first boot, cloud-init (`ci-runner-cloudinit`
   SealedSecret → NoCloud `userData`) writes `/etc/forgejo-runner/config.yaml`
   (capacity 1, labels `self-hosted,linux`), registers with
