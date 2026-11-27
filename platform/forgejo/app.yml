@@ -86,6 +86,7 @@ spec:
                 ALLOW_ONLY_EXTERNAL_REGISTRATION: "true"
               oauth2_client:
                 ENABLE_AUTO_REGISTRATION: "true"
+                OPENID_CONNECT_SCOPES: "openid profile email"
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: platform/forgejo
