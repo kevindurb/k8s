@@ -74,6 +74,10 @@ spec:
                 provider: openidConnect
                 autoDiscoverUrl: https://idp.beaver-cloud.ts.net/.well-known/openid-configuration
                 existingSecret: forgejo-oidc
+                # pocket-id emits a `groups` claim (names of the user's groups);
+                # members of the `admins` group become forgejo admins at login.
+                groupClaimName: groups
+                adminGroup: admins
             config:
               APP_NAME: Forgejo
               server:
@@ -87,7 +91,7 @@ spec:
                 ENABLE_INTERNAL_SIGNIN: "false"
               oauth2_client:
                 ENABLE_AUTO_REGISTRATION: "true"
-                OPENID_CONNECT_SCOPES: "openid profile email"
+                OPENID_CONNECT_SCOPES: "openid profile email groups"
     - repoURL: https://github.com/kevindurb/k8s.git
       targetRevision: HEAD
       path: platform/forgejo
