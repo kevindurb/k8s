@@ -62,6 +62,26 @@ leave internal sign-in enabled. OIDC-provisioned site admins (see above) are
 the normal path for administrative access; this account is only for
 catastrophic SSO failure.
 
+## Push to create
+
+Forgejo is configured with push-to-create (enabled 2026-11-27): pushing to a
+repository path that does not exist yet creates the repository instead of
+failing. Both user and organization namespaces are allowed
+(`ENABLE_PUSH_CREATE_USER` / `ENABLE_PUSH_CREATE_ORG: true`). The created
+repository is **private** by default (`DEFAULT_PUSH_CREATE_PRIVATE: true`);
+opt out per push with `git push -o repo.private=false`.
+
+```console
+$ git remote add origin ssh://git@forgejo-ssh.beaver-cloud.ts.net/kevindurb/new-repo.git
+$ git push -u origin main
+```
+
+Works over SSH and HTTPS remotes alike. In organizations, the push succeeds
+if you may create repositories there; otherwise it is rejected and no
+repository is created. Push-created repositories are **not** auto-mirrored to
+GitHub — the mirror workflow is opt-in per repository (see "GitHub mirror"
+below). Typo-created repositories can be deleted in the UI like any other.
+
 ## CI runner (`add-forgejo-runner`, since 2026-11-27)
 
 Forgejo Actions runs on a self-hosted runner, **not** in pods: a single
