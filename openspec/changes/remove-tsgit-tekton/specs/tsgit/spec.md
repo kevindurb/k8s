@@ -6,7 +6,7 @@
 
 **Reason**: The tsgit forge is being retired; tailnet-only access is being
 replaced by forgejo's tailnet-only ingress and SSH endpoint (see
-`add-forgejo-ci`). The public Funnel surface has no equivalent and is going
+`add-forgejo-runner`). The public Funnel surface has no equivalent and is going
 away entirely; public read access moves to the GitHub push mirror.
 **Migration**: Tailnet users clone from `https://forgejo.beaver-cloud.ts.net/...`
 or `ssh://forgejo/...`. Public readers use github.com/kevindurb/dotfiles.

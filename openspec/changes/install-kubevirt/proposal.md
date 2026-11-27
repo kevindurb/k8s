@@ -26,7 +26,7 @@ GitHub-hosted-runner experience this change's follow-on work wants to preserve.
   requires (`virt-handler` needs access to `/dev/kvm` and host devices); it is
   the only privileged virtualization layer this cluster carries.
 - No VMs are created by this change — it is the platform only. Consumers
-  (starting with the CI runner in `add-forgejo-ci`) are separate.
+  (starting with the CI runner in `add-forgejo-runner`) are separate.
 - Scheduling: all nodes advertise KVM (`cpu-cpuid.svm` / `vmx` feature labels);
   no node-level enablement changes are required. No affinity rules are baked in
   here; placement policy belongs to the consuming workloads.

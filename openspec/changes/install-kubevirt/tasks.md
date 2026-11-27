@@ -2,9 +2,9 @@
 
 ## 1. Preflight checks
 
-- [ ] 1.1 Verify every node exposes `/dev/kvm` (SSH or `kubectl debug node/<name> --image=busybox -- ls -l /dev/kvm`); expect drone-01..04 readable/writable KVM device; stop and reassess if missing
-- [ ] 1.2 Inventory the orphaned CRDs from the 2025-10 install: `kubectl get crd -o name | grep kubevirt.io` (expect ~16); record the list in the commit message
-- [ ] 1.3 Confirm none of those CRDs holds data: `kubectl get virtualmachines.kubevirt.io,virtualmachineinstances.kubevirt.io -A` returns empty lists
+- [x] 1.1 Verify every node exposes `/dev/kvm` (SSH or `kubectl debug node/<name> --image=busybox -- ls -l /dev/kvm`); expect drone-01..04 readable/writable KVM device; stop and reassess if missing
+- [x] 1.2 Inventory the orphaned CRDs from the 2025-10 install: `kubectl get crd -o name | grep kubevirt.io` (expect ~16); record the list in the commit message
+- [x] 1.3 Confirm none of those CRDs holds data: `kubectl get virtualmachines.kubevirt.io,virtualmachineinstances.kubevirt.io -A` returns empty lists
 
 ## 2. Clean slate
 
@@ -33,4 +33,4 @@
 
 ## Workflow follow-up
 
-- Archive once `add-forgejo-ci` is also merged and a real runner VM has booted from this platform.
+- Archive once `add-forgejo-runner` is also merged and a real runner VM has booted from this platform.

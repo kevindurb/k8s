@@ -1,11 +1,11 @@
 # Tasks
 
-Depends on: `add-forgejo-ci` merged and proven (all migrated repos green,
+Depends on: `add-forgejo-runner` merged and proven (all migrated repos green,
 mirror healthy). Do not start until then.
 
 ## 1. Preflight
 
-- [ ] 1.1 Confirm `add-forgejo-ci` is complete: dotfiles builds green on forgejo, push-mirror to GitHub verified, all image-building repos migrated and green
+- [ ] 1.1 Confirm `add-forgejo-runner` is complete: dotfiles builds green on forgejo, push-mirror to GitHub verified, all image-building repos migrated and green
 - [ ] 1.2 Record the exact SHAs of forgejo `dotfiles` vs tsgit `dotfiles` (must match): `git ls-remote` both — abort if mismatch
 - [ ] 1.3 Inventory soon-to-be-deleted objects: `kubectl get ns | grep -E 'tekton|tsgit'`, `kubectl get applications -n argocd | grep -E 'tekton|tsgit'`, `kubectl get pipelineruns -n tekton-pipelines` (informational), `kubectl get pvc -n tsgit`
 
@@ -38,7 +38,7 @@ mirror healthy). Do not start until then.
 
 - [ ] 5.1 Delete `docs/tsgit-ci.md`; grep the repo for `tsgit|tekton` and fix/remove stragglers (README, AGENTS.md if present, docs)
 - [ ] 5.2 The `tsgit` spec delta in this change removes the capability entirely — archived with this change's archive
-- [ ] 5.3 `openspec archive add-tsgit-ci` with a note "superseded by add-forgejo-ci + remove-tsgit-tekton"; close the 1 outstanding task as moot in the archive commit message
+- [ ] 5.3 `openspec archive add-tsgit-ci` with a note "superseded by add-forgejo-runner + remove-tsgit-tekton"; close the 1 outstanding task as moot in the archive commit message
 - [ ] 5.4 Verify final state: `kubectl get applications -n argocd | grep -E 'tsgit|tekton'` empty; `openspec list` shows no add-tsgit-ci
 
 ## 6. Final sweep

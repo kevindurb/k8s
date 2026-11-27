@@ -2,7 +2,7 @@
 
 ## Context
 
-Once `add-forgejo-ci` is merged and all migrated repos are green on forgejo,
+Once `add-forgejo-runner` is merged and all migrated repos are green on forgejo,
 the tsgit + Tekton stack has no remaining users. Its pieces live in:
 
 - git: `apps/tsgit/`, `infrastructure/tekton/`, `infrastructure/tsgit-ci/`,
@@ -59,7 +59,7 @@ The capability is gone; a "deprecated" spec would misdescribe the cluster. The
 delta in this change carries REMOVED with Reason/Migration per requirement.
 
 ### 5. GitHub mirror stays
-Push mirrors (configured in `add-forgejo-ci`) are the public read path; they
+Push mirrors (configured in `add-forgejo-runner`) are the public read path; they
 are deliberately untouched here. This change does not touch DNS, GitHub, or
 GHCR.
 
@@ -75,7 +75,7 @@ GHCR.
   (`cap/repo`, `cap/hooks`, `cap/funnel`) have exactly one consumer each
   (tekton egress, tsgit webhook, funnel); all three are deleted in this change.
 - [Docs drift] → `docs/tsgit-ci.md` deleted; `docs/forgejo.md` (from the
-  add-forgejo-ci work) becomes the only reference.
+  add-forgejo-runner work) becomes the only reference.
 
 ## Migration Plan
 

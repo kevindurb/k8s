@@ -22,7 +22,7 @@ See `proposal.md` for why this exists at all (CI runners for forgejo Actions).
   containerDisks; revisit if we want per-job ephemeral VMs).
 - Custom networking (SR-IOV, bridges, Multus) — pod NAT is enough for CI.
 - Live migration tuning, CPU pinning, hugepages.
-- VM images themselves — those belong to `add-forgejo-ci`.
+- VM images themselves — those belong to `add-forgejo-runner`.
 
 ## Decisions
 

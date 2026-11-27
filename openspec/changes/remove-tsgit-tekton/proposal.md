@@ -3,7 +3,7 @@
 ## Why
 
 tsgit and its Tekton CI companion exist to serve a workflow that is being
-replaced by `add-forgejo-ci`. Once forgejo is live and the migrated repos build
+replaced by `add-forgejo-runner`. Once forgejo is live and the migrated repos build
 green on it, the old stack is pure dead weight: two namespaces of controllers, a
 vendored Tekton Triggers install, an egress ProxyGroup and CoreDNS rewrite
 whose only consumer was the Tekton pipeline, tailnet policy grants, and the
@@ -15,7 +15,7 @@ two parallel CI stories from confusing the next person.
 
 - **BREAKING**: remove the `apps/tsgit` app (Deployment, PVCs, SealedSecret),
   the `tsgit` Argo CD Application, and the `tsgit` capability spec — the
-  forge moves to forgejo (see `add-forgejo-ci`).
+  forge moves to forgejo (see `add-forgejo-runner`).
 - **BREAKING**: remove the Tekton stack: `infrastructure/tekton/` (Pipelines
   Helm app, vendored Triggers + interceptors, Dashboard, gatus check) and
   `infrastructure/tsgit-ci/` (EventListener, tailnet ingress, prune CronJob,
@@ -38,7 +38,7 @@ two parallel CI stories from confusing the next person.
   `infrastructure/metallb/address-pool.yml` — the tailnet-only design makes it
   dead.
 
-Prerequisite: `add-forgejo-ci` must be merged, forgejo proven green on the
+Prerequisite: `add-forgejo-runner` must be merged, forgejo proven green on the
 migrated repos, and mirrors verified. **Do not start this change until then.**
 
 ## Capabilities
@@ -54,10 +54,10 @@ migrated repos, and mirrors verified. **Do not start this change until then.**
 - Argo CD apps removed: `tsgit`, `tekton`, `tsgit-ci`. Cluster loses: tekton
   controllers, triggers, dashboard, eventlistener; the tsgit pod; the egress
   path for CI clones.
-- Cluster keeps: forgejo (from `add-forgejo-ci`) as the only git forge/CI.
+- Cluster keeps: forgejo (from `add-forgejo-runner`) as the only git forge/CI.
 - External (separate repo `kevindurb/infra`): tailnet policy cleanup PR.
 - Data loss: the `tsgit-repos` PVC (bare repos, already migrated) and
   `tsgit-state` PVC, and any un-migrated repositories there (only `ci`, the
   superseded sketch — deliberately not migrated).
 - Documentation: `docs/tsgit-ci.md` deleted; repo docs updated to point at
-  forgejo docs (to be written in `add-forgejo-ci`).
+  forgejo docs (to be written in `add-forgejo-runner`).
