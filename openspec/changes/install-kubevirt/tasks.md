@@ -8,14 +8,14 @@
 
 ## 2. Clean slate
 
-- [ ] 2.1 Delete the orphaned kubevirt CRDs listed in 1.2; verify `kubectl get crd | grep -c kubevirt` is 0
-- [ ] 2.2 No other cluster objects reference them (spot-check namespaces for `virt`-named objects: `kubectl get all -A | grep -i virt`)
+- [x] 2.1 Delete the orphaned kubevirt CRDs listed in 1.2; verify `kubectl get crd | grep -c kubevirt` is 0
+- [x] 2.2 No other cluster objects reference them (spot-check namespaces for `virt`-named objects: `kubectl get all -A | grep -i virt`)
 
 ## 3. Install KubeVirt via Argo CD
 
-- [ ] 3.1 Vendor the pinned upstream release manifests (`virt-operator` + `kubevirt` CR for the chosen version, e.g. v1.5.x or newer stable) into `infrastructure/kubevirt/` with a pinned source URL recorded in a comment; keep the raw files byte-identical to upstream
-- [ ] 3.2 Add `infrastructure/kubevirt/kustomization.yml` and `infrastructure/kubevirt/app.yml` (Argo Application, project `infrastructure`, sync wave after CRDs, automated prune+selfHeal for operator only — instance CR immutable fields documented)
-- [ ] 3.3 Register in `infrastructure/kustomization.yml`; `kustomize build infrastructure/kubevirt` passes; `just check-kustomize` passes
+- [x] 3.1 Vendor the pinned upstream release manifests (`virt-operator` + `kubevirt` CR for the chosen version, e.g. v1.5.x or newer stable) into `infrastructure/kubevirt/` with a pinned source URL recorded in a comment; keep the raw files byte-identical to upstream
+- [x] 3.2 Add `infrastructure/kubevirt/kustomization.yml` and `infrastructure/kubevirt/app.yml` (Argo Application, project `infrastructure`, sync wave after CRDs, automated prune+selfHeal for operator only — instance CR immutable fields documented)
+- [x] 3.3 Register in `infrastructure/kustomization.yml`; `kustomize build infrastructure/kubevirt` passes; `just check-kustomize` passes
 - [ ] 3.4 Add `infrastructure/kustomization.yml` entry; commit; push; let Argo CD sync
 - [ ] 3.5 Verify: `kubectl -n kubevirt get kubevirt kubevirt -o yaml` shows phase `Deployed`/`Available`; all virt-operator/controller/handler/api pods Ready; CRD versions match the operator
 

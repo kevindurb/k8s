@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Vendored from the KubeVirt v1.10.0 release (2026-11-18). Do not edit —
+  # bump by downloading the new version's files over these, keeping them
+  # byte-identical to upstream:
+  #   https://github.com/kubevirt/kubevirt/releases/download/v1.10.0/kubevirt-operator.yaml
+  #   https://github.com/kubevirt/kubevirt/releases/download/v1.10.0/kubevirt-cr.yaml
+  # Note: the kubevirts.kubevirt.io CRD exceeds the 256 KiB annotation limit,
+  # so clients must use server-side apply (the Argo Application sets
+  # ServerSideApply=true).
+  - kubevirt-operator.yaml
+  - kubevirt-cr.yaml
+
+patches:
+  # The KubeVirt instance CR is the operator's input, not its output: apply it
+  # only after the CRD/operator exist (wave 1) and never prune it. The operator
+  # and CRDs stay at the default wave 0 and are pruned/self-healed normally.
+  - target:
+      group: kubevirt.io
+      version: v1
+      kind: KubeVirt
+      name: kubevirt
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "1"
+          argocd.argoproj.io/sync-options: Prune=false

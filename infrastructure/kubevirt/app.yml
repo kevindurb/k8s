@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubevirt
+  namespace: argocd
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/kevindurb/k8s.git
+    targetRevision: HEAD
+    path: infrastructure/kubevirt
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubevirt
+  syncPolicy:
+    syncOptions:
+      # kubevirts.kubevirt.io CRD exceeds the 256 KiB annotation limit for
+      # client-side apply; Argo must use server-side apply.
+      - ServerSideApply=true
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
