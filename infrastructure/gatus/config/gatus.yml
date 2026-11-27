@@ -31,17 +31,17 @@ endpoints:
     client: { insecure: true }
     conditions: ['[STATUS] == 200']
 
-  - name: Garage AP
+  - name: south-ap
     url: http://192.168.1.2
     group: networking
     conditions: ['[STATUS] == 200']
 
-  - name: Basement AP
+  - name: north-ap
     url: http://192.168.1.3
     group: networking
     conditions: ['[STATUS] == 200']
 
-  - name: Backyard AP
+  - name: backyard-ap
     url: http://192.168.1.4
     group: networking
     conditions: ['[STATUS] == 200']
