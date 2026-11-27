@@ -8,6 +8,7 @@ resources:
   - ./project.yml
   - alertmanager/app.yml
   - argocd/app.yml
+  - ci-runner/app.yml
   - coredns/app.yml
   - gatus/app.yml
   - grafana/app.yml

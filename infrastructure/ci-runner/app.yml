@@ -1,0 +1,31 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ci-runner
+  namespace: argocd
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/kevindurb/k8s.git
+    targetRevision: HEAD
+    path: infrastructure/ci-runner
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ci-runner
+  syncPolicy:
+    # virt-launcher needs NET_ADMIN and /dev/kvm; the VM is the isolation
+    # boundary (see changes/add-forgejo-runner/design.md), so the namespace
+    # is exempted from PSS the same way the kubevirt namespace is.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/enforce-version: v1.35
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: true

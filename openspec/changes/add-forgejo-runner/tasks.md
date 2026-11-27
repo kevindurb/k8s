@@ -6,8 +6,8 @@ applied (needs a forgejo URL + registration token). Cross-repo: tasks marked
 
 ## 1. Runner image (kevindurb/bootc)
 
-- [ ] 1.1 **(bootc)** Create `containers/ci-runner/Containerfile`: `FROM quay.io/fedora/fedora-bootc:stable` (pin digest), `dnf install` podman, buildah, git, git-lfs, make, jq; add `forgejo-runner` (pinned release from codeberg, checksummed) to `/usr/local/bin`; enable `forgejo-runner.service` (unit runs `daemon --config /etc/forgejo-runner/config.yaml`); `bootc container lint` clean
-- [ ] 1.2 **(bootc)** Wire `containers/ci-runner` into `.github/workflows/build.yml` via the existing `reusable-build.yml` pattern (rename job `ci-runner`); confirm push of `ghcr.io/kevindurb/ci-runner:latest` + dated tag
+- [x] 1.1 **(bootc)** Create `containers/ci-runner/Containerfile` — done: `quay.io/fedora/fedora-bootc:44@sha256:6b3262...` (no `stable` tag exists; `44` is current Fedora, matches fleet), dnf installs podman/buildah/podman-docker/skopeo/git/git-lfs/make/jq/nodejs/cloud-init, `forgejo-runner` v13.2.2 from code.forgejo.org pinned by sha256, `forgejo-runner.service` + hourly `podman-gc.timer` enabled, `bootc container lint` passes (warnings only, same class as other images)
+- [x] 1.2 **(bootc)** `ci-runner` job added to `.github/workflows/build.yml` via `reusable-build.yml`; CI build succeeded 2026-11-27 and pushed `ghcr.io/kevindurb/ci-runner:latest` (+ `sha-4cd0994`). Note: dated `YYYY.MM.DD` tags are only produced by the weekly cron build; the push-path build emits `latest` + `sha-<short>`. Dated tag will appear after the next scheduled Build (or on any future scheduled run) — flagging in case the dated tag is wanted on every push (one-line change to reusable-build.yml, intentionally left alone since it tags every image in the repo)
 - [ ] 1.3 **(bootc)** Add `.github/workflows/build-runner-disk.yml`: run `bootc-image-builder` (type `qcow2`) in a privileged step, then wrap the qcow2 as `FROM scratch / COPY *.qcow2 /disk/disk.img`, tag `ghcr.io/kevindurb/ci-runner-disk:<sha>`, cosign-sign both images (existing cosign flow), push
 - [ ] 1.4 Verify: `skopeo inspect docker://ghcr.io/kevindurb/ci-runner-disk:<sha>` succeeds from a clean machine; image is public (or note the required pull secret for KubeVirt)
 
@@ -34,7 +34,15 @@ applied (needs a forgejo URL + registration token). Cross-repo: tasks marked
 
 ## 5. Migrate image-building repositories
 
-- [ ] 5.1 Enumerate candidates: `gh repo list kevindurb --json name,isPrivate | jq ...` cross-referenced with `gh search code 'podman build' --owner kevindurb` (or manual recall: confirm list with owner before starting)
+> Deferred 2026-11-27 by owner decision: no image repos migrate yet. Enumeration (5.1) was done:
+> candidates with image-build workflows on GitHub are `kevindurb/bootc` (push-triggered multi-arch
+> builds), `kevindurb/containers` (buildah multi-arch matrix), `kevindurb/box` and
+> `kevindurb/ts-forge` (buildah multi-arch + manifest step), all pushing to ghcr.io.
+> None of them exist on forgejo yet (add-forgejo migrated only dotfiles), and a forgejo-runner
+> build there is amd64-only, so arm64 builds would either drop or stay on GitHub.
+> 5.2–5.5 stay unchecked until the owner picks the scope.
+
+- [x] 5.1 Enumerate candidates: `gh repo list kevindurb --json name,isPrivate | jq ...` cross-referenced with `gh search code 'podman build' --owner kevindurb` (or manual recall: confirm list with owner before starting) — done 2026-11-27: candidates are `bootc`, `containers`, `box`, `ts-forge`; owner decision: none migrate for now
 - [ ] 5.2 For each repo: push history (already done in `add-forgejo`), rewrite workflow file(s) to `.forgejo/workflows/`, `runs-on: [self-hosted, linux]`, drop GH-hosted-specific steps (e.g. `actions/checkout` pins are fine — forgejo resolves them), set `REGISTRY` = `ghcr.io`, `IMAGE` = same name as before
 - [ ] 5.3 Create per-repo or org-wide secret `REGISTRY_TOKEN` = fine-grained PAT (`packages: write` on GHCR) in forgejo secrets
 - [ ] 5.4 For each repo: push a no-op commit, watch the build go green in forgejo, verify GHCR has the new tag/digest, verify the deployed consumers (renovate PR flow) still work
