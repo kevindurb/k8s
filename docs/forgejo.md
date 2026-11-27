@@ -152,10 +152,7 @@ Status as of 2026-11-27: `kevindurb/dotfiles` was migrated with full history
 (`git push --mirror`); tip SHA matches tsgit (`be37d6c`). SSH clone/push from a
 tailnet peer verified.
 
-- `kevindurb/dotfiles` — migrated. Push-mirrors to `github.com/kevindurb/dotfiles`
-  (mirror configured in forgejo → repo → Settings → Mirror Settings; the PAT is
-  a fine-grained GitHub token with Contents: Read/Write on that one repo, stored
-  only in forgejo). Treat GitHub as read-only for this repo. Its CI
+- `kevindurb/dotfiles` — migrated. **The push-mirror to `github.com/kevindurb/dotfiles` is NOT active as of 2026-11-27** (verified: `push_mirrors` API returns `[]`, and GitHub's tip `84e6ed4` is an ancestor of forgejo's `main`, 15+ commits behind — the GitHub copy is stale). The mirror needs to be (re)created in repo Settings → Mirror Settings (or the docs corrected); see `add-forgejo` tasks 4.3/5.3. Until then, treat GitHub as read-only *and stale*. Its CI
   (`.forgejo/workflows/ci.yml`: chezmoi dry-run + shellcheck) runs on the
   forgejo runner; the Tekton `ci/pipeline.yaml` is kept for reference until
   `remove-tsgit-tekton` lands.
