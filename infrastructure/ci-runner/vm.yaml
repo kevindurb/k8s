@@ -47,8 +47,7 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
-              model:
-                type: virtio
+              model: virtio
       networks:
         - name: default
           pod: {}
