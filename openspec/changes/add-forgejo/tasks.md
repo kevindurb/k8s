@@ -26,7 +26,7 @@ Depends on: nothing (parallel with `install-kubevirt`). Blocks: `add-forgejo-run
 
 - [x] 4.1 Create repos in forgejo: `dotfiles` created (private). `ci` stays on tsgit per owner decision — no image-building repos existed on tsgit
 - [x] 4.2 From a laptop: clone each from tsgit; `git push --mirror forgejo <url>`; verify SHA equality (`git rev-parse main` forgejo vs tsgit) for every migrated repo
-- [ ] 4.3 Create fine-grained GitHub PAT (Contents: Read/Write on `kevindurb/dotfiles`) and configure the forgejo push mirror; push a test commit; confirm it lands on `github.com/kevindurb/dotfiles`
+- [x] 4.3 superseded by `add-github-mirror` (2026-11-27): instead of a static fine-grained PAT + forgejo push-mirror, `dotfiles` now mirrors to GitHub via a forgejo Actions workflow that mints a short-lived GitHub App installation token (app `kevindurb-forgejo-mirror`) and force-pushes branches/tags on every push + hourly. Verified: GitHub `main` == forgejo `main` (`ccd90c7`), and a rogue direct commit on GitHub was force-overwritten on the next run. See `docs/forgejo.md` → "GitHub mirror".
 - [x] 4.4 Decide + record the mirror policy for the image-building repos (mirror vs GitHub-only-read mirror vs none); document in `docs/forgejo.md` (decision: dotfiles mirrors to GitHub; `ci` not migrated, no mirror)
 
 ## 5. Verification

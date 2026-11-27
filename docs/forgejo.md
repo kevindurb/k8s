@@ -156,7 +156,15 @@ Status as of 2026-11-27: `kevindurb/dotfiles` was migrated with full history
 (`git push --mirror`); tip SHA matches tsgit (`be37d6c`). SSH clone/push from a
 tailnet peer verified.
 
-- `kevindurb/dotfiles` — migrated. **The push-mirror to `github.com/kevindurb/dotfiles` is NOT active as of 2026-11-27** (verified: `push_mirrors` API returns `[]`, and GitHub's tip `84e6ed4` is an ancestor of forgejo's `main`, 15+ commits behind — the GitHub copy is stale). The mirror needs to be (re)created in repo Settings → Mirror Settings (or the docs corrected); see `add-forgejo` tasks 4.3/5.3. Until then, treat GitHub as read-only *and stale*. Its CI
+- `kevindurb/dotfiles` — migrated. **GitHub mirror is now CI-driven (since
+  2026-11-27)**: `.forgejo/workflows/mirror.yml` on forgejo runs on every
+  push to any branch/tag, hourly, and on demand. It mints a short-lived
+  GitHub App installation token (app `kevindurb-forgejo-mirror`) and
+  force-pushes `refs/heads/*` + `refs/tags/*` to `github.com/kevindurb/dotfiles`,
+  then verifies both remotes match. Branches/tags deleted on forgejo are NOT
+  deleted on GitHub. GitHub is otherwise read-only for this repo — commits land
+  on forgejo and flow outward; anything pushed directly to GitHub is
+  overwritten by the next mirror run. Its CI
   (`.forgejo/workflows/ci.yml`: chezmoi dry-run + shellcheck) runs on the
   forgejo runner; the Tekton `ci/pipeline.yaml` is kept for reference until
   `remove-tsgit-tekton` lands.
@@ -171,12 +179,58 @@ tailnet peer verified.
 - CI runs on forgejo for `dotfiles` only; the other migrated repo (`ci`) does
   not exist on forgejo. Image-building repos remain on GitHub Actions.
 
+## GitHub mirror (forgejo → github.com)
+
+Since 2026-11-27, `dotfiles` carries `.forgejo/workflows/mirror.yml`, which
+mirrors it to `github.com/kevindurb/dotfiles` on every push (branches and
+tags), hourly, and on manual dispatch. Git is force-pushed from forgejo, so
+forgejo is authoritative; refs are never deleted on GitHub.
+
+Design (see `openspec/changes/add-github-mirror/` in this repo for the full
+change):
+
+- Auth comes from the GitHub App **kevindurb-forgejo-mirror** (app id 5954313,
+  client id `Iv23liby7P8kjC22nKCZ`), installed on all repos of the `kevindurb`
+  account with `contents: write` + `workflows: write` only. Per-run the
+  workflow signs a 10-minute RS256 JWT with the app private key (openssl),
+  exchanges it for a 1-hour installation token via the GitHub API, and pushes
+  with `git`. No long-lived GitHub credential exists anywhere in forgejo;
+  the app key lives only in forgejo user-level secrets
+  `MIRROR_APP_CLIENT_ID` / `MIRROR_APP_PRIVATE_KEY`.
+- A GitHub App cannot push packages, so **GHCR pushes are impossible from
+  this setup**; image builds stay on GitHub Actions.
+- forgejo 15.0.12 quirks that shaped the implementation (all verified
+  2026-11-27):
+  - Cross-repo reusable **workflows** (`uses: owner/repo/.forgejo/workflows/x.yml@main`,
+    and the full-URL form) do not run on this instance — the expanded job
+    fails immediately or sits in `waiting` forever; the logs show nothing
+    actionable. A composite **action** (`uses: <repo>@ref`, steps inlined
+    into the caller's job) works fine — this is the reuse mechanism.
+  - `actions/create-github-app-token` cannot be used (job fails at setup with
+    both the shorthand and the full URL). Token minting is done inline with
+    openssl + curl against `api.github.com`.
+  - Boolean workflow inputs arrive as the *strings* `"true"`/`"false"`, so
+    `if: ${{ inputs.dry_run }}`-style gating is unreliable; the action
+    normalises via a `Resolve push intent` step instead.
+  - `secrets:` is not a supported key of `on.workflow_call`.
+- The mirror logic lives in the composite action `kevindurb/gh-mirror`
+  (`action.yml`); each consumer repo calls it with ~6 lines of caller YAML,
+  passing `MIRROR_APP_CLIENT_ID` / `MIRROR_APP_PRIVATE_KEY` from secrets.
+- The forgejo-side runner must be up for the mirror to run; a push missed
+  while it is down is repaired by the hourly run.
+- Adopting another repo: create the private GitHub repo of the same name and
+  copy the ~6-line caller workflow from `kevindurb/gh-mirror`'s README
+  (`.forgejo/workflows/mirror.yml`) — the logic lives in the shared
+  `kevindurb/gh-mirror` composite action; no copying of the implementation.
+  Confirm a `workflow_dispatch` dry-run goes green, then push.
+
+
 ## TODO before this doc is final
 
 - [x] SSO round-trip verified in a private window
 - [x] `ENABLE_INTERNAL_SIGNIN=false` flipped and local login confirmed disabled
 - [x] Break-glass password login verified (before the flip)
 - [x] Repo migration SHAs match tsgit
-- [ ] Push mirror verified with a test commit
+- [x] Push mirror verified with a test commit (2026-11-27 — see "GitHub mirror" above; stray direct push to GitHub was force-overwritten by the mirror)
 - [x] Mirror policy for non-dotfiles repos documented
 - [x] Gatus green; runner/`add-forgejo-runner` handoff noted
