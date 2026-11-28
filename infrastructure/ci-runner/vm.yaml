@@ -54,13 +54,14 @@ spec:
       volumes:
         - name: rootdisk
           containerDisk:
-            # Pinned to the 2026.11.27.3 image (qcow2 built from
-            # ghcr.io/kevindurb/ci-runner:sha256:bf71f494fd30855b02e48e9e1d03fae272fde33a4ec85f1214fffe94496ee375,
-            # i.e. main @ c62b581: runner/jobs run as non-root user 'runner').
-            # Disk digest 7669cd4b2107fd8bdd4bb014b8d4c64f30d1c961910a68f6ae0569eac4e5bde2
+            # Pinned to the 2026.11.28 image (qcow2 built from
+            # ghcr.io/kevindurb/ci-runner:sha256:c47ffa4e097ca7f4cc44441b4288fcec3f939e352999c67ae2ab8f7c6fad0347,
+            # i.e. main @ ef2fc9c: non-root 'runner' user; file caps stripped
+            # from newuidmap/newgidmap so rootless podman works).
+            # Disk digest d2f6e2b4883934336e7864fbe71e88eb332b59f4e9463af0da6e5a734e7a3e17
             # Built by .github/workflows/build-runner-disk.yml in kevindurb/bootc.
             # Never use a floating tag here; bump deliberately.
-            image: ghcr.io/kevindurb/ci-runner-disk:2026.11.27.3
+            image: ghcr.io/kevindurb/ci-runner-disk:2026.11.28
         - name: cloudinitdisk
           cloudInitNoCloud:
             secretRef:

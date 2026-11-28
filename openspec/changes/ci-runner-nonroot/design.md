@@ -44,6 +44,13 @@ model; the user/units belong in the image.
 
 ### 2. Rootless podman via newuidmap + linger, no rootful fallback
 - `/etc/subuid` / `/etc/subgid`: `runner:165536:65536` (non-overlapping with system uids).
+- `/usr/bin/newuidmap` / `/usr/bin/newgidmap`: the bootc base ships them mode 0755
+  **with an effective `cap_setuid`/`cap_setgid` file capability**, and effective file
+  capabilities confer nothing in this VM (verified empirically: an `id` copy with
+  `cap_setuid=ep` gained nothing). When setuid *and* fcaps are combined the kernel
+  raises neither ("not raising all capabilities"), and the uid_map write fails
+  (`open of uid_map failed: Permission denied`). Fix: **strip the file capabilities
+  and setuid the binaries** — plain setuid works (verified on the rebuilt VM).
 - `loginctl enable-linger runner` so `XDG_RUNTIME_DIR`/`/run/user/<uid>` exists for the
   system service and rootless podman works without an interactive session. The unit sets
   `Environment=XDG_RUNTIME_DIR=/run/user/<uid>` explicitly so it does not depend on

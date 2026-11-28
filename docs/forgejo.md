@@ -128,13 +128,13 @@ root — state does not survive VM recreation).
   Built by `kevindurb/bootc` (`containers/ci-runner/`);
   cosign-signed (same key as the node image).
 - **Disk**: the VM boots a KubeVirt containerDisk,
-  `ghcr.io/kevindurb/ci-runner-disk:2026.11.27.3` — the fedora-bootc qcow2
+  `ghcr.io/kevindurb/ci-runner-disk:2026.11.28` — the fedora-bootc qcow2
   wrapped in a scratch image. cosign-signed. **The GH-hosted runners cannot
   build the qcow2** (osbuild needs nested user namespaces, which Ubuntu's
   `kernel.apparmor_restrict_unprivileged_userns=1` blocks; `/dev/kvm` exists
   but manifest generation itself dies in the sandbox). The qcow2 is therefore
   built on a Fedora host with `image-builder` (see the release notes on
-  `kevindurb/bootc` → `ci-runner-disk/2026.11.27.3`) and published as a GitHub
+  `kevindurb/bootc` → `ci-runner-disk/2026.11.28`) and published as a GitHub
   release asset; `build-runner-disk.yml` in that repo repacks the asset into
   the containerDisk and signs it. Rebuild: repeat the command in the release
   notes on any unrestricted Fedora/RHEL host, upload a new
@@ -165,7 +165,10 @@ root — state does not survive VM recreation).
   (`/etc/subuid` range `165536:65536`, `fuse-overlayfs`, `pasta` networking,
   `XDG_RUNTIME_DIR=/run/user/1000`; `runner` has a linger entry so the
   systemd `User=runner` services get a user runtime dir; the image setuids
-  `newuidmap`/`newgidmap` (the bootc base ships them 0755). No `sudo` is
+  `newuidmap`/`newgidmap` — the base image ships them with an effective
+  file capability that grants nothing on this platform, and the setuid+fcap
+  combo makes the kernel grant neither; the image strips the fcaps and
+  setuids them instead). No `sudo` is
   available to jobs; host-privileged steps (e.g. `dnf` on the host) will
   fail by design. `tailscaled` stays root, so jobs cannot use the tailnet
   CLI. In-container `pip ... running as root` warnings come from the job's
