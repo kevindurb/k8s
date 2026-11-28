@@ -128,13 +128,13 @@ root — state does not survive VM recreation).
   Built by `kevindurb/bootc` (`containers/ci-runner/`);
   cosign-signed (same key as the node image).
 - **Disk**: the VM boots a KubeVirt containerDisk,
-  `ghcr.io/kevindurb/ci-runner-disk:2026.11.27` — the fedora-bootc qcow2
+  `ghcr.io/kevindurb/ci-runner-disk:2026.11.27.3` — the fedora-bootc qcow2
   wrapped in a scratch image. cosign-signed. **The GH-hosted runners cannot
   build the qcow2** (osbuild needs nested user namespaces, which Ubuntu's
   `kernel.apparmor_restrict_unprivileged_userns=1` blocks; `/dev/kvm` exists
   but manifest generation itself dies in the sandbox). The qcow2 is therefore
   built on a Fedora host with `image-builder` (see the release notes on
-  `kevindurb/bootc` → `ci-runner-disk/2026.11.27`) and published as a GitHub
+  `kevindurb/bootc` → `ci-runner-disk/2026.11.27.3`) and published as a GitHub
   release asset; `build-runner-disk.yml` in that repo repacks the asset into
   the containerDisk and signs it. Rebuild: repeat the command in the release
   notes on any unrestricted Fedora/RHEL host, upload a new
@@ -148,18 +148,30 @@ root — state does not survive VM recreation).
   SealedSecret → NoCloud `userData`) writes `/etc/forgejo-runner/config.yaml`
   (capacity 1, labels `self-hosted,linux`), registers with
   `forgejo-runner register --no-interactive` using the token in
-  `/run/secrets/ci-runner-token` (tmpfs, deleted after registration), and
-  starts `forgejo-runner.service`. The `.runner` credentials live in
-  `/var/lib/forgejo-runner/` on the VM's ephemeral root.
+  `/run/secrets/ci-runner-token` (tmpfs, deleted after registration), chowns
+  `/var/lib/forgejo-runner` to the `runner` user, and starts
+  `forgejo-runner.service`. The `.runner` credentials live in
+  `/var/lib/forgejo-runner/` on the VM's ephemeral root. When rotating the
+  token, always seal a freshly generated one — the old token is not assumed
+  to be reusable (see "Rotating the registration token" below).
 - **Draining/reboot**: the VM is recreated from the pinned image (a drain
   migrates or recreates it; containerDisk VMs are migratable, so KubeVirt
   default `LiveMigrate` applies). On recreation it registers again with the
   same token — the stale duplicate entry in Site administration → Actions →
   Runners can be deleted there, or rotate the token (below).
-- **Job environment**: jobs run as root directly on the VM (host backend),
-  not in containers. `podman`/`podman build` work unmodified. No
-  privileged *pods* are involved anywhere; the podman socket is not exposed
-  to jobs except as the local `/run/podman/podman.sock` inside the VM.
+- **Job environment**: jobs run as the unprivileged `runner` user
+  (uid 1000) directly on the VM (host backend), not in containers and not as
+  root. `podman`/`podman build` work unmodified via rootless podman
+  (`/etc/subuid` range `165536:65536`, `fuse-overlayfs`, `pasta` networking,
+  `XDG_RUNTIME_DIR=/run/user/1000`; `runner` has a linger entry so the
+  systemd `User=runner` services get a user runtime dir; the image setuids
+  `newuidmap`/`newgidmap` (the bootc base ships them 0755). No `sudo` is
+  available to jobs; host-privileged steps (e.g. `dnf` on the host) will
+  fail by design. `tailscaled` stays root, so jobs cannot use the tailnet
+  CLI. In-container `pip ... running as root` warnings come from the job's
+  own containers and are unaffected by this. No privileged *pods* are
+  involved anywhere; the podman socket is not exposed to jobs except as the
+  runner user's rootless socket inside the VM.
 - **Capacity**: 1 job at a time; queue via forgejo. Podman cache survives
   normal VM reboots but is wiped by the hourly `podman system prune -f`
   systemd timer and by VM recreation (recreation is always a cold start).
