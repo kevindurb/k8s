@@ -61,7 +61,7 @@ spec:
             # Disk digest d2f6e2b4883934336e7864fbe71e88eb332b59f4e9463af0da6e5a734e7a3e17
             # Built by .github/workflows/build-runner-disk.yml in kevindurb/bootc.
             # Never use a floating tag here; bump deliberately.
-            image: ghcr.io/kevindurb/ci-runner-disk:2026.11.28
+            image: ghcr.io/kevindurb/ci-runner-disk:2026.11.28@sha256:d2f6e2b4883934336e7864fbe71e88eb332b59f4e9463af0da6e5a734e7a3e17
         - name: cloudinitdisk
           cloudInitNoCloud:
             secretRef:
